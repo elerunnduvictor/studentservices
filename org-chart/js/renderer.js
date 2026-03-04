@@ -6,12 +6,12 @@ OC.renderTile = function(emp) {
   var tileClass = isVP ? 'tile vp-tile' : isDirector ? 'tile director-tile' : 'tile';
 
   var responsibilitiesHtml = emp.responsibilities.length
-    ? '<div class="tile-section"><div class="tile-section-title">Responsibilities</div><ul class="tile-list">' +
+    ? '<div class="tile-section"><div class="tile-section-title">RESPONSIBILITIES</div><ul class="tile-list">' +
       emp.responsibilities.map(function(r) { return '<li>' + r + '</li>'; }).join('') +
       '</ul></div>' : '';
 
   var kpisHtml = emp.kpis.length
-    ? '<div class="tile-section"><div class="tile-section-title">Key KPIs</div><ul class="tile-list kpi-list">' +
+    ? '<div class="tile-section"><div class="tile-section-title">KEY KPIs</div><ul class="tile-list kpi-list">' +
       emp.kpis.map(function(k) { return '<li>' + k + '</li>'; }).join('') +
       '</ul></div>' : '';
 

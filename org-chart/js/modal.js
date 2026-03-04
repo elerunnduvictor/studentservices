@@ -16,17 +16,17 @@ OC.buildCardContent = function(empId) {
     '<div class="modal-body" style="--tile-color:' + dept.color + '; --tile-color-r:' + dept.colorR + ';">';
 
   if (emp.responsibilities.length) {
-    content += '<div class="tile-section"><div class="tile-section-title">Responsibilities</div><ul class="tile-list">' +
+    content += '<div class="tile-section"><div class="tile-section-title">RESPONSIBILITIES</div><ul class="tile-list">' +
       emp.responsibilities.map(function(r) { return '<li>' + r + '</li>'; }).join('') + '</ul></div>';
   }
 
   if (emp.kpis.length) {
-    content += '<div class="tile-section"><div class="tile-section-title">Key Performance Indicators</div><ul class="tile-list kpi-list">' +
+    content += '<div class="tile-section"><div class="tile-section-title">KEY KPIs</div><ul class="tile-list kpi-list">' +
       emp.kpis.map(function(k) { return '<li>' + k + '</li>'; }).join('') + '</ul></div>';
   }
 
   if (directReports.length) {
-    content += '<div class="tile-section"><div class="tile-section-title">Direct Reports (' + directReports.length + ')</div><ul class="tile-list">' +
+    content += '<div class="tile-section"><div class="tile-section-title">DIRECT REPORTS (' + directReports.length + ')</div><ul class="tile-list">' +
       directReports.map(function(r) { return '<li>' + r.name + ' \u2014 ' + r.title + '</li>'; }).join('') + '</ul></div>';
   }
 

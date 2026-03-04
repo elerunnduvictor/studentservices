@@ -192,7 +192,6 @@
   font-size: 0.58rem;
   font-weight: 600;
   letter-spacing: 0.12em;
-  text-transform: uppercase;
   color: var(--tile-color, var(--gold));
   margin-bottom: 6px;
   display: flex;

@@ -43,22 +43,27 @@
 <div class="toolbar" id="toolbar">
   <div class="toolbar-brand">Student Services</div>
 
-  <div class="search-box" id="toolbarSearch">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-    <input type="text" id="searchInput" placeholder="Search by name, title, or department…" autocomplete="off">
-    <span class="search-results-count" id="searchCount"></span>
-  </div>
+  <button class="menu-toggle" id="menuToggle" title="Menu">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
 
-  <div class="filter-group" id="toolbarFilters">
-    <button class="filter-btn active" data-filter="all" style="--filter-color:var(--gold);--filter-color-r:var(--gold-r)">All</button>
-    <button class="filter-btn" data-filter="records" style="--filter-color:var(--teal);--filter-color-r:var(--teal-r)">Records &amp; Support</button>
-    <button class="filter-btn" data-filter="enrollment" style="--filter-color:var(--purple);--filter-color-r:var(--purple-r)">Enrollment</button>
-    <button class="filter-btn" data-filter="dean" style="--filter-color:var(--green);--filter-color-r:var(--green-r)">Dean of Students</button>
-    <button class="filter-btn" data-filter="digital" style="--filter-color:var(--red);--filter-color-r:var(--red-r)">Digital Ops</button>
-    <button class="filter-btn filter-btn--hierarchy" id="hierarchyToggle" style="--filter-color:#58595B;--filter-color-r:88,89,91">Hierarchy Tree</button>
-  </div>
+  <div class="toolbar-collapsible" id="toolbarCollapsible">
+    <div class="search-box" id="toolbarSearch">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="searchInput" placeholder="Search by name, title, or department…" autocomplete="off">
+      <span class="search-results-count" id="searchCount"></span>
+    </div>
 
-  <div class="toolbar-actions" id="toolbarActions">
+    <div class="filter-group" id="toolbarFilters">
+      <button class="filter-btn active" data-filter="all" style="--filter-color:var(--gold);--filter-color-r:var(--gold-r)">All</button>
+      <button class="filter-btn" data-filter="records" style="--filter-color:var(--teal);--filter-color-r:var(--teal-r)">Records &amp; Support</button>
+      <button class="filter-btn" data-filter="enrollment" style="--filter-color:var(--purple);--filter-color-r:var(--purple-r)">Enrollment</button>
+      <button class="filter-btn" data-filter="dean" style="--filter-color:var(--green);--filter-color-r:var(--green-r)">Dean of Students</button>
+      <button class="filter-btn" data-filter="digital" style="--filter-color:var(--red);--filter-color-r:var(--red-r)">Digital Ops</button>
+      <button class="filter-btn filter-btn--hierarchy" id="hierarchyToggle" style="--filter-color:#58595B;--filter-color-r:88,89,91">Hierarchy Tree</button>
+    </div>
+
+    <div class="toolbar-actions" id="toolbarActions">
     <button class="tool-btn" id="zoomOut" title="Zoom Out">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>
     </button>
@@ -81,6 +86,7 @@
     <button class="tool-btn" id="exportPdf" title="Export PDF">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 18 15 15"/></svg>
     </button>
+    </div>
   </div>
 </div>
 

@@ -12,8 +12,6 @@
 
 /* ── Mobile ── */
 @media (max-width: 900px) {
-  .toolbar { padding: 10px 16px; gap: 8px; }
-  .filter-group { display: none; }
   .page-header { padding: 36px 16px 8px; }
 
   /* Switch to vertical accordion layout */
@@ -55,8 +53,6 @@
 
 /* ── Small mobile ── */
 @media (max-width: 480px) {
-  .toolbar-brand { font-size: 0.85rem; }
-  .search-box { min-width: 140px; }
   .tile-name { font-size: 0.85rem; }
   .tile-title { font-size: 0.6rem; }
   .tile-list li { font-size: 0.62rem; }

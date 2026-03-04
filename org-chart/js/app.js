@@ -126,6 +126,31 @@ document.addEventListener('DOMContentLoaded', function() {
   OC.initPan();
   OC.initToolbar();
 
+  // ── Hamburger menu toggle ──
+  var menuToggle = document.getElementById('menuToggle');
+  var toolbarCollapsible = document.getElementById('toolbarCollapsible');
+
+  menuToggle.addEventListener('click', function() {
+    menuToggle.classList.toggle('open');
+    toolbarCollapsible.classList.toggle('open');
+  });
+
+  // Close menu when a filter or action button is clicked
+  toolbarCollapsible.addEventListener('click', function(e) {
+    if (e.target.closest('.filter-btn') || e.target.closest('.tool-btn')) {
+      menuToggle.classList.remove('open');
+      toolbarCollapsible.classList.remove('open');
+    }
+  });
+
+  // Close menu on outside click
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.toolbar') && toolbarCollapsible.classList.contains('open')) {
+      menuToggle.classList.remove('open');
+      toolbarCollapsible.classList.remove('open');
+    }
+  });
+
   // ── Keyboard shortcuts ──
   document.addEventListener('keydown', function(e) {
     if ((e.ctrlKey && e.key === 'f') || (e.key === '/' && document.activeElement.tagName !== 'INPUT')) {

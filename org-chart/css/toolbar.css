@@ -124,3 +124,80 @@
   text-align: center;
   user-select: none;
 }
+
+/* ── Hamburger Menu Toggle ── */
+.menu-toggle {
+  display: none;
+  background: var(--ice-gray);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  width: 34px; height: 34px;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--transition);
+  flex-shrink: 0;
+}
+
+.menu-toggle:hover { border-color: var(--light-gray); color: var(--text); background: #E8EAED; }
+
+.menu-toggle.open { color: var(--gold); border-color: var(--gold); background: rgba(var(--gold-r), 0.08); }
+
+/* ── Collapsible wrapper (no effect on desktop) ── */
+.toolbar-collapsible {
+  display: contents;
+}
+
+/* ══════════════════════════════════════════════════════════
+   TOOLBAR RESPONSIVE
+   ══════════════════════════════════════════════════════════ */
+@media (max-width: 900px) {
+  .toolbar {
+    padding: 10px 16px;
+    gap: 8px;
+  }
+
+  .toolbar-brand {
+    flex: 1;
+  }
+
+  .menu-toggle {
+    display: flex;
+  }
+
+  .toolbar-collapsible {
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+    overflow: hidden;
+  }
+
+  .toolbar-collapsible.open {
+    display: flex;
+  }
+
+  .toolbar-collapsible .search-box {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .toolbar-collapsible .filter-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .toolbar-collapsible .toolbar-actions {
+    margin-left: 0;
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 480px) {
+  .toolbar-brand { font-size: 0.85rem; }
+  .toolbar-collapsible .search-box { min-width: 0; }
+}

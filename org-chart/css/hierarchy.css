@@ -1,0 +1,315 @@
+/* ══════════════════════════════════════════════════════════
+   HIERARCHY TREE — White-themed department structure view
+   All classes prefixed with ht- to avoid collisions
+   ══════════════════════════════════════════════════════════ */
+
+/* ── Chart container ── */
+.ht-chart {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding: 20px 24px 80px;
+}
+
+/* ── Legend ── */
+.ht-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 18px;
+  margin: 0 auto 36px;
+  padding: 14px 20px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--ice-gray);
+  width: 100%;
+  max-width: 700px;
+}
+
+.ht-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: clamp(0.52rem, 1.2vw, 0.58rem);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.ht-legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── VP ── */
+.ht-vp-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  animation: htFadeUp 0.5s ease both 0.05s;
+}
+
+.ht-vp-node {
+  background: linear-gradient(135deg, rgba(var(--gold-r), 0.08), #FFFFFF);
+  border: 1.5px solid rgba(var(--gold-r), 0.5);
+  border-radius: 4px;
+  padding: clamp(10px, 2vw, 14px) clamp(20px, 4vw, 52px);
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(0.8rem, 2vw, 1rem);
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold);
+  cursor: default;
+  transition: all 0.25s;
+  text-align: center;
+  position: relative;
+  max-width: 520px;
+  width: 100%;
+}
+
+.ht-vp-node:hover {
+  box-shadow: 0 0 24px rgba(var(--gold-r), 0.12);
+  transform: translateY(-2px);
+}
+
+.ht-level-tag {
+  position: absolute;
+  top: -9px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #FFFFFF;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-size: 0.44rem;
+  letter-spacing: 0.24em;
+  padding: 2px 10px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* ── Stems / Connectors ── */
+.ht-stem {
+  width: 1px;
+  background: var(--light-gray);
+  height: 28px;
+}
+
+.ht-h-bar {
+  height: 1px;
+  background: var(--border);
+  width: 100%;
+}
+
+/* ── Department row (4-column grid) ── */
+.ht-dept-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  width: 100%;
+  align-items: start;
+}
+
+/* ── Department column ── */
+.ht-dept {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 1px solid rgba(var(--dcr), 0.15);
+  border-radius: 6px;
+  padding: 0 10px 16px;
+  background: rgba(var(--dcr), 0.03);
+  transition: border-color 0.2s;
+  overflow: hidden;
+}
+
+.ht-dept:hover {
+  border-color: rgba(var(--dcr), 0.3);
+}
+
+.ht-dept:nth-child(odd) { animation: htFadeUp 0.6s ease both 0.2s; }
+.ht-dept:nth-child(even) { animation: htFadeUp 0.6s ease both 0.35s; }
+
+.ht-dept-accent {
+  width: 100%;
+  height: 3px;
+  background: var(--dc);
+  opacity: 0.6;
+  border-radius: 3px 3px 0 0;
+  margin-bottom: 0;
+}
+
+.ht-dept-stem {
+  width: 1px;
+  height: 24px;
+  background: var(--dc);
+  opacity: 0.4;
+}
+
+.ht-lvl-stem {
+  width: 1px;
+  height: 18px;
+  background: var(--dc);
+  opacity: 0.25;
+}
+
+/* ── Department header (collapsible on mobile) ── */
+.ht-dept-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 12px 4px 4px;
+  user-select: none;
+}
+
+.ht-dept-header-title {
+  font-size: clamp(0.58rem, 1.2vw, 0.66rem);
+  letter-spacing: 0.08em;
+  font-weight: 500;
+  color: var(--dc);
+  text-transform: uppercase;
+  text-align: center;
+  flex: 1;
+}
+
+.ht-chevron {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  color: var(--dc);
+  opacity: 0.5;
+  transition: transform 0.3s ease;
+  display: none;
+}
+
+.ht-dept.ht-collapsed .ht-chevron {
+  transform: rotate(-90deg);
+}
+
+/* ── Department body ── */
+.ht-dept-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  transition: max-height 0.35s ease, opacity 0.3s ease;
+  overflow: hidden;
+}
+
+.ht-dept.ht-collapsed .ht-dept-body {
+  max-height: 0 !important;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ── Level label ── */
+.ht-row-label {
+  font-size: clamp(0.52rem, 1vw, 0.58rem);
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--dc);
+  opacity: 0.75;
+  margin-bottom: 6px;
+  text-align: center;
+  width: 100%;
+}
+
+/* ── Node ── */
+.ht-node {
+  background: linear-gradient(135deg, rgba(var(--dcr), 0.05) 0%, #FFFFFF 100%);
+  border: 1px solid rgba(var(--dcr), 0.25);
+  border-radius: 3px;
+  padding: clamp(7px, 1.5vw, 10px) clamp(6px, 1.2vw, 12px);
+  font-size: clamp(0.58rem, 1.1vw, 0.65rem);
+  letter-spacing: 0.07em;
+  font-weight: 400;
+  color: rgba(var(--dcr), 0.85);
+  text-transform: uppercase;
+  text-align: center;
+  cursor: default;
+  transition: all 0.22s ease;
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+}
+
+.ht-node:hover {
+  border-color: rgba(var(--dcr), 0.6);
+  color: var(--dc);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 14px rgba(28, 35, 37, 0.08), 0 0 8px rgba(var(--dcr), 0.1);
+}
+
+/* Director node (special styling) */
+.ht-node.ht-director {
+  font-weight: 500;
+  border-color: rgba(var(--dcr), 0.5);
+  color: var(--dc);
+  background: linear-gradient(135deg, rgba(var(--dcr), 0.1), #FFFFFF);
+  width: 100%;
+  text-align: center;
+}
+
+/* ── Node row (horizontal siblings) ── */
+.ht-node-row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 6px;
+  width: 100%;
+  align-items: stretch;
+}
+
+.ht-node-row .ht-node {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* ── Animation ── */
+@keyframes htFadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ══════════════════════════════════════════════════════════
+   RESPONSIVE
+   ══════════════════════════════════════════════════════════ */
+
+/* ── Tablet: 2x2 grid ── */
+@media (max-width: 1024px) {
+  .ht-dept-row {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+  }
+  .ht-h-bar { width: 90%; }
+  .ht-node-row { flex-wrap: wrap; }
+  .ht-node-row .ht-node { flex: 1 1 calc(50% - 6px); min-width: calc(50% - 6px); }
+}
+
+/* ── Large mobile: 1 column, collapsible ── */
+@media (max-width: 640px) {
+  .ht-chart { padding: 20px 14px 60px; }
+  .ht-dept-row {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .ht-chevron { display: block; }
+  .ht-node-row { flex-wrap: wrap; }
+  .ht-node-row .ht-node { flex: 1 1 calc(50% - 6px); min-width: calc(50% - 6px); }
+  .ht-h-bar { width: 80%; }
+  .ht-node { font-size: 0.62rem; padding: 8px 10px; }
+  .ht-row-label { font-size: 0.44rem; }
+}
+
+/* ── Small mobile: 1 node per row ── */
+@media (max-width: 380px) {
+  .ht-node-row .ht-node { flex: 1 1 100%; }
+}

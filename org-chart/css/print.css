@@ -1,0 +1,56 @@
+/* ══════════════════════════════════════════════════════════
+   PRINT STYLES & PDF EXPORT MODE
+   ══════════════════════════════════════════════════════════ */
+
+/* ── PDF Export Mode ── */
+.pdf-mode .toolbar { display: none; }
+.pdf-mode .tile .tile-body { max-height: none !important; opacity: 1 !important; }
+.pdf-mode .tile-expand-indicator { display: none; }
+.pdf-mode .chart-viewport { overflow: visible; cursor: default; }
+.pdf-mode .chart-container { transform: none !important; }
+
+/* ── Print ── */
+@media print {
+  * { animation: none !important; transition: none !important; }
+
+  body { background: #FFFFFF !important; color: #1C2325 !important; }
+  body::before, body::after { display: none !important; }
+  .toolbar { display: none !important; }
+  .modal-overlay { display: none !important; }
+  .hover-card { display: none !important; }
+  .chart-viewport { overflow: visible !important; padding: 10px !important; cursor: default !important; }
+  .chart-container { transform: none !important; }
+
+  .page-header h1 { color: #1C2325; }
+  .page-header .subtitle { color: #58595B; }
+  .legend { border-color: #BCBEC0; background: #ECEFF2; }
+  .legend-item { color: #58595B; }
+
+  .tile {
+    background: #FFFFFF !important;
+    border-color: #BCBEC0 !important;
+    box-shadow: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .tile .tile-body { max-height: none !important; opacity: 1 !important; }
+  .tile-name { color: #1C2325 !important; }
+  .tile-title { color: #475052 !important; }
+  .tile-section-title { color: #1C2325 !important; }
+  .tile-section { opacity: 1 !important; }
+  .tile-list li { color: #58595B !important; }
+  .tile-list.kpi-list li { color: #168980 !important; }
+  .tile-meta { opacity: 1 !important; }
+  .tile-meta-item { color: #58595B !important; }
+  .tile-expand-indicator { display: none; }
+  .avatar { border-color: #BCBEC0 !important; color: #58595B !important; background: #ECEFF2 !important; }
+
+  .tree li::before { background: #BCBEC0 !important; transform: scaleY(1) !important; }
+  .tree li::after { background: #BCBEC0 !important; transform: scaleX(1) !important; }
+  .tree ul::before { background: #BCBEC0 !important; transform: scaleY(1) !important; }
+  .tile-accent { opacity: 1 !important; }
+}

@@ -1,0 +1,308 @@
+/* ══════════════════════════════════════════════════════════
+   TILES / EMPLOYEE CARDS
+   ══════════════════════════════════════════════════════════ */
+.tile {
+  width: 220px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  cursor: pointer;
+  position: relative;
+  opacity: 1;
+  transform-style: preserve-3d;
+  will-change: transform, opacity;
+  box-shadow: var(--shadow);
+  transition:
+    border-color var(--hover-duration) var(--smooth),
+    box-shadow var(--hover-duration) var(--smooth);
+}
+
+/* Tiles waiting for entrance animation start invisible */
+.tile.animate-pending {
+  opacity: 0;
+}
+
+.tile:hover {
+  border-color: var(--light-gray);
+  box-shadow: var(--shadow-hover);
+}
+
+.tile.highlighted {
+  border-color: var(--gold) !important;
+  box-shadow: 0 0 20px rgba(var(--gold-r), 0.2);
+}
+
+.tile.dimmed {
+  opacity: 0.25 !important;
+  transform: scale(0.95) !important;
+  filter: grayscale(0.8) blur(1px);
+  pointer-events: none;
+  transition: all 0.4s var(--smooth);
+}
+
+.tile-accent {
+  height: 3px;
+  background: var(--tile-color, var(--gold));
+  opacity: 0.8;
+}
+
+.tile-header {
+  padding: 16px 14px 10px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.avatar {
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  border: 2px solid rgba(var(--tile-color-r, var(--gold-r)), 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--tile-color, var(--gold));
+  background: rgba(var(--tile-color-r, var(--gold-r)), 0.08);
+  flex-shrink: 0;
+  overflow: hidden;
+  transition: transform 0.3s var(--spring), box-shadow 0.3s var(--smooth);
+}
+
+.tile:hover .avatar {
+  transform: scale(1.08);
+  box-shadow: 0 0 12px rgba(var(--tile-color-r, var(--gold-r)), 0.15);
+}
+
+.avatar img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.tile-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+  color: var(--text);
+  line-height: 1.2;
+}
+
+.tile-title {
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  color: var(--tile-color, var(--gold));
+  opacity: 0.9;
+  line-height: 1.3;
+}
+
+.tile-level-badge {
+  font-size: 0.5rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  background: var(--ice-gray);
+  border: 1px solid var(--border);
+  padding: 2px 8px;
+  border-radius: 10px;
+  margin-top: 2px;
+}
+
+.tile-expand-indicator {
+  font-size: 0.5rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  opacity: 0;
+  transition: opacity var(--transition);
+  padding-bottom: 6px;
+  text-align: center;
+}
+
+.tile:hover .tile-expand-indicator { opacity: 1; }
+
+/* ── EXPANDED TILE BODY ── */
+.tile-body {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition:
+    max-height 0.5s var(--spring),
+    opacity 0.3s var(--smooth);
+}
+
+.tile.expanded {
+  width: 440px;
+  z-index: 10;
+  transition:
+    width 0.35s var(--spring),
+    border-color var(--hover-duration) var(--smooth),
+    box-shadow var(--hover-duration) var(--smooth);
+}
+
+.tile.expanded .tile-body {
+  max-height: 600px;
+  opacity: 1;
+  transition:
+    max-height 0.5s var(--spring),
+    opacity 0.3s var(--smooth) 0.1s;
+}
+
+.tile.expanded .tile-body-inner {
+  padding: 0 20px 20px;
+}
+
+.tile.expanded .tile-name {
+  font-size: 1.1rem;
+}
+
+.tile.expanded .tile-title {
+  font-size: 0.78rem;
+}
+
+.tile.expanded .tile-list li {
+  font-size: 0.78rem;
+  margin-bottom: 5px;
+  line-height: 1.5;
+}
+
+.tile.expanded .tile-section-title {
+  font-size: 0.65rem;
+}
+
+.tile.expanded .tile-meta-item {
+  font-size: 0.68rem;
+}
+
+.tile-body-inner {
+  padding: 0 14px 14px;
+  border-top: 1px solid var(--border);
+}
+
+.tile-section {
+  margin-top: 10px;
+}
+
+.tile-section-title {
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--tile-color, var(--gold));
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tile-section-title::before {
+  content: '';
+  width: 3px;
+  height: 10px;
+  background: var(--tile-color, var(--gold));
+  border-radius: 2px;
+  opacity: 0.6;
+}
+
+.tile-list {
+  list-style: none;
+  padding: 0;
+}
+
+.tile-list li {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  padding-left: 14px;
+  position: relative;
+  margin-bottom: 4px;
+}
+
+.tile-list li::before {
+  content: '\2022';
+  position: absolute;
+  left: 3px;
+  color: var(--tile-color, var(--gold));
+  opacity: 0.5;
+}
+
+.tile-list.kpi-list li::before {
+  content: '\25C6';
+  font-size: 0.5rem;
+  top: 2px;
+}
+
+.tile-list.kpi-list li {
+  color: var(--green-teal);
+  opacity: 0.85;
+  font-weight: 500;
+}
+
+.tile-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.tile-meta-item {
+  font-size: 0.6rem;
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tile-meta-item svg {
+  width: 12px; height: 12px;
+  flex-shrink: 0;
+  opacity: 0.5;
+}
+
+.tile-meta-item a {
+  color: var(--teal);
+  text-decoration: none;
+  opacity: 0.8;
+  transition: opacity var(--transition);
+}
+
+.tile-meta-item a:hover { opacity: 1; }
+
+/* ── VP TILE (special) ── */
+.tile.vp-tile {
+  width: 280px;
+  border-color: rgba(var(--gold-r), 0.3);
+  background: linear-gradient(135deg, rgba(var(--gold-r),0.06), var(--bg-card));
+}
+
+.tile.vp-tile .avatar {
+  width: 64px; height: 64px;
+  font-size: 1.2rem;
+}
+
+.tile.vp-tile .tile-name {
+  font-size: 1.1rem;
+}
+
+/* ── DIRECTOR TILE ── */
+.tile.director-tile {
+  width: 240px;
+  border-color: rgba(var(--tile-color-r, 255,195,40), 0.2);
+  background: linear-gradient(135deg, rgba(var(--tile-color-r, 255,195,40),0.05), var(--bg-card));
+}
+
+.tile.director-tile .avatar {
+  width: 56px; height: 56px;
+  font-size: 1.1rem;
+}
+
+/* Expanded VP/Director tiles scale to same width */
+.tile.vp-tile.expanded { width: 480px; }
+.tile.director-tile.expanded { width: 460px; }

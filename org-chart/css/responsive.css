@@ -1,0 +1,63 @@
+/* ══════════════════════════════════════════════════════════
+   RESPONSIVE BREAKPOINTS
+   ══════════════════════════════════════════════════════════ */
+
+/* ── Tablet ── */
+@media (max-width: 1200px) {
+  .tile { width: 190px; }
+  .tile.vp-tile { width: 240px; }
+  .tile.director-tile { width: 210px; }
+  .tree li { padding: 24px 5px 0; }
+}
+
+/* ── Mobile ── */
+@media (max-width: 900px) {
+  .toolbar { padding: 10px 16px; gap: 8px; }
+  .filter-group { display: none; }
+  .page-header { padding: 36px 16px 8px; }
+
+  /* Switch to vertical accordion layout */
+  .chart-container { transform: none !important; }
+  .chart-viewport { cursor: default !important; overflow-y: auto; overflow-x: hidden; }
+
+  .tree, .tree ul, .tree li {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0;
+    width: 100%;
+  }
+
+  .tree ul { padding-top: 12px; gap: 10px; }
+  .tree li { padding: 12px 0 0; width: 100%; max-width: 360px; }
+  .tree li::before { height: 12px; }
+  .tree li::after { display: none; }
+  .tree ul::before { height: 12px; }
+
+  .tile, .tile.vp-tile, .tile.director-tile,
+  .tile.expanded, .tile.vp-tile.expanded, .tile.director-tile.expanded { width: 100%; max-width: 360px; }
+
+  .tree li.spacer-node { padding-top: 0; }
+  .tree li.spacer-node > ul { padding-top: 0; }
+  .tile.spacer-tile { display: none; }
+
+  .dept-branch { width: 100%; display: flex; flex-direction: column; align-items: center; }
+  .dept-branch > ul { width: 100%; align-items: center; }
+  .dept-branch > ul > li { width: 100%; max-width: 360px; }
+
+  /* Hide hover card on mobile */
+  .hover-card { display: none !important; }
+
+  /* Reduce animation complexity */
+  .tile { animation-duration: 0.3s !important; }
+  body::after { animation: none; }
+}
+
+/* ── Small mobile ── */
+@media (max-width: 480px) {
+  .toolbar-brand { font-size: 0.85rem; }
+  .search-box { min-width: 140px; }
+  .tile-name { font-size: 0.85rem; }
+  .tile-title { font-size: 0.6rem; }
+  .tile-list li { font-size: 0.62rem; }
+}

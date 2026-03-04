@@ -1,0 +1,136 @@
+/* ══════════════════════════════════════════════════════════
+   ANIMATIONS — The "Wow" Layer
+   ══════════════════════════════════════════════════════════ */
+
+/* ── Tile Entrance ── */
+@keyframes tileEntrance {
+  0% {
+    opacity: 0;
+    transform: translateY(28px) scale(0.92);
+    filter: blur(6px);
+  }
+  60% {
+    opacity: 1;
+    filter: blur(0);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+.tile.animate-in {
+  animation: tileEntrance var(--entrance-duration) var(--spring) forwards;
+}
+
+/* ── Glow Pulse on Hover ── */
+@keyframes glowPulse {
+  0%, 100% {
+    box-shadow:
+      var(--shadow),
+      0 0 15px rgba(var(--tile-color-r, var(--gold-r)), 0.06);
+  }
+  50% {
+    box-shadow:
+      var(--shadow-hover),
+      0 0 30px rgba(var(--tile-color-r, var(--gold-r)), 0.12);
+  }
+}
+
+.tile:hover:not(.dimmed) {
+  animation: glowPulse 2.5s ease-in-out infinite;
+}
+
+/* Stop glow pulse when tile is being tilted (JS adds this) */
+.tile.tilt-active {
+  animation: none !important;
+}
+
+.tile.tilt-active:hover {
+  box-shadow:
+    0 12px 40px rgba(28,35,37,0.12),
+    0 0 25px rgba(var(--tile-color-r, var(--gold-r)), var(--glow-intensity));
+}
+
+/* ── Accent Bar Shimmer ── */
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.tile:hover .tile-accent {
+  background: linear-gradient(
+    90deg,
+    var(--tile-color, var(--gold)) 0%,
+    rgba(var(--tile-color-r, var(--gold-r)), 0.3) 50%,
+    var(--tile-color, var(--gold)) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s ease-in-out infinite;
+  opacity: 1;
+}
+
+/* ── Avatar Ring Pulse ── */
+@keyframes ringPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(var(--tile-color-r, var(--gold-r)), 0.2); }
+  50%      { box-shadow: 0 0 0 6px rgba(var(--tile-color-r, var(--gold-r)), 0); }
+}
+
+.tile:hover .avatar {
+  animation: ringPulse 2s ease-in-out infinite;
+}
+
+/* ── Expand Content Stagger ── */
+.tile.expanded .tile-section {
+  animation: sectionFade 0.4s var(--smooth) forwards;
+  opacity: 0;
+}
+
+.tile.expanded .tile-section:nth-child(1) { animation-delay: 0.1s; }
+.tile.expanded .tile-section:nth-child(2) { animation-delay: 0.2s; }
+.tile.expanded .tile-section:nth-child(3) { animation-delay: 0.3s; }
+
+.tile.expanded .tile-meta {
+  animation: sectionFade 0.4s var(--smooth) 0.35s forwards;
+  opacity: 0;
+}
+
+@keyframes sectionFade {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Search Highlight Pulse ── */
+@keyframes highlightPulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(var(--gold-r), 0.12); }
+  50%      { box-shadow: 0 0 35px rgba(var(--gold-r), 0.25); }
+}
+
+.tile.highlighted {
+  animation: highlightPulse 1.5s ease-in-out infinite;
+}
+
+/* ── Header Entrance ── */
+@keyframes headerSlide {
+  from { opacity: 0; transform: translateY(-20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.page-header {
+  animation: headerSlide 0.8s var(--smooth);
+}
+
+.legend {
+  animation: headerSlide 0.8s var(--smooth) 0.15s both;
+}
+
+/* ── Toolbar slide-down ── */
+@keyframes toolbarSlide {
+  from { transform: translateY(-100%); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+
+.toolbar {
+  animation: toolbarSlide 0.5s var(--smooth);
+}

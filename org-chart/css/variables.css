@@ -1,0 +1,63 @@
+/* ══════════════════════════════════════════════════════════
+   DESIGN TOKENS — Brand Colors & Animation Variables
+   ══════════════════════════════════════════════════════════ */
+:root {
+  /* ── Brand Neutrals (Light Theme) ── */
+  --bg: #FFFFFF;
+  --bg-card: #FFFFFF;
+  --bg-elevated: #F5F6F8;
+  --text: #1C2325;
+  --text-muted: #58595B;
+  --text-dim: #7F898A;
+  --border-color: #BCBEC0;
+  --border: rgba(188,190,192,0.5);
+  --warm-gray: #706060;
+  --dark-gray: #58595B;
+  --light-gray: #BCBEC0;
+  --ice-gray: #ECEFF2;
+
+  /* ── Brand Accents ── */
+  --gold: #FFC328;
+  --gold-r: 255,195,40;
+  --mustard: #F4D25A;
+  --dark-mustard: #B59525;
+  --teal: #3A929D;
+  --teal-r: 58,146,157;
+  --deep-teal: #065577;
+  --deep-teal-blue: #28738A;
+  --medium-blue: #3599B8;
+  --steel-blue: #6A9FB0;
+  --sky-blue: #A4DDEE;
+  --purple: #B687AC;
+  --purple-r: 182,135,172;
+  --plum: #7B4F71;
+  --green: #A2C23D;
+  --green-r: 162,194,61;
+  --green-teal: #168980;
+  --deep-green: #0F5C55;
+  --red: #CB4A27;
+  --red-r: 203,74,39;
+  --brick-red: #BB4A4A;
+  --coral: #FB8281;
+  --peach: #FDAB89;
+  --terracotta: #BD7150;
+  --turquoise: #4AC5BB;
+  --dusty-rose: #DFBFBF;
+  --mauve-gray: #A78F8F;
+
+  /* ── Layout ── */
+  --radius: 8px;
+  --radius-lg: 12px;
+  --shadow: 0 2px 12px rgba(28,35,37,0.08);
+  --shadow-hover: 0 8px 30px rgba(28,35,37,0.12);
+  --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ── Animation Tokens ── */
+  --spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --entrance-duration: 0.6s;
+  --stagger-delay: 0.04s;
+  --hover-duration: 0.3s;
+  --glow-intensity: 0.12;
+}

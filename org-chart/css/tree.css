@@ -1,0 +1,103 @@
+/* ══════════════════════════════════════════════════════════
+   CHART VIEWPORT & TREE LAYOUT
+   ══════════════════════════════════════════════════════════ */
+.chart-viewport {
+  overflow: auto;
+  position: relative;
+  z-index: 1;
+  padding: 20px 24px 80px;
+  cursor: grab;
+}
+
+.chart-viewport:active { cursor: grabbing; }
+.chart-viewport.no-pan { cursor: default; }
+.chart-viewport.no-pan:active { cursor: default; }
+
+.chart-container {
+  transform-origin: top center;
+  transition: transform 0.2s ease;
+  min-width: fit-content;
+  margin: 0 auto;
+}
+
+/* ── Tree Structure ── */
+.tree { display: flex; flex-direction: column; align-items: center; }
+
+.tree ul {
+  display: flex;
+  justify-content: center;
+  list-style: none;
+  padding-top: 28px;
+  position: relative;
+}
+
+/* Vertical stem from parent to horizontal bar */
+.tree ul::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 1px;
+  height: 28px;
+  background: var(--light-gray);
+  transform-origin: top;
+  transform: scaleY(0);
+}
+
+.tree li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  padding: 28px 8px 0;
+}
+
+/* Vertical connector from horizontal bar to node */
+.tree li::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  width: 1px;
+  height: 28px;
+  background: var(--light-gray);
+  transform-origin: top;
+  transform: scaleY(0);
+}
+
+/* Horizontal connector bar */
+.tree li::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  width: 100%;
+  height: 1px;
+  background: rgba(188,190,192,0.5);
+  transform-origin: center;
+  transform: scaleX(0);
+}
+
+.tree li:first-child::after { left: 50%; width: 50%; transform-origin: left; }
+.tree li:last-child::after { right: 50%; width: 50%; transform-origin: right; }
+.tree li:only-child::after { display: none; }
+
+/* Animated state — connectors draw in */
+.tree li.connectors-drawn::before { transform: scaleY(1); transition: transform 0.4s var(--smooth); }
+.tree li.connectors-drawn::after { transform: scaleX(1); transition: transform 0.5s var(--smooth) 0.15s; }
+.tree ul.connectors-drawn::before { transform: scaleY(1); transition: transform 0.4s var(--smooth); }
+
+/* Spacer nodes — invisible pass-throughs that maintain correct level depth */
+.tree li.spacer-node {
+  padding-top: 28px;
+  padding-bottom: 0;
+}
+
+/* Ghost tile inside spacer — same structure as real tile, invisible but occupies space */
+.tile.spacer-tile {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* Department sub-trees use department color */
+.tree .dept-branch li::before { background: var(--dc); opacity: 0.35; }
+.tree .dept-branch li::after { background: var(--dc); opacity: 0.25; }
+.tree .dept-branch > ul::before { background: var(--dc); opacity: 0.35; }

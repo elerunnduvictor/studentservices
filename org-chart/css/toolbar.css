@@ -5,7 +5,7 @@
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(255,255,255,0.92);
+  background: rgba(var(--toolbar-bg-r, 255,255,255), 0.92);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--border);
@@ -93,7 +93,7 @@
   white-space: nowrap;
 }
 
-.filter-btn:hover { border-color: var(--light-gray); color: var(--text); background: #F0F1F3; }
+.filter-btn:hover { border-color: var(--light-gray); color: var(--text); background: var(--bg-elevated); }
 .filter-btn.active { border-color: var(--filter-color, var(--gold)); color: var(--filter-color, var(--gold)); background: rgba(var(--filter-color-r, var(--gold-r)), 0.08); }
 
 .toolbar-actions {
@@ -113,7 +113,7 @@
   transition: all var(--transition);
 }
 
-.tool-btn:hover { border-color: var(--light-gray); color: var(--text); background: #E8EAED; }
+.tool-btn:hover { border-color: var(--light-gray); color: var(--text); background: var(--bg-elevated); }
 .tool-btn svg { width: 16px; height: 16px; }
 
 .zoom-display {
@@ -140,7 +140,7 @@
   flex-shrink: 0;
 }
 
-.menu-toggle:hover { border-color: var(--light-gray); color: var(--text); background: #E8EAED; }
+.menu-toggle:hover { border-color: var(--light-gray); color: var(--text); background: var(--bg-elevated); }
 
 .menu-toggle.open { color: var(--gold); border-color: var(--gold); background: rgba(var(--gold-r), 0.08); }
 

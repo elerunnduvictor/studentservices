@@ -22,7 +22,7 @@ OC.LEVELS = {
 
 OC.employees = [
   // ── LEVEL 1: VP ──
-  { id: 'vp', name: 'Vice President', title: 'Vice President of Student Services', dept: 'executive', level: 1, reportsTo: null,
+  { id: 'vp', name: 'Ben Packer', title: 'Vice President of Student Services', dept: 'executive', level: 1, reportsTo: null,
     responsibilities: ['Executive oversight of all Student Services operations', 'Strategic direction for student support, enrollment, records, and digital operations', 'Budget and resource allocation across departments'],
     kpis: ['Overall student satisfaction scores', 'Student retention and completion rates', 'Operational efficiency across departments'], email: '', photoUrl: '' },
 

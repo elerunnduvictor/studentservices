@@ -30,7 +30,7 @@
   max-height: 85vh;
   overflow-y: auto;
   position: relative;
-  box-shadow: 0 20px 60px rgba(28,35,37,0.15);
+  box-shadow: var(--shadow-hover);
   animation: modalIn 0.45s var(--spring);
 }
 
@@ -61,7 +61,7 @@
   transition: all var(--transition);
 }
 
-.modal-close:hover { background: #E8EAED; color: var(--text); }
+.modal-close:hover { background: var(--bg-elevated); color: var(--text); }
 
 .modal-accent {
   height: 4px;
@@ -140,7 +140,7 @@
   width: 680px;
   max-height: 80vh;
   overflow-y: auto;
-  box-shadow: 0 16px 48px rgba(28,35,37,0.18);
+  box-shadow: var(--shadow-hover);
   opacity: 0;
   pointer-events: none;
   transform: translateY(8px) scale(0.97);
@@ -169,7 +169,7 @@
 }
 
 .hover-card:hover .hover-card-close { opacity: 1; }
-.hover-card .hover-card-close:hover { background: #E8EAED; color: var(--text); }
+.hover-card .hover-card-close:hover { background: var(--bg-elevated); color: var(--text); }
 
 /* Reuse modal header/body sizing inside hover card */
 .hover-card .modal-header {

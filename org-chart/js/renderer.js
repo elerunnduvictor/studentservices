@@ -43,60 +43,41 @@ OC.renderSubtree = function(parentId) {
   var children = OC.getChildren(parentId);
   if (children.length === 0) return '';
 
-  // Group children by level to detect skip-level reporting
-  var normalChildren = [];
-  var skipChildren = [];
   var parentLevel = parent ? parent.level : 0;
-
-  children.forEach(function(child) {
-    if (child.level > parentLevel + 1) {
-      skipChildren.push(child);
-    } else {
-      normalChildren.push(child);
-    }
-  });
 
   var html = '<ul>';
 
-  // Render normal (non-skip) children directly
-  normalChildren.forEach(function(child) {
+  children.forEach(function(child) {
     var isDeptBranch = child.level === 2;
     var branchAttr = isDeptBranch
       ? ' class="dept-branch" data-branch-dept="' + child.dept + '" style="--dc:' + OC.getDeptInfo(child.dept).color + '"'
       : '';
-    html += '<li' + branchAttr + '>';
-    html += OC.renderTile(child);
-    html += OC.renderSubtree(child.id);
-    html += '</li>';
-  });
-
-  // Render skip-level children wrapped in spacer nodes
-  skipChildren.forEach(function(child) {
     var gap = child.level - parentLevel - 1;
-    var isDeptBranch = child.level === 2;
-    var branchAttr = isDeptBranch
-      ? ' class="dept-branch" data-branch-dept="' + child.dept + '" style="--dc:' + OC.getDeptInfo(child.dept).color + '"'
-      : '';
 
-    // Open spacer layers for each skipped level, with ghost tiles for height alignment
-    for (var i = 0; i < gap; i++) {
-      html += '<li class="spacer-node connectors-drawn">' +
-        '<div class="tile spacer-tile"><div class="tile-accent"></div>' +
-        '<div class="tile-header"><div class="avatar"></div>' +
-        '<div class="tile-name">&nbsp;</div>' +
-        '<div class="tile-title">&nbsp;</div>' +
-        '<div class="tile-level-badge">&nbsp;</div>' +
-        '</div></div><ul>';
-    }
-
-    html += '<li' + branchAttr + '>';
-    html += OC.renderTile(child);
-    html += OC.renderSubtree(child.id);
-    html += '</li>';
-
-    // Close spacer layers
-    for (var j = 0; j < gap; j++) {
-      html += '</ul></li>';
+    if (gap > 0) {
+      // Skip-level: wrap in spacer nodes with ghost tiles for height alignment
+      for (var i = 0; i < gap; i++) {
+        html += '<li class="spacer-node connectors-drawn">' +
+          '<div class="tile spacer-tile"><div class="tile-accent"></div>' +
+          '<div class="tile-header"><div class="avatar">&nbsp;</div>' +
+          '<div class="tile-name">&nbsp;</div>' +
+          '<div class="tile-title">&nbsp;</div>' +
+          '<div class="tile-level-badge">&nbsp;</div></div>' +
+          '<div class="tile-expand-indicator">&nbsp;</div>' +
+          '<div class="spacer-connector"></div></div><ul>';
+      }
+      html += '<li' + branchAttr + '>';
+      html += OC.renderTile(child);
+      html += OC.renderSubtree(child.id);
+      html += '</li>';
+      for (var j = 0; j < gap; j++) {
+        html += '</ul></li>';
+      }
+    } else {
+      html += '<li' + branchAttr + '>';
+      html += OC.renderTile(child);
+      html += OC.renderSubtree(child.id);
+      html += '</li>';
     }
   });
 

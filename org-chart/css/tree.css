@@ -71,7 +71,7 @@
   top: 0;
   width: 100%;
   height: 1px;
-  background: rgba(188,190,192,0.5);
+  background: var(--border);
   transform-origin: center;
   transform: scaleX(0);
 }
@@ -85,16 +85,28 @@
 .tree li.connectors-drawn::after { transform: scaleX(1); transition: transform 0.5s var(--smooth) 0.15s; }
 .tree ul.connectors-drawn::before { transform: scaleY(1); transition: transform 0.4s var(--smooth); }
 
-/* Spacer nodes — invisible pass-throughs that maintain correct level depth */
-.tree li.spacer-node {
-  padding-top: 28px;
-  padding-bottom: 0;
-}
-
-/* Ghost tile inside spacer — same structure as real tile, invisible but occupies space */
+/* Spacer nodes — ghost tiles for height, invisible but space-occupying */
 .tile.spacer-tile {
   visibility: hidden;
   pointer-events: none;
+  position: relative;
+}
+
+/* Vertical connector through the ghost tile area — bridges the gap */
+.spacer-connector {
+  visibility: visible;
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--light-gray);
+  transform: translateX(-50%);
+}
+
+.tree .dept-branch .spacer-connector {
+  background: var(--dc);
+  opacity: 0.35;
 }
 
 /* Department sub-trees use department color */

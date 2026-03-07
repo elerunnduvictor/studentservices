@@ -60,4 +60,27 @@
   --stagger-delay: 0.04s;
   --hover-duration: 0.3s;
   --glow-intensity: 0.12;
+  --toolbar-bg-r: 255,255,255;
+}
+
+/* ══════════════════════════════════════════════════════════
+   DARK THEME OVERRIDES
+   ══════════════════════════════════════════════════════════ */
+[data-theme="dark"] {
+  --bg: #0d0d0f;
+  --bg-card: #13120e;
+  --bg-elevated: #1a1918;
+  --text: #e8e4dc;
+  --text-muted: #9a9590;
+  --text-dim: #5a5755;
+  --border-color: rgba(255,255,255,0.1);
+  --border: rgba(255,255,255,0.07);
+  --warm-gray: #706060;
+  --dark-gray: #9a9590;
+  --light-gray: rgba(255,255,255,0.12);
+  --ice-gray: rgba(255,255,255,0.04);
+  --shadow: 0 2px 12px rgba(0,0,0,0.3);
+  --shadow-hover: 0 8px 30px rgba(0,0,0,0.5);
+  --glow-intensity: 0.2;
+  --toolbar-bg-r: 13,13,15;
 }

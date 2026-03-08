@@ -7,6 +7,7 @@
   .tile { width: 190px; }
   .tile.vp-tile { width: 240px; }
   .tile.director-tile { width: 210px; }
+  .tile.assistant-tile { width: 160px; }
   .tree li { padding: 24px 5px 0; }
 }
 
@@ -43,7 +44,8 @@
   .dept-branch > ul { width: 100%; align-items: center; }
   .dept-branch > ul > li { width: 100%; max-width: 360px; }
 
-  /* Hide hover card on mobile */
+  /* Hide assistant groups and hover card on mobile */
+  .assistant-group { display: none; }
   .hover-card { display: none !important; }
 
   /* Reduce animation complexity */

@@ -174,5 +174,28 @@ OC.employees = [
     kpis: ['Stakeholder CSAT with communication and roadmap', 'Reporting accuracy and timeliness'], email: '', photoUrl: '' },
   { id: 'victor-ferreira', name: 'Victor Lam\u00e9ni Calado Ferreira', title: 'System & Operations Associate Registrar', dept: 'digital', level: 5, reportsTo: 'joshua-hadden',
     responsibilities: ['Overseeing the Student Information System (SIS)', 'Implementing institutional academic policies', 'FERPA compliance management'],
-    kpis: ['SIS uptime and reliability', 'FERPA compliance audit results', 'Academic policy implementation accuracy'], email: '', photoUrl: '' }
+    kpis: ['SIS uptime and reliability', 'FERPA compliance audit results', 'Academic policy implementation accuracy'], email: '', photoUrl: '' },
+
+  // ── PROJECT MANAGERS (displayed beside their director/VP) ──
+  { id: 'jess-swinburne', name: 'Jess Swinburne', title: 'Project Manager', dept: 'executive', level: 2, reportsTo: 'vp', role: 'pm', pmPosition: 'right',
+    responsibilities: ['Coordinate cross-departmental strategic initiatives for Student Services', 'Track project milestones, deliverables, and resource allocation across all departments', 'Facilitate executive reporting and stakeholder communication for the VP'],
+    kpis: ['On-time delivery of cross-departmental projects', 'Stakeholder satisfaction with project communication and reporting', 'Resource utilization efficiency across initiatives'], email: '', photoUrl: '' },
+  { id: 'david-koomson', name: 'David De-Graft Koomson', title: 'Assistant Project Manager', dept: 'executive', level: 2, reportsTo: 'vp', role: 'pm', pmPosition: 'right',
+    responsibilities: ['Support project coordination and documentation for VP-level initiatives', 'Manage project timelines, meeting agendas, and action item tracking', 'Assist with cross-team communication and follow-up on deliverables'],
+    kpis: ['Action item completion rate across VP initiatives', 'Meeting cadence adherence and documentation quality', 'Timely escalation of project risks and blockers'], email: '', photoUrl: '' },
+  { id: 'victor-elerunndu', name: 'Victor Oluwapelumi Elerunndu', title: 'Project Manager', dept: 'records', level: 3, reportsTo: 'mark-gefrom', role: 'pm', pmPosition: 'left',
+    responsibilities: ['Coordinate student support improvement projects and initiatives', 'Track Help Center and ticket system optimization milestones', 'Manage cross-functional project timelines within student support operations'],
+    kpis: ['On-time delivery of student support projects', 'Project milestone completion rate', 'Stakeholder satisfaction with project communication'], email: '', photoUrl: '' },
+  { id: 'moses-abioye', name: 'Moses Abioye', title: 'Project Manager', dept: 'records', level: 3, reportsTo: 'mark-gefrom', role: 'pm', pmPosition: 'right',
+    responsibilities: ['Coordinate registration and records process improvement projects', 'Track registrar system updates and compliance initiative timelines', 'Manage project documentation and reporting for records operations'],
+    kpis: ['On-time delivery of registrar and records projects', 'Registration process improvement milestones met', 'Project documentation completeness and accuracy'], email: '', photoUrl: '' },
+  { id: 'james-etukudo', name: 'James Etukudo Jr.', title: 'Project Manager', dept: 'enrollment', level: 3, reportsTo: 'alison-cundiff', role: 'pm', pmPosition: 'right',
+    responsibilities: ['Coordinate enrollment funnel and retention initiative projects', 'Track admissions system design, testing, and deployment milestones', 'Manage project reporting and cross-team coordination for enrollment services'],
+    kpis: ['On-time delivery of enrollment and retention projects', 'Enrollment initiative milestone completion rate', 'Stakeholder satisfaction with project updates and communication'], email: '', photoUrl: '' },
+  { id: 'mariela-pezzali', name: 'Mariela Gisell Pezzali', title: 'Project Manager', dept: 'dean', level: 3, reportsTo: 'steven-thomas', role: 'pm', pmPosition: 'right',
+    responsibilities: ['Coordinate Dean of Students office projects and compliance initiatives', 'Track Title IX, ADA/504, and student conduct process improvement timelines', 'Manage cross-office project documentation and stakeholder reporting'],
+    kpis: ['On-time delivery of DOS compliance and policy projects', 'Project milestone completion rate for student services initiatives', 'Stakeholder satisfaction with project coordination and reporting'], email: '', photoUrl: '' },
+  { id: 'karina-vargas', name: 'Karina Andrea Vargas', title: 'Project Manager', dept: 'digital', level: 3, reportsTo: 'jacob-adams', role: 'pm', pmPosition: 'right',
+    responsibilities: ['Coordinate digital operations development and deployment projects', 'Track sprint deliverables, feature releases, and system integration milestones', 'Manage stakeholder reporting and project communication for digital initiatives'],
+    kpis: ['On-time delivery of digital operations projects', 'Sprint and release milestone completion rate', 'Stakeholder satisfaction with project timeliness and communication'], email: '', photoUrl: '' }
 ];

@@ -29,6 +29,8 @@
   list-style: none;
   padding-top: 28px;
   position: relative;
+  --extra-pl: 0px;
+  --extra-pr: 0px;
 }
 
 /* Vertical stem from parent to horizontal bar */
@@ -69,15 +71,25 @@
   content: '';
   position: absolute;
   top: 0;
-  width: 100%;
+  left: -1px;
+  width: calc(100% + 2px);
   height: 1px;
   background: var(--border);
   transform-origin: center;
   transform: scaleX(0);
+  z-index: 1;
 }
 
-.tree li:first-child::after { left: 50%; width: 50%; transform-origin: left; }
-.tree li:last-child::after { right: 50%; width: 50%; transform-origin: right; }
+.tree li:first-child::after {
+  left: calc(50% + (var(--extra-pl, 0px) - var(--extra-pr, 0px)) / 2);
+  width: calc(50% - (var(--extra-pl, 0px) - var(--extra-pr, 0px)) / 2 + 1px);
+  transform-origin: left;
+}
+.tree li:last-child::after {
+  right: calc(50% + (var(--extra-pr, 0px) - var(--extra-pl, 0px)) / 2);
+  width: calc(50% - (var(--extra-pr, 0px) - var(--extra-pl, 0px)) / 2 + 1px);
+  transform-origin: right;
+}
 .tree li:only-child::after { display: none; }
 
 /* Animated state — connectors draw in */
@@ -113,3 +125,93 @@
 .tree .dept-branch li::before { background: var(--dc); opacity: 0.35; }
 .tree .dept-branch li::after { background: var(--dc); opacity: 0.25; }
 .tree .dept-branch > ul::before { background: var(--dc); opacity: 0.35; }
+
+/* ══════════════════════════════════════════════════════════
+   ASSISTANT / PM CARDS (beside directors and VP)
+   ══════════════════════════════════════════════════════════ */
+.tile-with-assistants {
+  position: relative;
+  display: inline-block;
+}
+
+.assistant-group {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  z-index: 5;
+}
+
+.assistant-group-right {
+  left: 100%;
+}
+
+.assistant-group-left {
+  right: 100%;
+}
+
+/* Single connector line from main tile to the PM group */
+.assistant-group-right::before {
+  content: '';
+  display: block;
+  width: 40px;
+  height: 1px;
+  background: var(--light-gray);
+  flex-shrink: 0;
+}
+
+.assistant-group-left::after {
+  content: '';
+  display: block;
+  width: 40px;
+  height: 1px;
+  background: var(--light-gray);
+  flex-shrink: 0;
+}
+
+/* Department-colored connectors for director PMs */
+.dept-branch .assistant-group-right::before,
+.dept-branch .assistant-group-left::after {
+  background: var(--dc);
+  opacity: 0.35;
+}
+
+/* Connector line between adjacent PM tiles */
+.assistant-slot {
+  position: relative;
+}
+
+.assistant-slot:not(:last-child) {
+  margin-right: 40px;
+}
+
+.assistant-slot:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  right: -40px;
+  top: 50%;
+  width: 40px;
+  height: 1px;
+  transform: translateY(-50%);
+  background: var(--light-gray);
+}
+
+.dept-branch .assistant-slot:not(:last-child)::after {
+  background: var(--dc);
+  opacity: 0.35;
+}
+
+/* Assistant tiles are slightly smaller */
+.tile.assistant-tile {
+  width: 190px;
+}
+
+.tile.assistant-tile .tile-name {
+  font-size: 0.85rem;
+}
+
+.tile.assistant-tile .tile-title {
+  font-size: 0.62rem;
+}

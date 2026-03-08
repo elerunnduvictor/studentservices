@@ -273,6 +273,75 @@
   min-width: 0;
 }
 
+/* ── VP row with PM branch ── */
+.ht-vp-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  width: 100%;
+}
+
+/* ── Director row with PM branches ── */
+.ht-director-pm-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  width: 100%;
+}
+
+.ht-director-pm-row .ht-node.ht-director {
+  flex-shrink: 0;
+}
+
+/* ── PM branch (connector + stack) ── */
+.ht-pm-branch {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex-shrink: 0;
+}
+
+.ht-pm-branch-left {
+  order: -1;
+}
+
+.ht-pm-connector {
+  width: 16px;
+  height: 1px;
+  background: var(--dc, var(--light-gray));
+  opacity: 0.4;
+  flex-shrink: 0;
+}
+
+.ht-pm-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ht-pm-node {
+  background: linear-gradient(135deg, rgba(var(--dcr, var(--gold-r)), 0.05) 0%, var(--bg) 100%);
+  border: 1px dashed rgba(var(--dcr, var(--gold-r)), 0.3);
+  border-radius: 3px;
+  padding: clamp(5px, 1vw, 7px) clamp(6px, 1.2vw, 10px);
+  font-size: clamp(0.48rem, 0.9vw, 0.55rem);
+  letter-spacing: 0.07em;
+  font-weight: 500;
+  color: rgba(var(--dcr, var(--gold-r)), 0.8);
+  text-transform: uppercase;
+  text-align: center;
+  white-space: nowrap;
+  cursor: default;
+  transition: all 0.22s ease;
+}
+
+.ht-pm-node:hover {
+  border-color: rgba(var(--dcr, var(--gold-r)), 0.6);
+  transform: translateY(-1px);
+}
+
 /* ── Animation ── */
 @keyframes htFadeUp {
   from { opacity: 0; transform: translateY(14px); }
@@ -292,6 +361,13 @@
   .ht-h-bar { width: 90%; }
   .ht-node-row { flex-wrap: wrap; }
   .ht-node-row .ht-node { flex: 1 1 calc(50% - 6px); min-width: calc(50% - 6px); }
+}
+
+/* ── Tablet: hide PM branches in hierarchy ── */
+@media (max-width: 1024px) {
+  .ht-pm-branch { display: none; }
+  .ht-vp-row { display: block; }
+  .ht-director-pm-row { display: block; }
 }
 
 /* ── Large mobile: 1 column, collapsible ── */

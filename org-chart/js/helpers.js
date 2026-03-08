@@ -7,6 +7,14 @@ OC.getChildren = function(parentId) {
   return OC.employees.filter(e => e.reportsTo === parentId);
 };
 
+OC.getTreeChildren = function(parentId) {
+  return OC.employees.filter(e => e.reportsTo === parentId && e.role !== 'pm');
+};
+
+OC.getAssistants = function(parentId) {
+  return OC.employees.filter(e => e.reportsTo === parentId && e.role === 'pm');
+};
+
 OC.getDeptInfo = function(deptKey) {
   return OC.DEPARTMENTS[deptKey] || OC.DEPARTMENTS.executive;
 };

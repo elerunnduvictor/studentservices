@@ -9,16 +9,43 @@
   .tile.director-tile { width: 210px; }
   .tile.assistant-tile { width: 160px; }
   .tree li { padding: 24px 5px 0; }
+
+  /* Smaller avatars on tablet */
+  .avatar { width: 42px; height: 42px; font-size: 0.85rem; }
+  .tile.vp-tile .avatar { width: 52px; height: 52px; font-size: 1rem; }
+  .tile.director-tile .avatar { width: 48px; height: 48px; font-size: 0.95rem; }
+  .tile-header { padding: 12px 10px 8px; gap: 5px; }
+  .tile-name { font-size: 0.82rem; }
+  .tile-title { font-size: 0.6rem; }
+  .tile-level-badge { font-size: 0.42rem; padding: 2px 6px; }
+
+  /* Tighter PM connectors */
+  .assistant-group-right::before,
+  .assistant-group-left::after { width: 24px; }
+  .assistant-slot:not(:last-child) { margin-right: 24px; }
+  .assistant-slot:not(:last-child)::after { right: -24px; width: 24px; }
+
+  /* Expanded cards shouldn't blow out layout */
+  .tile.expanded { width: 320px; }
+  .tile.vp-tile.expanded { width: 340px; }
+  .tile.director-tile.expanded { width: 330px; }
 }
 
 /* ── Mobile ── */
 @media (max-width: 900px) {
   .page-header { padding: 36px 16px 8px; }
 
-  /* Switch to vertical accordion layout */
+  /* Disable zoom/pan on mobile — use native scroll */
   .chart-container { transform: none !important; }
-  .chart-viewport { cursor: default !important; overflow-y: auto; overflow-x: hidden; }
+  .chart-viewport {
+    cursor: default !important;
+    overflow-y: auto;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 16px 12px 60px;
+  }
 
+  /* Switch to vertical column layout */
   .tree, .tree ul, .tree li {
     display: flex;
     flex-direction: column;
@@ -27,35 +54,153 @@
     width: 100%;
   }
 
-  .tree ul { padding-top: 12px; gap: 10px; }
-  .tree li { padding: 12px 0 0; width: 100%; max-width: 360px; }
+  .tree ul { padding-top: 12px; gap: 0; }
+  .tree li {
+    padding: 12px 0 0 !important;  /* Override inline padding-left/right from PM cards */
+    width: 100%;
+    max-width: 400px;
+  }
+
+  /* Vertical connectors only — no horizontal bar */
   .tree li::before { height: 12px; }
   .tree li::after { display: none; }
   .tree ul::before { height: 12px; }
 
-  .tile, .tile.vp-tile, .tile.director-tile,
-  .tile.expanded, .tile.vp-tile.expanded, .tile.director-tile.expanded { width: 100%; max-width: 360px; }
+  /* Reset CSS custom properties that would be set inline */
+  .tree li {
+    --extra-pl: 0px !important;
+    --extra-pr: 0px !important;
+  }
 
-  .tree li.spacer-node { padding-top: 0; }
+  /* All cards full-width, uniform sizing */
+  .tile,
+  .tile.vp-tile,
+  .tile.director-tile,
+  .tile.assistant-tile {
+    width: 100%;
+    max-width: 400px;
+  }
+
+  /* Expanded cards same width on mobile */
+  .tile.expanded,
+  .tile.vp-tile.expanded,
+  .tile.director-tile.expanded {
+    width: 100%;
+    max-width: 400px;
+  }
+
+  /* Tile-with-assistants wrapper should flow vertically */
+  .tile-with-assistants {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 400px;
+  }
+
+  /* Show assistant groups vertically below the main tile on mobile */
+  .assistant-group {
+    position: static;
+    transform: none;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 400px;
+    gap: 0;
+    margin-top: 8px;
+  }
+
+  /* Hide horizontal connector lines between PMs */
+  .assistant-group-right::before,
+  .assistant-group-left::after { display: none; }
+  .assistant-slot:not(:last-child)::after { display: none; }
+  .assistant-slot:not(:last-child) { margin-right: 0; }
+
+  /* PM slots take full width */
+  .assistant-slot {
+    width: 100%;
+    max-width: 400px;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 8px;
+  }
+
+  .assistant-slot .tile.assistant-tile {
+    width: 100%;
+    max-width: 400px;
+  }
+
+  /* Add a small vertical connector between main tile and PMs */
+  .assistant-group::before {
+    content: '';
+    width: 1px;
+    height: 10px;
+    background: var(--light-gray);
+    display: block;
+  }
+  .dept-branch .assistant-group::before {
+    background: var(--dc);
+    opacity: 0.35;
+  }
+
+  /* Spacer nodes — collapse them on mobile */
+  .tree li.spacer-node { padding-top: 0 !important; }
   .tree li.spacer-node > ul { padding-top: 0; }
   .tile.spacer-tile { display: none; }
 
-  .dept-branch { width: 100%; display: flex; flex-direction: column; align-items: center; }
+  /* Department branches flow vertically */
+  .dept-branch {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
   .dept-branch > ul { width: 100%; align-items: center; }
-  .dept-branch > ul > li { width: 100%; max-width: 360px; }
+  .dept-branch > ul > li { width: 100%; max-width: 400px; }
 
-  /* Hide assistant groups and hover card on mobile */
-  .assistant-group { display: none; }
+  /* Hide hover card on mobile */
   .hover-card { display: none !important; }
 
   /* Reduce animation complexity */
   .tile { animation-duration: 0.3s !important; }
   body::after { animation: none; }
+
+  /* Better tile appearance on mobile */
+  .tile-header { padding: 14px 14px 10px; gap: 6px; }
+  .avatar { width: 44px; height: 44px; font-size: 0.9rem; }
+  .tile.vp-tile .avatar { width: 52px; height: 52px; }
+  .tile.director-tile .avatar { width: 48px; height: 48px; }
+
+  /* Legend responsive */
+  .legend { padding: 10px 14px; gap: 6px 14px; }
+  .legend-item { font-size: 0.5rem; }
 }
 
 /* ── Small mobile ── */
 @media (max-width: 480px) {
+  .chart-viewport { padding: 12px 8px 40px; }
+
+  .tree li { max-width: 100%; }
+
+  .tile,
+  .tile.vp-tile,
+  .tile.director-tile,
+  .tile.assistant-tile,
+  .tile.expanded,
+  .tile.vp-tile.expanded,
+  .tile.director-tile.expanded,
+  .tile-with-assistants,
+  .assistant-group,
+  .assistant-slot,
+  .assistant-slot .tile.assistant-tile {
+    max-width: 100%;
+  }
+
   .tile-name { font-size: 0.85rem; }
   .tile-title { font-size: 0.6rem; }
   .tile-list li { font-size: 0.62rem; }
+
+  .page-header { padding: 28px 12px 6px; }
+  .page-header h1 { font-size: 1.4rem; letter-spacing: 0.1em; }
+  .page-header .subtitle { font-size: 0.55rem; letter-spacing: 0.15em; }
 }

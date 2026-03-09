@@ -3,6 +3,7 @@ OC.initPan = function() {
   var isPanning = false;
   var panStartX, panStartY, scrollStartX, scrollStartY;
 
+  // Mouse panning (desktop/tablet)
   viewport.addEventListener('mousedown', function(e) {
     if (e.target.closest('.tile')) return;
     isPanning = true;
@@ -19,6 +20,26 @@ OC.initPan = function() {
   });
 
   window.addEventListener('mouseup', function() {
+    isPanning = false;
+  });
+
+  // Touch panning (mobile/tablet)
+  viewport.addEventListener('touchstart', function(e) {
+    if (e.target.closest('.tile') || e.touches.length !== 1) return;
+    isPanning = true;
+    panStartX = e.touches[0].clientX;
+    panStartY = e.touches[0].clientY;
+    scrollStartX = viewport.scrollLeft;
+    scrollStartY = viewport.scrollTop;
+  }, { passive: true });
+
+  viewport.addEventListener('touchmove', function(e) {
+    if (!isPanning || e.touches.length !== 1) return;
+    viewport.scrollLeft = scrollStartX - (e.touches[0].clientX - panStartX);
+    viewport.scrollTop = scrollStartY - (e.touches[0].clientY - panStartY);
+  }, { passive: true });
+
+  viewport.addEventListener('touchend', function() {
     isPanning = false;
   });
 };

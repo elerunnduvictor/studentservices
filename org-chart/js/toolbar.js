@@ -9,10 +9,64 @@ OC.initToolbar = function() {
     document.querySelectorAll('.tile').forEach(function(t) { t.classList.remove('expanded'); });
   });
 
-  // Print
+  // Print — build one-card-per-page layout, print it, then remove it
   document.getElementById('printBtn').addEventListener('click', function() {
-    document.querySelectorAll('.tile').forEach(function(t) { t.classList.add('expanded'); });
-    setTimeout(function() { window.print(); }, 200);
+    // Build print-only container with one card per page
+    var container = document.createElement('div');
+    container.id = 'printPages';
+    container.className = 'print-pages';
+
+    // Helper: walk the tree under a parent, depth-first, by level
+    function collectTree(parentId) {
+      var result = [];
+      // Get PMs for this parent first
+      var pms = OC.getAssistants(parentId);
+      pms.forEach(function(pm) { result.push(pm); });
+      // Then non-PM children, sorted by level then name
+      var children = OC.getTreeChildren(parentId).sort(function(a, b) {
+        if (a.level !== b.level) return a.level - b.level;
+        return a.name.localeCompare(b.name);
+      });
+      children.forEach(function(child) {
+        result.push(child);
+        result = result.concat(collectTree(child.id));
+      });
+      return result;
+    }
+
+    var deptOrder = ['records', 'enrollment', 'dean', 'digital'];
+    var vp = OC.employees.find(function(e) { return e.level === 1; });
+    var ordered = [vp];
+    // VP's PMs
+    OC.getAssistants(vp.id).forEach(function(pm) { ordered.push(pm); });
+    // Each department: director first, then full subtree
+    deptOrder.forEach(function(deptKey) {
+      var director = OC.employees.find(function(e) {
+        return e.reportsTo === vp.id && e.dept === deptKey && e.role !== 'pm';
+      });
+      if (director) {
+        ordered.push(director);
+        ordered = ordered.concat(collectTree(director.id));
+      }
+    });
+
+    ordered.forEach(function(emp) {
+      var page = document.createElement('div');
+      page.className = 'print-page';
+      page.innerHTML = OC.buildCardContent(emp.id);
+      container.appendChild(page);
+    });
+
+    document.body.appendChild(container);
+    document.body.classList.add('print-mode');
+
+    setTimeout(function() { window.print(); }, 100);
+  });
+
+  window.addEventListener('afterprint', function() {
+    document.body.classList.remove('print-mode');
+    var pages = document.getElementById('printPages');
+    if (pages) pages.remove();
   });
 
   // Theme Toggle

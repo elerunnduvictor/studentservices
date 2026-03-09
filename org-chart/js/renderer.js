@@ -8,8 +8,9 @@ OC.renderTile = function(emp) {
   if (isPM) tileClass += ' assistant-tile';
 
   var levelBadge = isPM
-    ? 'Project Management'
-    : 'Level ' + emp.level + ' \u00b7 ' + OC.LEVELS[emp.level];
+    ? 'Contractor'
+    : isVP ? OC.LEVELS[emp.level]
+    : (emp.status || 'FTE') + ' \u00b7 ' + OC.LEVELS[emp.level];
 
   var responsibilitiesHtml = emp.responsibilities.length
     ? '<div class="tile-section"><div class="tile-section-title">RESPONSIBILITIES</div><ul class="tile-list">' +

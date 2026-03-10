@@ -4,203 +4,149 @@
 
 /* ── Tablet ── */
 @media (max-width: 1200px) {
-  .tile { width: 190px; }
-  .tile.vp-tile { width: 240px; }
-  .tile.director-tile { width: 210px; }
-  .tile.assistant-tile { width: 160px; }
-  .tree li { padding: 24px 5px 0; }
+  .tile { width: 160px; }
+  .tile.vp-tile { width: 200px; }
+  .tile.director-tile { width: 180px; }
+  .tile.assistant-tile { width: 140px; }
+  .tree li { padding: 18px 4px 0; }
+  .tree ul { padding-top: 18px; }
+  .tree ul::before { height: 18px; }
+  .tree li::before { height: 18px; }
 
-  /* Smaller avatars on tablet */
-  .avatar { width: 42px; height: 42px; font-size: 0.85rem; }
-  .tile.vp-tile .avatar { width: 52px; height: 52px; font-size: 1rem; }
-  .tile.director-tile .avatar { width: 48px; height: 48px; font-size: 0.95rem; }
-  .tile-header { padding: 12px 10px 8px; gap: 5px; }
-  .tile-name { font-size: 0.82rem; }
-  .tile-title { font-size: 0.6rem; }
-  .tile-level-badge { font-size: 0.42rem; padding: 2px 6px; }
+  .avatar { width: 36px; height: 36px; font-size: 0.75rem; }
+  .tile.vp-tile .avatar { width: 44px; height: 44px; font-size: 0.9rem; }
+  .tile.director-tile .avatar { width: 40px; height: 40px; font-size: 0.85rem; }
+  .tile-header { padding: 10px 8px 6px; gap: 4px; }
+  .tile-name { font-size: 0.72rem; }
+  .tile.vp-tile .tile-name { font-size: 0.82rem; }
+  .tile-title { font-size: 0.52rem; }
+  .tile-level-badge { font-size: 0.38rem; padding: 1px 5px; }
+  .tile-accent { height: 2px; }
+  .tile-expand-indicator { font-size: 0.4rem; padding-bottom: 4px; }
 
-  /* Tighter PM connectors */
+  /* PM connectors tighter */
   .assistant-group-right::before,
-  .assistant-group-left::after { width: 24px; }
-  .assistant-slot:not(:last-child) { margin-right: 24px; }
-  .assistant-slot:not(:last-child)::after { right: -24px; width: 24px; }
+  .assistant-group-left::after { width: 20px; }
+  .assistant-slot:not(:last-child) { margin-right: 20px; }
+  .assistant-slot:not(:last-child)::after { right: -20px; width: 20px; }
 
-  /* Expanded cards shouldn't blow out layout */
-  .tile.expanded { width: 320px; }
-  .tile.vp-tile.expanded { width: 340px; }
-  .tile.director-tile.expanded { width: 330px; }
+  /* Expanded cards smaller */
+  .tile.expanded { width: 280px; }
+  .tile.vp-tile.expanded { width: 300px; }
+  .tile.director-tile.expanded { width: 290px; }
+  .tile.expanded .tile-name { font-size: 0.85rem; }
+  .tile.expanded .tile-title { font-size: 0.62rem; }
+  .tile.expanded .tile-list li { font-size: 0.62rem; margin-bottom: 3px; }
+  .tile.expanded .tile-section-title { font-size: 0.52rem; }
+  .tile.expanded .tile-meta-item { font-size: 0.52rem; }
+  .tile.expanded .tile-body-inner { padding: 0 12px 12px; }
 }
 
 /* ── Mobile ── */
 @media (max-width: 900px) {
   .page-header { padding: 36px 16px 8px; }
 
-  /* Disable zoom/pan on mobile — use native scroll */
-  .chart-container { transform: none !important; }
+  /* Keep tree layout but allow horizontal scroll */
   .chart-viewport {
-    cursor: default !important;
-    overflow-y: auto;
-    overflow-x: auto;
+    overflow: auto;
     -webkit-overflow-scrolling: touch;
-    padding: 16px 12px 60px;
+    padding: 12px 12px 60px;
   }
 
-  /* Switch to vertical column layout */
-  .tree, .tree ul, .tree li {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 0;
-    width: 100%;
-  }
+  /* Smaller cards */
+  .tile { width: 120px; }
+  .tile.vp-tile { width: 150px; }
+  .tile.director-tile { width: 140px; }
+  .tile.assistant-tile { width: 110px; }
+  .tree li { padding: 14px 3px 0; }
+  .tree ul { padding-top: 14px; }
+  .tree ul::before { height: 14px; }
+  .tree li::before { height: 14px; }
 
-  .tree ul { padding-top: 12px; gap: 0; }
-  .tree li {
-    padding: 12px 0 0 !important;  /* Override inline padding-left/right from PM cards */
-    width: 100%;
-    max-width: 400px;
-  }
+  .avatar { width: 28px; height: 28px; font-size: 0.6rem; }
+  .tile.vp-tile .avatar { width: 34px; height: 34px; font-size: 0.7rem; }
+  .tile.director-tile .avatar { width: 32px; height: 32px; font-size: 0.65rem; }
+  .tile-header { padding: 8px 6px 5px; gap: 3px; }
+  .tile-name { font-size: 0.58rem; }
+  .tile.vp-tile .tile-name { font-size: 0.65rem; }
+  .tile-title { font-size: 0.42rem; }
+  .tile-level-badge { font-size: 0.32rem; padding: 1px 4px; letter-spacing: 0.08em; }
+  .tile-accent { height: 2px; }
+  .tile-expand-indicator { display: none; }
 
-  /* Vertical connectors only — no horizontal bar */
-  .tree li::before { height: 12px; }
-  .tree li::after { display: none; }
-  .tree ul::before { height: 12px; }
-
-  /* Reset CSS custom properties that would be set inline */
-  .tree li {
-    --extra-pl: 0px !important;
-    --extra-pr: 0px !important;
-  }
-
-  /* All cards full-width, uniform sizing */
-  .tile,
-  .tile.vp-tile,
-  .tile.director-tile,
-  .tile.assistant-tile {
-    width: 100%;
-    max-width: 400px;
-  }
-
-  /* Expanded cards same width on mobile */
-  .tile.expanded,
-  .tile.vp-tile.expanded,
-  .tile.director-tile.expanded {
-    width: 100%;
-    max-width: 400px;
-  }
-
-  /* Tile-with-assistants wrapper should flow vertically */
-  .tile-with-assistants {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-    max-width: 400px;
-  }
-
-  /* Show assistant groups vertically below the main tile on mobile */
-  .assistant-group {
-    position: static;
-    transform: none;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-    max-width: 400px;
-    gap: 0;
-    margin-top: 8px;
-  }
-
-  /* Hide horizontal connector lines between PMs */
+  /* PM connectors minimal */
   .assistant-group-right::before,
-  .assistant-group-left::after { display: none; }
-  .assistant-slot:not(:last-child)::after { display: none; }
-  .assistant-slot:not(:last-child) { margin-right: 0; }
+  .assistant-group-left::after { width: 14px; }
+  .assistant-slot:not(:last-child) { margin-right: 14px; }
+  .assistant-slot:not(:last-child)::after { right: -14px; width: 14px; }
 
-  /* PM slots take full width */
-  .assistant-slot {
-    width: 100%;
-    max-width: 400px;
-    display: flex;
-    justify-content: center;
-    margin-bottom: 8px;
-  }
+  /* Expanded cards on mobile */
+  .tile.expanded { width: 220px; }
+  .tile.vp-tile.expanded { width: 240px; }
+  .tile.director-tile.expanded { width: 230px; }
+  .tile.expanded .tile-name { font-size: 0.75rem; }
+  .tile.expanded .tile-title { font-size: 0.55rem; }
+  .tile.expanded .tile-list li { font-size: 0.55rem; margin-bottom: 2px; line-height: 1.3; }
+  .tile.expanded .tile-section-title { font-size: 0.45rem; }
+  .tile.expanded .tile-meta-item { font-size: 0.45rem; }
+  .tile.expanded .tile-body-inner { padding: 0 8px 8px; }
 
-  .assistant-slot .tile.assistant-tile {
-    width: 100%;
-    max-width: 400px;
-  }
+  /* Override inline padding from PM positioning */
+  .tree li[style*="padding-left"] { padding-left: 3px !important; }
+  .tree li[style*="padding-right"] { padding-right: 3px !important; }
 
-  /* Add a small vertical connector between main tile and PMs */
-  .assistant-group::before {
-    content: '';
-    width: 1px;
-    height: 10px;
-    background: var(--light-gray);
-    display: block;
-  }
-  .dept-branch .assistant-group::before {
-    background: var(--dc);
-    opacity: 0.35;
-  }
-
-  /* Spacer nodes — collapse them on mobile */
-  .tree li.spacer-node { padding-top: 0 !important; }
-  .tree li.spacer-node > ul { padding-top: 0; }
-  .tile.spacer-tile { display: none; }
-
-  /* Department branches flow vertically */
-  .dept-branch {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-  .dept-branch > ul { width: 100%; align-items: center; }
-  .dept-branch > ul > li { width: 100%; max-width: 400px; }
-
-  /* Hide hover card on mobile */
+  /* Hide hover card on mobile — tap to expand instead */
   .hover-card { display: none !important; }
+
+  /* Legend */
+  .legend { padding: 8px 12px; gap: 4px 12px; }
+  .legend-item { font-size: 0.45rem; }
 
   /* Reduce animation complexity */
   .tile { animation-duration: 0.3s !important; }
   body::after { animation: none; }
-
-  /* Better tile appearance on mobile */
-  .tile-header { padding: 14px 14px 10px; gap: 6px; }
-  .avatar { width: 44px; height: 44px; font-size: 0.9rem; }
-  .tile.vp-tile .avatar { width: 52px; height: 52px; }
-  .tile.director-tile .avatar { width: 48px; height: 48px; }
-
-  /* Legend responsive */
-  .legend { padding: 10px 14px; gap: 6px 14px; }
-  .legend-item { font-size: 0.5rem; }
 }
 
 /* ── Small mobile ── */
 @media (max-width: 480px) {
-  .chart-viewport { padding: 12px 8px 40px; }
+  .chart-viewport { padding: 8px 4px 40px; }
 
-  .tree li { max-width: 100%; }
+  .tile { width: 90px; }
+  .tile.vp-tile { width: 110px; }
+  .tile.director-tile { width: 100px; }
+  .tile.assistant-tile { width: 85px; }
+  .tree li { padding: 10px 2px 0; }
+  .tree ul { padding-top: 10px; }
+  .tree ul::before { height: 10px; }
+  .tree li::before { height: 10px; }
 
-  .tile,
-  .tile.vp-tile,
-  .tile.director-tile,
-  .tile.assistant-tile,
-  .tile.expanded,
-  .tile.vp-tile.expanded,
-  .tile.director-tile.expanded,
-  .tile-with-assistants,
-  .assistant-group,
-  .assistant-slot,
-  .assistant-slot .tile.assistant-tile {
-    max-width: 100%;
-  }
+  .avatar { width: 22px; height: 22px; font-size: 0.5rem; }
+  .tile.vp-tile .avatar { width: 26px; height: 26px; }
+  .tile.director-tile .avatar { width: 24px; height: 24px; }
+  .tile-header { padding: 6px 4px 4px; gap: 2px; }
+  .tile-name { font-size: 0.48rem; }
+  .tile.vp-tile .tile-name { font-size: 0.52rem; }
+  .tile-title { font-size: 0.35rem; }
+  .tile-level-badge { font-size: 0.28rem; padding: 1px 3px; }
 
-  .tile-name { font-size: 0.85rem; }
-  .tile-title { font-size: 0.6rem; }
-  .tile-list li { font-size: 0.62rem; }
+  /* PM connectors tiny */
+  .assistant-group-right::before,
+  .assistant-group-left::after { width: 8px; }
+  .assistant-slot:not(:last-child) { margin-right: 8px; }
+  .assistant-slot:not(:last-child)::after { right: -8px; width: 8px; }
 
-  .page-header { padding: 28px 12px 6px; }
-  .page-header h1 { font-size: 1.4rem; letter-spacing: 0.1em; }
-  .page-header .subtitle { font-size: 0.55rem; letter-spacing: 0.15em; }
+  /* Expanded cards */
+  .tile.expanded { width: 180px; }
+  .tile.vp-tile.expanded { width: 200px; }
+  .tile.director-tile.expanded { width: 190px; }
+  .tile.expanded .tile-name { font-size: 0.62rem; }
+  .tile.expanded .tile-title { font-size: 0.48rem; }
+  .tile.expanded .tile-list li { font-size: 0.48rem; }
+  .tile.expanded .tile-section-title { font-size: 0.4rem; }
+  .tile.expanded .tile-meta-item { font-size: 0.4rem; }
+  .tile.expanded .tile-body-inner { padding: 0 6px 6px; }
+
+  .page-header { padding: 28px 8px 4px; }
+  .page-header h1 { font-size: 1.2rem; letter-spacing: 0.08em; }
+  .page-header .subtitle { font-size: 0.45rem; letter-spacing: 0.12em; }
 }

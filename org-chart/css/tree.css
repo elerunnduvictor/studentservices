@@ -203,6 +203,13 @@
   opacity: 0.35;
 }
 
+/* When a PM card is expanded, align group to top so it grows downward */
+.assistant-group:has(.tile.expanded) {
+  top: 0;
+  transform: none;
+  z-index: 15;
+}
+
 /* Assistant tiles are slightly smaller */
 .tile.assistant-tile {
   width: 190px;

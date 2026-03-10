@@ -24,6 +24,10 @@
   .tile-accent { height: 2px; }
   .tile-expand-indicator { font-size: 0.4rem; padding-bottom: 4px; }
 
+  /* PM tiles same font size as regular tiles */
+  .tile.assistant-tile .tile-name { font-size: 0.72rem; }
+  .tile.assistant-tile .tile-title { font-size: 0.52rem; }
+
   /* PM connectors tighter */
   .assistant-group-right::before,
   .assistant-group-left::after { width: 20px; }
@@ -73,6 +77,10 @@
   .tile-level-badge { font-size: 0.32rem; padding: 1px 4px; letter-spacing: 0.08em; }
   .tile-accent { height: 2px; }
   .tile-expand-indicator { display: none; }
+
+  /* PM tiles same font size as regular tiles */
+  .tile.assistant-tile .tile-name { font-size: 0.58rem; }
+  .tile.assistant-tile .tile-title { font-size: 0.42rem; }
 
   /* PM connectors minimal */
   .assistant-group-right::before,
@@ -128,6 +136,10 @@
   .tile.vp-tile .tile-name { font-size: 0.52rem; }
   .tile-title { font-size: 0.35rem; }
   .tile-level-badge { font-size: 0.28rem; padding: 1px 3px; }
+
+  /* PM tiles same font size as regular tiles */
+  .tile.assistant-tile .tile-name { font-size: 0.48rem; }
+  .tile.assistant-tile .tile-title { font-size: 0.35rem; }
 
   /* PM connectors tiny */
   .assistant-group-right::before,

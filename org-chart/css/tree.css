@@ -39,11 +39,10 @@
   position: absolute;
   top: 0;
   left: 50%;
-  width: 1px;
+  width: 2px;
   height: 28px;
-  background: var(--light-gray);
-  transform-origin: top;
-  transform: scaleY(0);
+  background: var(--connector-color);
+  transform: translateX(-50%);
 }
 
 .tree li {
@@ -59,11 +58,9 @@
   content: '';
   position: absolute;
   top: 0;
-  width: 1px;
+  width: 2px;
   height: 28px;
-  background: var(--light-gray);
-  transform-origin: top;
-  transform: scaleY(0);
+  background: var(--connector-color);
 }
 
 /* Horizontal connector bar */
@@ -73,10 +70,8 @@
   top: 0;
   left: -1px;
   width: calc(100% + 2px);
-  height: 1px;
-  background: var(--border);
-  transform-origin: center;
-  transform: scaleX(0);
+  height: 2px;
+  background: var(--connector-color);
   z-index: 1;
 }
 
@@ -92,10 +87,7 @@
 }
 .tree li:only-child::after { display: none; }
 
-/* Animated state — connectors draw in */
-.tree li.connectors-drawn::before { transform: scaleY(1); transition: transform 0.4s var(--smooth); }
-.tree li.connectors-drawn::after { transform: scaleX(1); transition: transform 0.5s var(--smooth) 0.15s; }
-.tree ul.connectors-drawn::before { transform: scaleY(1); transition: transform 0.4s var(--smooth); }
+/* Connectors are visible immediately — no animation needed */
 
 /* Spacer nodes — ghost tiles for height, invisible but space-occupying */
 .tile.spacer-tile {
@@ -111,20 +103,20 @@
   left: 50%;
   top: 0;
   bottom: 0;
-  width: 1px;
-  background: var(--light-gray);
+  width: 2px;
+  background: var(--connector-color);
   transform: translateX(-50%);
 }
 
 .tree .dept-branch .spacer-connector {
   background: var(--dc);
-  opacity: 0.35;
+  opacity: 0.5;
 }
 
 /* Department sub-trees use department color */
-.tree .dept-branch li::before { background: var(--dc); opacity: 0.35; }
-.tree .dept-branch li::after { background: var(--dc); opacity: 0.25; }
-.tree .dept-branch > ul::before { background: var(--dc); opacity: 0.35; }
+.tree .dept-branch li::before { background: var(--dc); opacity: 0.5; }
+.tree .dept-branch li::after { background: var(--dc); opacity: 0.4; }
+.tree .dept-branch > ul::before { background: var(--dc); opacity: 0.5; }
 
 /* ══════════════════════════════════════════════════════════
    ASSISTANT / PM CARDS (beside directors and VP)
@@ -157,8 +149,8 @@
   content: '';
   display: block;
   width: 40px;
-  height: 1px;
-  background: var(--light-gray);
+  height: 2px;
+  background: var(--connector-color);
   flex-shrink: 0;
 }
 
@@ -166,8 +158,8 @@
   content: '';
   display: block;
   width: 40px;
-  height: 1px;
-  background: var(--light-gray);
+  height: 2px;
+  background: var(--connector-color);
   flex-shrink: 0;
 }
 
@@ -175,7 +167,7 @@
 .dept-branch .assistant-group-right::before,
 .dept-branch .assistant-group-left::after {
   background: var(--dc);
-  opacity: 0.35;
+  opacity: 0.5;
 }
 
 /* Connector line between adjacent PM tiles */
@@ -193,14 +185,14 @@
   right: -40px;
   top: 50%;
   width: 40px;
-  height: 1px;
+  height: 2px;
   transform: translateY(-50%);
-  background: var(--light-gray);
+  background: var(--connector-color);
 }
 
 .dept-branch .assistant-slot:not(:last-child)::after {
   background: var(--dc);
-  opacity: 0.35;
+  opacity: 0.5;
 }
 
 /* When a PM card is expanded, align group to top so it grows downward */

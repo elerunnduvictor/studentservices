@@ -1,0 +1,3517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Services — Interactive Organizational Chart</title>
+
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<!-- ═══════════════ INLINED CSS ═══════════════ -->
+<style>
+/* ══════════════════════════════════════════════════════════
+   DESIGN TOKENS — Brand Colors & Animation Variables
+   ══════════════════════════════════════════════════════════ */
+:root {
+  /* ── Brand Neutrals (Light Theme) ── */
+  --bg: #FFFFFF;
+  --bg-card: #FFFFFF;
+  --bg-elevated: #F5F6F8;
+  --text: #1C2325;
+  --text-muted: #58595B;
+  --text-dim: #7F898A;
+  --border-color: #BCBEC0;
+  --border: rgba(188,190,192,0.5);
+  --warm-gray: #706060;
+  --dark-gray: #58595B;
+  --light-gray: #BCBEC0;
+  --ice-gray: #ECEFF2;
+
+  /* ── Brand Accents ── */
+  --gold: #FFC328;
+  --gold-r: 255,195,40;
+  --mustard: #F4D25A;
+  --dark-mustard: #B59525;
+  --teal: #3A929D;
+  --teal-r: 58,146,157;
+  --deep-teal: #065577;
+  --deep-teal-blue: #28738A;
+  --medium-blue: #3599B8;
+  --steel-blue: #6A9FB0;
+  --sky-blue: #A4DDEE;
+  --purple: #B687AC;
+  --purple-r: 182,135,172;
+  --plum: #7B4F71;
+  --green: #A2C23D;
+  --green-r: 162,194,61;
+  --green-teal: #168980;
+  --deep-green: #0F5C55;
+  --red: #CB4A27;
+  --red-r: 203,74,39;
+  --brick-red: #BB4A4A;
+  --coral: #FB8281;
+  --peach: #FDAB89;
+  --terracotta: #BD7150;
+  --turquoise: #4AC5BB;
+  --dusty-rose: #DFBFBF;
+  --mauve-gray: #A78F8F;
+
+  /* ── Connectors ── */
+  --connector-color: #BCBEC0;
+
+  /* ── Layout ── */
+  --radius: 8px;
+  --radius-lg: 12px;
+  --shadow: 0 2px 12px rgba(28,35,37,0.08);
+  --shadow-hover: 0 8px 30px rgba(28,35,37,0.12);
+  --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ── Animation Tokens ── */
+  --spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --entrance-duration: 0.6s;
+  --stagger-delay: 0.04s;
+  --hover-duration: 0.3s;
+  --glow-intensity: 0.12;
+  --toolbar-bg-r: 255,255,255;
+}
+
+/* ══════════════════════════════════════════════════════════
+   DARK THEME OVERRIDES
+   ══════════════════════════════════════════════════════════ */
+[data-theme="dark"] {
+  --bg: #0d0d0f;
+  --bg-card: #13120e;
+  --bg-elevated: #1a1918;
+  --text: #f0ece4;
+  --text-muted: #b5b0a8;
+  --text-dim: #8a8580;
+  --border-color: rgba(255,255,255,0.15);
+  --border: rgba(255,255,255,0.1);
+  --warm-gray: #706060;
+  --dark-gray: #9a9590;
+  --light-gray: rgba(255,255,255,0.12);
+  --ice-gray: rgba(255,255,255,0.04);
+  --connector-color: rgba(255,255,255,0.45);
+  --shadow: 0 2px 12px rgba(0,0,0,0.3);
+  --shadow-hover: 0 8px 30px rgba(0,0,0,0.5);
+  --glow-intensity: 0.2;
+  --toolbar-bg-r: 13,13,15;
+}
+</style>
+
+<style>
+/* ══════════════════════════════════════════════════════════
+   RESET & BASE
+   ══════════════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Jost', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+  line-height: 1.5;
+}
+
+/* Subtle ambient top glow */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background: radial-gradient(ellipse 70% 40% at 50% 0%, rgba(var(--gold-r),0.04) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Living background — soft drifting color orbs */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 50% 30% at 15% 85%, rgba(var(--teal-r), 0.035) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 40% at 85% 15%, rgba(var(--purple-r), 0.035) 0%, transparent 70%),
+    radial-gradient(ellipse 35% 35% at 50% 50%, rgba(var(--red-r), 0.02) 0%, transparent 70%);
+  animation: bgShift 25s ease-in-out infinite alternate;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes bgShift {
+  0%   { transform: translate(0, 0) scale(1); }
+  50%  { transform: translate(-15px, 8px) scale(1.02); }
+  100% { transform: translate(10px, -5px) scale(0.98); }
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--light-gray); }
+
+/* ── No results ── */
+.no-results {
+  text-align: center;
+  padding: 80px 24px;
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
+  display: none;
+}
+
+.no-results.visible { display: block; }
+</style>
+
+<style>
+/* ══════════════════════════════════════════════════════════
+   TOOLBAR
+   ══════════════════════════════════════════════════════════ */
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(var(--toolbar-bg-r, 255,255,255), 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.toolbar-brand {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 600;
+  font-size: 1.1rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold);
+  white-space: nowrap;
+  margin-right: 8px;
+}
+
+.search-box {
+  flex: 1;
+  min-width: 180px;
+  max-width: 360px;
+  position: relative;
+}
+
+.search-box input {
+  width: 100%;
+  background: var(--ice-gray);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 12px 8px 36px;
+  color: var(--text);
+  font-family: 'Jost', sans-serif;
+  font-size: 0.85rem;
+  outline: none;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.search-box input:focus {
+  border-color: var(--teal);
+  box-shadow: 0 0 0 3px rgba(var(--teal-r), 0.1);
+}
+
+.search-box input::placeholder { color: var(--text-dim); }
+
+.search-box svg {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px; height: 16px;
+  color: var(--text-dim);
+}
+
+.search-results-count {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.filter-group {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  background: var(--ice-gray);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 5px 14px;
+  font-family: 'Jost', sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--transition);
+  white-space: nowrap;
+}
+
+.filter-btn:hover { border-color: var(--light-gray); color: var(--text); background: var(--bg-elevated); }
+.filter-btn.active { border-color: var(--filter-color, var(--gold)); color: var(--filter-color, var(--gold)); background: rgba(var(--filter-color-r, var(--gold-r)), 0.08); }
+
+.toolbar-actions {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.tool-btn {
+  background: var(--ice-gray);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  width: 34px; height: 34px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.tool-btn:hover { border-color: var(--light-gray); color: var(--text); background: var(--bg-elevated); }
+.tool-btn svg { width: 16px; height: 16px; }
+
+.zoom-display {
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  letter-spacing: 0.08em;
+  min-width: 36px;
+  text-align: center;
+  user-select: none;
+}
+
+/* ── Hamburger Menu Toggle ── */
+.menu-toggle {
+  display: none;
+  background: var(--ice-gray);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  width: 34px; height: 34px;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--transition);
+  flex-shrink: 0;
+}
+
+.menu-toggle:hover { border-color: var(--light-gray); color: var(--text); background: var(--bg-elevated); }
+
+.menu-toggle.open { color: var(--gold); border-color: var(--gold); background: rgba(var(--gold-r), 0.08); }
+
+/* ── Collapsible wrapper (no effect on desktop) ── */
+.toolbar-collapsible {
+  display: contents;
+}
+
+/* ══════════════════════════════════════════════════════════
+   TOOLBAR RESPONSIVE
+   ══════════════════════════════════════════════════════════ */
+@media (max-width: 900px) {
+  .toolbar {
+    padding: 10px 16px;
+    gap: 8px;
+  }
+
+  .toolbar-brand {
+    flex: 1;
+  }
+
+  .menu-toggle {
+    display: flex;
+  }
+
+  .toolbar-collapsible {
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+    overflow: hidden;
+  }
+
+  .toolbar-collapsible.open {
+    display: flex;
+  }
+
+  .toolbar-collapsible .search-box {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .toolbar-collapsible .filter-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .toolbar-collapsible .toolbar-actions {
+    margin-left: 0;
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 480px) {
+  .toolbar-brand { font-size: 0.85rem; }
+  .toolbar-collapsible .search-box { min-width: 0; }
+}
+</style>
+
+<style>
+/* ══════════════════════════════════════════════════════════
+   HEADER & LEGEND
+   ══════════════════════════════════════════════════════════ */
+.page-header {
+  text-align: center;
+  padding: 48px 24px 8px;
+  position: relative;
+  z-index: 1;
+}
+
+.page-header h1 {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 300;
+  font-size: clamp(1.6rem, 4vw, 2.6rem);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 6px;
+}
+
+.page-header .subtitle {
+  font-size: 0.65rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 16px;
+}
+
+/* ── Hierarchy Toggle (toolbar filter) ── */
+.filter-btn--hierarchy {
+  margin-left: 8px;
+  border-left: 1px solid var(--border);
+  padding-left: 16px;
+}
+
+/* ── Hierarchy Section ── */
+.hierarchy-section {
+  animation: htFadeUp 0.4s ease both;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 20px;
+  margin: 0 auto 12px;
+  padding: 14px 22px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--ice-gray);
+  max-width: 760px;
+}
+
+.legend-item {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.legend-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+</style>
+
+<style>
+/* ══════════════════════════════════════════════════════════
+   HIERARCHY TREE — White-themed department structure view
+   All classes prefixed with ht- to avoid collisions
+   ══════════════════════════════════════════════════════════ */
+
+/* ── Chart container ── */
+.ht-chart {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding: 20px 24px 80px;
+}
+
+/* ── Legend ── */
+.ht-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 18px;
+  margin: 0 auto 36px;
+  padding: 14px 20px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--ice-gray);
+  width: 100%;
+  max-width: 700px;
+}
+
+.ht-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: clamp(0.52rem, 1.2vw, 0.58rem);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.ht-legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── VP ── */
+.ht-vp-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  animation: htFadeUp 0.5s ease both 0.05s;
+}
+
+.ht-vp-node {
+  background: linear-gradient(135deg, rgba(var(--gold-r), 0.08), var(--bg));
+  border: 1.5px solid rgba(var(--gold-r), 0.5);
+  border-radius: 4px;
+  padding: clamp(10px, 2vw, 14px) clamp(20px, 4vw, 52px);
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(0.8rem, 2vw, 1rem);
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold);
+  cursor: default;
+  transition: all 0.25s;
+  text-align: center;
+  position: relative;
+  max-width: 520px;
+  width: 100%;
+}
+
+.ht-vp-node:hover {
+  box-shadow: 0 0 24px rgba(var(--gold-r), 0.12);
+  transform: translateY(-2px);
+}
+
+.ht-level-tag {
+  position: absolute;
+  top: -9px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-size: 0.44rem;
+  letter-spacing: 0.24em;
+  padding: 2px 10px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* ── Stems / Connectors ── */
+.ht-stem {
+  width: 1px;
+  background: var(--light-gray);
+  height: 28px;
+}
+
+.ht-h-bar {
+  height: 1px;
+  background: var(--border);
+  width: 100%;
+}
+
+/* ── Department row (4-column grid) ── */
+.ht-dept-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  width: 100%;
+  align-items: start;
+}
+
+/* ── Department column ── */
+.ht-dept {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 1px solid rgba(var(--dcr), 0.15);
+  border-radius: 6px;
+  padding: 0 10px 16px;
+  background: rgba(var(--dcr), 0.03);
+  transition: border-color 0.2s;
+  overflow: hidden;
+}
+
+.ht-dept:hover {
+  border-color: rgba(var(--dcr), 0.3);
+}
+
+.ht-dept:nth-child(odd) { animation: htFadeUp 0.6s ease both 0.2s; }
+.ht-dept:nth-child(even) { animation: htFadeUp 0.6s ease both 0.35s; }
+
+.ht-dept-accent {
+  width: 100%;
+  height: 3px;
+  background: var(--dc);
+  opacity: 0.6;
+  border-radius: 3px 3px 0 0;
+  margin-bottom: 0;
+}
+
+.ht-dept-stem {
+  width: 1px;
+  height: 24px;
+  background: var(--dc);
+  opacity: 0.4;
+}
+
+.ht-lvl-stem {
+  width: 1px;
+  height: 18px;
+  background: var(--dc);
+  opacity: 0.25;
+}
+
+/* ── Department header (collapsible on mobile) ── */
+.ht-dept-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 12px 4px 4px;
+  user-select: none;
+}
+
+.ht-dept-header-title {
+  font-size: clamp(0.58rem, 1.2vw, 0.66rem);
+  letter-spacing: 0.08em;
+  font-weight: 500;
+  color: var(--dc);
+  text-transform: uppercase;
+  text-align: center;
+  flex: 1;
+}
+
+.ht-chevron {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  color: var(--dc);
+  opacity: 0.5;
+  transition: transform 0.3s ease;
+  display: none;
+}
+
+.ht-dept.ht-collapsed .ht-chevron {
+  transform: rotate(-90deg);
+}
+
+/* ── Department body ── */
+.ht-dept-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  transition: max-height 0.35s ease, opacity 0.3s ease;
+  overflow: hidden;
+}
+
+.ht-dept.ht-collapsed .ht-dept-body {
+  max-height: 0 !important;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ── Level label ── */
+.ht-row-label {
+  font-size: clamp(0.52rem, 1vw, 0.58rem);
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--dc);
+  opacity: 0.75;
+  margin-bottom: 6px;
+  text-align: center;
+  width: 100%;
+}
+
+/* ── Node ── */
+.ht-node {
+  background: linear-gradient(135deg, rgba(var(--dcr), 0.05) 0%, var(--bg) 100%);
+  border: 1px solid rgba(var(--dcr), 0.25);
+  border-radius: 3px;
+  padding: clamp(7px, 1.5vw, 10px) clamp(6px, 1.2vw, 12px);
+  font-size: clamp(0.58rem, 1.1vw, 0.65rem);
+  letter-spacing: 0.07em;
+  font-weight: 400;
+  color: rgba(var(--dcr), 0.85);
+  text-transform: uppercase;
+  text-align: center;
+  cursor: default;
+  transition: all 0.22s ease;
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+}
+
+.ht-node:hover {
+  border-color: rgba(var(--dcr), 0.6);
+  color: var(--dc);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow), 0 0 8px rgba(var(--dcr), 0.1);
+}
+
+/* Director node (special styling) */
+.ht-node.ht-director {
+  font-weight: 500;
+  border-color: rgba(var(--dcr), 0.5);
+  color: var(--dc);
+  background: linear-gradient(135deg, rgba(var(--dcr), 0.1), var(--bg));
+  width: 100%;
+  text-align: center;
+}
+
+/* ── Node row (horizontal siblings) ── */
+.ht-node-row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 6px;
+  width: 100%;
+  align-items: stretch;
+}
+
+.ht-node-row .ht-node {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* ── VP row with PM branch ── */
+.ht-vp-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  width: 100%;
+}
+
+/* ── Director row with PM branches ── */
+.ht-director-pm-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  width: 100%;
+}
+
+.ht-director-pm-row .ht-node.ht-director {
+  flex-shrink: 0;
+}
+
+/* ── PM branch (connector + stack) ── */
+.ht-pm-branch {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex-shrink: 0;
+}
+
+.ht-pm-branch-left {
+  order: -1;
+}
+
+.ht-pm-connector {
+  width: 16px;
+  height: 1px;
+  background: var(--dc, var(--light-gray));
+  opacity: 0.4;
+  flex-shrink: 0;
+}
+
+.ht-pm-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ht-pm-node {
+  background: linear-gradient(135deg, rgba(var(--dcr, var(--gold-r)), 0.05) 0%, var(--bg) 100%);
+  border: 1px dashed rgba(var(--dcr, var(--gold-r)), 0.3);
+  border-radius: 3px;
+  padding: clamp(5px, 1vw, 7px) clamp(6px, 1.2vw, 10px);
+  font-size: clamp(0.48rem, 0.9vw, 0.55rem);
+  letter-spacing: 0.07em;
+  font-weight: 500;
+  color: rgba(var(--dcr, var(--gold-r)), 0.8);
+  text-transform: uppercase;
+  text-align: center;
+  white-space: nowrap;
+  cursor: default;
+  transition: all 0.22s ease;
+}
+
+.ht-pm-node:hover {
+  border-color: rgba(var(--dcr, var(--gold-r)), 0.6);
+  transform: translateY(-1px);
+}
+
+/* ── Animation ── */
+@keyframes htFadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ══════════════════════════════════════════════════════════
+   RESPONSIVE
+   ══════════════════════════════════════════════════════════ */
+
+/* ── Tablet: 2x2 grid ── */
+@media (max-width: 1024px) {
+  .ht-dept-row {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+  }
+  .ht-h-bar { width: 90%; }
+  .ht-node-row { flex-wrap: wrap; }
+  .ht-node-row .ht-node { flex: 1 1 calc(50% - 6px); min-width: calc(50% - 6px); }
+}
+
+/* ── Tablet: hide PM branches in hierarchy ── */
+@media (max-width: 1024px) {
+  .ht-pm-branch { display: none; }
+  .ht-vp-row { display: block; }
+  .ht-director-pm-row { display: block; }
+}
+
+/* ── Large mobile: 1 column, collapsible ── */
+@media (max-width: 640px) {
+  .ht-chart { padding: 20px 14px 60px; }
+  .ht-dept-row {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .ht-chevron { display: block; }
+  .ht-node-row { flex-wrap: wrap; }
+  .ht-node-row .ht-node { flex: 1 1 calc(50% - 6px); min-width: calc(50% - 6px); }
+  .ht-h-bar { width: 80%; }
+  .ht-node { font-size: 0.62rem; padding: 8px 10px; }
+  .ht-row-label { font-size: 0.44rem; }
+}
+
+/* ── Small mobile: 1 node per row ── */
+@media (max-width: 380px) {
+  .ht-node-row .ht-node { flex: 1 1 100%; }
+}
+</style>
+
+<style>
+/* ══════════════════════════════════════════════════════════
+   CHART VIEWPORT & TREE LAYOUT
+   ══════════════════════════════════════════════════════════ */
+.chart-viewport {
+  overflow: auto;
+  position: relative;
+  z-index: 1;
+  padding: 20px 24px 80px;
+  cursor: grab;
+}
+
+.chart-viewport:active { cursor: grabbing; }
+.chart-viewport.no-pan { cursor: default; }
+.chart-viewport.no-pan:active { cursor: default; }
+
+.chart-container {
+  transform-origin: top center;
+  transition: transform 0.2s ease;
+  min-width: fit-content;
+  margin: 0 auto;
+}
+
+/* ── Tree Structure ── */
+.tree { display: flex; flex-direction: column; align-items: center; }
+
+.tree ul {
+  display: flex;
+  justify-content: center;
+  list-style: none;
+  padding-top: 28px;
+  position: relative;
+  --extra-pl: 0px;
+  --extra-pr: 0px;
+}
+
+/* Vertical stem from parent to horizontal bar */
+.tree ul::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 2px;
+  height: 28px;
+  background: var(--connector-color);
+  transform: translateX(-50%);
+}
+
+.tree li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  padding: 28px 8px 0;
+}
+
+/* Vertical connector from horizontal bar to node */
+.tree li::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  width: 2px;
+  height: 28px;
+  background: var(--connector-color);
+}
+
+/* Horizontal connector bar */
+.tree li::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -1px;
+  width: calc(100% + 2px);
+  height: 2px;
+  background: var(--connector-color);
+  z-index: 1;
+}
+
+.tree li:first-child::after {
+  left: calc(50% + (var(--extra-pl, 0px) - var(--extra-pr, 0px)) / 2);
+  width: calc(50% - (var(--extra-pl, 0px) - var(--extra-pr, 0px)) / 2 + 1px);
+  transform-origin: left;
+}
+.tree li:last-child::after {
+  right: calc(50% + (var(--extra-pr, 0px) - var(--extra-pl, 0px)) / 2);
+  width: calc(50% - (var(--extra-pr, 0px) - var(--extra-pl, 0px)) / 2 + 1px);
+  transform-origin: right;
+}
+.tree li:only-child::after { display: none; }
+
+/* Spacer nodes — ghost tiles for height, invisible but space-occupying */
+.tile.spacer-tile {
+  visibility: hidden;
+  pointer-events: none;
+  position: relative;
+}
+
+/* Vertical connector through the ghost tile area — bridges the gap */
+.spacer-connector {
+  visibility: visible;
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--connector-color);
+  transform: translateX(-50%);
+}
+
+.tree .dept-branch .spacer-connector {
+  background: var(--dc);
+  opacity: 0.5;
+}
+
+/* Department sub-trees use department color */
+.tree .dept-branch li::before { background: var(--dc); opacity: 0.5; }
+.tree .dept-branch li::after { background: var(--dc); opacity: 0.4; }
+.tree .dept-branch > ul::before { background: var(--dc); opacity: 0.5; }
+
+/* ══════════════════════════════════════════════════════════
+   ASSISTANT / PM CARDS (beside directors and VP)
+   ══════════════════════════════════════════════════════════ */
+.tile-with-assistants {
+  position: relative;
+  display: inline-block;
+}
+
+.assistant-group {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  z-index: 5;
+}
+
+.assistant-group-right {
+  left: 100%;
+}
+
+.assistant-group-left {
+  right: 100%;
+}
+
+/* Single connector line from main tile to the PM group */
+.assistant-group-right::before {
+  content: '';
+  display: block;
+  width: 40px;
+  height: 2px;
+  background: var(--connector-color);
+  flex-shrink: 0;
+}
+
+.assistant-group-left::after {
+  content: '';
+  display: block;
+  width: 40px;
+  height: 2px;
+  background: var(--connector-color);
+  flex-shrink: 0;
+}
+
+/* Department-colored connectors for director PMs */
+.dept-branch .assistant-group-right::before,
+.dept-branch .assistant-group-left::after {
+  background: var(--dc);
+  opacity: 0.5;
+}
+
+/* Connector line between adjacent PM tiles */
+.assistant-slot {
+  position: relative;
+}
+
+.assistant-slot:not(:last-child) {
+  margin-right: 40px;
+}
+
+.assistant-slot:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  right: -40px;
+  top: 50%;
+  width: 40px;
+  height: 2px;
+  transform: translateY(-50%);
+  background: var(--connector-color);
+}
+
+.dept-branch .assistant-slot:not(:last-child)::after {
+  background: var(--dc);
+  opacity: 0.5;
+}
+
+/* When a PM card is expanded, align group to top so it grows downward */
+.assistant-group:has(.tile.expanded) {
+  top: 0;
+  transform: none;
+  z-index: 15;
+}
+
+/* Assistant tiles are slightly smaller */
+.tile.assistant-tile {
+  width: 190px;
+}
+
+.tile.assistant-tile .tile-name {
+  font-size: 0.85rem;
+}
+
+.tile.assistant-tile .tile-title {
+  font-size: 0.62rem;
+}
+</style>
+
+<style>
+/* ══════════════════════════════════════════════════════════
+   TILES / EMPLOYEE CARDS
+   ══════════════════════════════════════════════════════════ */
+.tile {
+  width: 220px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  cursor: pointer;
+  position: relative;
+  opacity: 1;
+  transform-style: preserve-3d;
+  will-change: transform, opacity;
+  box-shadow: var(--shadow);
+  transition:
+    border-color var(--hover-duration) var(--smooth),
+    box-shadow var(--hover-duration) var(--smooth);
+}
+
+/* Tiles waiting for entrance animation start invisible */
+.tile.animate-pending {
+  opacity: 0;
+}
+
+.tile:hover {
+  border-color: var(--light-gray);
+  box-shadow: var(--shadow-hover);
+}
+
+.tile.highlighted {
+  border-color: var(--gold) !important;
+  box-shadow: 0 0 20px rgba(var(--gold-r), 0.2);
+}
+
+.tile.dimmed {
+  opacity: 0.25 !important;
+  transform: scale(0.95) !important;
+  filter: grayscale(0.8) blur(1px);
+  pointer-events: none;
+  transition: all 0.4s var(--smooth);
+}
+
+.tile-accent {
+  height: 3px;
+  background: var(--tile-color, var(--gold));
+  opacity: 0.8;
+}
+
+.tile-header {
+  padding: 16px 14px 10px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.avatar {
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  border: 2px solid rgba(var(--tile-color-r, var(--gold-r)), 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--tile-color, var(--gold));
+  background: rgba(var(--tile-color-r, var(--gold-r)), 0.08);
+  flex-shrink: 0;
+  overflow: hidden;
+  transition: transform 0.3s var(--spring), box-shadow 0.3s var(--smooth);
+}
+
+.tile:hover .avatar {
+  transform: scale(1.08);
+  box-shadow: 0 0 12px rgba(var(--tile-color-r, var(--gold-r)), 0.15);
+}
+
+.avatar img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.tile-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+  color: var(--text);
+  line-height: 1.2;
+  text-rendering: optimizeLegibility;
+}
+
+.tile-title {
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--tile-color, var(--gold));
+  opacity: 0.9;
+  line-height: 1.3;
+}
+
+.tile-level-badge {
+  font-size: 0.5rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: var(--ice-gray);
+  border: 1px solid var(--border);
+  padding: 2px 8px;
+  border-radius: 10px;
+  margin-top: 2px;
+  white-space: nowrap;
+}
+
+.tile-expand-indicator {
+  font-size: 0.55rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  opacity: 0;
+  transition: opacity var(--transition);
+  padding-bottom: 6px;
+  text-align: center;
+}
+
+.tile:hover .tile-expand-indicator { opacity: 1; }
+
+/* ── EXPANDED TILE BODY ── */
+.tile-body {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition:
+    max-height 0.5s var(--spring),
+    opacity 0.3s var(--smooth);
+}
+
+.tile.expanded {
+  width: 440px;
+  z-index: 10;
+  transition:
+    width 0.35s var(--spring),
+    border-color var(--hover-duration) var(--smooth),
+    box-shadow var(--hover-duration) var(--smooth);
+}
+
+.tile.expanded .tile-body {
+  max-height: 600px;
+  opacity: 1;
+  transition:
+    max-height 0.5s var(--spring),
+    opacity 0.3s var(--smooth) 0.1s;
+}
+
+.tile.expanded .tile-body-inner {
+  padding: 0 20px 20px;
+}
+
+.tile.expanded .tile-name {
+  font-size: 1.1rem;
+}
+
+.tile.expanded .tile-title {
+  font-size: 0.78rem;
+}
+
+.tile.expanded .tile-list li {
+  font-size: 0.78rem;
+  margin-bottom: 5px;
+  line-height: 1.5;
+}
+
+.tile.expanded .tile-section-title {
+  font-size: 0.65rem;
+}
+
+.tile.expanded .tile-meta-item {
+  font-size: 0.68rem;
+}
+
+.tile-body-inner {
+  padding: 0 14px 14px;
+  border-top: 1px solid var(--border);
+}
+
+.tile-section {
+  margin-top: 10px;
+}
+
+.tile-section-title {
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--tile-color, var(--gold));
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tile-section-title::before {
+  content: '';
+  width: 3px;
+  height: 10px;
+  background: var(--tile-color, var(--gold));
+  border-radius: 2px;
+  opacity: 0.6;
+}
+
+.tile-list {
+  list-style: none;
+  padding: 0;
+}
+
+.tile-list li {
+  font-size: 0.68rem;
+  font-weight: 400;
+  color: var(--text-muted);
+  line-height: 1.5;
+  padding-left: 14px;
+  position: relative;
+  margin-bottom: 4px;
+}
+
+.tile-list li::before {
+  content: '\2022';
+  position: absolute;
+  left: 3px;
+  color: var(--tile-color, var(--gold));
+  opacity: 0.5;
+}
+
+.tile-list.kpi-list li::before {
+  content: '\25C6';
+  font-size: 0.5rem;
+  top: 2px;
+}
+
+.tile-list.kpi-list li {
+  color: var(--green-teal);
+  opacity: 0.85;
+  font-weight: 500;
+}
+
+.tile-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.tile-meta-item {
+  font-size: 0.6rem;
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tile-meta-item svg {
+  width: 12px; height: 12px;
+  flex-shrink: 0;
+  opacity: 0.5;
+}
+
+.tile-meta-item a {
+  color: var(--teal);
+  text-decoration: none;
+  opacity: 0.8;
+  transition: opacity var(--transition);
+}
+
+.tile-meta-item a:hover { opacity: 1; }
+
+/* ── VP TILE (special) ── */
+.tile.vp-tile {
+  width: 280px;
+  border-color: rgba(var(--gold-r), 0.3);
+  background: linear-gradient(135deg, rgba(var(--gold-r),0.06), var(--bg-card));
+}
+
+.tile.vp-tile .avatar {
+  width: 64px; height: 64px;
+  font-size: 1.2rem;
+}
+
+.tile.vp-tile .tile-name {
+  font-size: 1.1rem;
+}
+
+/* ── DIRECTOR TILE ── */
+.tile.director-tile {
+  width: 240px;
+  border-color: rgba(var(--tile-color-r, 255,195,40), 0.2);
+  background: linear-gradient(135deg, rgba(var(--tile-color-r, 255,195,40),0.05), var(--bg-card));
+}
+
+.tile.director-tile .avatar {
+  width: 56px; height: 56px;
+  font-size: 1.1rem;
+}
+
+/* Expanded VP/Director tiles scale to same width */
+.tile.vp-tile.expanded { width: 480px; }
+.tile.director-tile.expanded { width: 460px; }
+</style>
+
+<style>
+/* ══════════════════════════════════════════════════════════
+   DETAIL MODAL
+   ══════════════════════════════════════════════════════════ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(28,35,37,0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 200;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.modal-overlay.active {
+  display: flex;
+  opacity: 1;
+}
+
+.modal {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  max-width: 680px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: var(--shadow-hover);
+  animation: modalIn 0.45s var(--spring);
+}
+
+@keyframes modalIn {
+  0% {
+    transform: translateY(30px) scale(0.9);
+    opacity: 0;
+    filter: blur(8px);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+.modal-close {
+  position: absolute;
+  top: 12px; right: 12px;
+  background: var(--ice-gray);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-muted);
+  cursor: pointer;
+  z-index: 10;
+  transition: all var(--transition);
+}
+
+.modal-close:hover { background: var(--bg-elevated); color: var(--text); }
+
+.modal-accent {
+  height: 4px;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.modal-header {
+  padding: 32px 32px 20px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.modal-header .avatar {
+  width: 88px; height: 88px;
+  font-size: 1.6rem;
+}
+
+.modal-header .tile-name {
+  font-size: 1.5rem;
+}
+
+.modal-header .tile-title {
+  font-size: 0.92rem;
+}
+
+.modal-header .tile-level-badge {
+  font-size: 0.62rem;
+  padding: 4px 12px;
+}
+
+.modal-body {
+  padding: 0 32px 32px;
+}
+
+.modal-body .tile-section {
+  margin-top: 20px;
+}
+
+.modal-body .tile-section-title {
+  font-size: 0.72rem;
+}
+
+.modal-body .tile-list li {
+  font-size: 0.85rem;
+  margin-bottom: 8px;
+  line-height: 1.6;
+}
+
+.modal-body .tile-meta {
+  margin-top: 20px;
+  padding-top: 16px;
+}
+
+.modal-body .tile-meta-item {
+  font-size: 0.78rem;
+  gap: 8px;
+}
+
+.modal-body .tile-meta-item svg {
+  width: 15px; height: 15px;
+}
+
+/* ══════════════════════════════════════════════════════════
+   HOVER CARD — appears on tile hover with full details
+   ══════════════════════════════════════════════════════════ */
+.hover-card {
+  position: fixed;
+  z-index: 150;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  max-width: 680px;
+  width: 680px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-hover);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(8px) scale(0.97);
+  transition: opacity 0.25s var(--smooth), transform 0.25s var(--spring);
+}
+
+.hover-card.visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+.hover-card .hover-card-close {
+  position: absolute;
+  top: 10px; right: 10px;
+  background: var(--ice-gray);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-muted);
+  cursor: pointer;
+  z-index: 10;
+  opacity: 0;
+  transition: opacity 0.2s, background 0.2s;
+}
+
+.hover-card:hover .hover-card-close { opacity: 1; }
+.hover-card .hover-card-close:hover { background: var(--bg-elevated); color: var(--text); }
+
+/* Reuse modal header/body sizing inside hover card */
+.hover-card .modal-header {
+  padding: 32px 32px 20px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.hover-card .avatar {
+  width: 88px; height: 88px;
+  font-size: 1.6rem;
+}
+
+.hover-card .tile-name {
+  font-size: 1.5rem;
+}
+
+.hover-card .tile-title {
+  font-size: 0.92rem;
+}
+
+.hover-card .tile-level-badge {
+  font-size: 0.62rem;
+  padding: 4px 12px;
+}
+
+.hover-card .modal-body {
+  padding: 0 32px 32px;
+}
+
+.hover-card .tile-section {
+  margin-top: 20px;
+}
+
+.hover-card .tile-section-title {
+  font-size: 0.72rem;
+}
+
+.hover-card .tile-list li {
+  font-size: 0.85rem;
+  margin-bottom: 8px;
+  line-height: 1.6;
+}
+
+.hover-card .tile-meta {
+  margin-top: 20px;
+  padding-top: 16px;
+}
+
+.hover-card .tile-meta-item {
+  font-size: 0.78rem;
+  gap: 8px;
+}
+
+.hover-card .tile-meta-item svg {
+  width: 15px; height: 15px;
+}
+</style>
+
+<style>
+/* ══════════════════════════════════════════════════════════
+   ANIMATIONS — The "Wow" Layer
+   ══════════════════════════════════════════════════════════ */
+
+/* ── Tile Entrance ── */
+@keyframes tileEntrance {
+  0% {
+    opacity: 0;
+    transform: translateY(28px) scale(0.92);
+    filter: blur(6px);
+  }
+  60% {
+    opacity: 1;
+    filter: blur(0);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+.tile.animate-in {
+  animation: tileEntrance var(--entrance-duration) var(--spring) forwards;
+}
+
+/* ── Glow Pulse on Hover ── */
+@keyframes glowPulse {
+  0%, 100% {
+    box-shadow:
+      var(--shadow),
+      0 0 15px rgba(var(--tile-color-r, var(--gold-r)), 0.06);
+  }
+  50% {
+    box-shadow:
+      var(--shadow-hover),
+      0 0 30px rgba(var(--tile-color-r, var(--gold-r)), 0.12);
+  }
+}
+
+.tile:hover:not(.dimmed) {
+  animation: glowPulse 2.5s ease-in-out infinite;
+}
+
+/* Stop glow pulse when tile is being tilted (JS adds this) */
+.tile.tilt-active {
+  animation: none !important;
+}
+
+.tile.tilt-active:hover {
+  box-shadow:
+    0 12px 40px rgba(28,35,37,0.12),
+    0 0 25px rgba(var(--tile-color-r, var(--gold-r)), var(--glow-intensity));
+}
+
+/* ── Accent Bar Shimmer ── */
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.tile:hover .tile-accent {
+  background: linear-gradient(
+    90deg,
+    var(--tile-color, var(--gold)) 0%,
+    rgba(var(--tile-color-r, var(--gold-r)), 0.3) 50%,
+    var(--tile-color, var(--gold)) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s ease-in-out infinite;
+  opacity: 1;
+}
+
+/* ── Avatar Ring Pulse ── */
+@keyframes ringPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(var(--tile-color-r, var(--gold-r)), 0.2); }
+  50%      { box-shadow: 0 0 0 6px rgba(var(--tile-color-r, var(--gold-r)), 0); }
+}
+
+.tile:hover .avatar {
+  animation: ringPulse 2s ease-in-out infinite;
+}
+
+/* ── Expand Content Stagger ── */
+.tile.expanded .tile-section {
+  animation: sectionFade 0.4s var(--smooth) forwards;
+  opacity: 0;
+}
+
+.tile.expanded .tile-section:nth-child(1) { animation-delay: 0.1s; }
+.tile.expanded .tile-section:nth-child(2) { animation-delay: 0.2s; }
+.tile.expanded .tile-section:nth-child(3) { animation-delay: 0.3s; }
+
+.tile.expanded .tile-meta {
+  animation: sectionFade 0.4s var(--smooth) 0.35s forwards;
+  opacity: 0;
+}
+
+@keyframes sectionFade {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Search Highlight Pulse ── */
+@keyframes highlightPulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(var(--gold-r), 0.12); }
+  50%      { box-shadow: 0 0 35px rgba(var(--gold-r), 0.25); }
+}
+
+.tile.highlighted {
+  animation: highlightPulse 1.5s ease-in-out infinite;
+}
+
+/* ── Header Entrance ── */
+@keyframes headerSlide {
+  from { opacity: 0; transform: translateY(-20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.page-header {
+  animation: headerSlide 0.8s var(--smooth);
+}
+
+.legend {
+  animation: headerSlide 0.8s var(--smooth) 0.15s both;
+}
+
+/* ── Toolbar slide-down ── */
+@keyframes toolbarSlide {
+  from { transform: translateY(-100%); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+
+.toolbar {
+  animation: toolbarSlide 0.5s var(--smooth);
+}
+</style>
+
+<style>
+/* ══════════════════════════════════════════════════════════
+   RESPONSIVE BREAKPOINTS
+   ══════════════════════════════════════════════════════════ */
+
+/* ── Tablet ── */
+@media (max-width: 1200px) {
+  .tile { width: 160px; }
+  .tile.vp-tile { width: 200px; }
+  .tile.director-tile { width: 180px; }
+  .tile.assistant-tile { width: 140px; }
+  .tree li { padding: 18px 4px 0; }
+  .tree ul { padding-top: 18px; }
+  .tree ul::before { height: 18px; }
+  .tree li::before { height: 18px; }
+
+  .avatar { width: 36px; height: 36px; font-size: 0.75rem; }
+  .tile.vp-tile .avatar { width: 44px; height: 44px; font-size: 0.9rem; }
+  .tile.director-tile .avatar { width: 40px; height: 40px; font-size: 0.85rem; }
+  .tile-header { padding: 10px 8px 6px; gap: 4px; }
+  .tile-name { font-size: 0.72rem; }
+  .tile.vp-tile .tile-name { font-size: 0.82rem; }
+  .tile-title { font-size: 0.52rem; }
+  .tile-level-badge { font-size: 0.38rem; padding: 1px 5px; }
+  .tile-accent { height: 2px; }
+  .tile-expand-indicator { font-size: 0.4rem; padding-bottom: 4px; }
+
+  /* PM tiles same font size as regular tiles */
+  .tile.assistant-tile .tile-name { font-size: 0.72rem; }
+  .tile.assistant-tile .tile-title { font-size: 0.52rem; }
+
+  /* PM connectors tighter */
+  .assistant-group-right::before,
+  .assistant-group-left::after { width: 20px; }
+  .assistant-slot:not(:last-child) { margin-right: 20px; }
+  .assistant-slot:not(:last-child)::after { right: -20px; width: 20px; }
+
+  /* Expanded cards smaller */
+  .tile.expanded { width: 280px; }
+  .tile.vp-tile.expanded { width: 300px; }
+  .tile.director-tile.expanded { width: 290px; }
+  .tile.expanded .tile-name { font-size: 0.85rem; }
+  .tile.expanded .tile-title { font-size: 0.62rem; }
+  .tile.expanded .tile-list li { font-size: 0.62rem; margin-bottom: 3px; }
+  .tile.expanded .tile-section-title { font-size: 0.52rem; }
+  .tile.expanded .tile-meta-item { font-size: 0.52rem; }
+  .tile.expanded .tile-body-inner { padding: 0 12px 12px; }
+}
+
+/* ── Mobile ── */
+@media (max-width: 900px) {
+  .page-header { padding: 36px 16px 8px; }
+
+  /* Keep tree layout but allow horizontal scroll */
+  .chart-viewport {
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 12px 12px 60px;
+  }
+
+  /* Smaller cards */
+  .tile { width: 120px; }
+  .tile.vp-tile { width: 150px; }
+  .tile.director-tile { width: 140px; }
+  .tile.assistant-tile { width: 110px; }
+  .tree li { padding: 14px 3px 0; }
+  .tree ul { padding-top: 14px; }
+  .tree ul::before { height: 14px; }
+  .tree li::before { height: 14px; }
+
+  .avatar { width: 28px; height: 28px; font-size: 0.6rem; }
+  .tile.vp-tile .avatar { width: 34px; height: 34px; font-size: 0.7rem; }
+  .tile.director-tile .avatar { width: 32px; height: 32px; font-size: 0.65rem; }
+  .tile-header { padding: 8px 6px 5px; gap: 3px; }
+  .tile-name { font-size: 0.58rem; }
+  .tile.vp-tile .tile-name { font-size: 0.65rem; }
+  .tile-title { font-size: 0.42rem; }
+  .tile-level-badge { font-size: 0.32rem; padding: 1px 4px; letter-spacing: 0.08em; }
+  .tile-accent { height: 2px; }
+  .tile-expand-indicator { display: none; }
+
+  /* PM tiles same font size as regular tiles */
+  .tile.assistant-tile .tile-name { font-size: 0.58rem; }
+  .tile.assistant-tile .tile-title { font-size: 0.42rem; }
+
+  /* PM connectors minimal */
+  .assistant-group-right::before,
+  .assistant-group-left::after { width: 14px; }
+  .assistant-slot:not(:last-child) { margin-right: 14px; }
+  .assistant-slot:not(:last-child)::after { right: -14px; width: 14px; }
+
+  /* Expanded cards on mobile */
+  .tile.expanded { width: 220px; }
+  .tile.vp-tile.expanded { width: 240px; }
+  .tile.director-tile.expanded { width: 230px; }
+  .tile.expanded .tile-name { font-size: 0.75rem; }
+  .tile.expanded .tile-title { font-size: 0.55rem; }
+  .tile.expanded .tile-list li { font-size: 0.55rem; margin-bottom: 2px; line-height: 1.3; }
+  .tile.expanded .tile-section-title { font-size: 0.45rem; }
+  .tile.expanded .tile-meta-item { font-size: 0.45rem; }
+  .tile.expanded .tile-body-inner { padding: 0 8px 8px; }
+
+  /* Override inline padding from PM positioning */
+  .tree li[style*="padding-left"] { padding-left: 3px !important; }
+  .tree li[style*="padding-right"] { padding-right: 3px !important; }
+
+  /* Hide hover card on mobile — tap to expand instead */
+  .hover-card { display: none !important; }
+
+  /* Legend */
+  .legend { padding: 8px 12px; gap: 4px 12px; }
+  .legend-item { font-size: 0.45rem; }
+
+  /* Reduce animation complexity */
+  .tile { animation-duration: 0.3s !important; }
+  body::after { animation: none; }
+}
+
+/* ── Small mobile ── */
+@media (max-width: 480px) {
+  .chart-viewport { padding: 8px 4px 40px; }
+
+  .tile { width: 90px; }
+  .tile.vp-tile { width: 110px; }
+  .tile.director-tile { width: 100px; }
+  .tile.assistant-tile { width: 85px; }
+  .tree li { padding: 10px 2px 0; }
+  .tree ul { padding-top: 10px; }
+  .tree ul::before { height: 10px; }
+  .tree li::before { height: 10px; }
+
+  .avatar { width: 22px; height: 22px; font-size: 0.5rem; }
+  .tile.vp-tile .avatar { width: 26px; height: 26px; }
+  .tile.director-tile .avatar { width: 24px; height: 24px; }
+  .tile-header { padding: 6px 4px 4px; gap: 2px; }
+  .tile-name { font-size: 0.48rem; }
+  .tile.vp-tile .tile-name { font-size: 0.52rem; }
+  .tile-title { font-size: 0.35rem; }
+  .tile-level-badge { font-size: 0.28rem; padding: 1px 3px; }
+
+  /* PM tiles same font size as regular tiles */
+  .tile.assistant-tile .tile-name { font-size: 0.48rem; }
+  .tile.assistant-tile .tile-title { font-size: 0.35rem; }
+
+  /* PM connectors tiny */
+  .assistant-group-right::before,
+  .assistant-group-left::after { width: 8px; }
+  .assistant-slot:not(:last-child) { margin-right: 8px; }
+  .assistant-slot:not(:last-child)::after { right: -8px; width: 8px; }
+
+  /* Expanded cards */
+  .tile.expanded { width: 180px; }
+  .tile.vp-tile.expanded { width: 200px; }
+  .tile.director-tile.expanded { width: 190px; }
+  .tile.expanded .tile-name { font-size: 0.62rem; }
+  .tile.expanded .tile-title { font-size: 0.48rem; }
+  .tile.expanded .tile-list li { font-size: 0.48rem; }
+  .tile.expanded .tile-section-title { font-size: 0.4rem; }
+  .tile.expanded .tile-meta-item { font-size: 0.4rem; }
+  .tile.expanded .tile-body-inner { padding: 0 6px 6px; }
+
+  .page-header { padding: 28px 8px 4px; }
+  .page-header h1 { font-size: 1.2rem; letter-spacing: 0.08em; }
+  .page-header .subtitle { font-size: 0.45rem; letter-spacing: 0.12em; }
+}
+</style>
+
+<style>
+/* ══════════════════════════════════════════════════════════
+   PRINT STYLES & PDF EXPORT MODE
+   ══════════════════════════════════════════════════════════ */
+
+/* ── PDF Export Mode ── */
+.pdf-mode .toolbar { display: none; }
+.pdf-mode .tile .tile-body { max-height: none !important; opacity: 1 !important; }
+.pdf-mode .tile-expand-indicator { display: none; }
+.pdf-mode .chart-viewport { overflow: visible; cursor: default; }
+.pdf-mode .chart-container { transform: none !important; }
+
+/* ── Print pages container: hidden on screen ── */
+.print-pages { display: none; }
+
+/* ── Print ── */
+@media print {
+  @page {
+    size: portrait;
+    margin: 0.5in;
+  }
+
+  * { animation: none !important; transition: none !important; }
+
+  body {
+    background: #FFFFFF !important;
+    color: #1C2325 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  body::before, body::after { display: none !important; }
+
+  /* Hide everything on screen */
+  .toolbar { display: none !important; }
+  .page-header { display: none !important; }
+  .legend { display: none !important; }
+  .chart-viewport { display: none !important; }
+  .no-results { display: none !important; }
+  .hierarchy-section { display: none !important; }
+  .modal-overlay { display: none !important; }
+  .hover-card { display: none !important; }
+
+  /* Show print pages */
+  .print-pages {
+    display: block !important;
+  }
+
+  .print-page {
+    page-break-after: always;
+    break-after: page;
+    border: 1px solid #BCBEC0;
+    border-radius: 8px;
+    overflow: hidden;
+    max-width: 100%;
+    margin: 0 auto;
+  }
+
+  .print-page:last-child {
+    page-break-after: auto;
+    break-after: auto;
+  }
+
+  /* Card styling inside print pages */
+  .print-page .modal-accent {
+    height: 4px;
+  }
+
+  .print-page .modal-header {
+    padding: 24px 24px 16px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .print-page .avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 600;
+    font-size: 1.2rem;
+    border: 2px solid #BCBEC0;
+    color: #58595B;
+    background: #ECEFF2;
+  }
+
+  .print-page .tile-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 600;
+    font-size: 1.3rem;
+    color: #1C2325;
+  }
+
+  .print-page .tile-title {
+    font-size: 0.85rem;
+    letter-spacing: 0.04em;
+  }
+
+  .print-page .tile-level-badge {
+    font-size: 0.55rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: #58595B;
+    background: #ECEFF2;
+    border: 1px solid #BCBEC0;
+    padding: 3px 10px;
+    border-radius: 10px;
+  }
+
+  .print-page .modal-body {
+    padding: 0 24px 24px;
+  }
+
+  .print-page .tile-section {
+    margin-top: 14px;
+  }
+
+  .print-page .tile-section-title {
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    color: #1C2325;
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .print-page .tile-section-title::before {
+    content: '';
+    width: 3px;
+    height: 10px;
+    border-radius: 2px;
+    opacity: 0.6;
+    background: #58595B;
+  }
+
+  .print-page .tile-list {
+    list-style: none;
+    padding: 0;
+  }
+
+  .print-page .tile-list li {
+    font-size: 0.8rem;
+    color: #58595B;
+    line-height: 1.5;
+    padding-left: 14px;
+    position: relative;
+    margin-bottom: 4px;
+  }
+
+  .print-page .tile-list li::before {
+    content: '\2022';
+    position: absolute;
+    left: 3px;
+    color: #58595B;
+    opacity: 0.5;
+  }
+
+  .print-page .tile-list.kpi-list li {
+    color: #168980;
+  }
+
+  .print-page .tile-list.kpi-list li::before {
+    content: '\25C6';
+    font-size: 0.5rem;
+    top: 2px;
+    color: #168980;
+  }
+
+  .print-page .tile-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 14px;
+    padding-top: 10px;
+    border-top: 1px solid #BCBEC0;
+  }
+
+  .print-page .tile-meta-item {
+    font-size: 0.72rem;
+    color: #58595B;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .print-page .tile-meta-item svg {
+    width: 13px;
+    height: 13px;
+    opacity: 0.5;
+  }
+
+  .print-page .tile-meta-item a {
+    color: #3A929D;
+    text-decoration: none;
+  }
+}
+</style>
+
+<!-- ═══════════════ INLINED JS ═══════════════ -->
+<script>
+// ═══════════════════════════════════════════════════════════
+// DATA — Departments, Levels, and Employee Dataset
+// ═══════════════════════════════════════════════════════════
+
+window.OC = window.OC || {};
+
+OC.DEPARTMENTS = {
+  executive:  { name: 'Executive', color: '#FFC328', colorR: '255,195,40' },
+  records:    { name: 'Records, Registration & Support', color: '#3A929D', colorR: '58,146,157' },
+  enrollment: { name: 'Enrollment & Retention', color: '#B687AC', colorR: '182,135,172' },
+  dean:       { name: 'Dean of Students', color: '#A2C23D', colorR: '162,194,61' },
+  digital:    { name: 'Digital Operations', color: '#CB4A27', colorR: '203,74,39' }
+};
+
+OC.LEVELS = {
+  1: 'Executive',
+  2: 'Director',
+  3: 'Department Leadership',
+  4: 'Management',
+  5: 'Staff'
+};
+
+OC.employees = [
+  // ── LEVEL 1: VP ──
+  { id: 'vp', name: 'Ben Packer', title: 'Vice President of Student Services', dept: 'executive', level: 1, status: 'FTE', reportsTo: null,
+    responsibilities: ['Executive oversight of all Student Services operations', 'Strategic direction for student support, enrollment, records, and digital operations', 'Budget and resource allocation across departments'],
+    kpis: ['Overall student satisfaction scores', 'Student retention and completion rates', 'Operational efficiency across departments'], email: '', photoUrl: '' },
+
+  // ── LEVEL 2: DIRECTORS ──
+  { id: 'mark-gefrom', name: 'Mark Gefrom', title: 'Director of Student Records, Registration & Support', dept: 'records', level: 2, status: 'FTE', reportsTo: 'vp',
+    responsibilities: ['Ensuring the path for students to get help is clear and easy by promoting the use of the Help Center', 'Overseeing student records, registration processes, and support operations', 'Managing support, registrar, and training teams'],
+    kpis: ['Student support ticket resolution rates', 'Help Center usage and effectiveness', 'Overall department satisfaction scores'], email: '', photoUrl: '' },
+  { id: 'alison-cundiff', name: 'Alison Cundiff', title: 'Director of Enrollment & Retention', dept: 'enrollment', level: 2, status: 'FTE', reportsTo: 'vp',
+    responsibilities: ['Oversee the Enrollment Counselling and Mentoring teams', 'Manage 1:1s, team meetings, and long-term planning', 'Drive enrollment funnel performance and retention strategies'],
+    kpis: ['Enrollment & Retention budget management', 'Application, retention, and completion rates', 'Overall student autonomy and satisfaction (secondary)'], email: '', photoUrl: '' },
+  { id: 'steven-thomas', name: 'Steven K. Thomas', title: 'Dean of Students', dept: 'dean', level: 2, status: 'FTE', reportsTo: 'vp',
+    responsibilities: ['Executive oversight of Dean of Students office', 'Title IX Coordinator, ADA/Section 504 Coordinator', 'Student crisis portfolio development'],
+    kpis: ['No material audit, legal, or accreditation findings attributable to DOS', 'Annual DOS budget management', 'Overall student satisfaction (primary)'], email: '', photoUrl: '' },
+  { id: 'jacob-adams', name: 'Jacob Adams', title: 'Director of Digital Operations', dept: 'digital', level: 2, status: 'FTE', reportsTo: 'vp',
+    responsibilities: ['Strategic discernment of analytics engine and Companion/Mentor portal features', 'Oversee digital tools, development, and AI/ML initiatives', 'Partnership with IT and ICS stakeholders'],
+    kpis: ['Stakeholder CSAT with timeliness per project', 'Stakeholder CSAT with communication and roadmap', 'Overall student autonomy and satisfaction (secondary)'], email: '', photoUrl: '' },
+
+  // ── RECORDS, REGISTRATION & SUPPORT ──
+  // Level 3
+  { id: 'brad-lester', name: 'Brad Lester', title: 'Senior Manager of Student Support', dept: 'records', level: 3, status: 'FTE', reportsTo: 'mark-gefrom',
+    responsibilities: ['Run weekly team meetings and stand-ups to align priorities', 'Conduct 1:1 check-ins with direct reports', 'Monitor workload and escalate issues'],
+    kpis: ['Ticket response and resolution times', 'QA, CSAT, and FCR scores', 'Student support budget management'], email: '', photoUrl: '' },
+  { id: 'kari-johnson', name: 'Kari Johnson', title: 'Registrar', dept: 'records', level: 3, status: 'FTE', reportsTo: 'mark-gefrom',
+    responsibilities: ['Maintain student academic records and ensure compliance with institutional policies', 'Oversee registration, graduation, and transcript processes', 'Manage block/term system and catalog data'],
+    kpis: ['Resolution time on Registrar processes and tickets', 'C-Sat on Registrar processes and tickets', 'Registrar budget management'], email: '', photoUrl: '' },
+  // Level 4
+  { id: 'matthew-smith', name: 'Matthew Smith', title: 'Senior Manager, IT for Student Support', dept: 'records', level: 3, status: 'FTE', reportsTo: 'mark-gefrom',
+    responsibilities: ['Managing and developing the technical support team staff', 'Updating key stakeholders on bug/issues', 'Coordinating and prioritizing bug/issues based on impact'],
+    kpis: ['Tech support ticket resolution time', 'Tech support QA, CSAT, and FCR scores', 'Tech support costs'], email: '', photoUrl: '' },
+  { id: 'hilary-bagley', name: 'Hilary Bagley', title: 'Training & QA Manager', dept: 'records', level: 4, status: 'FTE', reportsTo: 'brad-lester',
+    responsibilities: ['Coordinate training with other Pathway departments and partners', 'Coordinate with media and creative production teams', 'Oversee knowledge base development and QA processes'],
+    kpis: ['Request-to-KB Publish Time (median days)', 'QA Calibration Consistency Rate', 'KB Audit accuracy scores'], email: '', photoUrl: '' },
+  { id: 'kim-overdiek', name: 'Kim Overdiek', title: 'Associate Registrar', dept: 'records', level: 4, status: 'FTE', reportsTo: 'kari-johnson',
+    responsibilities: ['Work on ADO resolution', 'Review Coursedog proposals for Academic Catalog updates', 'Make configuration updates in Anthology Student for planning and registration'],
+    kpis: ['Ticket resolution time', 'On-time catalog publishing and system configuration', 'Planning and Registration team costs'], email: '', photoUrl: '' },
+  { id: 'tyson-bell', name: 'Tyson Bell', title: 'Associate Registrar', dept: 'records', level: 4, status: 'FTE', reportsTo: 'kari-johnson',
+    responsibilities: ['Oversee student records and transcript processes', 'Manage graduation and enrollment verification', 'Ensure records integrity and compliance'],
+    kpis: ['Student records accuracy rate', 'Transcript processing time', 'Graduation verification accuracy'], email: '', photoUrl: '' },
+  // Level 5
+  { id: 'colby-warner', name: 'Colby Warner', title: 'Product Support Engineer', dept: 'records', level: 5, status: 'FTE', reportsTo: 'matthew-smith',
+    responsibilities: ['Resolve student cases and coordinate P1 issues', 'Write DevOps bugs for ICS as necessary', 'Write Knowledge Base articles and product documentation'],
+    kpis: ['Individual ticket resolution time', 'Ticket response time', 'Tech Support QA, CSAT, and FCR scores'], email: '', photoUrl: '' },
+  { id: 'alyssa-burrell', name: 'Alyssa Burrell', title: 'Student Support Coordinator', dept: 'records', level: 5, status: 'FTE', reportsTo: 'brad-lester',
+    responsibilities: ['Lead and oversee the Phone Support team including domestic and international staff', 'Monitor and report on phone support metrics', 'Handle escalated student support cases'],
+    kpis: ['Phone answer speed and handle time', 'Phone Support QA, CSAT, and FCR scores', 'Phone support cost management'], email: '', photoUrl: '' },
+  { id: 'kira-hayes', name: 'Kira Hayes', title: 'Training & QA Coordinator', dept: 'records', level: 5, status: 'FTE', reportsTo: 'hilary-bagley',
+    responsibilities: ['Managing the QA team and External KB team', 'Ensuring internal articles are created for agent support', 'Onboarding and training coordination for student support'],
+    kpis: ['KB publishing time', 'QA evaluations on every agent', 'All DSAT & Critical Violations sent to team leaders'], email: '', photoUrl: '' },
+  { id: 'geraldine-bean', name: 'Geraldine Susan Bean', title: 'Graduation Coordinator', dept: 'records', level: 5, status: 'FTE', reportsTo: 'tyson-bell',
+    responsibilities: ['Oversee the graduation team on applications and issues', 'Personally vet and award credentials each week', 'Manage graduation application workflow'],
+    kpis: ['Graduation application completion time', 'Number of rescinded degrees', 'Graduation team costs'], email: '', photoUrl: '' },
+  { id: 'anne-owen', name: 'Anne E. Owen', title: 'Records & Transcript Coordinator', dept: 'records', level: 5, status: 'FTE', reportsTo: 'tyson-bell',
+    responsibilities: ['Oversee grade change documentation and processing', 'Handle academic exceptions and reinstatements', 'Manage transcript requests and records'],
+    kpis: ['Process ticket completion time', 'Transcript accuracy QA scores', 'Process ticket C-Sat'], email: '', photoUrl: '' },
+  { id: 'cindi-putnam', name: 'Cindi C Putnam', title: 'Planning Coordinator', dept: 'records', level: 5, status: 'FTE', reportsTo: 'kim-overdiek',
+    responsibilities: ['Meet with Planning Team leadership to review productivity and training', 'Work with teams inside and outside department on planning processes', 'Manage degree progress audit corrections'],
+    kpis: ['Degree planning escalation ticket resolution time', 'Degree planning escalation ticket C-Sat and QA', 'Degree planning team costs'], email: '', photoUrl: '' },
+  { id: 'nikki-chambers', name: 'Nikki Jane Chambers', title: 'Enrollment Verification Specialist', dept: 'records', level: 5, status: 'FTT', reportsTo: 'tyson-bell',
+    responsibilities: ['Standard and advanced enrollment verification', 'Third-party inputs and specialized forms', 'Partner transfer evaluation and apostilles'],
+    kpis: ['Enrollment verification completion time', 'Apostille QA and C-Sat', 'Enrollment Verification team costs'], email: '', photoUrl: '' },
+  { id: 'emma-stone', name: 'Emma Stone', title: 'Registration Specialist', dept: 'records', level: 5, status: 'FTT', reportsTo: 'kim-overdiek',
+    responsibilities: ['Registration user testing and support', 'Manual registration projects', 'Registration issue resolution'],
+    kpis: ['Registration issue ticket resolution time', 'Registration issue ticket QA and C-Sat', 'Registration team costs'], email: '', photoUrl: '' },
+
+  // ── ENROLLMENT & RETENTION ──
+  // Level 3
+  { id: 'trevor-shelton', name: 'Trevor Shelton', title: 'Senior Manager of Enrollment Services', dept: 'enrollment', level: 3, status: 'FTE', reportsTo: 'alison-cundiff',
+    responsibilities: ['Develop admissions policies and strategies for new and evolving initiatives', 'Key business owner for system design, testing, and improvement', 'Drive enrollment funnel performance and strategy'],
+    kpis: ['Delivery of strategic admissions initiatives on time and as scoped', '% reduction of enrollment related support tickets', '% reduction of admissions tier 2 support tickets'], email: '', photoUrl: '' },
+  { id: 'kelley-richardson', name: 'Kelley Richardson', title: 'Mentoring Manager', dept: 'enrollment', level: 3, status: 'FTE', reportsTo: 'alison-cundiff',
+    responsibilities: ['Implement the Mentoring Strategy', 'CRM needs and adjustments', 'Oversee Mentor & Evaluator training sessions'],
+    kpis: ['Mentor RA Completion Rates', 'Mentor Interaction QA Rates', 'Mentor CSAT rates'], email: '', photoUrl: '' },
+  // Level 4
+  { id: 'rachel-kirk', name: 'Rachel Kirk', title: 'Enrollment Counseling Manager', dept: 'enrollment', level: 4, status: 'FTE', reportsTo: 'trevor-shelton',
+    responsibilities: ['Supporting team and escalating complicated issues (50%)', 'Cross-departmental collaboration (15%)', 'Planning targeted outreach and monitoring performance (35%)'],
+    kpis: ['EC RA Completion Rates', 'EC Contact rate by alert', 'Yield contribution by EC'], email: '', photoUrl: '' },
+  // Level 5
+  { id: 'mandy-schwab', name: 'Mandy Schwab', title: 'Mentor Development Specialist', dept: 'enrollment', level: 5, status: 'PTT', reportsTo: 'kelley-richardson',
+    responsibilities: ['Mentor development programs and training', 'Mentor interaction quality improvement', 'Support mentor onboarding processes'],
+    kpis: ['Mentor Interaction QA Rates', 'Mentor CSAT rates'], email: '', photoUrl: '' },
+  { id: 'johanna-relkin', name: 'Johanna Relkin', title: 'Mentor Operations Specialist', dept: 'enrollment', level: 5, status: 'PTT', reportsTo: 'kelley-richardson',
+    responsibilities: ['Mentoring operations management', 'Mentor scheduling and logistics', 'Operational reporting for mentoring program'],
+    kpis: ['Mentor RA Completion Rates'], email: '', photoUrl: '' },
+  { id: 'kimarie-howard', name: 'Kimarie Howard', title: 'EC Development & Performance Coordinator', dept: 'enrollment', level: 5, status: 'Contractor', reportsTo: 'rachel-kirk',
+    responsibilities: ['Enrollment counselor development and performance tracking', 'EC training program coordination', 'Performance metrics monitoring'],
+    kpis: ['EC CSAT rates', 'Yield contribution by EC'], email: '', photoUrl: '' },
+  { id: 'megan-niblett', name: 'Megan Niblett', title: 'EC Operations Coordinator', dept: 'enrollment', level: 5, status: 'Contractor', reportsTo: 'rachel-kirk',
+    responsibilities: ['Enrollment counselor operations management', 'EC scheduling and workload distribution', 'Operational process improvements'],
+    kpis: ['EC RA Completion Rates', 'EC Contact rate by alert', 'EC CSAT rates'], email: '', photoUrl: '' },
+  { id: 'shaunasee-james', name: 'Shaunasee Janette James', title: 'Enrollment Coordinator', dept: 'enrollment', level: 5, status: 'FTE', reportsTo: 'trevor-shelton',
+    responsibilities: ['Liaise with Ecclesiastical Clearance Office and chaplains', 'Manage team for MRN notifications and endorsement requests', 'Oversee transfer evaluation team and transcript submission workflows'],
+    kpis: ['Transfer Evaluation Throughput rate', 'Transfer Eval timelines (case age rates)', 'Transfer Eval quality (QA scores)'], email: '', photoUrl: '' },
+  { id: 'ely-zmolek', name: 'Ely Zmolek', title: 'Enrollment Services Specialist', dept: 'enrollment', level: 5, status: 'FTE', reportsTo: 'trevor-shelton',
+    responsibilities: ['Process student applications across various programs', 'Monitor integration logs and resolve reported issues', 'Review and process Manual Review applications including exceptions'],
+    kpis: ['% of applications processed within 1 business day during promotion', 'Manual review turnaround time (within one week)', 'Reduction of application related support tickets'], email: '', photoUrl: '' },
+  { id: 'trey-mooney', name: 'Trey Mooney', title: 'University Chaplain', dept: 'enrollment', level: 5, status: 'FTE', reportsTo: 'trevor-shelton',
+    responsibilities: ['Coordination with Admissions Leadership and Data Team', 'Volunteer Chaplain Leadership coordination', 'Conduct Ecclesiastical Endorsement interviews and training'],
+    kpis: ['Endorsement completion time', '% of positive feedback from missionary chaplains', '% of non-member student grievances related to endorsement delays'], email: '', photoUrl: '' },
+
+  // ── DEAN OF STUDENTS ──
+  // Level 3
+  { id: 'anne-clark', name: 'Anne Marie Clark', title: 'Associate Dean of Students', dept: 'dean', level: 3, status: 'FTE', reportsTo: 'steven-thomas',
+    responsibilities: ['Operational authority over all Dean of Students service offices', 'Deputy oversight of Title IX and ADA/Section 504 compliance', 'Operational governance and quality assurance'],
+    kpis: ['DOS case response and resolution times', 'Low escalation rates across DOS service areas', 'Deputy Title IX and ADA/Section 504 Coordinator metrics'], email: '', photoUrl: '' },
+  // Level 5 (no Level 4 in this dept)
+  { id: 'katelyn-ray', name: 'Katelyn Ray', title: 'Student Honor & Conduct Coordinator', dept: 'dean', level: 5, status: 'FTE', reportsTo: 'anne-clark',
+    responsibilities: ['Administers CES Honor Code and student conduct process', 'Ensures fairness, consistency, and due process', 'Oversee behavioral and conduct case management'],
+    kpis: ['Honor and Conduct cases response and resolution times', 'Rate of repeat offenders'], email: '', photoUrl: '' },
+  { id: 'sandra-wirttele', name: 'Sandra Wirttele', title: 'Student Accessibility Coordinator', dept: 'dean', level: 5, status: 'Contractor', reportsTo: 'anne-clark',
+    responsibilities: ['Determine and administer reasonable accommodations for students with disabilities', 'Deputy ADA/Section 504 Coordinator', 'Accommodation appeals and compliance auditing'],
+    kpis: ['Accommodation determinations and resolution times', 'Compliance with ADA and Section 504 standards audit'], email: '', photoUrl: '' },
+  { id: 'ana-decastro', name: 'Ana De Castro', title: 'Student Belonging Coordinator', dept: 'dean', level: 5, status: 'Contractor', reportsTo: 'anne-clark',
+    responsibilities: ['Institutional administrator for belonging and non-discrimination concerns', 'Ensure timely, fair, and policy-aligned response', 'Belonging-related concern resolution and reporting'],
+    kpis: ['Discrimination concerns resolved informally without escalation', 'Student sentiment and C-Sat surveys'], email: '', photoUrl: '' },
+  { id: 'helen-reboucas', name: 'Helen Reboucas', title: 'Student Grievance Coordinator', dept: 'dean', level: 5, status: 'Contractor', reportsTo: 'anne-clark',
+    responsibilities: ['Administer formal academic and administrative grievance processes', 'Ensure compliance with institutional policy and due process', 'Grievance appeals, pattern analysis, and reporting'],
+    kpis: ['Student grievance case resolution time', 'Grievance QA scores'], email: '', photoUrl: '' },
+  { id: 'joseph-bentum', name: 'Joseph Bentum', title: 'Student Crisis Coordinator', dept: 'dean', level: 5, status: 'Contractor', reportsTo: 'anne-clark',
+    responsibilities: ['Coordinate institutional intake, triage, and response for crisis referrals', 'Stabilize high-risk situations and activate emergency protocols', 'High-risk case monitoring and follow-through'],
+    kpis: ['Crisis response time', 'Appropriate C-Sat or QA measures for crisis resolution'], email: '', photoUrl: '' },
+
+  // ── DIGITAL OPERATIONS ──
+  // Level 3
+  { id: 'ricky-kailiponi', name: 'Ricky Kailiponi Jr.', title: 'Senior Manager of Digital Operations', dept: 'digital', level: 3, status: 'FTE', reportsTo: 'jacob-adams',
+    responsibilities: ['Responsible for Companion features (EC3, Registration, Admissions, Finance)', 'Partner collaboration with IT & ICS partners', 'Architect & Engineer engagement and Development & QA oversight'],
+    kpis: ['Stakeholder CSAT with timeliness per project', '% student autonomy through AI outreach (partnership metric)'], email: '', photoUrl: '' },
+  // Level 4
+  { id: 'joshua-hadden', name: 'Joshua Stafford Hadden', title: 'System & Operations Manager', dept: 'digital', level: 4, status: 'FTE', reportsTo: 'jacob-adams',
+    responsibilities: ['Help Student Services operate with greater efficiency and efficacy', 'Future state project guidance (technical elements)', 'Operational data & reporting and SIS support'],
+    kpis: ['Time to graduation/transcript requests completion', 'Projects delivered ahead or before schedule', 'Stakeholder CSAT with system operations'], email: '', photoUrl: '' },
+  { id: 'sebastian-vargas', name: 'Sebastian Vargas', title: 'Dev Manager', dept: 'digital', level: 4, status: 'Contractor', reportsTo: 'ricky-kailiponi',
+    responsibilities: ['Responsible for data accuracy in mentor portal', 'Data pipeline connection to predictive model outputs', 'High stakeholder satisfaction with timeliness and quality'],
+    kpis: ['Stakeholder CSAT with timeliness and quality', 'Stakeholder CSAT with communication and roadmap', 'Data analyst costs per PowerBI project'], email: '', photoUrl: '' },
+  { id: 'samuel-riveros', name: 'Samuel Riveros', title: 'Dev Manager', dept: 'digital', level: 4, status: 'Contractor', reportsTo: 'ricky-kailiponi',
+    responsibilities: ['Responsible for Companion front-end stability and usability', 'Companion integrations with analytics engine', 'High stakeholder satisfaction with development output'],
+    kpis: ['Companion front-end stability metrics', 'Analytics engine integration quality', 'Stakeholder CSAT with development delivery'], email: '', photoUrl: '' },
+  { id: 'aitana-toscano', name: 'Aitana Toscano', title: 'Dev Manager', dept: 'digital', level: 4, status: 'Contractor', reportsTo: 'ricky-kailiponi',
+    responsibilities: ['Quick turnarounds for PowerBI reporting', 'Backend table stability and cleaning', 'High stakeholder satisfaction with data operations'],
+    kpis: ['Power BI turnaround time', 'Backend table stability metrics', 'Stakeholder CSAT with data quality'], email: '', photoUrl: '' },
+  { id: 'isaias-zuniga', name: 'Isaias Zu\u00f1iga', title: 'AI Manager', dept: 'digital', level: 4, status: 'Contractor', reportsTo: 'ricky-kailiponi',
+    responsibilities: ['Source solutions to unfolding project challenges', 'Build AI/ML architecture and data models', 'Manage Azure DevOps board and GitHub operations'],
+    kpis: ['Azure DevOps sprint completion rates', 'Model drift and silent hallucination monitoring', 'Developer costs per project'], email: '', photoUrl: '' },
+  // Level 5
+  { id: 'david-peck', name: 'David Peck', title: 'Operational Data Analyst', dept: 'digital', level: 5, status: 'FTE', reportsTo: 'joshua-hadden',
+    responsibilities: ['Create and maintain operational reports for Student Services', 'Manage Power BI Apps reports and data refresh', 'Ensure reports reflect accurate and current data'],
+    kpis: ['Stakeholder CSAT with timeliness per project', 'Report accuracy and refresh reliability'], email: '', photoUrl: '' },
+  { id: 'pelenatita-neiufi', name: 'Pelenatita Neiufi', title: 'Reporting & Evaluation Coordinator', dept: 'digital', level: 5, status: 'FTE', reportsTo: 'joshua-hadden',
+    responsibilities: ['NSC reporting for both BYUI and EC', 'Enrollment verifications and demographic changes', 'SSN verifications and auto-drop process management'],
+    kpis: ['Stakeholder CSAT with communication and roadmap', 'Reporting accuracy and timeliness'], email: '', photoUrl: '' },
+  { id: 'victor-ferreira', name: 'Victor Lam\u00e9ni Calado Ferreira', title: 'System & Operations Associate Registrar', dept: 'digital', level: 5, status: 'FTE', reportsTo: 'joshua-hadden',
+    responsibilities: ['Overseeing the Student Information System (SIS)', 'Implementing institutional academic policies', 'FERPA compliance management'],
+    kpis: ['SIS uptime and reliability', 'FERPA compliance audit results', 'Academic policy implementation accuracy'], email: '', photoUrl: '' },
+
+  // ── PROJECT MANAGERS (displayed beside their director/VP) ──
+  { id: 'jess-swinburne', name: 'Jess Swinburne', title: 'Project Manager', dept: 'executive', level: 2, status: 'Contractor', reportsTo: 'vp', role: 'pm', pmPosition: 'right',
+    responsibilities: ['Coordinate cross-departmental strategic initiatives for Student Services', 'Track project milestones, deliverables, and resource allocation across all departments', 'Facilitate executive reporting and stakeholder communication for the VP'],
+    kpis: ['On-time delivery of cross-departmental projects', 'Stakeholder satisfaction with project communication and reporting', 'Resource utilization efficiency across initiatives'], email: '', photoUrl: '' },
+  { id: 'david-koomson', name: 'David De-Graft Koomson', title: 'Assistant Project Manager', dept: 'executive', level: 2, status: 'Contractor', reportsTo: 'vp', role: 'pm', pmPosition: 'right',
+    responsibilities: ['Support project coordination and documentation for VP-level initiatives', 'Manage project timelines, meeting agendas, and action item tracking', 'Assist with cross-team communication and follow-up on deliverables'],
+    kpis: ['Action item completion rate across VP initiatives', 'Meeting cadence adherence and documentation quality', 'Timely escalation of project risks and blockers'], email: '', photoUrl: '' },
+  { id: 'victor-elerunndu', name: 'Victor Oluwapelumi Elerunndu', title: 'Project Manager', dept: 'records', level: 3, status: 'Contractor', reportsTo: 'mark-gefrom', role: 'pm', pmPosition: 'left',
+    responsibilities: ['Coordinate student support improvement projects and initiatives', 'Track Help Center and ticket system optimization milestones', 'Manage cross-functional project timelines within student support operations'],
+    kpis: ['On-time delivery of student support projects', 'Project milestone completion rate', 'Stakeholder satisfaction with project communication'], email: '', photoUrl: '' },
+  { id: 'moses-abioye', name: 'Moses Abioye', title: 'Project Manager', dept: 'records', level: 3, status: 'Contractor', reportsTo: 'mark-gefrom', role: 'pm', pmPosition: 'right',
+    responsibilities: ['Coordinate registration and records process improvement projects', 'Track registrar system updates and compliance initiative timelines', 'Manage project documentation and reporting for records operations'],
+    kpis: ['On-time delivery of registrar and records projects', 'Registration process improvement milestones met', 'Project documentation completeness and accuracy'], email: '', photoUrl: '' },
+  { id: 'james-etukudo', name: 'James Etukudo Jr.', title: 'Project Manager', dept: 'enrollment', level: 3, status: 'Contractor', reportsTo: 'alison-cundiff', role: 'pm', pmPosition: 'right',
+    responsibilities: ['Coordinate enrollment funnel and retention initiative projects', 'Track admissions system design, testing, and deployment milestones', 'Manage project reporting and cross-team coordination for enrollment services'],
+    kpis: ['On-time delivery of enrollment and retention projects', 'Enrollment initiative milestone completion rate', 'Stakeholder satisfaction with project updates and communication'], email: '', photoUrl: '' },
+  { id: 'mariela-pezzali', name: 'Mariela Gisell Pezzali', title: 'Project Manager', dept: 'dean', level: 3, status: 'Contractor', reportsTo: 'steven-thomas', role: 'pm', pmPosition: 'right',
+    responsibilities: ['Coordinate Dean of Students office projects and compliance initiatives', 'Track Title IX, ADA/504, and student conduct process improvement timelines', 'Manage cross-office project documentation and stakeholder reporting'],
+    kpis: ['On-time delivery of DOS compliance and policy projects', 'Project milestone completion rate for student services initiatives', 'Stakeholder satisfaction with project coordination and reporting'], email: '', photoUrl: '' },
+  { id: 'karina-vargas', name: 'Karina Andrea Vargas', title: 'Project Manager', dept: 'digital', level: 3, status: 'Contractor', reportsTo: 'jacob-adams', role: 'pm', pmPosition: 'right',
+    responsibilities: ['Coordinate digital operations development and deployment projects', 'Track sprint deliverables, feature releases, and system integration milestones', 'Manage stakeholder reporting and project communication for digital initiatives'],
+    kpis: ['On-time delivery of digital operations projects', 'Sprint and release milestone completion rate', 'Stakeholder satisfaction with project timeliness and communication'], email: '', photoUrl: '' }
+];
+</script>
+
+<script>
+OC.getInitials = function(name) {
+  if (!name || name === 'Vice President') return 'VP';
+  return name.split(' ').filter(w => w.length > 0).map(w => w[0]).join('').toUpperCase().slice(0, 2);
+};
+
+OC.getChildren = function(parentId) {
+  return OC.employees.filter(e => e.reportsTo === parentId);
+};
+
+OC.getTreeChildren = function(parentId) {
+  return OC.employees.filter(e => e.reportsTo === parentId && e.role !== 'pm');
+};
+
+OC.getAssistants = function(parentId) {
+  return OC.employees.filter(e => e.reportsTo === parentId && e.role === 'pm');
+};
+
+OC.getDeptInfo = function(deptKey) {
+  return OC.DEPARTMENTS[deptKey] || OC.DEPARTMENTS.executive;
+};
+
+OC.getManager = function(emp) {
+  if (!emp.reportsTo) return null;
+  return OC.employees.find(e => e.id === emp.reportsTo) || null;
+};
+</script>
+
+<script>
+OC.renderTile = function(emp) {
+  var dept = OC.getDeptInfo(emp.dept);
+  var manager = OC.getManager(emp);
+  var isVP = emp.level === 1;
+  var isDirector = emp.level === 2 && emp.role !== 'pm';
+  var isPM = emp.role === 'pm';
+  var tileClass = isVP ? 'tile vp-tile' : isDirector ? 'tile director-tile' : 'tile';
+  if (isPM) tileClass += ' assistant-tile';
+
+  var levelBadge = isPM
+    ? 'Contractor'
+    : isVP ? OC.LEVELS[emp.level]
+    : (emp.status || 'FTE') + ' \u00b7 ' + OC.LEVELS[emp.level];
+
+  var responsibilitiesHtml = emp.responsibilities.length
+    ? '<div class="tile-section"><div class="tile-section-title">RESPONSIBILITIES</div><ul class="tile-list">' +
+      emp.responsibilities.map(function(r) { return '<li>' + r + '</li>'; }).join('') +
+      '</ul></div>' : '';
+
+  var kpisHtml = emp.kpis.length
+    ? '<div class="tile-section"><div class="tile-section-title">KEY KPIs</div><ul class="tile-list kpi-list">' +
+      emp.kpis.map(function(k) { return '<li>' + k + '</li>'; }).join('') +
+      '</ul></div>' : '';
+
+  var reportsToHtml = manager
+    ? '<div class="tile-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Reports to: ' + manager.name + '</div>' : '';
+
+  var emailHtml = emp.email
+    ? '<div class="tile-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><a href="mailto:' + emp.email + '">' + emp.email + '</a></div>' : '';
+
+  var deptHtml = '<div class="tile-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>' + dept.name + '</div>';
+
+  return '<div class="' + tileClass + '" data-id="' + emp.id + '" data-dept="' + emp.dept + '" data-level="' + emp.level + '" data-name="' + emp.name.toLowerCase() + '" data-title="' + emp.title.toLowerCase() + '" style="--tile-color:' + dept.color + '; --tile-color-r:' + dept.colorR + ';">' +
+    '<div class="tile-accent" style="background:' + dept.color + '"></div>' +
+    '<div class="tile-header">' +
+      '<div class="avatar">' + (emp.photoUrl ? '<img src="' + emp.photoUrl + '" alt="' + emp.name + '">' : OC.getInitials(emp.name)) + '</div>' +
+      '<div class="tile-name">' + emp.name + '</div>' +
+      '<div class="tile-title">' + emp.title + '</div>' +
+      '<div class="tile-level-badge">' + levelBadge + '</div>' +
+    '</div>' +
+    '<div class="tile-expand-indicator">Click to expand \u00b7 Double-click for details</div>' +
+    '<div class="tile-body"><div class="tile-body-inner">' +
+      responsibilitiesHtml + kpisHtml +
+      '<div class="tile-meta">' + reportsToHtml + deptHtml + emailHtml + '</div>' +
+    '</div></div></div>';
+};
+
+OC.renderTileWithAssistants = function(emp) {
+  var assistants = OC.getAssistants(emp.id);
+  if (assistants.length === 0) return OC.renderTile(emp);
+
+  var left = assistants.filter(function(a) { return a.pmPosition === 'left'; });
+  var right = assistants.filter(function(a) { return a.pmPosition === 'right'; });
+
+  var html = '<div class="tile-with-assistants">';
+  html += OC.renderTile(emp);
+
+  if (left.length) {
+    html += '<div class="assistant-group assistant-group-left">';
+    left.forEach(function(a) {
+      html += '<div class="assistant-slot">' + OC.renderTile(a) + '</div>';
+    });
+    html += '</div>';
+  }
+
+  if (right.length) {
+    html += '<div class="assistant-group assistant-group-right">';
+    right.forEach(function(a) {
+      html += '<div class="assistant-slot">' + OC.renderTile(a) + '</div>';
+    });
+    html += '</div>';
+  }
+
+  html += '</div>';
+  return html;
+};
+
+OC.renderSubtree = function(parentId) {
+  var parent = OC.employees.find(function(e) { return e.id === parentId; });
+  var children = OC.getTreeChildren(parentId);
+  if (children.length === 0) return '';
+
+  var parentLevel = parent ? parent.level : 0;
+
+  var html = '<ul>';
+
+  children.forEach(function(child) {
+    var isDeptBranch = child.level === 2;
+    var deptColor = OC.getDeptInfo(child.dept).color;
+
+    // Check if this child has assistants and calculate extra padding
+    var childAssistants = OC.getAssistants(child.id);
+    var hasLeftPM = childAssistants.some(function(a) { return a.pmPosition === 'left'; });
+    var hasRightPM = childAssistants.some(function(a) { return a.pmPosition === 'right'; });
+    var extraStyles = '';
+    if (hasLeftPM) extraStyles += 'padding-left:260px;--extra-pl:252px;';
+    if (hasRightPM) extraStyles += 'padding-right:260px;--extra-pr:252px;';
+
+    var branchAttr = isDeptBranch
+      ? ' class="dept-branch" data-branch-dept="' + child.dept + '" style="--dc:' + deptColor + ';' + extraStyles + '"'
+      : (extraStyles ? ' style="' + extraStyles + '"' : '');
+    var gap = child.level - parentLevel - 1;
+
+    if (gap > 0) {
+      // Skip-level: wrap in spacer nodes with ghost tiles for height alignment
+      for (var i = 0; i < gap; i++) {
+        html += '<li class="spacer-node connectors-drawn">' +
+          '<div class="tile spacer-tile"><div class="tile-accent"></div>' +
+          '<div class="tile-header"><div class="avatar">&nbsp;</div>' +
+          '<div class="tile-name">&nbsp;</div>' +
+          '<div class="tile-title">&nbsp;</div>' +
+          '<div class="tile-level-badge">&nbsp;</div></div>' +
+          '<div class="tile-expand-indicator">&nbsp;</div>' +
+          '<div class="spacer-connector"></div></div><ul>';
+      }
+      html += '<li' + branchAttr + '>';
+      html += OC.renderTileWithAssistants(child);
+      html += OC.renderSubtree(child.id);
+      html += '</li>';
+      for (var j = 0; j < gap; j++) {
+        html += '</ul></li>';
+      }
+    } else {
+      html += '<li' + branchAttr + '>';
+      html += OC.renderTileWithAssistants(child);
+      html += OC.renderSubtree(child.id);
+      html += '</li>';
+    }
+  });
+
+  html += '</ul>';
+  return html;
+};
+
+OC.renderChart = function() {
+  var vp = OC.employees.find(function(e) { return e.level === 1; });
+  var html = '<div class="tree">';
+  html += OC.renderTileWithAssistants(vp);
+  html += OC.renderSubtree(vp.id);
+  html += '</div>';
+  document.getElementById('chartContainer').innerHTML = html;
+};
+</script>
+
+<script>
+// Shared content builder for modal and hover card
+OC.buildCardContent = function(empId) {
+  var emp = OC.employees.find(function(e) { return e.id === empId; });
+  if (!emp) return '';
+  var dept = OC.getDeptInfo(emp.dept);
+  var manager = OC.getManager(emp);
+  var directReports = OC.getChildren(emp.id);
+
+  var content = '<div class="modal-accent" style="background:' + dept.color + '"></div>' +
+    '<div class="modal-header" style="--tile-color:' + dept.color + '; --tile-color-r:' + dept.colorR + ';">' +
+      '<div class="avatar">' + (emp.photoUrl ? '<img src="' + emp.photoUrl + '" alt="' + emp.name + '">' : OC.getInitials(emp.name)) + '</div>' +
+      '<div class="tile-name">' + emp.name + '</div>' +
+      '<div class="tile-title" style="color:' + dept.color + '">' + emp.title + '</div>' +
+      '<div class="tile-level-badge">' + (emp.role === 'pm' ? 'Contractor' : emp.level === 1 ? OC.LEVELS[emp.level] : (emp.status || 'FTE') + ' \u00b7 ' + OC.LEVELS[emp.level]) + '</div>' +
+    '</div>' +
+    '<div class="modal-body" style="--tile-color:' + dept.color + '; --tile-color-r:' + dept.colorR + ';">';
+
+  if (emp.responsibilities.length) {
+    content += '<div class="tile-section"><div class="tile-section-title">RESPONSIBILITIES</div><ul class="tile-list">' +
+      emp.responsibilities.map(function(r) { return '<li>' + r + '</li>'; }).join('') + '</ul></div>';
+  }
+
+  if (emp.kpis.length) {
+    content += '<div class="tile-section"><div class="tile-section-title">KEY KPIs</div><ul class="tile-list kpi-list">' +
+      emp.kpis.map(function(k) { return '<li>' + k + '</li>'; }).join('') + '</ul></div>';
+  }
+
+  if (directReports.length) {
+    content += '<div class="tile-section"><div class="tile-section-title">DIRECT REPORTS (' + directReports.length + ')</div><ul class="tile-list">' +
+      directReports.map(function(r) { return '<li>' + r.name + ' \u2014 ' + r.title + '</li>'; }).join('') + '</ul></div>';
+  }
+
+  content += '<div class="tile-meta">';
+  if (manager) {
+    content += '<div class="tile-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Reports to: ' + manager.name + ' (' + manager.title + ')</div>';
+  }
+  content += '<div class="tile-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>Department: ' + dept.name + '</div>';
+  if (emp.email) {
+    content += '<div class="tile-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><a href="mailto:' + emp.email + '">' + emp.email + '</a></div>';
+  }
+  content += '</div></div>';
+
+  return content;
+};
+
+OC.openModal = function(empId) {
+  var content = OC.buildCardContent(empId);
+  if (!content) return;
+  document.getElementById('modalContent').innerHTML = content;
+  document.getElementById('modalOverlay').classList.add('active');
+};
+
+OC.closeModal = function() {
+  document.getElementById('modalOverlay').classList.remove('active');
+};
+
+OC.initModal = function() {
+  document.getElementById('modalClose').addEventListener('click', OC.closeModal);
+  document.getElementById('modalOverlay').addEventListener('click', function(e) {
+    if (e.target === this) OC.closeModal();
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') OC.closeModal();
+  });
+};
+</script>
+
+<script>
+OC.initSearch = function() {
+  var searchInput = document.getElementById('searchInput');
+  var searchCount = document.getElementById('searchCount');
+  var noResults = document.getElementById('noResults');
+
+  searchInput.addEventListener('input', function() {
+    var query = this.value.toLowerCase().trim();
+    var tiles = document.querySelectorAll('.tile');
+
+    if (!query) {
+      tiles.forEach(function(t) { t.classList.remove('highlighted', 'dimmed'); });
+      searchCount.textContent = '';
+      noResults.classList.remove('visible');
+      return;
+    }
+
+    var matchCount = 0;
+    tiles.forEach(function(t) {
+      var name = t.dataset.name || '';
+      var title = t.dataset.title || '';
+      var dept = t.dataset.dept || '';
+      var deptName = (OC.DEPARTMENTS[dept] || {}).name || '';
+
+      if (name.includes(query) || title.includes(query) || deptName.toLowerCase().includes(query)) {
+        t.classList.add('highlighted');
+        t.classList.remove('dimmed');
+        matchCount++;
+      } else {
+        t.classList.remove('highlighted');
+        t.classList.add('dimmed');
+      }
+    });
+
+    searchCount.textContent = matchCount + ' found';
+    noResults.classList.toggle('visible', matchCount === 0);
+
+    var first = document.querySelector('.tile.highlighted');
+    if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+};
+</script>
+
+<script>
+OC.initFilter = function() {
+  var searchInput = document.getElementById('searchInput');
+  var searchCount = document.getElementById('searchCount');
+  var noResults = document.getElementById('noResults');
+
+  document.querySelectorAll('.filter-btn[data-filter]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.filter-btn[data-filter]').forEach(function(b) { b.classList.remove('active'); });
+      this.classList.add('active');
+
+      var filter = this.dataset.filter;
+      var branches = document.querySelectorAll('.dept-branch');
+      var tiles = document.querySelectorAll('.tile');
+
+      if (filter === 'all') {
+        // Show all branches and remove dimming
+        branches.forEach(function(b) { b.style.display = ''; });
+        tiles.forEach(function(t) { t.classList.remove('dimmed'); });
+      } else {
+        // Hide non-matching department branches, show matching ones
+        branches.forEach(function(b) {
+          if (b.dataset.branchDept === filter) {
+            b.style.display = '';
+          } else {
+            b.style.display = 'none';
+          }
+        });
+        // Ensure all visible tiles are not dimmed
+        tiles.forEach(function(t) { t.classList.remove('dimmed'); });
+      }
+
+      searchInput.value = '';
+      searchCount.textContent = '';
+      noResults.classList.remove('visible');
+    });
+  });
+};
+</script>
+
+<script>
+(function() {
+  var zoomLevel = 1;
+  var zoomStep = 0.1;
+  var zoomMin = 0.5;
+  var zoomMax = 1.5;
+
+  function getContainer() { return document.getElementById('chartContainer'); }
+  function getDisplay() { return document.getElementById('zoomDisplay'); }
+
+  OC.applyZoom = function() {
+    getContainer().style.transform = 'scale(' + zoomLevel + ')';
+    getDisplay().textContent = Math.round(zoomLevel * 100) + '%';
+  };
+
+  OC.zoomIn = function() {
+    zoomLevel = Math.min(zoomMax, zoomLevel + zoomStep);
+    OC.applyZoom();
+  };
+
+  OC.zoomOut = function() {
+    zoomLevel = Math.max(zoomMin, zoomLevel - zoomStep);
+    OC.applyZoom();
+  };
+
+  OC.zoomReset = function() {
+    zoomLevel = 1;
+    OC.applyZoom();
+  };
+
+  OC.autoFitZoom = function() {
+    var viewport = document.getElementById('chartViewport');
+    var container = getContainer();
+    var vw = viewport.clientWidth;
+    var cw = container.scrollWidth;
+    if (cw > vw) {
+      zoomLevel = Math.max(zoomMin, (vw - 48) / cw);
+      OC.applyZoom();
+    }
+  };
+
+  OC.initZoom = function() {
+    document.getElementById('zoomIn').addEventListener('click', OC.zoomIn);
+    document.getElementById('zoomOut').addEventListener('click', OC.zoomOut);
+    document.getElementById('zoomReset').addEventListener('click', OC.zoomReset);
+
+    document.getElementById('chartViewport').addEventListener('wheel', function(e) {
+      if (e.ctrlKey) {
+        e.preventDefault();
+        zoomLevel += e.deltaY > 0 ? -zoomStep : zoomStep;
+        zoomLevel = Math.max(zoomMin, Math.min(zoomMax, zoomLevel));
+        OC.applyZoom();
+      }
+    }, { passive: false });
+  };
+})();
+</script>
+
+<script>
+OC.initPan = function() {
+  var viewport = document.getElementById('chartViewport');
+  var isPanning = false;
+  var panStartX, panStartY, scrollStartX, scrollStartY;
+
+  // Mouse panning (desktop/tablet)
+  viewport.addEventListener('mousedown', function(e) {
+    if (e.target.closest('.tile')) return;
+    isPanning = true;
+    panStartX = e.clientX;
+    panStartY = e.clientY;
+    scrollStartX = viewport.scrollLeft;
+    scrollStartY = viewport.scrollTop;
+  });
+
+  window.addEventListener('mousemove', function(e) {
+    if (!isPanning) return;
+    viewport.scrollLeft = scrollStartX - (e.clientX - panStartX);
+    viewport.scrollTop = scrollStartY - (e.clientY - panStartY);
+  });
+
+  window.addEventListener('mouseup', function() {
+    isPanning = false;
+  });
+
+  // Touch panning (mobile/tablet)
+  viewport.addEventListener('touchstart', function(e) {
+    if (e.target.closest('.tile') || e.touches.length !== 1) return;
+    isPanning = true;
+    panStartX = e.touches[0].clientX;
+    panStartY = e.touches[0].clientY;
+    scrollStartX = viewport.scrollLeft;
+    scrollStartY = viewport.scrollTop;
+  }, { passive: true });
+
+  viewport.addEventListener('touchmove', function(e) {
+    if (!isPanning || e.touches.length !== 1) return;
+    viewport.scrollLeft = scrollStartX - (e.touches[0].clientX - panStartX);
+    viewport.scrollTop = scrollStartY - (e.touches[0].clientY - panStartY);
+  }, { passive: true });
+
+  viewport.addEventListener('touchend', function() {
+    isPanning = false;
+  });
+};
+</script>
+
+<script>
+OC.initToolbar = function() {
+  // Expand All
+  document.getElementById('expandAll').addEventListener('click', function() {
+    document.querySelectorAll('.tile').forEach(function(t) { t.classList.add('expanded'); });
+  });
+
+  // Collapse All
+  document.getElementById('collapseAll').addEventListener('click', function() {
+    document.querySelectorAll('.tile').forEach(function(t) { t.classList.remove('expanded'); });
+  });
+
+  // Print — build one-card-per-page layout, print it, then remove it
+  document.getElementById('printBtn').addEventListener('click', function() {
+    // Build print-only container with one card per page
+    var container = document.createElement('div');
+    container.id = 'printPages';
+    container.className = 'print-pages';
+
+    // Helper: walk the tree under a parent, depth-first, by level
+    function collectTree(parentId) {
+      var result = [];
+      // Get PMs for this parent first
+      var pms = OC.getAssistants(parentId);
+      pms.forEach(function(pm) { result.push(pm); });
+      // Then non-PM children, sorted by level then name
+      var children = OC.getTreeChildren(parentId).sort(function(a, b) {
+        if (a.level !== b.level) return a.level - b.level;
+        return a.name.localeCompare(b.name);
+      });
+      children.forEach(function(child) {
+        result.push(child);
+        result = result.concat(collectTree(child.id));
+      });
+      return result;
+    }
+
+    var deptOrder = ['records', 'enrollment', 'dean', 'digital'];
+    var vp = OC.employees.find(function(e) { return e.level === 1; });
+    var ordered = [vp];
+    // VP's PMs
+    OC.getAssistants(vp.id).forEach(function(pm) { ordered.push(pm); });
+    // Each department: director first, then full subtree
+    deptOrder.forEach(function(deptKey) {
+      var director = OC.employees.find(function(e) {
+        return e.reportsTo === vp.id && e.dept === deptKey && e.role !== 'pm';
+      });
+      if (director) {
+        ordered.push(director);
+        ordered = ordered.concat(collectTree(director.id));
+      }
+    });
+
+    ordered.forEach(function(emp) {
+      var page = document.createElement('div');
+      page.className = 'print-page';
+      page.innerHTML = OC.buildCardContent(emp.id);
+      container.appendChild(page);
+    });
+
+    document.body.appendChild(container);
+    document.body.classList.add('print-mode');
+
+    setTimeout(function() { window.print(); }, 100);
+  });
+
+  window.addEventListener('afterprint', function() {
+    document.body.classList.remove('print-mode');
+    var pages = document.getElementById('printPages');
+    if (pages) pages.remove();
+  });
+
+  // Theme Toggle
+  var themeBtn = document.getElementById('themeToggle');
+  var moonIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+  var sunIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
+
+  function updateThemeIcon() {
+    var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    themeBtn.innerHTML = isDark ? sunIcon : moonIcon;
+  }
+
+  themeBtn.addEventListener('click', function() {
+    var html = document.documentElement;
+    var isDark = html.getAttribute('data-theme') === 'dark';
+    html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+    localStorage.setItem('oc-theme', isDark ? 'light' : 'dark');
+    updateThemeIcon();
+  });
+
+  // Restore saved theme
+  var savedTheme = localStorage.getItem('oc-theme') || 'light';
+  document.documentElement.setAttribute('data-theme', savedTheme);
+  updateThemeIcon();
+};
+</script>
+
+<script>
+(function() {
+  var isMobile = function() { return window.matchMedia('(max-width: 900px)').matches; };
+
+  function initEntranceAnimations() {
+    var tiles = document.querySelectorAll('.tile:not(.spacer-tile)');
+    var tileIndex = 0;
+
+    tiles.forEach(function(t) { t.classList.add('animate-pending'); });
+
+    requestAnimationFrame(function() {
+      var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) {
+            var tile = entry.target;
+            var delay = tileIndex * 40;
+            tile.style.animationDelay = delay + 'ms';
+            tile.classList.remove('animate-pending');
+            tile.classList.add('animate-in');
+            tileIndex++;
+            observer.unobserve(tile);
+          }
+        });
+      }, { threshold: 0.01, rootMargin: '200px' });
+
+      tiles.forEach(function(t) { observer.observe(t); });
+
+      // Safety net: force visible after 3s
+      setTimeout(function() {
+        tiles.forEach(function(t) {
+          if (t.classList.contains('animate-pending')) {
+            t.classList.remove('animate-pending');
+            t.classList.add('animate-in');
+          }
+        });
+      }, 3000);
+    });
+  }
+
+  function initConnectorDrawing() {
+    var treeItems = document.querySelectorAll('.tree li');
+    var treeUls = document.querySelectorAll('.tree ul');
+    var delay = 0;
+
+    treeUls.forEach(function(ul) {
+      setTimeout(function() { ul.classList.add('connectors-drawn'); }, delay);
+      delay += 100;
+    });
+
+    treeItems.forEach(function(li) {
+      setTimeout(function() { li.classList.add('connectors-drawn'); }, delay);
+      delay += 30;
+    });
+  }
+
+  function initTiltEffect() {
+    if (isMobile()) return;
+    var container = document.getElementById('chartContainer');
+
+    container.addEventListener('mousemove', function(e) {
+      var tile = e.target.closest('.tile');
+      if (!tile || tile.classList.contains('dimmed')) return;
+
+      var rect = tile.getBoundingClientRect();
+      var x = (e.clientX - rect.left) / rect.width - 0.5;
+      var y = (e.clientY - rect.top) / rect.height - 0.5;
+
+      tile.classList.add('tilt-active');
+      tile.style.transform = 'perspective(600px) rotateY(' + (x * 10) + 'deg) rotateX(' + (-y * 10) + 'deg) translateY(-4px) scale(1.02)';
+    });
+
+    container.addEventListener('mouseleave', function(e) {
+      var tile = e.target.closest('.tile');
+      if (tile) {
+        tile.classList.remove('tilt-active');
+        tile.style.transform = '';
+      }
+    }, true);
+
+    container.addEventListener('mouseout', function(e) {
+      var tile = e.target.closest('.tile');
+      var relatedTile = e.relatedTarget && e.relatedTarget.closest ? e.relatedTarget.closest('.tile') : null;
+      if (tile && tile !== relatedTile) {
+        tile.classList.remove('tilt-active');
+        tile.style.transform = '';
+      }
+    });
+  }
+
+  OC.initAnimations = function() {
+    requestAnimationFrame(function() {
+      initConnectorDrawing();
+      setTimeout(initEntranceAnimations, 200);
+      initTiltEffect();
+    });
+
+    var wasDesktop = !isMobile();
+    window.addEventListener('resize', function() {
+      var isDesktop = !isMobile();
+      if (isDesktop && !wasDesktop) initTiltEffect();
+      wasDesktop = isDesktop;
+    });
+  };
+})();
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // ── Render the chart ──
+  OC.renderChart();
+
+  // ── Event delegation for tiles ──
+  var chartContainer = document.getElementById('chartContainer');
+
+  // ── Hover card setup ──
+  var hoverCard = document.getElementById('hoverCard');
+  var hoverContent = document.getElementById('hoverCardContent');
+  var hoverTimer = null;
+  var hideTimer = null;
+  var currentHoverId = null;
+  var isMobile = function() { return window.matchMedia('(max-width: 900px)').matches; };
+
+  function positionHoverCard(tile) {
+    var rect = tile.getBoundingClientRect();
+    var cardWidth = 680;
+    var vw = window.innerWidth;
+    var vh = window.innerHeight;
+
+    // Try to place to the right of the tile
+    var left = rect.right + 16;
+    // If not enough room on the right, place to the left
+    if (left + cardWidth > vw - 16) {
+      left = rect.left - cardWidth - 16;
+    }
+    // If still off-screen, center horizontally
+    if (left < 16) {
+      left = Math.max(16, (vw - cardWidth) / 2);
+    }
+
+    // Vertically align with tile top, but keep within viewport
+    var top = rect.top;
+    hoverCard.style.left = left + 'px';
+    hoverCard.style.top = top + 'px';
+
+    // After rendering, check if it overflows bottom
+    requestAnimationFrame(function() {
+      var cardRect = hoverCard.getBoundingClientRect();
+      if (cardRect.bottom > vh - 16) {
+        hoverCard.style.top = Math.max(16, vh - cardRect.height - 16) + 'px';
+      }
+    });
+  }
+
+  function showHoverCard(tile) {
+    var empId = tile.dataset.id;
+    if (!empId || empId === currentHoverId) return;
+    currentHoverId = empId;
+
+    var content = OC.buildCardContent(empId);
+    if (!content) return;
+
+    hoverContent.innerHTML = content;
+    positionHoverCard(tile);
+    hoverCard.classList.add('visible');
+  }
+
+  function hideHoverCard() {
+    clearTimeout(hoverTimer);
+    clearTimeout(hideTimer);
+    hoverCard.classList.remove('visible');
+    currentHoverId = null;
+  }
+
+  // ── Tile click (expand/collapse) — hides hover card ──
+  chartContainer.addEventListener('click', function(e) {
+    var tile = e.target.closest('.tile:not(.spacer-tile)');
+    if (!tile) return;
+    hideHoverCard();
+    tile.classList.toggle('expanded');
+  });
+
+  // ── Tile double-click (open modal) ──
+  chartContainer.addEventListener('dblclick', function(e) {
+    var tile = e.target.closest('.tile:not(.spacer-tile)');
+    if (tile && tile.dataset.id) {
+      OC.openModal(tile.dataset.id);
+    }
+  });
+
+  // ── Hover card show/hide ──
+  chartContainer.addEventListener('mouseenter', function(e) {
+    if (isMobile()) return;
+    var tile = e.target.closest('.tile:not(.spacer-tile)');
+    if (!tile || tile.classList.contains('expanded')) return;
+
+    clearTimeout(hideTimer);
+    clearTimeout(hoverTimer);
+    hoverTimer = setTimeout(function() { showHoverCard(tile); }, 300);
+  }, true);
+
+  chartContainer.addEventListener('mouseleave', function(e) {
+    var tile = e.target.closest('.tile:not(.spacer-tile)');
+    if (!tile) return;
+
+    clearTimeout(hoverTimer);
+    hideTimer = setTimeout(hideHoverCard, 200);
+  }, true);
+
+  // Keep hover card visible when mouse is over it
+  hoverCard.addEventListener('mouseenter', function() {
+    clearTimeout(hideTimer);
+  });
+
+  hoverCard.addEventListener('mouseleave', function() {
+    hideTimer = setTimeout(hideHoverCard, 200);
+  });
+
+  // Close button on hover card
+  document.getElementById('hoverCardClose').addEventListener('click', hideHoverCard);
+
+  // Hide hover card when modal opens
+  var origOpenModal = OC.openModal;
+  OC.openModal = function(empId) {
+    hideHoverCard();
+    origOpenModal(empId);
+  };
+
+  // ── Initialize all modules ──
+  OC.initModal();
+  OC.initSearch();
+  OC.initFilter();
+  OC.initZoom();
+  OC.initPan();
+  OC.initToolbar();
+
+  // ── Hamburger menu toggle ──
+  var menuToggle = document.getElementById('menuToggle');
+  var toolbarCollapsible = document.getElementById('toolbarCollapsible');
+
+  menuToggle.addEventListener('click', function() {
+    menuToggle.classList.toggle('open');
+    toolbarCollapsible.classList.toggle('open');
+  });
+
+  // Close menu when a filter or action button is clicked
+  toolbarCollapsible.addEventListener('click', function(e) {
+    if (e.target.closest('.filter-btn') || e.target.closest('.tool-btn')) {
+      menuToggle.classList.remove('open');
+      toolbarCollapsible.classList.remove('open');
+    }
+  });
+
+  // Close menu on outside click
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.toolbar') && toolbarCollapsible.classList.contains('open')) {
+      menuToggle.classList.remove('open');
+      toolbarCollapsible.classList.remove('open');
+    }
+  });
+
+  // ── Keyboard shortcuts ──
+  document.addEventListener('keydown', function(e) {
+    if ((e.ctrlKey && e.key === 'f') || (e.key === '/' && document.activeElement.tagName !== 'INPUT')) {
+      e.preventDefault();
+      document.getElementById('searchInput').focus();
+    }
+    if (document.activeElement.tagName !== 'INPUT') {
+      if (e.key === '+' || e.key === '=') OC.zoomIn();
+      if (e.key === '-') OC.zoomOut();
+    }
+  });
+
+  // ── Init animations ──
+  OC.initAnimations();
+
+  // ── Hierarchy Tree toggle ──
+  var hierarchyToggle = document.getElementById('hierarchyToggle');
+  var hierarchySection = document.getElementById('hierarchySection');
+  var chartViewport = document.getElementById('chartViewport');
+  var legendEl = document.querySelector('.legend');
+  var noResults = document.getElementById('noResults');
+  var toolbarSearch = document.getElementById('toolbarSearch');
+  var toolbarFilters = document.getElementById('toolbarFilters');
+  var toolbarActions = document.getElementById('toolbarActions');
+
+  hierarchyToggle.addEventListener('click', function(e) {
+    e.stopPropagation();
+    var isActive = hierarchyToggle.classList.toggle('active');
+    hideHoverCard();
+
+    if (isActive) {
+      // Remove active from department filter buttons
+      document.querySelectorAll('.filter-btn[data-filter]').forEach(function(b) { b.classList.remove('active'); });
+      // Show hierarchy, hide org chart
+      chartViewport.style.display = 'none';
+      legendEl.style.display = 'none';
+      noResults.style.display = 'none';
+      hierarchySection.style.display = '';
+      // Recalculate max-height now that section is visible
+      requestAnimationFrame(function() {
+        document.querySelectorAll('.ht-dept:not(.ht-collapsed) .ht-dept-body').forEach(function(body) {
+          body.style.maxHeight = body.scrollHeight + 'px';
+        });
+      });
+    } else {
+      // Show org chart, hide hierarchy
+      hierarchySection.style.display = 'none';
+      chartViewport.style.display = '';
+      legendEl.style.display = '';
+      // Re-activate "All" filter
+      document.querySelectorAll('.filter-btn[data-filter]').forEach(function(b) { b.classList.remove('active'); });
+      document.querySelector('.filter-btn[data-filter="all"]').classList.add('active');
+      // Show all branches
+      document.querySelectorAll('.dept-branch').forEach(function(b) { b.style.display = ''; });
+    }
+  });
+
+  // When a department filter is clicked, deactivate hierarchy toggle and restore org chart
+  document.querySelectorAll('.filter-btn[data-filter]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      if (hierarchyToggle.classList.contains('active')) {
+        hierarchyToggle.classList.remove('active');
+        hierarchySection.style.display = 'none';
+        chartViewport.style.display = '';
+        legendEl.style.display = '';
+      }
+    });
+  });
+
+  // ── Hierarchy tree: department collapse/expand (mobile) ──
+  OC.toggleHtDept = function(header) {
+    var chevron = header.querySelector('.ht-chevron');
+    if (getComputedStyle(chevron).display === 'none') return;
+
+    var dept = header.closest('.ht-dept');
+    var body = dept.querySelector('.ht-dept-body');
+
+    if (dept.classList.contains('ht-collapsed')) {
+      dept.classList.remove('ht-collapsed');
+      body.style.maxHeight = body.scrollHeight + 'px';
+    } else {
+      dept.classList.add('ht-collapsed');
+      body.style.maxHeight = '0px';
+    }
+  };
+
+  // Note: initial max-height is set when hierarchy section becomes visible
+
+  // Recalculate on resize
+  window.addEventListener('resize', function() {
+    document.querySelectorAll('.ht-dept:not(.ht-collapsed) .ht-dept-body').forEach(function(body) {
+      body.style.maxHeight = body.scrollHeight + 'px';
+    });
+  });
+});
+</script>
+
+</head>
+<body>
+
+<!-- ═══════════════ TOOLBAR ═══════════════ -->
+<div class="toolbar" id="toolbar">
+  <a href="index.html" class="toolbar-brand" style="text-decoration:none;color:inherit;">Student Services</a>
+
+  <button class="menu-toggle" id="menuToggle" title="Menu">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
+
+  <div class="toolbar-collapsible" id="toolbarCollapsible">
+    <div class="search-box" id="toolbarSearch">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="searchInput" placeholder="Search by name, title, or department…" autocomplete="off">
+      <span class="search-results-count" id="searchCount"></span>
+    </div>
+
+    <div class="filter-group" id="toolbarFilters">
+      <button class="filter-btn active" data-filter="all" style="--filter-color:var(--gold);--filter-color-r:var(--gold-r)">All</button>
+      <button class="filter-btn" data-filter="records" style="--filter-color:var(--teal);--filter-color-r:var(--teal-r)">Records &amp; Support</button>
+      <button class="filter-btn" data-filter="enrollment" style="--filter-color:var(--purple);--filter-color-r:var(--purple-r)">Enrollment</button>
+      <button class="filter-btn" data-filter="dean" style="--filter-color:var(--green);--filter-color-r:var(--green-r)">Dean of Students</button>
+      <button class="filter-btn" data-filter="digital" style="--filter-color:var(--red);--filter-color-r:var(--red-r)">Digital Ops</button>
+      <button class="filter-btn filter-btn--hierarchy" id="hierarchyToggle" style="--filter-color:#58595B;--filter-color-r:88,89,91">Hierarchy Tree</button>
+    </div>
+
+    <div class="toolbar-actions" id="toolbarActions">
+    <button class="tool-btn" id="zoomOut" title="Zoom Out">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
+    <span class="zoom-display" id="zoomDisplay">100%</span>
+    <button class="tool-btn" id="zoomIn" title="Zoom In">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
+    <button class="tool-btn" id="zoomReset" title="Reset Zoom">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+    </button>
+    <button class="tool-btn" id="expandAll" title="Expand All">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="7 13 12 18 17 13"/><polyline points="7 6 12 11 17 6"/></svg>
+    </button>
+    <button class="tool-btn" id="collapseAll" title="Collapse All">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 11 12 6 7 11"/><polyline points="17 18 12 13 7 18"/></svg>
+    </button>
+    <button class="tool-btn" id="printBtn" title="Print">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+    </button>
+    <button class="tool-btn" id="themeToggle" title="Toggle Dark/Light Mode">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ HEADER ═══════════════ -->
+<div class="page-header">
+  <h1>Student Services</h1>
+  <p class="subtitle">Interactive Organizational Chart &middot; BYU-Pathway Worldwide</p>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:var(--gold)"></div>Executive</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--teal)"></div>Records, Registration &amp; Support</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--purple)"></div>Enrollment &amp; Retention</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>Dean of Students</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div>Digital Operations</div>
+</div>
+
+<div class="chart-viewport" id="chartViewport">
+  <div class="chart-container" id="chartContainer">
+    <!-- Rendered by JS -->
+  </div>
+</div>
+
+<div class="no-results" id="noResults">No employees match your search.</div>
+
+<!-- ═══════════════ HIERARCHY TREE (toggled inline) ═══════════════ -->
+<div id="hierarchySection" class="hierarchy-section" style="display:none;">
+  <div class="ht-legend">
+    <div class="ht-legend-item"><div class="ht-legend-dot" style="background:var(--gold)"></div>Executive</div>
+    <div class="ht-legend-item"><div class="ht-legend-dot" style="background:var(--teal)"></div>Student Records, Registration &amp; Support</div>
+    <div class="ht-legend-item"><div class="ht-legend-dot" style="background:var(--purple)"></div>Enrollment &amp; Retention</div>
+    <div class="ht-legend-item"><div class="ht-legend-dot" style="background:var(--green)"></div>Dean of Students</div>
+    <div class="ht-legend-item"><div class="ht-legend-dot" style="background:var(--red)"></div>Digital Operations</div>
+  </div>
+
+  <div class="ht-chart">
+    <!-- LEVEL I: VP -->
+    <div class="ht-vp-wrap">
+      <div class="ht-vp-row">
+        <div class="ht-vp-node">
+          <span class="ht-level-tag">Level I &middot; Executive</span>
+          Vice President of Student Services
+        </div>
+        <div class="ht-pm-branch">
+          <div class="ht-pm-connector"></div>
+          <div class="ht-pm-node" style="--dc:var(--gold); --dcr:var(--gold-r);">Project Manager</div>
+          <div class="ht-pm-connector"></div>
+          <div class="ht-pm-node" style="--dc:var(--gold); --dcr:var(--gold-r);">Assistant Project Manager</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ht-stem"></div>
+    <div class="ht-h-bar"></div>
+
+    <!-- DEPARTMENT COLUMNS -->
+    <div class="ht-dept-row">
+
+      <!-- DEPT 1: Student Records -->
+      <div class="ht-dept" style="--dc:var(--teal); --dcr:var(--teal-r);">
+        <div class="ht-dept-accent"></div>
+        <div class="ht-dept-header" onclick="OC.toggleHtDept(this)">
+          <span class="ht-dept-header-title">Student Records, Registration &amp; Support</span>
+          <svg class="ht-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="ht-dept-body">
+          <div class="ht-dept-stem"></div>
+          <div class="ht-row-label">Level II &middot; Director</div>
+          <div class="ht-director-pm-row">
+            <div class="ht-node ht-director">Director of Student Records, Registration &amp; Support</div>
+            <div class="ht-pm-branch ht-pm-branch-left">
+              <div class="ht-pm-stack"><div class="ht-pm-node">Project Manager</div></div>
+              <div class="ht-pm-connector"></div>
+            </div>
+            <div class="ht-pm-branch">
+              <div class="ht-pm-connector"></div>
+              <div class="ht-pm-stack"><div class="ht-pm-node">Project Manager</div></div>
+            </div>
+          </div>
+
+          <div class="ht-lvl-stem" style="height:22px;"></div>
+          <div class="ht-row-label">Level III &middot; Department Leadership</div>
+          <div class="ht-node-row">
+            <div class="ht-node">Senior Manager, Student Support</div>
+            <div class="ht-node">Senior Manager, IT for Student Support</div>
+            <div class="ht-node">Registrar</div>
+          </div>
+
+          <div class="ht-lvl-stem" style="height:22px;"></div>
+          <div class="ht-row-label">Level IV &middot; Management</div>
+          <div class="ht-node-row">
+            <div class="ht-node">Manager</div>
+            <div class="ht-node">Associate Registrar</div>
+          </div>
+
+          <div class="ht-lvl-stem" style="height:22px;"></div>
+          <div class="ht-row-label">Level V &middot; Staff</div>
+          <div class="ht-node-row">
+            <div class="ht-node">Coordinator</div>
+            <div class="ht-node">Specialist</div>
+            <div class="ht-node">Product Support Engineer</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DEPT 2: Enrollment & Retention -->
+      <div class="ht-dept" style="--dc:var(--purple); --dcr:var(--purple-r);">
+        <div class="ht-dept-accent"></div>
+        <div class="ht-dept-header" onclick="OC.toggleHtDept(this)">
+          <span class="ht-dept-header-title">Enrollment &amp; Retention</span>
+          <svg class="ht-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="ht-dept-body">
+          <div class="ht-dept-stem"></div>
+          <div class="ht-row-label">Level II &middot; Director</div>
+          <div class="ht-director-pm-row">
+            <div class="ht-node ht-director">Director of Enrollment &amp; Retention</div>
+            <div class="ht-pm-branch">
+              <div class="ht-pm-connector"></div>
+              <div class="ht-pm-stack"><div class="ht-pm-node">Project Manager</div></div>
+            </div>
+          </div>
+
+          <div class="ht-lvl-stem" style="height:22px;"></div>
+          <div class="ht-row-label">Level III &middot; Department Leadership</div>
+          <div class="ht-node">Senior Manager</div>
+
+          <div class="ht-lvl-stem" style="height:22px;"></div>
+          <div class="ht-row-label">Level IV &middot; Management</div>
+          <div class="ht-node">Manager</div>
+
+          <div class="ht-lvl-stem" style="height:22px;"></div>
+          <div class="ht-row-label">Level V &middot; Staff</div>
+          <div class="ht-node-row">
+            <div class="ht-node">Specialist</div>
+            <div class="ht-node">Coordinator</div>
+            <div class="ht-node">University Chaplain</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DEPT 3: Dean of Students -->
+      <div class="ht-dept" style="--dc:var(--green); --dcr:var(--green-r);">
+        <div class="ht-dept-accent"></div>
+        <div class="ht-dept-header" onclick="OC.toggleHtDept(this)">
+          <span class="ht-dept-header-title">Dean of Students</span>
+          <svg class="ht-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="ht-dept-body">
+          <div class="ht-dept-stem"></div>
+          <div class="ht-row-label">Level II &middot; Director</div>
+          <div class="ht-director-pm-row">
+            <div class="ht-node ht-director">Dean of Students</div>
+            <div class="ht-pm-branch">
+              <div class="ht-pm-connector"></div>
+              <div class="ht-pm-stack"><div class="ht-pm-node">Project Manager</div></div>
+            </div>
+          </div>
+
+          <div class="ht-lvl-stem" style="height:22px;"></div>
+          <div class="ht-row-label">Level III &middot; Department Leadership</div>
+          <div class="ht-node">Associate Dean</div>
+
+          <div class="ht-lvl-stem" style="height:22px; background:rgba(var(--green-r),0.1);"></div>
+          <div class="ht-row-label" style="opacity:0.15;">Level IV &middot; Management</div>
+          <div class="ht-node" style="opacity:0.15; pointer-events:none; border-style:dashed;">&mdash;</div>
+
+          <div class="ht-lvl-stem" style="height:22px;"></div>
+          <div class="ht-row-label">Level V &middot; Staff</div>
+          <div class="ht-node">Coordinator</div>
+        </div>
+      </div>
+
+      <!-- DEPT 4: Digital Operations -->
+      <div class="ht-dept" style="--dc:var(--red); --dcr:var(--red-r);">
+        <div class="ht-dept-accent"></div>
+        <div class="ht-dept-header" onclick="OC.toggleHtDept(this)">
+          <span class="ht-dept-header-title">Digital Operations</span>
+          <svg class="ht-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="ht-dept-body">
+          <div class="ht-dept-stem"></div>
+          <div class="ht-row-label">Level II &middot; Director</div>
+          <div class="ht-director-pm-row">
+            <div class="ht-node ht-director">Director of Digital Operations</div>
+            <div class="ht-pm-branch">
+              <div class="ht-pm-connector"></div>
+              <div class="ht-pm-stack"><div class="ht-pm-node">Project Manager</div></div>
+            </div>
+          </div>
+
+          <div class="ht-lvl-stem" style="height:22px;"></div>
+          <div class="ht-row-label">Level III &middot; Department Leadership</div>
+          <div class="ht-node">Senior Manager</div>
+
+          <div class="ht-lvl-stem" style="height:22px;"></div>
+          <div class="ht-row-label">Level IV &middot; Management</div>
+          <div class="ht-node">Manager</div>
+
+          <div class="ht-lvl-stem" style="height:22px;"></div>
+          <div class="ht-row-label">Level V &middot; Staff</div>
+          <div class="ht-node-row">
+            <div class="ht-node">Operational Data Analyst</div>
+            <div class="ht-node">Coordinator</div>
+            <div class="ht-node">Systems &amp; Operations Associate Registrar</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div><!-- /hierarchySection -->
+
+<!-- ═══════════════ FOOTER ═══════════════ -->
+<style>
+.site-footer { background: #065577; color: rgba(255,255,255,0.7); padding: 48px 32px 32px; position: relative; margin-top: 40px; }
+[data-theme="dark"] .site-footer { background: #08141a; }
+.site-footer::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,transparent,#FFC328,transparent); }
+.site-footer .footer-inner { max-width:1100px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:20px; }
+.site-footer .footer-brand { font-family:'Cormorant Garamond',serif; font-weight:600; font-size:1rem; letter-spacing:0.1em; text-transform:uppercase; color:#FFC328; }
+.site-footer .footer-links { display:flex; gap:20px; flex-wrap:wrap; }
+.site-footer .footer-link { font-size:0.7rem; letter-spacing:0.08em; text-transform:uppercase; color:rgba(255,255,255,0.5); text-decoration:none; transition:color 0.2s; }
+.site-footer .footer-link:hover { color:#FFC328; }
+.site-footer .footer-copy { width:100%; text-align:center; font-size:0.6rem; letter-spacing:0.08em; color:rgba(255,255,255,0.3); margin-top:24px; }
+@media(max-width:768px) { .site-footer .footer-inner { justify-content:center; text-align:center; } .site-footer .footer-links { justify-content:center; } }
+</style>
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-brand">Student Services &middot; BYU-Pathway Worldwide</div>
+    <div class="footer-links">
+      <a href="index.html" class="footer-link">Home</a>
+      <a href="org-chart/index.html" class="footer-link">Org Chart Explorer</a>
+      <a href="org-chart/hierarchy.html" class="footer-link">Hierarchy View</a>
+      <a href="departments/records.html" class="footer-link">Records</a>
+      <a href="departments/enrollment.html" class="footer-link">Enrollment</a>
+      <a href="departments/dean.html" class="footer-link">Dean of Students</a>
+      <a href="departments/digital.html" class="footer-link">Digital Ops</a>
+    </div>
+    <div class="footer-copy">&copy; 2026 BYU-Pathway Worldwide. All rights reserved.</div>
+  </div>
+</footer>
+
+<!-- ═══════════════ HOVER CARD ═══════════════ -->
+<div class="hover-card" id="hoverCard">
+  <button class="modal-close hover-card-close" id="hoverCardClose">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+  </button>
+  <div id="hoverCardContent"></div>
+</div>
+
+<!-- ═══════════════ MODAL ═══════════════ -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modal">
+    <button class="modal-close" id="modalClose">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+</body>
+</html>

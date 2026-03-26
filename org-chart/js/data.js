@@ -49,7 +49,7 @@ OC.employees = [
     responsibilities: ['Maintain student academic records and ensure compliance with institutional policies', 'Oversee registration, graduation, and transcript processes', 'Manage block/term system and catalog data'],
     kpis: ['Resolution time on Registrar processes and tickets', 'C-Sat on Registrar processes and tickets', 'Registrar budget management'], email: '', photoUrl: '' },
   // Level 4
-  { id: 'matthew-smith', name: 'Matthew Smith', title: 'Technical Support Manager', dept: 'records', level: 4, status: 'FTE', reportsTo: 'brad-lester',
+  { id: 'matthew-smith', name: 'Matthew Smith', title: 'Senior Manager, IT for Student Support', dept: 'records', level: 3, status: 'FTE', reportsTo: 'mark-gefrom',
     responsibilities: ['Managing and developing the technical support team staff', 'Updating key stakeholders on bug/issues', 'Coordinating and prioritizing bug/issues based on impact'],
     kpis: ['Tech support ticket resolution time', 'Tech support QA, CSAT, and FCR scores', 'Tech support costs'], email: '', photoUrl: '' },
   { id: 'hilary-bagley', name: 'Hilary Bagley', title: 'Training & QA Manager', dept: 'records', level: 4, status: 'FTE', reportsTo: 'brad-lester',

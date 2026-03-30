@@ -1196,7 +1196,7 @@ body::after {
 }
 
 .tile.expanded {
-  width: 440px;
+  width: 680px;
   z-index: 10;
   transition:
     width 0.35s var(--spring),
@@ -1205,7 +1205,7 @@ body::after {
 }
 
 .tile.expanded .tile-body {
-  max-height: 600px;
+  max-height: 80vh;
   opacity: 1;
   transition:
     max-height 0.5s var(--spring),
@@ -1213,29 +1213,29 @@ body::after {
 }
 
 .tile.expanded .tile-body-inner {
-  padding: 0 20px 20px;
+  padding: 0 32px 32px;
 }
 
 .tile.expanded .tile-name {
-  font-size: 1.1rem;
+  font-size: 1.5rem;
 }
 
 .tile.expanded .tile-title {
-  font-size: 0.78rem;
+  font-size: 0.92rem;
 }
 
 .tile.expanded .tile-list li {
-  font-size: 0.78rem;
-  margin-bottom: 5px;
-  line-height: 1.5;
+  font-size: 0.85rem;
+  margin-bottom: 8px;
+  line-height: 1.6;
 }
 
 .tile.expanded .tile-section-title {
-  font-size: 0.65rem;
+  font-size: 0.72rem;
 }
 
 .tile.expanded .tile-meta-item {
-  font-size: 0.68rem;
+  font-size: 0.78rem;
 }
 
 .tile-body-inner {
@@ -1497,109 +1497,6 @@ body::after {
   width: 15px; height: 15px;
 }
 
-/* ══════════════════════════════════════════════════════════
-   HOVER CARD — appears on tile hover with full details
-   ══════════════════════════════════════════════════════════ */
-.hover-card {
-  position: fixed;
-  z-index: 150;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  max-width: 680px;
-  width: 680px;
-  max-height: 80vh;
-  overflow-y: auto;
-  box-shadow: var(--shadow-hover);
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(8px) scale(0.97);
-  transition: opacity 0.25s var(--smooth), transform 0.25s var(--spring);
-}
-
-.hover-card.visible {
-  opacity: 1;
-  pointer-events: auto;
-  transform: translateY(0) scale(1);
-}
-
-.hover-card .hover-card-close {
-  position: absolute;
-  top: 10px; right: 10px;
-  background: var(--ice-gray);
-  border: 1px solid var(--border);
-  border-radius: 50%;
-  width: 28px; height: 28px;
-  display: flex; align-items: center; justify-content: center;
-  color: var(--text-muted);
-  cursor: pointer;
-  z-index: 10;
-  opacity: 0;
-  transition: opacity 0.2s, background 0.2s;
-}
-
-.hover-card:hover .hover-card-close { opacity: 1; }
-.hover-card .hover-card-close:hover { background: var(--bg-elevated); color: var(--text); }
-
-/* Reuse modal header/body sizing inside hover card */
-.hover-card .modal-header {
-  padding: 32px 32px 20px;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-}
-
-.hover-card .avatar {
-  width: 88px; height: 88px;
-  font-size: 1.6rem;
-}
-
-.hover-card .tile-name {
-  font-size: 1.5rem;
-}
-
-.hover-card .tile-title {
-  font-size: 0.92rem;
-}
-
-.hover-card .tile-level-badge {
-  font-size: 0.62rem;
-  padding: 4px 12px;
-}
-
-.hover-card .modal-body {
-  padding: 0 32px 32px;
-}
-
-.hover-card .tile-section {
-  margin-top: 20px;
-}
-
-.hover-card .tile-section-title {
-  font-size: 0.72rem;
-}
-
-.hover-card .tile-list li {
-  font-size: 0.85rem;
-  margin-bottom: 8px;
-  line-height: 1.6;
-}
-
-.hover-card .tile-meta {
-  margin-top: 20px;
-  padding-top: 16px;
-}
-
-.hover-card .tile-meta-item {
-  font-size: 0.78rem;
-  gap: 8px;
-}
-
-.hover-card .tile-meta-item svg {
-  width: 15px; height: 15px;
-}
 </style>
 
 <style>
@@ -1847,9 +1744,6 @@ body::after {
   .tree li[style*="padding-left"] { padding-left: 3px !important; }
   .tree li[style*="padding-right"] { padding-right: 3px !important; }
 
-  /* Hide hover card on mobile — tap to expand instead */
-  .hover-card { display: none !important; }
-
   /* Legend */
   .legend { padding: 8px 12px; gap: 4px 12px; }
   .legend-item { font-size: 0.45rem; }
@@ -1948,7 +1842,6 @@ body::after {
   .no-results { display: none !important; }
   .hierarchy-section { display: none !important; }
   .modal-overlay { display: none !important; }
-  .hover-card { display: none !important; }
 
   /* Show print pages */
   .print-pages {
@@ -2959,70 +2852,10 @@ document.addEventListener('DOMContentLoaded', function() {
   // ── Event delegation for tiles ──
   var chartContainer = document.getElementById('chartContainer');
 
-  // ── Hover card setup ──
-  var hoverCard = document.getElementById('hoverCard');
-  var hoverContent = document.getElementById('hoverCardContent');
-  var hoverTimer = null;
-  var hideTimer = null;
-  var currentHoverId = null;
-  var isMobile = function() { return window.matchMedia('(max-width: 900px)').matches; };
-
-  function positionHoverCard(tile) {
-    var rect = tile.getBoundingClientRect();
-    var cardWidth = 680;
-    var vw = window.innerWidth;
-    var vh = window.innerHeight;
-
-    // Try to place to the right of the tile
-    var left = rect.right + 16;
-    // If not enough room on the right, place to the left
-    if (left + cardWidth > vw - 16) {
-      left = rect.left - cardWidth - 16;
-    }
-    // If still off-screen, center horizontally
-    if (left < 16) {
-      left = Math.max(16, (vw - cardWidth) / 2);
-    }
-
-    // Vertically align with tile top, but keep within viewport
-    var top = rect.top;
-    hoverCard.style.left = left + 'px';
-    hoverCard.style.top = top + 'px';
-
-    // After rendering, check if it overflows bottom
-    requestAnimationFrame(function() {
-      var cardRect = hoverCard.getBoundingClientRect();
-      if (cardRect.bottom > vh - 16) {
-        hoverCard.style.top = Math.max(16, vh - cardRect.height - 16) + 'px';
-      }
-    });
-  }
-
-  function showHoverCard(tile) {
-    var empId = tile.dataset.id;
-    if (!empId || empId === currentHoverId) return;
-    currentHoverId = empId;
-
-    var content = OC.buildCardContent(empId);
-    if (!content) return;
-
-    hoverContent.innerHTML = content;
-    positionHoverCard(tile);
-    hoverCard.classList.add('visible');
-  }
-
-  function hideHoverCard() {
-    clearTimeout(hoverTimer);
-    clearTimeout(hideTimer);
-    hoverCard.classList.remove('visible');
-    currentHoverId = null;
-  }
-
-  // ── Tile click (expand/collapse) — hides hover card ──
+  // ── Tile click (expand/collapse) ──
   chartContainer.addEventListener('click', function(e) {
     var tile = e.target.closest('.tile:not(.spacer-tile)');
     if (!tile) return;
-    hideHoverCard();
     tile.classList.toggle('expanded');
   });
 
@@ -3033,44 +2866,6 @@ document.addEventListener('DOMContentLoaded', function() {
       OC.openModal(tile.dataset.id);
     }
   });
-
-  // ── Hover card show/hide ──
-  chartContainer.addEventListener('mouseenter', function(e) {
-    if (isMobile()) return;
-    var tile = e.target.closest('.tile:not(.spacer-tile)');
-    if (!tile || tile.classList.contains('expanded')) return;
-
-    clearTimeout(hideTimer);
-    clearTimeout(hoverTimer);
-    hoverTimer = setTimeout(function() { showHoverCard(tile); }, 300);
-  }, true);
-
-  chartContainer.addEventListener('mouseleave', function(e) {
-    var tile = e.target.closest('.tile:not(.spacer-tile)');
-    if (!tile) return;
-
-    clearTimeout(hoverTimer);
-    hideTimer = setTimeout(hideHoverCard, 200);
-  }, true);
-
-  // Keep hover card visible when mouse is over it
-  hoverCard.addEventListener('mouseenter', function() {
-    clearTimeout(hideTimer);
-  });
-
-  hoverCard.addEventListener('mouseleave', function() {
-    hideTimer = setTimeout(hideHoverCard, 200);
-  });
-
-  // Close button on hover card
-  document.getElementById('hoverCardClose').addEventListener('click', hideHoverCard);
-
-  // Hide hover card when modal opens
-  var origOpenModal = OC.openModal;
-  OC.openModal = function(empId) {
-    hideHoverCard();
-    origOpenModal(empId);
-  };
 
   // ── Initialize all modules ──
   OC.initModal();
@@ -3494,13 +3289,6 @@ document.addEventListener('DOMContentLoaded', function() {
   </div>
 </footer>
 
-<!-- ═══════════════ HOVER CARD ═══════════════ -->
-<div class="hover-card" id="hoverCard">
-  <button class="modal-close hover-card-close" id="hoverCardClose">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-  </button>
-  <div id="hoverCardContent"></div>
-</div>
 
 <!-- ═══════════════ MODAL ═══════════════ -->
 <div class="modal-overlay" id="modalOverlay">

@@ -117,6 +117,8 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
   line-height: 1.5;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Subtle ambient top glow */
@@ -412,6 +414,7 @@ body::after {
 /* ── Hierarchy Section ── */
 .hierarchy-section {
   animation: htFadeUp 0.4s ease both;
+  flex: 1;
 }
 
 .legend {
@@ -844,6 +847,7 @@ body::after {
   z-index: 1;
   padding: 20px 24px 80px;
   cursor: grab;
+  flex: 1;
 }
 
 .chart-viewport:active { cursor: grabbing; }
@@ -941,6 +945,36 @@ body::after {
   width: 2px;
   background: var(--connector-color);
   transform: translateX(-50%);
+}
+
+/* ── Leadership view: VP + directors side by side, PMs below each director ── */
+
+/* Show senior managers (level 3) under directors, hide everything below them */
+.tree.leadership-view .dept-branch > ul > li > ul { display: none !important; }
+/* Hide any non-level-3 direct children of directors (e.g. Joshua at level 4 under Jacob) */
+.tree.leadership-view .dept-branch > ul > li:not([data-lvl="3"]) { display: none !important; }
+/* When a director's ul has a hidden non-level-3 sibling, suppress the dangling half-bar on the sole level-3 child */
+.tree.leadership-view .dept-branch > ul:has(> li[data-lvl]:not([data-lvl="3"])) > li[data-lvl="3"]::after { display: none !important; }
+
+/* Remove the 260px PM side padding, restore tight spacing, reset connector variables */
+.tree.leadership-view > ul > li {
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+  --extra-pl: 0px !important;
+  --extra-pr: 0px !important;
+}
+
+/* Hide all PM assistant groups in leadership view (directors + VP) */
+.tree.leadership-view .assistant-group { display: none !important; }
+
+/* Single dept filter: hide the horizontal bar that spans hidden siblings */
+.tree.single-dept-view > ul > li::after { display: none !important; }
+
+/* Single dept filter: collapse spacer tiles so the connector isn't excessively long */
+.tree.single-dept-view .tile.spacer-tile {
+  height: 0 !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
 }
 
 .tree .dept-branch .spacer-connector {
@@ -2160,7 +2194,7 @@ OC.employees = [
     responsibilities: ['Responsible for Companion features (EC3, Registration, Admissions, Finance)', 'Partner collaboration with IT & ICS partners', 'Architect & Engineer engagement and Development & QA oversight'],
     kpis: ['Stakeholder CSAT with timeliness per project', '% student autonomy through AI outreach (partnership metric)'], email: '', photoUrl: '' },
   // Level 4
-  { id: 'joshua-hadden', name: 'Joshua Stafford Hadden', title: 'System & Operations Manager', dept: 'digital', level: 4, status: 'FTE', reportsTo: 'jacob-adams',
+  { id: 'joshua-hadden', name: 'Joshua Stafford Hadden', title: 'System & Operations Manager', dept: 'digital', level: 4, status: 'FTE', reportsTo: 'ricky-kailiponi',
     responsibilities: ['Help Student Services operate with greater efficiency and efficacy', 'Future state project guidance (technical elements)', 'Operational data & reporting and SIS support'],
     kpis: ['Time to graduation/transcript requests completion', 'Projects delivered ahead or before schedule', 'Stakeholder CSAT with system operations'], email: '', photoUrl: '' },
   { id: 'sebastian-vargas', name: 'Sebastian Vargas', title: 'Dev Manager', dept: 'digital', level: 4, status: 'Contractor', reportsTo: 'ricky-kailiponi',
@@ -2339,8 +2373,8 @@ OC.renderSubtree = function(parentId) {
     if (hasRightPM) extraStyles += 'padding-right:260px;--extra-pr:252px;';
 
     var branchAttr = isDeptBranch
-      ? ' class="dept-branch" data-branch-dept="' + child.dept + '" style="--dc:' + deptColor + ';' + extraStyles + '"'
-      : (extraStyles ? ' style="' + extraStyles + '"' : '');
+      ? ' class="dept-branch" data-branch-dept="' + child.dept + '" data-lvl="' + child.level + '" style="--dc:' + deptColor + ';' + extraStyles + '"'
+      : ' data-lvl="' + child.level + '"' + (extraStyles ? ' style="' + extraStyles + '"' : '');
     var gap = child.level - parentLevel - 1;
 
     if (gap > 0) {
@@ -2376,7 +2410,7 @@ OC.renderSubtree = function(parentId) {
 
 OC.renderChart = function() {
   var vp = OC.employees.find(function(e) { return e.level === 1; });
-  var html = '<div class="tree">';
+  var html = '<div class="tree leadership-view">';
   html += OC.renderTileWithAssistants(vp);
   html += OC.renderSubtree(vp.id);
   html += '</div>';
@@ -2509,13 +2543,18 @@ OC.initFilter = function() {
       var filter = this.dataset.filter;
       var branches = document.querySelectorAll('.dept-branch');
       var tiles = document.querySelectorAll('.tile');
+      var tree = document.querySelector('.tree');
 
       if (filter === 'all') {
-        // Show all branches and remove dimming
+        // Leadership view: show VP + directors only, hide dept subtrees
         branches.forEach(function(b) { b.style.display = ''; });
         tiles.forEach(function(t) { t.classList.remove('dimmed'); });
+        tree.classList.add('leadership-view');
+        tree.classList.remove('single-dept-view');
       } else {
-        // Hide non-matching department branches, show matching ones
+        // Department view: show full subtree for selected dept
+        tree.classList.remove('leadership-view');
+        tree.classList.add('single-dept-view');
         branches.forEach(function(b) {
           if (b.dataset.branchDept === filter) {
             b.style.display = '';
@@ -2523,7 +2562,6 @@ OC.initFilter = function() {
             b.style.display = 'none';
           }
         });
-        // Ensure all visible tiles are not dimmed
         tiles.forEach(function(t) { t.classList.remove('dimmed'); });
       }
 
@@ -2949,11 +2987,13 @@ document.addEventListener('DOMContentLoaded', function() {
       hierarchySection.style.display = 'none';
       chartViewport.style.display = '';
       legendEl.style.display = '';
-      // Re-activate "All" filter
+      // Re-activate "Leadership" filter
       document.querySelectorAll('.filter-btn[data-filter]').forEach(function(b) { b.classList.remove('active'); });
       document.querySelector('.filter-btn[data-filter="all"]').classList.add('active');
-      // Show all branches
+      // Show all branches in leadership view
       document.querySelectorAll('.dept-branch').forEach(function(b) { b.style.display = ''; });
+      document.querySelector('.tree').classList.add('leadership-view');
+      document.querySelector('.tree').classList.remove('single-dept-view');
     }
   });
 
@@ -2965,6 +3005,11 @@ document.addEventListener('DOMContentLoaded', function() {
         hierarchySection.style.display = 'none';
         chartViewport.style.display = '';
         legendEl.style.display = '';
+      }
+      // Remove leadership-view when switching to a dept filter
+      if (this.dataset.filter !== 'all') {
+        var tree = document.querySelector('.tree');
+        if (tree) tree.classList.remove('leadership-view');
       }
     });
   });
@@ -3016,7 +3061,7 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 
     <div class="filter-group" id="toolbarFilters">
-      <button class="filter-btn active" data-filter="all" style="--filter-color:var(--gold);--filter-color-r:var(--gold-r)">All</button>
+      <button class="filter-btn active" data-filter="all" style="--filter-color:var(--gold);--filter-color-r:var(--gold-r)">Leadership</button>
       <button class="filter-btn" data-filter="records" style="--filter-color:var(--teal);--filter-color-r:var(--teal-r)">Records &amp; Support</button>
       <button class="filter-btn" data-filter="enrollment" style="--filter-color:var(--purple);--filter-color-r:var(--purple-r)">Enrollment</button>
       <button class="filter-btn" data-filter="dean" style="--filter-color:var(--green);--filter-color-r:var(--green-r)">Dean of Students</button>

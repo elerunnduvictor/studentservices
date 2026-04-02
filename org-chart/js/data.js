@@ -150,7 +150,7 @@ OC.employees = [
     responsibilities: ['Responsible for Companion features (EC3, Registration, Admissions, Finance)', 'Partner collaboration with IT & ICS partners', 'Architect & Engineer engagement and Development & QA oversight'],
     kpis: ['Stakeholder CSAT with timeliness per project', '% student autonomy through AI outreach (partnership metric)'], email: '', photoUrl: '' },
   // Level 4
-  { id: 'joshua-hadden', name: 'Joshua Stafford Hadden', title: 'System & Operations Manager', dept: 'digital', level: 4, status: 'FTE', reportsTo: 'jacob-adams',
+  { id: 'joshua-hadden', name: 'Joshua Stafford Hadden', title: 'System & Operations Manager', dept: 'digital', level: 4, status: 'FTE', reportsTo: 'ricky-kailiponi',
     responsibilities: ['Help Student Services operate with greater efficiency and efficacy', 'Future state project guidance (technical elements)', 'Operational data & reporting and SIS support'],
     kpis: ['Time to graduation/transcript requests completion', 'Projects delivered ahead or before schedule', 'Stakeholder CSAT with system operations'], email: '', photoUrl: '' },
   { id: 'sebastian-vargas', name: 'Sebastian Vargas', title: 'Dev Manager', dept: 'digital', level: 4, status: 'Contractor', reportsTo: 'ricky-kailiponi',

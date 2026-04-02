@@ -97,8 +97,8 @@ OC.renderSubtree = function(parentId) {
     if (hasRightPM) extraStyles += 'padding-right:260px;--extra-pr:252px;';
 
     var branchAttr = isDeptBranch
-      ? ' class="dept-branch" data-branch-dept="' + child.dept + '" style="--dc:' + deptColor + ';' + extraStyles + '"'
-      : (extraStyles ? ' style="' + extraStyles + '"' : '');
+      ? ' class="dept-branch" data-branch-dept="' + child.dept + '" data-lvl="' + child.level + '" style="--dc:' + deptColor + ';' + extraStyles + '"'
+      : ' data-lvl="' + child.level + '"' + (extraStyles ? ' style="' + extraStyles + '"' : '');
     var gap = child.level - parentLevel - 1;
 
     if (gap > 0) {
@@ -134,7 +134,7 @@ OC.renderSubtree = function(parentId) {
 
 OC.renderChart = function() {
   var vp = OC.employees.find(function(e) { return e.level === 1; });
-  var html = '<div class="tree">';
+  var html = '<div class="tree leadership-view">';
   html += OC.renderTileWithAssistants(vp);
   html += OC.renderSubtree(vp.id);
   html += '</div>';

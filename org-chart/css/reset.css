@@ -12,6 +12,8 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
   line-height: 1.5;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Subtle ambient top glow */

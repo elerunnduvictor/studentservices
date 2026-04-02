@@ -200,11 +200,13 @@ document.addEventListener('DOMContentLoaded', function() {
       hierarchySection.style.display = 'none';
       chartViewport.style.display = '';
       legendEl.style.display = '';
-      // Re-activate "All" filter
+      // Re-activate "Leadership" filter
       document.querySelectorAll('.filter-btn[data-filter]').forEach(function(b) { b.classList.remove('active'); });
       document.querySelector('.filter-btn[data-filter="all"]').classList.add('active');
-      // Show all branches
+      // Show all branches in leadership view
       document.querySelectorAll('.dept-branch').forEach(function(b) { b.style.display = ''; });
+      var tree = document.querySelector('.tree');
+      if (tree) { tree.classList.add('leadership-view'); tree.classList.remove('single-dept-view'); }
     }
   });
 

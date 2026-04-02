@@ -12,12 +12,14 @@ OC.initFilter = function() {
       var branches = document.querySelectorAll('.dept-branch');
       var tiles = document.querySelectorAll('.tile');
 
+      var tree = document.querySelector('.tree');
+
       if (filter === 'all') {
-        // Show all branches and remove dimming
         branches.forEach(function(b) { b.style.display = ''; });
         tiles.forEach(function(t) { t.classList.remove('dimmed'); });
+        if (tree) { tree.classList.add('leadership-view'); tree.classList.remove('single-dept-view'); }
       } else {
-        // Hide non-matching department branches, show matching ones
+        if (tree) { tree.classList.remove('leadership-view'); tree.classList.add('single-dept-view'); }
         branches.forEach(function(b) {
           if (b.dataset.branchDept === filter) {
             b.style.display = '';
@@ -25,7 +27,6 @@ OC.initFilter = function() {
             b.style.display = 'none';
           }
         });
-        // Ensure all visible tiles are not dimmed
         tiles.forEach(function(t) { t.classList.remove('dimmed'); });
       }
 

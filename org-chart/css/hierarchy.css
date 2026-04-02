@@ -3,6 +3,9 @@
    All classes prefixed with ht- to avoid collisions
    ══════════════════════════════════════════════════════════ */
 
+/* Flex grow so footer is pushed to bottom */
+.hierarchy-section { flex: 1; }
+
 /* ── Chart container ── */
 .ht-chart {
   display: flex;

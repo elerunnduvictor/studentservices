@@ -7,6 +7,7 @@
   z-index: 1;
   padding: 20px 24px 80px;
   cursor: grab;
+  flex: 1;
 }
 
 .chart-viewport:active { cursor: grabbing; }
@@ -106,6 +107,35 @@
   width: 2px;
   background: var(--connector-color);
   transform: translateX(-50%);
+}
+
+/* ── Leadership view ── */
+/* Show senior managers (level 3) under directors, hide everything below */
+.tree.leadership-view .dept-branch > ul > li > ul { display: none !important; }
+/* Hide non-level-3 direct children of directors */
+.tree.leadership-view .dept-branch > ul > li:not([data-lvl="3"]) { display: none !important; }
+/* Suppress dangling half-bar when sole visible child has hidden siblings */
+.tree.leadership-view .dept-branch > ul:has(> li[data-lvl]:not([data-lvl="3"])) > li[data-lvl="3"]::after { display: none !important; }
+
+/* Tight spacing between directors */
+.tree.leadership-view > ul > li {
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+  --extra-pl: 0px !important;
+  --extra-pr: 0px !important;
+}
+
+/* Hide all PM assistant groups in leadership view */
+.tree.leadership-view .assistant-group { display: none !important; }
+
+/* Single dept filter: hide the orphaned horizontal bar */
+.tree.single-dept-view > ul > li::after { display: none !important; }
+
+/* Single dept filter: collapse spacer tiles to shorten connector */
+.tree.single-dept-view .tile.spacer-tile {
+  height: 0 !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
 }
 
 .tree .dept-branch .spacer-connector {

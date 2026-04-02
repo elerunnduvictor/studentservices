@@ -28,6 +28,25 @@ OC.initFilter = function() {
           }
         });
         tiles.forEach(function(t) { t.classList.remove('dimmed'); });
+
+        // Fix spacer tile heights: find the skipped level and measure a real tile at that level
+        requestAnimationFrame(function() {
+          document.querySelectorAll('.spacer-node').forEach(function(spacerLi) {
+            var spacerTile = spacerLi.querySelector('.tile.spacer-tile');
+            if (!spacerTile) return;
+            // The real child inside the spacer tells us the destination level
+            var innerTile = spacerLi.querySelector('.tile:not(.spacer-tile)');
+            var targetLevel = innerTile ? (parseInt(innerTile.dataset.level) - 1) : 4;
+            // Find any visible tile at that level to use as height reference
+            var refTile = document.querySelector('.tile[data-level="' + targetLevel + '"]:not(.spacer-tile)');
+            if (!refTile || refTile.offsetHeight === 0) {
+              // Fallback: any visible non-vp non-director tile
+              refTile = document.querySelector('.tile:not(.spacer-tile):not(.vp-tile):not(.director-tile)');
+            }
+            if (!refTile || refTile.offsetHeight === 0) return;
+            spacerTile.style.height = refTile.offsetHeight + 'px';
+          });
+        });
       }
 
       searchInput.value = '';

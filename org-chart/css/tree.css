@@ -131,12 +131,6 @@
 /* Single dept filter: hide the orphaned horizontal bar */
 .tree.single-dept-view > ul > li::after { display: none !important; }
 
-/* Single dept filter: collapse spacer tiles to shorten connector */
-.tree.single-dept-view .tile.spacer-tile {
-  height: 0 !important;
-  min-height: 0 !important;
-  overflow: hidden !important;
-}
 
 .tree .dept-branch .spacer-connector {
   background: var(--dc);

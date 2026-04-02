@@ -111,6 +111,7 @@ OC.renderSubtree = function(parentId) {
           '<div class="tile-title">&nbsp;</div>' +
           '<div class="tile-level-badge">&nbsp;</div></div>' +
           '<div class="tile-expand-indicator">&nbsp;</div>' +
+          '<div class="tile-body"><div class="tile-body-inner"></div></div>' +
           '<div class="spacer-connector"></div></div><ul>';
       }
       html += '<li' + branchAttr + '>';

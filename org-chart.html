@@ -970,12 +970,6 @@ body::after {
 /* Single dept filter: hide the horizontal bar that spans hidden siblings */
 .tree.single-dept-view > ul > li::after { display: none !important; }
 
-/* Single dept filter: collapse spacer tiles so the connector isn't excessively long */
-.tree.single-dept-view .tile.spacer-tile {
-  height: 0 !important;
-  min-height: 0 !important;
-  overflow: hidden !important;
-}
 
 .tree .dept-branch .spacer-connector {
   background: var(--dc);
@@ -2156,13 +2150,13 @@ OC.employees = [
   { id: 'megan-niblett', name: 'Megan Niblett', title: 'EC Operations Coordinator', dept: 'enrollment', level: 5, status: 'Contractor', reportsTo: 'rachel-kirk',
     responsibilities: ['Enrollment counselor operations management', 'EC scheduling and workload distribution', 'Operational process improvements'],
     kpis: ['EC RA Completion Rates', 'EC Contact rate by alert', 'EC CSAT rates'], email: '', photoUrl: '' },
-  { id: 'shaunasee-james', name: 'Shaunasee Janette James', title: 'Enrollment Coordinator', dept: 'enrollment', level: 5, status: 'FTE', reportsTo: 'trevor-shelton',
+  { id: 'shaunasee-james', name: 'Shaunasee Janette James', title: 'Enrollment Coordinator', dept: 'enrollment', level: 5, status: 'FTE', reportsTo: 'rachel-kirk',
     responsibilities: ['Liaise with Ecclesiastical Clearance Office and chaplains', 'Manage team for MRN notifications and endorsement requests', 'Oversee transfer evaluation team and transcript submission workflows'],
     kpis: ['Transfer Evaluation Throughput rate', 'Transfer Eval timelines (case age rates)', 'Transfer Eval quality (QA scores)'], email: '', photoUrl: '' },
-  { id: 'ely-zmolek', name: 'Ely Zmolek', title: 'Enrollment Services Specialist', dept: 'enrollment', level: 5, status: 'FTE', reportsTo: 'trevor-shelton',
+  { id: 'ely-zmolek', name: 'Ely Zmolek', title: 'Enrollment Services Specialist', dept: 'enrollment', level: 5, status: 'FTE', reportsTo: 'rachel-kirk',
     responsibilities: ['Process student applications across various programs', 'Monitor integration logs and resolve reported issues', 'Review and process Manual Review applications including exceptions'],
     kpis: ['% of applications processed within 1 business day during promotion', 'Manual review turnaround time (within one week)', 'Reduction of application related support tickets'], email: '', photoUrl: '' },
-  { id: 'trey-mooney', name: 'Trey Mooney', title: 'University Chaplain', dept: 'enrollment', level: 5, status: 'FTE', reportsTo: 'trevor-shelton',
+  { id: 'trey-mooney', name: 'Trey Mooney', title: 'University Chaplain', dept: 'enrollment', level: 5, status: 'FTE', reportsTo: 'rachel-kirk',
     responsibilities: ['Coordination with Admissions Leadership and Data Team', 'Volunteer Chaplain Leadership coordination', 'Conduct Ecclesiastical Endorsement interviews and training'],
     kpis: ['Endorsement completion time', '% of positive feedback from missionary chaplains', '% of non-member student grievances related to endorsement delays'], email: '', photoUrl: '' },
 
@@ -2387,6 +2381,7 @@ OC.renderSubtree = function(parentId) {
           '<div class="tile-title">&nbsp;</div>' +
           '<div class="tile-level-badge">&nbsp;</div></div>' +
           '<div class="tile-expand-indicator">&nbsp;</div>' +
+          '<div class="tile-body"><div class="tile-body-inner"></div></div>' +
           '<div class="spacer-connector"></div></div><ul>';
       }
       html += '<li' + branchAttr + '>';
@@ -2563,6 +2558,25 @@ OC.initFilter = function() {
           }
         });
         tiles.forEach(function(t) { t.classList.remove('dimmed'); });
+
+        // Fix spacer tile heights: find the skipped level and measure a real tile at that level
+        requestAnimationFrame(function() {
+          document.querySelectorAll('.spacer-node').forEach(function(spacerLi) {
+            var spacerTile = spacerLi.querySelector('.tile.spacer-tile');
+            if (!spacerTile) return;
+            // The real child inside the spacer tells us the destination level
+            var innerTile = spacerLi.querySelector('.tile:not(.spacer-tile)');
+            var targetLevel = innerTile ? (parseInt(innerTile.dataset.level) - 1) : 4;
+            // Find any visible tile at that level to use as height reference
+            var refTile = document.querySelector('.tile[data-level="' + targetLevel + '"]:not(.spacer-tile)');
+            if (!refTile || refTile.offsetHeight === 0) {
+              // Fallback: any visible non-vp non-director tile
+              refTile = document.querySelector('.tile:not(.spacer-tile):not(.vp-tile):not(.director-tile)');
+            }
+            if (!refTile || refTile.offsetHeight === 0) return;
+            spacerTile.style.height = refTile.offsetHeight + 'px';
+          });
+        });
       }
 
       searchInput.value = '';

@@ -5,70 +5,10 @@ document.addEventListener('DOMContentLoaded', function() {
   // ── Event delegation for tiles ──
   var chartContainer = document.getElementById('chartContainer');
 
-  // ── Hover card setup ──
-  var hoverCard = document.getElementById('hoverCard');
-  var hoverContent = document.getElementById('hoverCardContent');
-  var hoverTimer = null;
-  var hideTimer = null;
-  var currentHoverId = null;
-  var isMobile = function() { return window.matchMedia('(max-width: 900px)').matches; };
-
-  function positionHoverCard(tile) {
-    var rect = tile.getBoundingClientRect();
-    var cardWidth = 680;
-    var vw = window.innerWidth;
-    var vh = window.innerHeight;
-
-    // Try to place to the right of the tile
-    var left = rect.right + 16;
-    // If not enough room on the right, place to the left
-    if (left + cardWidth > vw - 16) {
-      left = rect.left - cardWidth - 16;
-    }
-    // If still off-screen, center horizontally
-    if (left < 16) {
-      left = Math.max(16, (vw - cardWidth) / 2);
-    }
-
-    // Vertically align with tile top, but keep within viewport
-    var top = rect.top;
-    hoverCard.style.left = left + 'px';
-    hoverCard.style.top = top + 'px';
-
-    // After rendering, check if it overflows bottom
-    requestAnimationFrame(function() {
-      var cardRect = hoverCard.getBoundingClientRect();
-      if (cardRect.bottom > vh - 16) {
-        hoverCard.style.top = Math.max(16, vh - cardRect.height - 16) + 'px';
-      }
-    });
-  }
-
-  function showHoverCard(tile) {
-    var empId = tile.dataset.id;
-    if (!empId || empId === currentHoverId) return;
-    currentHoverId = empId;
-
-    var content = OC.buildCardContent(empId);
-    if (!content) return;
-
-    hoverContent.innerHTML = content;
-    positionHoverCard(tile);
-    hoverCard.classList.add('visible');
-  }
-
-  function hideHoverCard() {
-    clearTimeout(hoverTimer);
-    clearTimeout(hideTimer);
-    hoverCard.classList.remove('visible');
-    currentHoverId = null;
-  }
-
-  // ── Tile click (expand/collapse) — hides hover card ──
+  // ── Tile click (expand/collapse) ──
   chartContainer.addEventListener('click', function(e) {
     var tile = e.target.closest('.tile:not(.spacer-tile)');
     if (!tile) return;
-    hideHoverCard();
     tile.classList.toggle('expanded');
   });
 
@@ -79,44 +19,6 @@ document.addEventListener('DOMContentLoaded', function() {
       OC.openModal(tile.dataset.id);
     }
   });
-
-  // ── Hover card show/hide ──
-  chartContainer.addEventListener('mouseenter', function(e) {
-    if (isMobile()) return;
-    var tile = e.target.closest('.tile:not(.spacer-tile)');
-    if (!tile || tile.classList.contains('expanded')) return;
-
-    clearTimeout(hideTimer);
-    clearTimeout(hoverTimer);
-    hoverTimer = setTimeout(function() { showHoverCard(tile); }, 300);
-  }, true);
-
-  chartContainer.addEventListener('mouseleave', function(e) {
-    var tile = e.target.closest('.tile:not(.spacer-tile)');
-    if (!tile) return;
-
-    clearTimeout(hoverTimer);
-    hideTimer = setTimeout(hideHoverCard, 200);
-  }, true);
-
-  // Keep hover card visible when mouse is over it
-  hoverCard.addEventListener('mouseenter', function() {
-    clearTimeout(hideTimer);
-  });
-
-  hoverCard.addEventListener('mouseleave', function() {
-    hideTimer = setTimeout(hideHoverCard, 200);
-  });
-
-  // Close button on hover card
-  document.getElementById('hoverCardClose').addEventListener('click', hideHoverCard);
-
-  // Hide hover card when modal opens
-  var origOpenModal = OC.openModal;
-  OC.openModal = function(empId) {
-    hideHoverCard();
-    origOpenModal(empId);
-  };
 
   // ── Initialize all modules ──
   OC.initModal();
@@ -179,7 +81,6 @@ document.addEventListener('DOMContentLoaded', function() {
   hierarchyToggle.addEventListener('click', function(e) {
     e.stopPropagation();
     var isActive = hierarchyToggle.classList.toggle('active');
-    hideHoverCard();
 
     if (isActive) {
       // Remove active from department filter buttons

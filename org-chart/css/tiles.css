@@ -142,7 +142,7 @@
 }
 
 .tile.expanded {
-  width: 440px;
+  width: 680px;
   z-index: 10;
   transition:
     width 0.35s var(--spring),
@@ -151,7 +151,7 @@
 }
 
 .tile.expanded .tile-body {
-  max-height: 600px;
+  max-height: 80vh;
   opacity: 1;
   transition:
     max-height 0.5s var(--spring),

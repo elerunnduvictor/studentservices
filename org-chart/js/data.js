@@ -83,9 +83,6 @@ OC.employees = [
   { id: 'nikki-chambers', name: 'Nikki Jane Chambers', title: 'Enrollment Verification Specialist', dept: 'records', level: 5, status: 'FTT', reportsTo: 'tyson-bell',
     responsibilities: ['Standard and advanced enrollment verification', 'Third-party inputs and specialized forms', 'Partner transfer evaluation and apostilles'],
     kpis: ['Enrollment verification completion time', 'Apostille QA and C-Sat', 'Enrollment Verification team costs'], email: '', photoUrl: '' },
-  { id: 'emma-stone', name: 'Emma Stone', title: 'Registration Specialist', dept: 'records', level: 5, status: 'FTT', reportsTo: 'kim-overdiek',
-    responsibilities: ['Registration user testing and support', 'Manual registration projects', 'Registration issue resolution'],
-    kpis: ['Registration issue ticket resolution time', 'Registration issue ticket QA and C-Sat', 'Registration team costs'], email: '', photoUrl: '' },
 
   // ── ENROLLMENT & RETENTION ──
   // Level 3

@@ -76,9 +76,9 @@ body {
   overflow-x: hidden;
 }
 
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+/* Hide scrollbars (SharePoint provides outer scroll) */
+* { scrollbar-width: none; -ms-overflow-style: none; }
+*::-webkit-scrollbar { display: none; }
 
 a { color: inherit; text-decoration: none; }
 img { max-width: 100%; }
@@ -679,214 +679,6 @@ img { max-width: 100%; }
   line-height: 1.4;
 }
 
-/* ══════════════════════════════════════════════════════════
-   EVENTS TIMELINE
-   ══════════════════════════════════════════════════════════ */
-.events-list {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  position: relative;
-  padding-left: 32px;
-}
-
-.events-list::before {
-  content: '';
-  position: absolute;
-  left: 7px;
-  top: 8px;
-  bottom: 8px;
-  width: 2px;
-  background: var(--border);
-  border-radius: 1px;
-}
-
-.event-item {
-  position: relative;
-  display: flex;
-  gap: 20px;
-  align-items: flex-start;
-}
-
-.event-dot {
-  position: absolute;
-  left: -32px;
-  top: 6px;
-  width: 16px; height: 16px;
-  border-radius: 50%;
-  border: 2px solid var(--gold);
-  background: var(--bg);
-  z-index: 1;
-  transition: all 0.3s var(--spring);
-}
-
-.event-item:hover .event-dot {
-  background: var(--gold);
-  box-shadow: 0 0 12px rgba(var(--gold-r), 0.3);
-  transform: scale(1.2);
-}
-
-.event-card {
-  flex: 1;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 20px 24px;
-  box-shadow: var(--shadow);
-  transition: all 0.3s var(--spring);
-}
-
-.event-item:hover .event-card {
-  transform: translateX(4px);
-  box-shadow: var(--shadow-hover);
-}
-
-.event-date {
-  display: inline-block;
-  font-size: 0.55rem;
-  font-weight: 600;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: var(--gold);
-  background: rgba(var(--gold-r), 0.08);
-  border: 1px solid rgba(var(--gold-r), 0.15);
-  border-radius: 12px;
-  padding: 3px 12px;
-  margin-bottom: 8px;
-}
-
-.event-title {
-  font-family: 'Cormorant Garamond', serif;
-  font-weight: 600;
-  font-size: 1.05rem;
-  color: var(--text);
-  margin-bottom: 4px;
-}
-
-.event-desc {
-  font-size: 0.78rem;
-  color: var(--text-dim);
-  line-height: 1.5;
-}
-
-/* ══════════════════════════════════════════════════════════
-   SSC NOTES ACCORDION
-   ══════════════════════════════════════════════════════════ */
-.ssc-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.ssc-item {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  overflow: hidden;
-  box-shadow: var(--shadow);
-  transition: box-shadow 0.3s;
-}
-
-.ssc-item:hover { box-shadow: var(--shadow-hover); }
-
-.ssc-item.open { border-color: rgba(var(--gold-r), 0.2); }
-
-.ssc-header {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 18px 24px;
-  cursor: pointer;
-  user-select: none;
-  transition: background 0.2s;
-}
-
-.ssc-header:hover { background: var(--ice-gray); }
-
-.ssc-indicator {
-  width: 4px;
-  height: 28px;
-  border-radius: 2px;
-  background: var(--gold);
-  opacity: 0.4;
-  flex-shrink: 0;
-  transition: opacity 0.3s;
-}
-
-.ssc-item.open .ssc-indicator { opacity: 1; }
-
-.ssc-header-info { flex: 1; min-width: 0; }
-
-.ssc-meeting-date {
-  font-size: 0.58rem;
-  font-weight: 600;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: var(--gold);
-}
-
-.ssc-meeting-title {
-  font-family: 'Cormorant Garamond', serif;
-  font-weight: 600;
-  font-size: 1rem;
-  color: var(--text);
-}
-
-.ssc-chevron {
-  width: 18px; height: 18px;
-  color: var(--text-dim);
-  flex-shrink: 0;
-  transition: transform 0.3s var(--spring);
-}
-
-.ssc-item.open .ssc-chevron {
-  transform: rotate(180deg);
-}
-
-.ssc-body {
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height 0.4s var(--spring), opacity 0.3s;
-  opacity: 0;
-}
-
-.ssc-item.open .ssc-body {
-  opacity: 1;
-}
-
-.ssc-body-inner {
-  padding: 0 24px 24px;
-  padding-left: 44px;
-}
-
-.ssc-body-inner p {
-  font-size: 0.82rem;
-  color: var(--text-muted);
-  line-height: 1.7;
-  margin-bottom: 10px;
-}
-
-.ssc-body-inner ul {
-  list-style: none;
-  padding: 0;
-}
-
-.ssc-body-inner li {
-  font-size: 0.82rem;
-  color: var(--text-muted);
-  line-height: 1.6;
-  padding-left: 16px;
-  position: relative;
-  margin-bottom: 6px;
-}
-
-.ssc-body-inner li::before {
-  content: '\2022';
-  position: absolute;
-  left: 2px;
-  color: var(--gold);
-  opacity: 0.5;
-}
 
 /* ══════════════════════════════════════════════════════════
    FOOTER
@@ -1012,11 +804,9 @@ img { max-width: 100%; }
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
   </button>
   <div class="nav-links" id="navLinks">
-    <a href="#mission" class="nav-link">Mission</a>
-    <a href="#message" class="nav-link">Weekly Message</a>
+    <a href="#message" class="nav-link">Message from Leadership</a>
     <a href="#departments" class="nav-link">Departments</a>
-    <a href="#events" class="nav-link">Events</a>
-    <a href="#ssc" class="nav-link">SSC Notes</a>
+    <a href="#tools" class="nav-link">Tools &amp; Resources</a>
   </div>
   <button class="nav-theme-btn" id="themeToggle" title="Toggle theme">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
@@ -1244,34 +1034,6 @@ img { max-width: 100%; }
   </div>
 </section>
 
-<!-- ═══════════════ RECENT EVENTS ═══════════════ -->
-<section class="section section-glow" id="events">
-  <div class="section-inner">
-    <div data-reveal>
-      <div class="section-label">What's Happening</div>
-      <div class="section-title">Recent Events</div>
-      <div class="section-divider"></div>
-    </div>
-    <div class="events-list" id="eventsList">
-      <!-- Rendered by JS -->
-    </div>
-  </div>
-</section>
-
-<!-- ═══════════════ SSC NOTES ═══════════════ -->
-<section class="section" id="ssc">
-  <div class="section-inner">
-    <div data-reveal>
-      <div class="section-label">Meeting Notes</div>
-      <div class="section-title">Student Services Council</div>
-      <div class="section-divider"></div>
-    </div>
-    <div class="ssc-list" id="sscList">
-      <!-- Rendered by JS -->
-    </div>
-  </div>
-</section>
-
 <!-- ═══════════════ FOOTER ═══════════════ -->
 <footer class="site-footer">
   <div class="footer-inner">
@@ -1281,7 +1043,6 @@ img { max-width: 100%; }
       <a href="org-chart/index.html" class="footer-link">Org Chart</a>
       <a href="org-chart/hierarchy.html" class="footer-link">Hierarchy View</a>
       <a href="#departments" class="footer-link">Departments</a>
-      <a href="#ssc" class="footer-link">SSC Notes</a>
     </div>
     <div class="footer-copy">&copy; 2026 BYU-Pathway Worldwide. All rights reserved.</div>
   </div>
@@ -1293,74 +1054,10 @@ img { max-width: 100%; }
    EDITABLE CONTENT — Update these each week
    ════════════════════════════════════════════ */
 
-var EVENTS_DATA = [
-  { date: 'Mar 21, 2026', title: 'Spring Enrollment Window Opens', desc: 'New student application portal goes live for the upcoming spring semester across all programs.' },
-  { date: 'Mar 18, 2026', title: 'Student Services All-Hands Meeting', desc: 'Quarterly all-hands with department updates, strategic priorities review, and team recognition.' },
-  { date: 'Mar 14, 2026', title: 'Help Center 2.0 Launch', desc: 'Redesigned Help Center with improved search, AI-assisted routing, and multi-language support goes live.' },
-  { date: 'Mar 10, 2026', title: 'Mentoring Program Workshop', desc: 'Training session for new mentors covering best practices, CRM tools, and student engagement strategies.' },
-  { date: 'Mar 5, 2026', title: 'Power BI Dashboard Update', desc: 'New operational dashboard released with real-time enrollment metrics and support ticket analytics.' }
-];
-
-var SSC_DATA = [
-  { date: 'March 20, 2026', title: 'Weekly SSC Standup', notes: '<p>Key discussion points from this week\'s Student Services Council meeting:</p><ul><li>Enrollment numbers tracking 8% above target for spring semester — team recognized for outreach efforts</li><li>Help Center 2.0 feedback has been overwhelmingly positive; 23% reduction in repeat contacts</li><li>Dean of Students office rolling out updated grievance process documentation by end of month</li><li>Digital Operations shared roadmap for AI-assisted student support features (Q2 target)</li><li>Action item: All directors to submit Q1 KPI reports by March 27</li></ul>' },
-  { date: 'March 13, 2026', title: 'Weekly SSC Standup', notes: '<p>Updates and action items:</p><ul><li>Registration system performance improvements deployed — page load times reduced by 40%</li><li>Mentoring team onboarded 15 new mentors this week; training completion rate at 92%</li><li>Student accessibility accommodations process review scheduled for next week</li><li>Cross-department collaboration on transfer evaluation workflow showing promising results</li></ul>' },
-  { date: 'March 6, 2026', title: 'Monthly SSC Strategic Review', notes: '<p>Monthly strategic session highlights:</p><ul><li>Budget review: All departments within allocation; Digital Ops requesting supplemental for AI initiative</li><li>Student satisfaction scores up 5 points quarter-over-quarter</li><li>Title IX and ADA compliance audit preparation underway — no concerns flagged</li><li>New project management framework adopted across all departments for better cross-team visibility</li><li>Ben shared vision for summer initiatives: focus on automation and student self-service capabilities</li></ul>' }
-];
-
 /* ════════════════════════════════════════════
    RENDER FUNCTIONS
    ════════════════════════════════════════════ */
 
-function renderEvents() {
-  var el = document.getElementById('eventsList');
-  el.innerHTML = EVENTS_DATA.map(function(ev, i) {
-    return '<div class="event-item" data-reveal data-reveal-delay="' + i + '">' +
-      '<div class="event-dot"></div>' +
-      '<div class="event-card">' +
-        '<div class="event-date">' + ev.date + '</div>' +
-        '<div class="event-title">' + ev.title + '</div>' +
-        '<div class="event-desc">' + ev.desc + '</div>' +
-      '</div></div>';
-  }).join('');
-}
-
-function renderSSC() {
-  var el = document.getElementById('sscList');
-  el.innerHTML = SSC_DATA.map(function(item, i) {
-    return '<div class="ssc-item' + (i === 0 ? ' open' : '') + '" data-reveal data-reveal-delay="' + i + '">' +
-      '<div class="ssc-header" onclick="toggleSSC(this)">' +
-        '<div class="ssc-indicator"></div>' +
-        '<div class="ssc-header-info">' +
-          '<div class="ssc-meeting-date">' + item.date + '</div>' +
-          '<div class="ssc-meeting-title">' + item.title + '</div>' +
-        '</div>' +
-        '<svg class="ssc-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>' +
-      '</div>' +
-      '<div class="ssc-body"><div class="ssc-body-inner">' + item.notes + '</div></div></div>';
-  }).join('');
-
-  // Set initial open state
-  var firstItem = el.querySelector('.ssc-item.open .ssc-body');
-  if (firstItem) firstItem.style.maxHeight = firstItem.scrollHeight + 'px';
-}
-
-function toggleSSC(header) {
-  var item = header.parentElement;
-  var body = item.querySelector('.ssc-body');
-  var isOpen = item.classList.contains('open');
-
-  // Close all
-  document.querySelectorAll('.ssc-item.open').forEach(function(el) {
-    el.classList.remove('open');
-    el.querySelector('.ssc-body').style.maxHeight = '0';
-  });
-
-  // Toggle clicked
-  if (!isOpen) {
-    item.classList.add('open');
-    body.style.maxHeight = body.scrollHeight + 'px';
-  }
-}
 
 /* ════════════════════════════════════════════
    SCROLL REVEAL
@@ -1489,8 +1186,6 @@ function initTilt() {
    INIT
    ════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', function() {
-  renderEvents();
-  renderSSC();
   initTheme();
   initNavbar();
   initScrollReveal();

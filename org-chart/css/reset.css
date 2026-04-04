@@ -45,11 +45,9 @@ body::after {
   100% { transform: translate(10px, -5px) scale(0.98); }
 }
 
-/* ── Scrollbar ── */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--light-gray); }
+/* ── Hide scrollbars (SharePoint provides outer scroll) ── */
+* { scrollbar-width: none; -ms-overflow-style: none; }
+*::-webkit-scrollbar { display: none; }
 
 /* ── No results ── */
 .no-results {

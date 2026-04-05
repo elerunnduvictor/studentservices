@@ -152,7 +152,12 @@ img { max-width: 100%; }
   border-radius: 20px;
   transition: all var(--transition);
   white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
+.nav-link svg { width: 14px; height: 14px; flex-shrink: 0; opacity: 0.7; }
+.nav-link:hover svg { opacity: 1; }
 
 .nav-link:hover { color: var(--text); background: var(--ice-gray); }
 .nav-link.active { color: var(--gold); background: rgba(var(--gold-r), 0.08); }
@@ -804,9 +809,14 @@ img { max-width: 100%; }
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
   </button>
   <div class="nav-links" id="navLinks">
-    <a href="#message" class="nav-link">Message from Leadership</a>
-    <a href="#departments" class="nav-link">Departments</a>
-    <a href="#tools" class="nav-link">Tools &amp; Resources</a>
+    <a href="#departments" class="nav-link">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+      Departments
+    </a>
+    <a href="#tools" class="nav-link">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+      Tools &amp; Resources
+    </a>
   </div>
   <button class="nav-theme-btn" id="themeToggle" title="Toggle theme">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
@@ -861,11 +871,11 @@ img { max-width: 100%; }
             <span class="message-from">Message from Leadership</span>
             <span class="message-date">March 2026</span>
           </div>
-          <div class="message-title">Starting the Week with Purpose</div>
+          <div class="message-title">Serving with Purpose</div>
           <div class="message-quote">
-            <p>As we begin another week, we want to remind us of the incredible impact we have on students' lives every single day. Each support ticket resolved, each enrollment guided, every process improved are moments where we help someone take one more step toward their future. We are reaching out to the hidden many and inviting them to step into the light of Christ.</p>
-            <p>Let's approach this week intentionally. Look for the student behind every case number. Find one thing you can do better than last week. Remember that the work we do here matters more than we can easily see from behind the hustle and bustle of our daily tasks.</p>
-            <p>We are grateful for each of you and the dedication you bring. Let's make it a great week.</p>
+            <p>We want to remind you of the incredible impact you have on students' lives every single day. Each support ticket resolved, each enrollment guided, every process improved — these are moments where we help someone take one more step toward their future. We are reaching out to the hidden many and inviting them to step into the light of Christ.</p>
+            <p>Look for the student behind every case number. Find one thing you can do better than before. Remember that the work we do here matters more than we can easily see from behind the hustle and bustle of our daily tasks.</p>
+            <p>We are grateful for each of you and the dedication you bring.</p>
           </div>
           <div class="message-signature">
             <strong>Student Services Leadership</strong> &middot; BYU-Pathway Worldwide

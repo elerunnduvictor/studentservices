@@ -265,10 +265,14 @@ body {
 }
 
 /* ══════════════ ORG CHART ══════════════ */
+#team .section-inner { max-width: 100%; padding-left: 0; padding-right: 0; }
+#team .org-tree-wrap { overflow-x: auto; padding: 0 clamp(16px, 4vw, 48px); }
 .org-tree {
   display: flex; flex-direction: column;
   align-items: center; gap: 0;
   padding: 20px 0;
+  min-width: max-content;
+  margin: 0 auto;
 }
 .org-connector {
   width: 2px; height: 28px;
@@ -716,6 +720,7 @@ body {
       <div class="section-title">Department Structure</div>
       <div class="section-divider"></div>
     </div>
+    <div class="org-tree-wrap">
     <div class="org-tree" data-reveal="scale">
       <!-- Director -->
       <div class="org-node director">
@@ -769,6 +774,7 @@ body {
           <div class="org-node-title">Coordinator</div>
         </div>
       </div>
+    </div>
     </div>
   </div>
 </section>

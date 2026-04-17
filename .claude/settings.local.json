@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -r \"^\\\\s*//\" /c/Users/veler/Downloads/studentservices/org-chart/js --include=\"*.js\")",
+      "Bash(find /c/Users/veler/Downloads/studentservices -name \"*.js\" -exec wc -l {} +)",
+      "Bash(find /c/Users/veler/Downloads/studentservices -name \"*.css\" -exec wc -l {} +)",
+      "Bash(grep -r \"^\\\\s*}\\\\s*$\" /c/Users/veler/Downloads/studentservices/org-chart/css --include=\"*.css\" -B 5)",
+      "Bash(node -e ':*)"
+    ]
+  }
+}

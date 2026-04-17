@@ -45,10 +45,6 @@ body::after {
   100% { transform: translate(10px, -5px) scale(0.98); }
 }
 
-/* ── Hide scrollbars (SharePoint provides outer scroll) ── */
-* { scrollbar-width: none; -ms-overflow-style: none; }
-*::-webkit-scrollbar { display: none; }
-
 /* ── No results ── */
 .no-results {
   text-align: center;

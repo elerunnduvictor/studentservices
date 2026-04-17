@@ -11,7 +11,6 @@
   --text-dim: #7F898A;
   --border-color: #BCBEC0;
   --border: rgba(188,190,192,0.5);
-  --warm-gray: #706060;
   --dark-gray: #58595B;
   --light-gray: #BCBEC0;
   --ice-gray: #ECEFF2;
@@ -19,8 +18,6 @@
   /* ── Brand Accents ── */
   --gold: #FFC328;
   --gold-r: 255,195,40;
-  --mustard: #F4D25A;
-  --dark-mustard: #B59525;
   --teal: #3A929D;
   --teal-r: 58,146,157;
   --deep-teal: #065577;
@@ -30,20 +27,11 @@
   --sky-blue: #A4DDEE;
   --purple: #B687AC;
   --purple-r: 182,135,172;
-  --plum: #7B4F71;
   --green: #A2C23D;
   --green-r: 162,194,61;
   --green-teal: #168980;
-  --deep-green: #0F5C55;
   --red: #CB4A27;
   --red-r: 203,74,39;
-  --brick-red: #BB4A4A;
-  --coral: #FB8281;
-  --peach: #FDAB89;
-  --terracotta: #BD7150;
-  --turquoise: #4AC5BB;
-  --dusty-rose: #DFBFBF;
-  --mauve-gray: #A78F8F;
 
   /* ── Connectors ── */
   --connector-color: #BCBEC0;
@@ -78,7 +66,6 @@
   --text-dim: #8a8580;
   --border-color: rgba(255,255,255,0.15);
   --border: rgba(255,255,255,0.1);
-  --warm-gray: #706060;
   --dark-gray: #9a9590;
   --light-gray: rgba(255,255,255,0.12);
   --ice-gray: rgba(255,255,255,0.04);

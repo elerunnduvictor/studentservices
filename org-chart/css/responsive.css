@@ -103,9 +103,6 @@
   .tree li[style*="padding-left"] { padding-left: 3px !important; }
   .tree li[style*="padding-right"] { padding-right: 3px !important; }
 
-  /* Hide hover card on mobile — tap to expand instead */
-  .hover-card { display: none !important; }
-
   /* Legend */
   .legend { padding: 8px 12px; gap: 4px 12px; }
   .legend-item { font-size: 0.45rem; }

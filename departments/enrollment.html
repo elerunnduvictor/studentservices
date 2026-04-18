@@ -6,6 +6,10 @@
 <title>Enrollment &amp; Retention — Student Services</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/dept.css">
+<link rel="stylesheet" href="../org-chart/css/variables.css">
+<link rel="stylesheet" href="../org-chart/css/tree.css">
+<link rel="stylesheet" href="../org-chart/css/tiles.css">
+<link rel="stylesheet" href="../org-chart/css/modal.css">
 <style>
 :root {
   --dept-color: #B687AC;
@@ -62,7 +66,7 @@
   <div class="section-inner">
     <div data-reveal>
       <div class="section-label">Our Purpose</div>
-      <div class="section-title">Mission Statement</div>
+      <div class="section-title">Strategy Statement</div>
       <div class="section-divider"></div>
     </div>
     <div class="mission-card" data-reveal>
@@ -144,84 +148,8 @@
       <div class="section-title">Department Structure</div>
       <div class="section-divider"></div>
     </div>
-    <div class="org-tree-wrap">
-    <div class="org-tree" data-reveal="scale">
-      <!-- Director -->
-      <div class="org-node director">
-        <div class="org-node-name">Alison Cundiff</div>
-        <div class="org-node-title">Director of Enrollment &amp; Retention</div>
-      </div>
-      <div class="org-connector"></div>
-
-      <div class="org-level-label">Project Manager</div>
-      <div class="org-level-row">
-        <div class="org-node">
-          <div class="org-node-name">James Etukudo Jr.</div>
-          <div class="org-node-title">Project Manager</div>
-        </div>
-      </div>
-      <div class="org-connector"></div>
-      <div class="org-h-bar"></div>
-      <div class="org-connector"></div>
-
-      <div class="org-level-label">Senior Leadership</div>
-      <div class="org-level-row">
-        <div class="org-node">
-          <div class="org-node-name">Trevor Shelton</div>
-          <div class="org-node-title">Senior Manager, Enrollment Services</div>
-        </div>
-        <div class="org-node">
-          <div class="org-node-name">Kelley Richardson</div>
-          <div class="org-node-title">Mentoring Manager</div>
-        </div>
-      </div>
-      <div class="org-connector"></div>
-      <div class="org-h-bar"></div>
-      <div class="org-connector"></div>
-
-      <div class="org-level-label">Management</div>
-      <div class="org-level-row">
-        <div class="org-node">
-          <div class="org-node-name">Rachel Kirk</div>
-          <div class="org-node-title">Enrollment Counseling Manager</div>
-        </div>
-      </div>
-      <div class="org-connector"></div>
-      <div class="org-h-bar"></div>
-      <div class="org-connector"></div>
-
-      <div class="org-level-label">Staff</div>
-      <div class="org-level-row">
-        <div class="org-node">
-          <div class="org-node-name">Mandy Schwab</div>
-          <div class="org-node-title">Enrollment Counselor</div>
-        </div>
-        <div class="org-node">
-          <div class="org-node-name">Johanna Relkin</div>
-          <div class="org-node-title">Enrollment Counselor</div>
-        </div>
-        <div class="org-node">
-          <div class="org-node-name">Kimarie Howard</div>
-          <div class="org-node-title">Enrollment Counselor</div>
-        </div>
-        <div class="org-node">
-          <div class="org-node-name">Megan Niblett</div>
-          <div class="org-node-title">Enrollment Counselor</div>
-        </div>
-        <div class="org-node">
-          <div class="org-node-name">Shaunasee James</div>
-          <div class="org-node-title">Enrollment Counselor</div>
-        </div>
-        <div class="org-node">
-          <div class="org-node-name">Ely Zmolek</div>
-          <div class="org-node-title">Mentor Coordinator</div>
-        </div>
-        <div class="org-node">
-          <div class="org-node-name">Trey Mooney</div>
-          <div class="org-node-title">Mentor Coordinator</div>
-        </div>
-      </div>
-    </div>
+    <div class="dept-chart-wrap" data-reveal="scale">
+      <div id="deptChart"></div>
     </div>
   </div>
 </section>
@@ -315,7 +243,49 @@
   <div>&copy; 2026 BYU-Pathway Worldwide. All rights reserved.</div>
 </footer>
 
+<!-- ═══════════════ MODAL ═══════════════ -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modal">
+    <button class="modal-close" id="modalClose">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
 <!-- ═══════════════ JAVASCRIPT ═══════════════ -->
+<script src="../org-chart/js/data.js"></script>
+<script src="../org-chart/js/helpers.js"></script>
+<script src="../org-chart/js/renderer.js"></script>
+<script src="../org-chart/js/modal.js"></script>
+<script>
+/* Render department subtree + wire interactions */
+(function() {
+  var director = OC.employees.find(function(e) { return e.dept === 'enrollment' && e.level === 2 && e.role !== 'pm'; });
+  if (!director) return;
+  var html = '<div class="tree single-dept-view">';
+  html += OC.renderTileWithAssistants(director);
+  html += OC.renderSubtree(director.id);
+  html += '</div>';
+  var container = document.getElementById('deptChart');
+  container.innerHTML = html;
+
+  container.addEventListener('click', function(e) {
+    if (e.target.closest('[data-view-more]')) {
+      e.stopPropagation();
+      return;
+    }
+    var tile = e.target.closest('.tile:not(.spacer-tile)');
+    if (tile) tile.classList.toggle('expanded');
+  });
+  container.addEventListener('dblclick', function(e) {
+    var tile = e.target.closest('.tile:not(.spacer-tile)');
+    if (tile && tile.dataset.id) OC.openModal(tile.dataset.id);
+  });
+
+  OC.initModal();
+})();
+</script>
 <script>
 /* Theme Toggle */
 (function() {

@@ -280,6 +280,46 @@
 
 .tile-meta-item a:hover { opacity: 1; }
 
+/* Row containing "Reports to" + "View more" button */
+.tile-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.tile-meta-row:empty { display: none; }
+.tile-meta-row .tile-meta-item { flex: 1 1 auto; min-width: 0; }
+
+/* View-more link (routes to each person's role inventory doc) */
+.tile-view-more {
+  font-family: inherit;
+  font-size: 0.55rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--tile-color);
+  background: rgba(var(--tile-color-r), 0.08);
+  border: 1px solid rgba(var(--tile-color-r), 0.4);
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  transition: background var(--transition), color var(--transition), border-color var(--transition);
+  margin-left: auto;
+}
+.tile-view-more svg { width: 11px; height: 11px; }
+.tile-view-more:hover {
+  background: var(--tile-color);
+  color: #fff;
+  border-color: var(--tile-color);
+  opacity: 1;
+}
+
 /* ── VP TILE (special) ── */
 .tile.vp-tile {
   width: 280px;

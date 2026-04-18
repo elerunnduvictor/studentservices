@@ -308,6 +308,15 @@ body {
   color: var(--dept-color); opacity: 0.7;
   margin-top: 20px; margin-bottom: 8px;
 }
+/* Dept structure inline chart wrap */
+.dept-chart-wrap {
+  width: 100%;
+  padding: 16px 0 40px;
+  display: flex;
+  justify-content: center;
+}
+.dept-chart-wrap > div { width: 100%; display: flex; justify-content: center; }
+.dept-chart-wrap .tree { padding-top: 16px; margin: 0 auto; }
 
 /* ══════════════ FOCUS AREAS ══════════════ */
 .focus-grid {

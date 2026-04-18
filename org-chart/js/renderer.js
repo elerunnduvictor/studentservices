@@ -30,6 +30,10 @@ OC.renderTile = function(emp) {
 
   var deptHtml = '<div class="tile-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>' + dept.name + '</div>';
 
+  var viewMoreHtml = !isVP
+    ? '<a class="tile-view-more" href="' + (emp.roleInventoryUrl || '#') + '" target="_blank" rel="noopener" data-view-more>View more responsibilities &amp; KPIs <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>'
+    : '';
+
   return '<div class="' + tileClass + '" data-id="' + emp.id + '" data-dept="' + emp.dept + '" data-level="' + emp.level + '" data-name="' + emp.name.toLowerCase() + '" data-title="' + emp.title.toLowerCase() + '" style="--tile-color:' + dept.color + '; --tile-color-r:' + dept.colorR + ';">' +
     '<div class="tile-accent" style="background:' + dept.color + '"></div>' +
     '<div class="tile-header">' +
@@ -41,7 +45,10 @@ OC.renderTile = function(emp) {
     '<div class="tile-expand-indicator">Click to expand \u00b7 Double-click for details</div>' +
     '<div class="tile-body"><div class="tile-body-inner">' +
       responsibilitiesHtml + kpisHtml +
-      '<div class="tile-meta">' + reportsToHtml + deptHtml + emailHtml + '</div>' +
+      '<div class="tile-meta">' +
+        '<div class="tile-meta-row">' + reportsToHtml + viewMoreHtml + '</div>' +
+        deptHtml + emailHtml +
+      '</div>' +
     '</div></div></div>';
 };
 

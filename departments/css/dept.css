@@ -249,6 +249,166 @@ body {
   color: var(--text-dim);
 }
 
+/* ══════════════ DEPT MINI DASHBOARD ══════════════ */
+.dept-dashboard { margin-top: 40px; }
+.dd-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.dd-kpi {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--kpi-color, var(--dept-color));
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  padding: 22px 24px;
+  transition: var(--transition);
+}
+.dd-kpi:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
+}
+.dd-kpi-label {
+  font-size: 0.68rem; font-weight: 500;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--text-dim); margin-bottom: 8px;
+}
+.dd-kpi-value {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2.2rem; font-weight: 700;
+  color: var(--text); line-height: 1;
+  margin-bottom: 4px;
+}
+.dd-kpi-sub {
+  font-size: 0.76rem; color: var(--text-dim);
+}
+.dd-charts {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+}
+@media (max-width: 900px) {
+  .dd-charts { grid-template-columns: 1fr; }
+}
+.dd-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  padding: 24px;
+}
+.dd-card-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.2rem; font-weight: 600;
+  letter-spacing: 0.03em; color: var(--text);
+  margin-bottom: 18px;
+}
+.dd-bar-row {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 10px;
+}
+.dd-bar-row:last-child { margin-bottom: 0; }
+.dd-bar-label {
+  width: 180px; font-size: 0.78rem; font-weight: 500;
+  color: var(--text-muted); text-align: right;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.dd-bar-track {
+  flex: 1; height: 28px;
+  background: var(--bg-elevated);
+  border-radius: 6px;
+  position: relative; overflow: hidden;
+}
+.dd-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--bar-color, var(--dept-color)), var(--bar-color-light, var(--dept-dark)));
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: flex-end;
+  padding-right: 10px;
+  transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+}
+.dd-bar-value {
+  font-size: 0.72rem; font-weight: 700;
+  color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+@media (max-width: 600px) {
+  .dd-bar-label { width: 110px; font-size: 0.72rem; }
+}
+.dd-donut-wrap {
+  display: flex; align-items: center; gap: 24px;
+  flex-wrap: wrap; justify-content: center;
+}
+.dd-donut-wrap svg { flex-shrink: 0; }
+.dd-legend {
+  display: flex; flex-direction: column; gap: 8px;
+}
+.dd-legend-item {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 0.8rem; color: var(--text-muted);
+}
+.dd-legend-item b { color: var(--text); font-weight: 600; }
+.dd-dot {
+  width: 12px; height: 12px; border-radius: 3px;
+  flex-shrink: 0;
+}
+.dd-donut-center-val {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.8rem; font-weight: 700;
+  fill: var(--text);
+}
+.dd-donut-center-label {
+  font-size: 0.62rem; fill: var(--text-dim);
+  letter-spacing: 0.12em; text-transform: uppercase;
+}
+.dd-empty {
+  padding: 40px 20px; text-align: center;
+  color: var(--text-dim); font-size: 0.88rem;
+}
+
+/* ══════════════ DASHBOARD EMBED ══════════════ */
+#dashboard .section-inner { max-width: none; }
+.dashboard-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  min-height: 520px;
+  max-height: 85vh;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.dashboard-wrap::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--dept-color), transparent);
+  z-index: 1;
+}
+.dashboard-wrap iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+@media (max-width: 900px) {
+  .dashboard-wrap {
+    aspect-ratio: auto;
+    height: 75vh;
+    min-height: 480px;
+  }
+}
+@media (max-width: 600px) {
+  .dashboard-wrap {
+    height: 70vh;
+    min-height: 420px;
+  }
+}
+
 /* ══════════════ ORG CHART ══════════════ */
 #team .section-inner { max-width: 100%; padding-left: 0; padding-right: 0; }
 #team .org-tree-wrap { overflow-x: auto; padding: 0 clamp(16px, 4vw, 48px); }

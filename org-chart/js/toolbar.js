@@ -83,12 +83,12 @@ OC.initToolbar = function() {
     var html = document.documentElement;
     var isDark = html.getAttribute('data-theme') === 'dark';
     html.setAttribute('data-theme', isDark ? 'light' : 'dark');
-    localStorage.setItem('oc-theme', isDark ? 'light' : 'dark');
+    localStorage.setItem('ss-theme', isDark ? 'light' : 'dark');
     updateThemeIcon();
   });
 
   // Restore saved theme
-  var savedTheme = localStorage.getItem('oc-theme') || 'light';
+  var savedTheme = localStorage.getItem('ss-theme') || 'light';
   document.documentElement.setAttribute('data-theme', savedTheme);
   updateThemeIcon();
 };

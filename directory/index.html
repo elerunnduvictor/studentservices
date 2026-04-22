@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Services Directory — BYU-Pathway Worldwide</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/directory.css">
+</head>
+<body>
+
+<!-- ═══════════════ NAVBAR ═══════════════ -->
+<nav class="navbar" id="navbar">
+  <a href="../index.html" class="nav-brand">Student Services</a>
+  <button class="nav-hamburger" id="navHamburger" aria-label="Menu">
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
+  <div class="nav-links" id="navLinks">
+    <a href="../index.html" class="nav-link">Home</a>
+    <a href="../index.html#departments" class="nav-link">Departments</a>
+    <a href="../index.html#tools" class="nav-link">Tools &amp; Resources</a>
+    <a href="../org-chart/index.html" class="nav-link">Org Chart</a>
+  </div>
+  <button class="nav-theme-btn" id="themeToggle" title="Toggle theme">
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  </button>
+</nav>
+
+<!-- ═══════════════ HERO ═══════════════ -->
+<header class="dir-hero">
+  <div class="hero-pattern"></div>
+  <div class="dir-hero-content">
+    <div class="hero-badge">BYU-Pathway Worldwide</div>
+    <h1>Student Services <span>Directory</span></h1>
+    <p class="dir-hero-sub">Explore every team member across Student Services — filter by department, role, and employment type to find who does what.</p>
+  </div>
+</header>
+
+<!-- ═══════════════ DASHBOARD ═══════════════ -->
+<main class="dir-section">
+  <div class="dir-inner">
+
+    <!-- Filters -->
+    <div class="dir-filters" data-reveal>
+      <span class="dir-filters-label">Filters</span>
+      <select id="filterDept" class="dir-select" aria-label="Filter by department"></select>
+      <select id="filterSubDept" class="dir-select" aria-label="Filter by sub-department"></select>
+      <select id="filterType" class="dir-select" aria-label="Filter by employment type"></select>
+      <input id="filterSearch" class="dir-search" type="search" placeholder="Search by name or role..." aria-label="Search">
+      <button id="filterClear" class="dir-clear" type="button">Clear</button>
+    </div>
+
+    <!-- KPIs -->
+    <div id="dirKpis" class="dir-kpis" data-reveal></div>
+
+    <!-- Charts -->
+    <div class="dir-charts">
+      <div class="dir-card" data-reveal>
+        <div class="dir-card-title">Employees by Department</div>
+        <div id="deptBars"></div>
+      </div>
+      <div class="dir-card" data-reveal>
+        <div class="dir-card-title">Employment Types</div>
+        <div id="typeDonut"></div>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="dir-card dir-table-card" data-reveal>
+      <div class="dir-table-header">
+        <div class="dir-card-title">Directory</div>
+        <div id="dirCount" class="dir-table-count"></div>
+      </div>
+      <div class="dir-table-wrap">
+        <table class="dir-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Role</th>
+              <th>Department</th>
+              <th>Sub-Department</th>
+              <th>Employment Type</th>
+              <th>Reports To</th>
+            </tr>
+          </thead>
+          <tbody id="dirTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- ═══════════════ FOOTER ═══════════════ -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-brand">Student Services &middot; BYU-Pathway Worldwide</div>
+    <div class="footer-links">
+      <a href="../index.html" class="footer-link">Home</a>
+      <a href="../org-chart/index.html" class="footer-link">Org Chart</a>
+      <a href="../index.html#departments" class="footer-link">Departments</a>
+    </div>
+    <div class="footer-copy">&copy; 2026 BYU-Pathway Worldwide. All rights reserved.</div>
+  </div>
+</footer>
+
+<script src="js/employees.js"></script>
+<script src="js/directory.js"></script>
+</body>
+</html>

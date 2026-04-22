@@ -7,219 +7,161 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/main.css">
 </head>
-<body>
+<body class="home-single">
 
-<!-- ═══════════════ NAVBAR ═══════════════ -->
-<nav class="navbar" id="navbar">
-  <div class="nav-brand">Student Services</div>
-  <button class="nav-hamburger" id="navHamburger" aria-label="Menu">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-  </button>
-  <div class="nav-links" id="navLinks">
-    <a href="#departments" class="nav-link">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-      Departments
-    </a>
-    <a href="#tools" class="nav-link">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
-      Tools &amp; Resources
-    </a>
-  </div>
-  <button class="nav-theme-btn" id="themeToggle" title="Toggle theme">
+<!-- ═══════════════ HERO (splash) ═══════════════ -->
+<section class="hero hero-compact" id="hero">
+  <button class="hero-theme-btn" id="themeToggle" title="Toggle theme" aria-label="Toggle theme">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
   </button>
-</nav>
-
-<!-- ═══════════════ HERO ═══════════════ -->
-<section class="hero" id="hero">
   <div class="hero-content">
     <div class="hero-badge">BYU-Pathway Worldwide</div>
     <h1>Student <span>Services</span></h1>
     <p class="hero-subtitle">Empowering Students &middot; Inspiring Growth &middot; Building Futures</p>
-    <a href="#departments" class="hero-cta">
-      Explore Departments
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+  </div>
+</section>
+
+<!-- ═══════════════ MISSION BAND ═══════════════ -->
+<section class="home-mission" id="mission" data-reveal>
+  <div class="home-mission-inner">
+    <div class="home-mission-label">Why We Serve</div>
+    <p class="home-mission-text">We are dedicated to creating a seamless, supportive experience for every BYU-Pathway student worldwide. Through innovative services, compassionate support, and operational excellence, we empower students to achieve their educational and spiritual goals &mdash; no matter where they are on their journey.</p>
+  </div>
+</section>
+
+<!-- ═══════════════ DEPARTMENTS ROW ═══════════════ -->
+<section class="home-row" id="departments">
+  <div class="home-row-head">
+    <div class="home-row-eyebrow">Our Teams</div>
+    <h2 class="home-row-title">Departments</h2>
+    <div class="home-row-divider"></div>
+  </div>
+  <div class="dept-grid">
+
+    <a href="departments/records.html" class="dept-card" style="--dc:#3A929D; --dc-r:58,146,157;" data-reveal data-reveal-delay="0">
+      <div class="dept-card-accent" style="background:#3A929D"></div>
+      <div class="dept-card-inner">
+        <div class="dept-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        </div>
+        <div class="dept-info">
+          <div class="dept-name">Records, Registration &amp; Support</div>
+          <div class="dept-desc">Student records, registration, Help Center, and support operations</div>
+        </div>
+      </div>
     </a>
-  </div>
-  <div class="hero-scroll">
-    <span>Scroll</span>
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-  </div>
-</section>
 
-<!-- ═══════════════ MISSION ═══════════════ -->
-<section class="section section-glow section-center" id="mission">
-  <div class="section-inner">
-    <div data-reveal>
-      <div class="section-label">Our Mission</div>
-      <div class="section-title">Why We Serve</div>
-      <div class="section-divider"></div>
-    </div>
-    <div class="mission-text" data-reveal>
-      We are dedicated to creating a seamless, supportive experience for every BYU-Pathway student worldwide. Through innovative services, compassionate support, and operational excellence, we empower students to achieve their educational and spiritual goals — no matter where they are on their journey.
-    </div>
-  </div>
-</section>
-
-<!-- ═══════════════ DEPARTMENTS ═══════════════ -->
-<section class="section section-glow" id="departments">
-  <div class="section-inner">
-    <div class="section-center" data-reveal>
-      <div class="section-label">Our Teams</div>
-      <div class="section-title">Departments</div>
-      <div class="section-divider"></div>
-    </div>
-    <div class="dept-grid">
-
-      <a href="departments/records.html" class="dept-card" style="--dc:#3A929D; --dc-r:58,146,157;" data-reveal data-reveal-delay="0">
-        <div class="dept-card-accent" style="background:#3A929D"></div>
-        <div class="dept-card-inner">
-          <div class="dept-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-          </div>
-          <div class="dept-info">
-            <div class="dept-name">Records, Registration & Support</div>
-            <div class="dept-desc">Student records, registration processes, Help Center, and support operations</div>
-          </div>
-          <div class="dept-arrow">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-          </div>
+    <a href="departments/enrollment.html" class="dept-card" style="--dc:#B687AC; --dc-r:182,135,172;" data-reveal data-reveal-delay="1">
+      <div class="dept-card-accent" style="background:#B687AC"></div>
+      <div class="dept-card-inner">
+        <div class="dept-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         </div>
-      </a>
-
-      <a href="departments/enrollment.html" class="dept-card" style="--dc:#B687AC; --dc-r:182,135,172;" data-reveal data-reveal-delay="1">
-        <div class="dept-card-accent" style="background:#B687AC"></div>
-        <div class="dept-card-inner">
-          <div class="dept-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-          </div>
-          <div class="dept-info">
-            <div class="dept-name">Enrollment & Retention</div>
-            <div class="dept-desc">Enrollment counseling, mentoring programs, and student retention strategies</div>
-          </div>
-          <div class="dept-arrow">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-          </div>
+        <div class="dept-info">
+          <div class="dept-name">Enrollment &amp; Retention</div>
+          <div class="dept-desc">Enrollment counseling, mentoring, and retention strategies</div>
         </div>
-      </a>
+      </div>
+    </a>
 
-      <a href="departments/dean.html" class="dept-card" style="--dc:#A2C23D; --dc-r:162,194,61;" data-reveal data-reveal-delay="2">
-        <div class="dept-card-accent" style="background:#A2C23D"></div>
-        <div class="dept-card-inner">
-          <div class="dept-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-          </div>
-          <div class="dept-info">
-            <div class="dept-name">Dean of Students</div>
-            <div class="dept-desc">Student honor & conduct, accessibility, belonging, grievances, and crisis support</div>
-          </div>
-          <div class="dept-arrow">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-          </div>
+    <a href="departments/dean.html" class="dept-card" style="--dc:#A2C23D; --dc-r:162,194,61;" data-reveal data-reveal-delay="2">
+      <div class="dept-card-accent" style="background:#A2C23D"></div>
+      <div class="dept-card-inner">
+        <div class="dept-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
         </div>
-      </a>
-
-      <a href="departments/digital.html" class="dept-card" style="--dc:#CB4A27; --dc-r:203,74,39;" data-reveal data-reveal-delay="3">
-        <div class="dept-card-accent" style="background:#CB4A27"></div>
-        <div class="dept-card-inner">
-          <div class="dept-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-          </div>
-          <div class="dept-info">
-            <div class="dept-name">Digital Operations</div>
-            <div class="dept-desc">Digital tools, analytics, AI/ML initiatives, and system operations</div>
-          </div>
-          <div class="dept-arrow">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-          </div>
+        <div class="dept-info">
+          <div class="dept-name">Dean of Students</div>
+          <div class="dept-desc">Honor &amp; conduct, accessibility, belonging, and crisis support</div>
         </div>
-      </a>
+      </div>
+    </a>
 
-    </div>
+    <a href="departments/digital.html" class="dept-card" style="--dc:#CB4A27; --dc-r:203,74,39;" data-reveal data-reveal-delay="3">
+      <div class="dept-card-accent" style="background:#CB4A27"></div>
+      <div class="dept-card-inner">
+        <div class="dept-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        </div>
+        <div class="dept-info">
+          <div class="dept-name">Digital Operations</div>
+          <div class="dept-desc">Digital tools, analytics, AI/ML initiatives, and system operations</div>
+        </div>
+      </div>
+    </a>
+
   </div>
 </section>
 
-<!-- ═══════════════ TOOLS & RESOURCES ═══════════════ -->
-<section class="section" id="tools">
-  <div class="section-inner">
-    <div class="section-center" data-reveal>
-      <div class="section-label">Quick Access</div>
-      <div class="section-title">Tools & Resources</div>
-      <div class="section-divider"></div>
-    </div>
-    <div class="tools-grid">
+<!-- ═══════════════ TOOLS ROW ═══════════════ -->
+<section class="home-row" id="tools">
+  <div class="home-row-head">
+    <div class="home-row-eyebrow">Quick Access</div>
+    <h2 class="home-row-title">Tools &amp; Resources</h2>
+    <div class="home-row-divider"></div>
+  </div>
+  <div class="tools-grid">
 
-      <a href="org-chart/index.html" class="tool-card" data-reveal="left">
-        <div class="tool-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="5" r="3"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="5" y1="12" x2="19" y2="12"/><line x1="5" y1="12" x2="5" y2="15"/><line x1="12" y1="12" x2="12" y2="15"/><line x1="19" y1="12" x2="19" y2="15"/><rect x="3" y="15" width="4" height="3" rx="0.5"/><rect x="10" y="15" width="4" height="3" rx="0.5"/><rect x="17" y="15" width="4" height="3" rx="0.5"/></svg>
-        </div>
-        <div class="tool-info">
-          <div class="tool-name">Org Chart Explorer</div>
-          <div class="tool-desc">Advanced view with search, filters, zoom, and department breakdowns</div>
-        </div>
-      </a>
+    <a href="org-chart/index.html" class="tool-card" data-reveal>
+      <div class="tool-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="5" r="3"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="5" y1="12" x2="19" y2="12"/><line x1="5" y1="12" x2="5" y2="15"/><line x1="12" y1="12" x2="12" y2="15"/><line x1="19" y1="12" x2="19" y2="15"/><rect x="3" y="15" width="4" height="3" rx="0.5"/><rect x="10" y="15" width="4" height="3" rx="0.5"/><rect x="17" y="15" width="4" height="3" rx="0.5"/></svg>
+      </div>
+      <div class="tool-info">
+        <div class="tool-name">Org Chart</div>
+        <div class="tool-desc">Search, filters, and department breakdowns</div>
+      </div>
+    </a>
 
-<a href="https://app.powerbi.com/groups/me/apps/d4fe7f49-1b93-41aa-9e7d-6ee6d5ec3eb0/reports/0e27c81e-b983-4456-89aa-4aa064935967/b752672c08e74c969e5e?experience=power-bi&clientSideAuth=0" target="_blank" class="tool-card" data-reveal="left">
-        <div class="tool-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3v18h18"/><rect x="7" y="13" width="3" height="7"/><rect x="12" y="9" width="3" height="11"/><rect x="17" y="5" width="3" height="15"/></svg>
-        </div>
-        <div class="tool-info">
-          <div class="tool-name">Student Services Dashboard</div>
-          <div class="tool-desc">Student Services metrics, KPIs, and operational analytics</div>
-        </div>
-      </a>
+    <a href="directory/index.html" class="tool-card" data-reveal>
+      <div class="tool-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+      </div>
+      <div class="tool-info">
+        <div class="tool-name">Directory</div>
+        <div class="tool-desc">Team members, filters &amp; KPIs</div>
+      </div>
+    </a>
 
-      <a href="https://app.powerbi.com/groups/4f9c84ba-b5d3-4eda-a86b-41fbb3b3bc4a/reports/af9ba6b3-8092-4e0c-bb52-4f8903b1b861/b4f5a8a463b9d5aef9c3?experience=power-bi&clientSideAuth=0" target="_blank" class="tool-card" data-reveal="right">
-        <div class="tool-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/><path d="M7 10l3-3 2 2 4-4"/><circle cx="16" cy="5" r="0" fill="currentColor"/></svg>
-        </div>
-        <div class="tool-info">
-          <div class="tool-name">Student Support Metrics Dashboard</div>
-          <div class="tool-desc">Support performance metrics, ticket analytics, and team KPIs</div>
-        </div>
-      </a>
+    <a href="https://app.powerbi.com/groups/me/apps/d4fe7f49-1b93-41aa-9e7d-6ee6d5ec3eb0/reports/0e27c81e-b983-4456-89aa-4aa064935967/b752672c08e74c969e5e?experience=power-bi&amp;clientSideAuth=0" target="_blank" class="tool-card" data-reveal>
+      <div class="tool-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3v18h18"/><rect x="7" y="13" width="3" height="7"/><rect x="12" y="9" width="3" height="11"/><rect x="17" y="5" width="3" height="15"/></svg>
+      </div>
+      <div class="tool-info">
+        <div class="tool-name">SS Dashboard</div>
+        <div class="tool-desc">Metrics, KPIs &amp; analytics</div>
+      </div>
+    </a>
 
-      <a href="https://studentservices.byupathway.edu/studentservices/academic-calendar" target="_blank" class="tool-card" data-reveal="left">
-        <div class="tool-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/></svg>
-        </div>
-        <div class="tool-info">
-          <div class="tool-name">Academic Calendar</div>
-          <div class="tool-desc">Key dates, deadlines, and semester schedules for students and staff</div>
-        </div>
-      </a>
+    <a href="https://app.powerbi.com/groups/4f9c84ba-b5d3-4eda-a86b-41fbb3b3bc4a/reports/af9ba6b3-8092-4e0c-bb52-4f8903b1b861/b4f5a8a463b9d5aef9c3?experience=power-bi&amp;clientSideAuth=0" target="_blank" class="tool-card" data-reveal>
+      <div class="tool-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/><path d="M7 10l3-3 2 2 4-4"/></svg>
+      </div>
+      <div class="tool-info">
+        <div class="tool-name">Support Metrics</div>
+        <div class="tool-desc">Tickets, performance &amp; team KPIs</div>
+      </div>
+    </a>
 
-    </div>
+    <a href="https://studentservices.byupathway.edu/studentservices/academic-calendar" target="_blank" class="tool-card" data-reveal>
+      <div class="tool-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/></svg>
+      </div>
+      <div class="tool-info">
+        <div class="tool-name">Academic Calendar</div>
+        <div class="tool-desc">Key dates &amp; semester schedules</div>
+      </div>
+    </a>
+
   </div>
 </section>
 
-<!-- ═══════════════ FOOTER ═══════════════ -->
-<footer class="site-footer">
-  <div class="footer-inner">
-    <div class="footer-brand">Student Services &middot; BYU-Pathway Worldwide</div>
-    <div class="footer-links">
-      <a href="#hero" class="footer-link">Home</a>
-      <a href="org-chart/index.html" class="footer-link">Org Chart</a>
-      <a href="#departments" class="footer-link">Departments</a>
-    </div>
-    <div class="footer-copy">&copy; 2026 BYU-Pathway Worldwide. All rights reserved.</div>
-  </div>
+<!-- ═══════════════ THIN FOOTER ═══════════════ -->
+<footer class="home-footer">
+  <span>&copy; 2026 BYU-Pathway Worldwide &middot; Student Services</span>
 </footer>
 
 <!-- ═══════════════ JAVASCRIPT ═══════════════ -->
 <script>
-/* ════════════════════════════════════════════
-   EDITABLE CONTENT — Update these each week
-   ════════════════════════════════════════════ */
-
-/* ════════════════════════════════════════════
-   RENDER FUNCTIONS
-   ════════════════════════════════════════════ */
-
-
-/* ════════════════════════════════════════════
-   SCROLL REVEAL
-   ════════════════════════════════════════════ */
 function initScrollReveal() {
   var elements = document.querySelectorAll('[data-reveal]');
   var observer = new IntersectionObserver(function(entries) {
@@ -232,56 +174,11 @@ function initScrollReveal() {
         observer.unobserve(el);
       }
     });
-  }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+  }, { threshold: 0.08, rootMargin: '0px 0px -20px 0px' });
 
   elements.forEach(function(el) { observer.observe(el); });
 }
 
-/* ════════════════════════════════════════════
-   NAVBAR
-   ════════════════════════════════════════════ */
-function initNavbar() {
-  var navbar = document.getElementById('navbar');
-  var hamburger = document.getElementById('navHamburger');
-  var links = document.getElementById('navLinks');
-
-  window.addEventListener('scroll', function() {
-    navbar.classList.toggle('scrolled', window.scrollY > 20);
-  });
-
-  hamburger.addEventListener('click', function() {
-    links.classList.toggle('open');
-  });
-
-  // Close on link click
-  links.addEventListener('click', function(e) {
-    if (e.target.classList.contains('nav-link')) {
-      links.classList.remove('open');
-    }
-  });
-
-  // Active section highlighting
-  var sections = document.querySelectorAll('.section[id], .hero[id]');
-  var navAnchors = document.querySelectorAll('.nav-link');
-
-  window.addEventListener('scroll', function() {
-    var scrollY = window.scrollY + 120;
-    sections.forEach(function(section) {
-      var top = section.offsetTop;
-      var height = section.offsetHeight;
-      var id = section.getAttribute('id');
-      if (scrollY >= top && scrollY < top + height) {
-        navAnchors.forEach(function(a) {
-          a.classList.toggle('active', a.getAttribute('href') === '#' + id);
-        });
-      }
-    });
-  });
-}
-
-/* ════════════════════════════════════════════
-   THEME TOGGLE
-   ════════════════════════════════════════════ */
 function initTheme() {
   var btn = document.getElementById('themeToggle');
   var moonIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
@@ -295,35 +192,17 @@ function initTheme() {
   btn.addEventListener('click', function() {
     var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
     document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
-    localStorage.setItem('hp-theme', isDark ? 'light' : 'dark');
+    localStorage.setItem('ss-theme', isDark ? 'light' : 'dark');
     update();
   });
 
-  var saved = localStorage.getItem('hp-theme') || 'light';
+  var saved = localStorage.getItem('ss-theme') || 'light';
   document.documentElement.setAttribute('data-theme', saved);
   update();
 }
 
-/* ════════════════════════════════════════════
-   PARALLAX (hero)
-   ════════════════════════════════════════════ */
-function initParallax() {
-  var hero = document.querySelector('.hero::before') ? document.querySelector('.hero') : null;
-  if (!hero || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-
-  window.addEventListener('scroll', function() {
-    var scrollY = window.scrollY;
-    if (scrollY < window.innerHeight) {
-      hero.style.backgroundPositionY = (scrollY * 0.3) + 'px';
-    }
-  }, { passive: true });
-}
-
-/* ════════════════════════════════════════════
-   TILT EFFECT on department cards
-   ════════════════════════════════════════════ */
 function initTilt() {
-  if (window.matchMedia('(max-width: 900px)').matches) return;
+  if (window.matchMedia('(max-width: 1023px)').matches) return;
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
   document.querySelectorAll('.dept-card, .tool-card').forEach(function(card) {
@@ -331,23 +210,17 @@ function initTilt() {
       var rect = card.getBoundingClientRect();
       var x = (e.clientX - rect.left) / rect.width - 0.5;
       var y = (e.clientY - rect.top) / rect.height - 0.5;
-      card.style.transform = 'perspective(800px) rotateY(' + (x * 6) + 'deg) rotateX(' + (-y * 6) + 'deg) translateY(-6px) scale(1.01)';
+      card.style.transform = 'perspective(800px) rotateY(' + (x * 4) + 'deg) rotateX(' + (-y * 4) + 'deg) translateY(-3px) scale(1.01)';
     });
-
     card.addEventListener('mouseleave', function() {
       card.style.transform = '';
     });
   });
 }
 
-/* ════════════════════════════════════════════
-   INIT
-   ════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', function() {
   initTheme();
-  initNavbar();
   initScrollReveal();
-  initParallax();
   initTilt();
 });
 </script>

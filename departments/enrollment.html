@@ -34,7 +34,6 @@
     <a href="../index.html" class="nav-link">Home</a>
     <a href="#mission" class="nav-link">Mission</a>
     <a href="#team" class="nav-link">Team</a>
-    <a href="#role-inventory" class="nav-link">Role Inventory</a>
     <a href="#departments" class="nav-link">Other Depts</a>
   </div>
   <button class="nav-theme-btn" id="themeToggle" title="Toggle theme">
@@ -77,25 +76,8 @@
       </div>
     </div>
 
-    <!-- Stats -->
-    <div class="stats-row" data-reveal>
-      <div class="stat-card">
-        <div class="stat-number">13</div>
-        <div class="stat-label">Team Members</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-number">3</div>
-        <div class="stat-label">Functional Areas</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-number">95%</div>
-        <div class="stat-label">Retention Goal</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-number">4</div>
-        <div class="stat-label">Org Levels</div>
-      </div>
-    </div>
+    <!-- Live dept dashboard -->
+    <div id="deptDashboard" class="dept-dashboard" data-reveal></div>
   </div>
 </section>
 
@@ -154,54 +136,6 @@
   </div>
 </section>
 
-<!-- ═══════════════ ROLE INVENTORY ═══════════════ -->
-<section class="section" id="role-inventory" style="background: var(--bg-elevated);">
-  <div class="section-inner">
-    <div data-reveal>
-      <div class="section-label">Explore Roles</div>
-      <div class="section-title">Role Inventory</div>
-      <div class="section-divider"></div>
-    </div>
-    <div class="role-inventory-wrap" data-reveal="scale">
-      <a href="https://churchofjesuschrist.sharepoint.com/sites/BYU-PathwayStudentSuccessRoleInventory/Supporting%20Documents/Forms/AllItems.aspx?id=%2Fsites%2FBYU%2DPathwayStudentSuccessRoleInventory%2FSupporting%20Documents%2FStudent%20Services%20Role%20Inventory%2FEnrollment%20%26%20Retention&viewid=0a01238f%2Db483%2D4dea%2D96ab%2D313f3e5202a5&as=json" target="_blank" class="role-inventory-card">
-        <div class="ri-bg-mesh"></div>
-        <div class="ri-dots"></div>
-        <div class="ri-orb ri-orb-1"></div>
-        <div class="ri-orb ri-orb-2"></div>
-        <div class="ri-orb ri-orb-3"></div>
-        <div class="ri-content">
-          <div class="ri-badge">Enrollment &amp; Retention</div>
-          <div class="ri-title">Discover Every <strong>Role</strong> in Our Department</div>
-          <div class="ri-desc">Explore detailed role descriptions, responsibilities, growth paths, and key performance indicators for every position in Enrollment &amp; Retention.</div>
-          <div class="ri-cta">
-            View Role Inventory
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-          </div>
-        </div>
-        <div class="ri-illustration">
-          <div class="ri-card-stack">
-            <div class="ri-mini-card">
-              <div class="ri-mini-line"></div>
-              <div class="ri-mini-line"></div>
-              <div class="ri-mini-line"></div>
-            </div>
-            <div class="ri-mini-card">
-              <div class="ri-mini-line"></div>
-              <div class="ri-mini-line"></div>
-              <div class="ri-mini-line"></div>
-            </div>
-            <div class="ri-mini-card">
-              <div class="ri-mini-line"></div>
-              <div class="ri-mini-line"></div>
-              <div class="ri-mini-line"></div>
-            </div>
-          </div>
-        </div>
-      </a>
-    </div>
-  </div>
-</section>
-
 <!-- ═══════════════ OTHER DEPARTMENTS ═══════════════ -->
 <section class="section" id="departments">
   <div class="section-inner">
@@ -254,6 +188,9 @@
 </div>
 
 <!-- ═══════════════ JAVASCRIPT ═══════════════ -->
+<script>window.DEPT_NAME = "Enrollment & Retention";</script>
+<script src="../directory/js/employees.js"></script>
+<script src="js/dept-dashboard.js"></script>
 <script src="../org-chart/js/data.js"></script>
 <script src="../org-chart/js/helpers.js"></script>
 <script src="../org-chart/js/renderer.js"></script>

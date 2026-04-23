@@ -71,8 +71,12 @@
     <div class="mission-card" data-reveal>
       <div class="mission-accent">&ldquo;</div>
       <div class="mission-text">
-        <p>The Records, Registration &amp; Support department is dedicated to providing accurate, secure, and accessible management of student academic records while delivering exceptional support services that empower students to navigate their educational journey with confidence.</p>
-        <p>We strive to streamline registration processes, maintain the highest standards of data integrity, and offer responsive, student-centered help through our Help Center and support operations. Our team is committed to continuous improvement, leveraging technology and collaboration to enhance every student interaction.</p>
+        <p>We balance student needs with organizational policies, and we remove barriers which might otherwise impede students from reaching their educational and spiritual goals. We accomplish this by focusing on:</p>
+        <ul class="mission-list">
+          <li>Establishing simple/intuitive processes for students</li>
+          <li>Clearly communicating resources, processes, and policies</li>
+          <li>Being responsive and knowledgeable</li>
+        </ul>
       </div>
     </div>
 
@@ -215,12 +219,6 @@
     var tile = e.target.closest('.tile:not(.spacer-tile)');
     if (tile) tile.classList.toggle('expanded');
   });
-  container.addEventListener('dblclick', function(e) {
-    var tile = e.target.closest('.tile:not(.spacer-tile)');
-    if (tile && tile.dataset.id) OC.openModal(tile.dataset.id);
-  });
-
-  OC.initModal();
 })();
 </script>
 <script>

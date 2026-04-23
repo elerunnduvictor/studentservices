@@ -71,8 +71,7 @@
     <div class="mission-card" data-reveal>
       <div class="mission-accent">&ldquo;</div>
       <div class="mission-text">
-        <p>Digital Operations drives technological innovation across Student Services, building and maintaining the digital infrastructure that powers every student interaction and operational workflow.</p>
-        <p>From AI-driven support tools to real-time analytics dashboards, our team develops, deploys, and optimizes the systems that enable data-informed decisions and seamless digital experiences for students and staff alike.</p>
+        <p>Digital Operations helps increase enrollment, student autonomy, satisfaction, retention, completion, etc. through AI and analytics in collaboration with Student Services departments.</p>
       </div>
     </div>
 
@@ -215,12 +214,6 @@
     var tile = e.target.closest('.tile:not(.spacer-tile)');
     if (tile) tile.classList.toggle('expanded');
   });
-  container.addEventListener('dblclick', function(e) {
-    var tile = e.target.closest('.tile:not(.spacer-tile)');
-    if (tile && tile.dataset.id) OC.openModal(tile.dataset.id);
-  });
-
-  OC.initModal();
 })();
 </script>
 <script>

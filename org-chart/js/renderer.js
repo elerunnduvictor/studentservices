@@ -13,13 +13,19 @@ OC.renderTile = function(emp) {
     : (emp.status || 'FTE') + ' \u00b7 ' + OC.LEVELS[emp.level];
 
   var responsibilitiesHtml = emp.responsibilities.length
-    ? '<div class="tile-section"><div class="tile-section-title">RESPONSIBILITIES</div><ul class="tile-list">' +
+    ? '<div class="tile-section"><div class="tile-section-title">STEWARDSHIPS</div><ul class="tile-list">' +
       emp.responsibilities.map(function(r) { return '<li>' + r + '</li>'; }).join('') +
       '</ul></div>' : '';
 
   var kpisHtml = emp.kpis.length
     ? '<div class="tile-section"><div class="tile-section-title">KEY KPIs</div><ul class="tile-list kpi-list">' +
       emp.kpis.map(function(k) { return '<li>' + k + '</li>'; }).join('') +
+      '</ul></div>' : '';
+
+  var directReports = OC.getChildren(emp.id);
+  var directReportsHtml = directReports.length
+    ? '<div class="tile-section"><div class="tile-section-title">DIRECT REPORTS (' + directReports.length + ')</div><ul class="tile-list">' +
+      directReports.map(function(r) { return '<li>' + r.name + ' — ' + r.title + '</li>'; }).join('') +
       '</ul></div>' : '';
 
   var reportsToHtml = manager
@@ -42,9 +48,9 @@ OC.renderTile = function(emp) {
       '<div class="tile-title">' + emp.title + '</div>' +
       '<div class="tile-level-badge">' + levelBadge + '</div>' +
     '</div>' +
-    '<div class="tile-expand-indicator">Click to expand \u00b7 Double-click for details</div>' +
+    '<div class="tile-expand-indicator">Click to expand</div>' +
     '<div class="tile-body"><div class="tile-body-inner">' +
-      responsibilitiesHtml + kpisHtml +
+      responsibilitiesHtml + kpisHtml + directReportsHtml +
       '<div class="tile-meta">' +
         '<div class="tile-meta-row">' + reportsToHtml + viewMoreHtml + '</div>' +
         deptHtml + emailHtml +
@@ -100,8 +106,8 @@ OC.renderSubtree = function(parentId) {
     var hasLeftPM = childAssistants.some(function(a) { return a.pmPosition === 'left'; });
     var hasRightPM = childAssistants.some(function(a) { return a.pmPosition === 'right'; });
     var extraStyles = '';
-    if (hasLeftPM) extraStyles += 'padding-left:260px;--extra-pl:252px;';
-    if (hasRightPM) extraStyles += 'padding-right:260px;--extra-pr:252px;';
+    if (hasLeftPM) extraStyles += 'padding-left:260px;--extra-pl:260px;';
+    if (hasRightPM) extraStyles += 'padding-right:260px;--extra-pr:260px;';
 
     var branchAttr = isDeptBranch
       ? ' class="dept-branch" data-branch-dept="' + child.dept + '" data-lvl="' + child.level + '" style="--dc:' + deptColor + ';' + extraStyles + '"'

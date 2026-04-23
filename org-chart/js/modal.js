@@ -16,7 +16,7 @@ OC.buildCardContent = function(empId) {
     '<div class="modal-body" style="--tile-color:' + dept.color + '; --tile-color-r:' + dept.colorR + ';">';
 
   if (emp.responsibilities.length) {
-    content += '<div class="tile-section"><div class="tile-section-title">RESPONSIBILITIES</div><ul class="tile-list">' +
+    content += '<div class="tile-section"><div class="tile-section-title">STEWARDSHIPS</div><ul class="tile-list">' +
       emp.responsibilities.map(function(r) { return '<li>' + r + '</li>'; }).join('') + '</ul></div>';
   }
 

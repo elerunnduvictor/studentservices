@@ -217,6 +217,30 @@ body {
   position: relative; z-index: 1;
 }
 .mission-text p + p { margin-top: 16px; }
+.mission-list {
+  list-style: none;
+  padding: 0;
+  margin: 20px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.mission-list li {
+  position: relative;
+  padding-left: 26px;
+  font-size: clamp(0.95rem, 1.8vw, 1.08rem);
+  line-height: 1.6;
+}
+.mission-list li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.6em;
+  width: 8px;
+  height: 8px;
+  background: var(--dept-color);
+  border-radius: 50%;
+}
 
 /* ══════════════ STATS ROW ══════════════ */
 .stats-row {

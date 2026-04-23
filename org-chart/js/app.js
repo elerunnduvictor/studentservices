@@ -12,16 +12,7 @@ document.addEventListener('DOMContentLoaded', function() {
     tile.classList.toggle('expanded');
   });
 
-  // ── Tile double-click (open modal) ──
-  chartContainer.addEventListener('dblclick', function(e) {
-    var tile = e.target.closest('.tile:not(.spacer-tile)');
-    if (tile && tile.dataset.id) {
-      OC.openModal(tile.dataset.id);
-    }
-  });
-
   // ── Initialize all modules ──
-  OC.initModal();
   OC.initSearch();
   OC.initFilter();
   OC.initZoom();

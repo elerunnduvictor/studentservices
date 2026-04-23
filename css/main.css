@@ -846,10 +846,9 @@ body.home-single .hero-compact::before { display: none; }
   font-family: 'Cormorant Garamond', serif;
   font-style: italic;
   font-weight: 400;
-  color: rgba(255,255,255,0.7);
+  color: rgba(255,255,255,0.72);
   margin: 0;
 }
-
 /* --- SECTION HEADERS --- */
 .home-row-head {
   display: flex;

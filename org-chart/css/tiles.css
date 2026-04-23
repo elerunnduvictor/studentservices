@@ -57,7 +57,7 @@
 }
 
 .avatar {
-  width: 52px; height: 52px;
+  width: 72px; height: 72px;
   border-radius: 50%;
   border: 2px solid rgba(var(--tile-color-r, var(--gold-r)), 0.3);
   display: flex;
@@ -65,7 +65,7 @@
   justify-content: center;
   font-family: 'Cormorant Garamond', serif;
   font-weight: 600;
-  font-size: 1rem;
+  font-size: 1.25rem;
   color: var(--tile-color, var(--gold));
   background: rgba(var(--tile-color-r, var(--gold-r)), 0.08);
   flex-shrink: 0;
@@ -320,34 +320,14 @@
   opacity: 1;
 }
 
-/* ── VP TILE (special) ── */
+/* ── VP TILE (color accent only, size matches regular tiles) ── */
 .tile.vp-tile {
-  width: 280px;
   border-color: rgba(var(--gold-r), 0.3);
   background: linear-gradient(135deg, rgba(var(--gold-r),0.06), var(--bg-card));
 }
 
-.tile.vp-tile .avatar {
-  width: 64px; height: 64px;
-  font-size: 1.2rem;
-}
-
-.tile.vp-tile .tile-name {
-  font-size: 1.1rem;
-}
-
-/* ── DIRECTOR TILE ── */
+/* ── DIRECTOR TILE (color accent only, size matches regular tiles) ── */
 .tile.director-tile {
-  width: 240px;
   border-color: rgba(var(--tile-color-r, 255,195,40), 0.2);
   background: linear-gradient(135deg, rgba(var(--tile-color-r, 255,195,40),0.05), var(--bg-card));
 }
-
-.tile.director-tile .avatar {
-  width: 56px; height: 56px;
-  font-size: 1.1rem;
-}
-
-/* Expanded VP/Director tiles scale to same width */
-.tile.vp-tile.expanded { width: 480px; }
-.tile.director-tile.expanded { width: 460px; }

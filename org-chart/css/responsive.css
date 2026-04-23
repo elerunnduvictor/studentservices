@@ -5,28 +5,18 @@
 /* ── Tablet ── */
 @media (max-width: 1200px) {
   .tile { width: 160px; }
-  .tile.vp-tile { width: 200px; }
-  .tile.director-tile { width: 180px; }
-  .tile.assistant-tile { width: 140px; }
   .tree li { padding: 18px 4px 0; }
   .tree ul { padding-top: 18px; }
   .tree ul::before { height: 18px; }
   .tree li::before { height: 18px; }
 
-  .avatar { width: 36px; height: 36px; font-size: 0.75rem; }
-  .tile.vp-tile .avatar { width: 44px; height: 44px; font-size: 0.9rem; }
-  .tile.director-tile .avatar { width: 40px; height: 40px; font-size: 0.85rem; }
+  .avatar { width: 52px; height: 52px; font-size: 0.95rem; }
   .tile-header { padding: 10px 8px 6px; gap: 4px; }
   .tile-name { font-size: 0.72rem; }
-  .tile.vp-tile .tile-name { font-size: 0.82rem; }
   .tile-title { font-size: 0.52rem; }
   .tile-level-badge { font-size: 0.38rem; padding: 1px 5px; }
   .tile-accent { height: 2px; }
   .tile-expand-indicator { font-size: 0.4rem; padding-bottom: 4px; }
-
-  /* PM tiles same font size as regular tiles */
-  .tile.assistant-tile .tile-name { font-size: 0.72rem; }
-  .tile.assistant-tile .tile-title { font-size: 0.52rem; }
 
   /* PM connectors tighter */
   .assistant-group-right::before,
@@ -36,8 +26,6 @@
 
   /* Expanded cards smaller */
   .tile.expanded { width: 280px; }
-  .tile.vp-tile.expanded { width: 300px; }
-  .tile.director-tile.expanded { width: 290px; }
   .tile.expanded .tile-name { font-size: 0.85rem; }
   .tile.expanded .tile-title { font-size: 0.62rem; }
   .tile.expanded .tile-list li { font-size: 0.62rem; margin-bottom: 3px; }
@@ -59,28 +47,18 @@
 
   /* Smaller cards */
   .tile { width: 120px; }
-  .tile.vp-tile { width: 150px; }
-  .tile.director-tile { width: 140px; }
-  .tile.assistant-tile { width: 110px; }
   .tree li { padding: 14px 3px 0; }
   .tree ul { padding-top: 14px; }
   .tree ul::before { height: 14px; }
   .tree li::before { height: 14px; }
 
-  .avatar { width: 28px; height: 28px; font-size: 0.6rem; }
-  .tile.vp-tile .avatar { width: 34px; height: 34px; font-size: 0.7rem; }
-  .tile.director-tile .avatar { width: 32px; height: 32px; font-size: 0.65rem; }
+  .avatar { width: 40px; height: 40px; font-size: 0.8rem; }
   .tile-header { padding: 8px 6px 5px; gap: 3px; }
   .tile-name { font-size: 0.58rem; }
-  .tile.vp-tile .tile-name { font-size: 0.65rem; }
   .tile-title { font-size: 0.42rem; }
   .tile-level-badge { font-size: 0.32rem; padding: 1px 4px; letter-spacing: 0.08em; }
   .tile-accent { height: 2px; }
   .tile-expand-indicator { display: none; }
-
-  /* PM tiles same font size as regular tiles */
-  .tile.assistant-tile .tile-name { font-size: 0.58rem; }
-  .tile.assistant-tile .tile-title { font-size: 0.42rem; }
 
   /* PM connectors minimal */
   .assistant-group-right::before,
@@ -90,8 +68,6 @@
 
   /* Expanded cards on mobile */
   .tile.expanded { width: 220px; }
-  .tile.vp-tile.expanded { width: 240px; }
-  .tile.director-tile.expanded { width: 230px; }
   .tile.expanded .tile-name { font-size: 0.75rem; }
   .tile.expanded .tile-title { font-size: 0.55rem; }
   .tile.expanded .tile-list li { font-size: 0.55rem; margin-bottom: 2px; line-height: 1.3; }
@@ -117,26 +93,16 @@
   .chart-viewport { padding: 8px 4px 40px; }
 
   .tile { width: 90px; }
-  .tile.vp-tile { width: 110px; }
-  .tile.director-tile { width: 100px; }
-  .tile.assistant-tile { width: 85px; }
   .tree li { padding: 10px 2px 0; }
   .tree ul { padding-top: 10px; }
   .tree ul::before { height: 10px; }
   .tree li::before { height: 10px; }
 
-  .avatar { width: 22px; height: 22px; font-size: 0.5rem; }
-  .tile.vp-tile .avatar { width: 26px; height: 26px; }
-  .tile.director-tile .avatar { width: 24px; height: 24px; }
+  .avatar { width: 32px; height: 32px; font-size: 0.65rem; }
   .tile-header { padding: 6px 4px 4px; gap: 2px; }
   .tile-name { font-size: 0.48rem; }
-  .tile.vp-tile .tile-name { font-size: 0.52rem; }
   .tile-title { font-size: 0.35rem; }
   .tile-level-badge { font-size: 0.28rem; padding: 1px 3px; }
-
-  /* PM tiles same font size as regular tiles */
-  .tile.assistant-tile .tile-name { font-size: 0.48rem; }
-  .tile.assistant-tile .tile-title { font-size: 0.35rem; }
 
   /* PM connectors tiny */
   .assistant-group-right::before,
@@ -146,8 +112,6 @@
 
   /* Expanded cards */
   .tile.expanded { width: 180px; }
-  .tile.vp-tile.expanded { width: 200px; }
-  .tile.director-tile.expanded { width: 190px; }
   .tile.expanded .tile-name { font-size: 0.62rem; }
   .tile.expanded .tile-title { font-size: 0.48rem; }
   .tile.expanded .tile-list li { font-size: 0.48rem; }

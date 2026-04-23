@@ -71,8 +71,7 @@
     <div class="mission-card" data-reveal>
       <div class="mission-accent">&ldquo;</div>
       <div class="mission-text">
-        <p>The Enrollment &amp; Retention department is committed to guiding students through every step of their enrollment journey while implementing proactive retention strategies that ensure academic persistence and success.</p>
-        <p>Through personalized counseling, dedicated mentoring programs, and data-driven outreach, we create supportive pathways that help students stay engaged, overcome barriers, and achieve their educational goals.</p>
+        <p>Enrollment &amp; Retention aims to increase student enrollment, retention, and completion through seamless enrollment experiences, targeted mentoring, and strategic use of data to guide interventions and outreach.</p>
       </div>
     </div>
 
@@ -215,12 +214,6 @@
     var tile = e.target.closest('.tile:not(.spacer-tile)');
     if (tile) tile.classList.toggle('expanded');
   });
-  container.addEventListener('dblclick', function(e) {
-    var tile = e.target.closest('.tile:not(.spacer-tile)');
-    if (tile && tile.dataset.id) OC.openModal(tile.dataset.id);
-  });
-
-  OC.initModal();
 })();
 </script>
 <script>

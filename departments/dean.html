@@ -71,8 +71,8 @@
     <div class="mission-card" data-reveal>
       <div class="mission-accent">&ldquo;</div>
       <div class="mission-text">
-        <p>The Dean of Students office serves as a central advocate for students, fostering a culture of belonging, integrity, and well-being across the entire student body.</p>
-        <p>We uphold community standards through fair and educational conduct processes, ensure accessibility for all learners, address grievances with care and impartiality, and provide critical crisis support when students need it most.</p>
+        <p>Grounded in Discipleship, Opportunity, and Covenant Belonging, the Dean of Students Office inspires students to succeed in their studies, live with integrity and honor, and grow as disciples of Jesus Christ.</p>
+        <p>We pursue this vision through compliance, compassion, and commitment, providing support across six critical service offices: Sexual Misconduct / Title IX, Student Honor &amp; Conduct, Accessibility, Grievances, Students in Crisis, and Belonging.</p>
       </div>
     </div>
 
@@ -215,12 +215,6 @@
     var tile = e.target.closest('.tile:not(.spacer-tile)');
     if (tile) tile.classList.toggle('expanded');
   });
-  container.addEventListener('dblclick', function(e) {
-    var tile = e.target.closest('.tile:not(.spacer-tile)');
-    if (tile && tile.dataset.id) OC.openModal(tile.dataset.id);
-  });
-
-  OC.initModal();
 })();
 </script>
 <script>

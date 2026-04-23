@@ -54,11 +54,14 @@
   padding: 28px 8px 0;
 }
 
-/* Vertical connector from horizontal bar to node */
+/* Vertical connector from horizontal bar to node — centered on the tile,
+   shifted when PM flanks add asymmetric padding */
 .tree li::before {
   content: '';
   position: absolute;
   top: 0;
+  left: calc(50% + (var(--extra-pl, 0px) - var(--extra-pr, 0px)) / 2);
+  transform: translateX(-50%);
   width: 2px;
   height: 28px;
   background: var(--connector-color);
@@ -226,15 +229,4 @@
   z-index: 15;
 }
 
-/* Assistant tiles are slightly smaller */
-.tile.assistant-tile {
-  width: 190px;
-}
-
-.tile.assistant-tile .tile-name {
-  font-size: 0.85rem;
-}
-
-.tile.assistant-tile .tile-title {
-  font-size: 0.62rem;
-}
+/* Assistant tiles share base tile sizing; only color accent differs */

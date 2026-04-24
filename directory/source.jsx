@@ -92,7 +92,7 @@ const EMPLOYEES = [
   { name: "Winner Aniekan Anietie", role: "Technical Support Engineer", dept: "Records, Registration & Support", type: "Contractor", stakeholder: "Matthew Smith", subDept: "Technical Support", org: "Springboard", tier: "3" },
   { name: "Colby Warner", role: "Product Support Engineer", dept: "Records, Registration & Support", type: "Full-Time Employee", stakeholder: "Matthew Smith", subDept: "Technical Support", org: "", tier: "" },
   { name: "Matthew Smith", role: "Technical Support Manager", dept: "Records, Registration & Support", type: "Full-Time Employee", stakeholder: "Mark Gefrom", subDept: "Technical Support", org: "", tier: "" },
-  { name: "David De-Graft Koomson", role: "Ass. Project Manager", dept: "VP - Student Services", type: "Contractor", stakeholder: "Ben Packer", subDept: "Department Leadership", org: "Springboard", tier: "3" },
+  { name: "David De-Graft Koomson", role: "Ass. Project Manager", dept: "VP - Student Services", type: "Contractor", stakeholder: "Jess Swinburne", subDept: "Department Leadership", org: "Springboard", tier: "3" },
   { name: "Jess Swinburne", role: "Project Manager", dept: "VP - Student Services", type: "Contractor", stakeholder: "Ben Packer", subDept: "Department Leadership", org: "Springboard", tier: "3" },
 ];
 

@@ -71,7 +71,7 @@ OC.renderTileWithAssistants = function(emp) {
   if (left.length) {
     html += '<div class="assistant-group assistant-group-left">';
     left.forEach(function(a) {
-      html += '<div class="assistant-slot">' + OC.renderTile(a) + '</div>';
+      html += '<div class="assistant-slot">' + OC.renderTileWithAssistants(a) + '</div>';
     });
     html += '</div>';
   }
@@ -79,7 +79,7 @@ OC.renderTileWithAssistants = function(emp) {
   if (right.length) {
     html += '<div class="assistant-group assistant-group-right">';
     right.forEach(function(a) {
-      html += '<div class="assistant-slot">' + OC.renderTile(a) + '</div>';
+      html += '<div class="assistant-slot">' + OC.renderTileWithAssistants(a) + '</div>';
     });
     html += '</div>';
   }

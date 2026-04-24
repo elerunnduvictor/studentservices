@@ -214,7 +214,7 @@ img { max-width: 100%; }
 .hero-content {
   position: relative;
   z-index: 1;
-  max-width: 700px;
+  max-width: 1000px;
 }
 
 .hero-badge {
@@ -243,9 +243,13 @@ img { max-width: 100%; }
   animation: heroFadeUp 0.8s var(--smooth) 0.25s both;
 }
 
+.hero h1 {
+  white-space: nowrap;
+}
 .hero h1 span {
-  display: block;
+  display: inline;
   color: var(--gold);
+  margin-left: 0.3em;
 }
 
 .hero-subtitle {
@@ -833,7 +837,7 @@ body.home-single .hero-compact::before { display: none; }
   border: none;
   text-align: center;
 }
-.home-mission-inner { max-width: 860px; margin: 0 auto; }
+.home-mission-inner { max-width: 1200px; margin: 0 auto; }
 .home-mission-label {
   font-size: 0.55rem;
   font-weight: 600;
@@ -903,7 +907,7 @@ body.home-single .dept-card-inner {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 32px 18px;
+  padding: 20px 18px;
   height: auto;
 }
 body.home-single .dept-icon {
@@ -948,7 +952,7 @@ body.home-single .tool-card {
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   color: #fff;
-  padding: 32px 18px;
+  padding: 20px 18px;
   gap: 14px;
   display: flex;
   align-items: center;
@@ -999,12 +1003,229 @@ body.home-single .tool-desc {
 /* --- FOOTER (transparent strip) --- */
 .home-footer {
   background: transparent;
-  border-top: 1px solid rgba(255,255,255,0.1);
+  border-top: 1px solid rgba(255,255,255,0.08);
   color: rgba(255,255,255,0.4);
   text-align: center;
-  font-size: 0.55rem;
+  font-size: 0.7rem;
   letter-spacing: 0.2em;
   text-transform: uppercase;
+  line-height: 1.2;
+}
+
+
+/* ══════════════════════════════════════════════════════════
+   HOME ORG STRUCTURE (hierarchical tree on homepage)
+   ══════════════════════════════════════════════════════════ */
+.home-org {
+  padding: 24px 48px 12px;
+  max-width: 1320px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.home-row-head-centered {
+  align-items: center;
+  text-align: center;
+}
+
+.home-org-tree {
+  margin-top: 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+.org-level {
+  width: 100%;
+  position: relative;
+}
+
+.org-level-top {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 18px;
+}
+
+/* Vertical stem from VP down to the horizontal bar */
+.org-level-top::after {
+  content: '';
+  position: absolute;
+  bottom: -18px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  height: 18px;
+  background: rgba(255, 195, 40, 0.45);
+}
+
+.org-level-directors {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  padding-top: 18px;
+  align-items: start;
+}
+
+/* Horizontal bar spanning the 4 director columns */
+.org-level-directors::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 12.5%;
+  width: 75%;
+  height: 2px;
+  background: rgba(255,255,255,0.25);
+}
+
+.org-branch {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Vertical stem from horizontal bar down to each director card */
+.org-branch::before {
+  content: '';
+  position: absolute;
+  top: -18px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  height: 18px;
+  background: var(--dc);
+  opacity: 0.55;
+}
+
+/* ─── Node cards (glassy, dept-color trimmed) ─── */
+.org-node {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.14);
+  border-left: 3px solid var(--dc, rgba(255,255,255,0.35));
+  border-radius: 10px;
+  padding: 12px 14px;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  text-align: center;
+  color: #fff;
+  transition: transform 0.3s var(--spring), background 0.3s var(--smooth), box-shadow 0.3s var(--smooth);
+}
+
+.org-node:hover {
+  background: rgba(255,255,255,0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+}
+
+.org-node-title {
+  font-family: 'Jost', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.25;
+  color: #fff;
+}
+
+.org-node-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.85rem;
+  font-weight: 500;
+  font-style: italic;
+  color: rgba(255,255,255,0.78);
+  margin-top: 4px;
+  letter-spacing: 0.01em;
+}
+
+/* VP card — gold tinted, wider */
+.org-node-vp {
+  border-color: rgba(var(--gold-r), 0.35);
+  border-left: 3px solid var(--gold);
+  background: linear-gradient(135deg, rgba(var(--gold-r),0.12), rgba(255,255,255,0.05));
+  padding: 16px 32px;
+  min-width: 260px;
+}
+
+.org-node-vp .org-node-title {
+  font-size: 0.92rem;
+  color: var(--gold);
+}
+
+.org-node-vp .org-node-name {
+  font-size: 1rem;
+  color: #fff;
+}
+
+/* Director card — dept-tinted, slightly stronger */
+.org-node-dir {
+  background: linear-gradient(135deg, rgba(var(--dc-r),0.18), rgba(255,255,255,0.04));
+  border-color: rgba(var(--dc-r), 0.35);
+  padding: 14px 16px;
+}
+
+.org-node-dir .org-node-title {
+  font-size: 0.8rem;
+  color: #fff;
+}
+
+.org-node-dir .org-node-name {
+  font-size: 0.9rem;
+  color: rgba(255,255,255,0.85);
+}
+
+/* ─── Sub-team stack under each director ─── */
+.org-sub {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 14px;
+  position: relative;
+}
+
+/* Vertical connector above each sub card */
+.org-sub .org-node {
+  position: relative;
+}
+.org-sub .org-node::before {
+  content: '';
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  height: 14px;
+  background: var(--dc);
+  opacity: 0.5;
+}
+
+/* Mobile/tablet — stack branches vertically, drop the multi-column bar */
+@media (max-width: 1023px) {
+  .home-org { padding: 40px 20px 12px; }
+  .home-org-tree { margin-top: 24px; }
+  .org-level-top { margin-bottom: 20px; }
+  .org-level-top::after { bottom: -20px; height: 20px; }
+  .org-level-directors {
+    grid-template-columns: 1fr;
+    gap: 28px;
+    padding-top: 20px;
+  }
+  .org-level-directors::before { display: none; }
+  .org-branch::before {
+    top: -20px;
+    height: 20px;
+  }
+  .org-branch:first-child::before { display: none; }
+  /* On stacked mobile, the VP stem becomes a single line into the first director */
+  .org-node-vp { min-width: auto; width: 100%; max-width: 360px; }
+}
+
+/* Small phones — compact text */
+@media (max-width: 560px) {
+  .org-node { padding: 10px 12px; }
+  .org-node-title { font-size: 0.72rem; }
+  .org-node-name { font-size: 0.78rem; }
+  .org-node-vp { padding: 14px 20px; }
+  .org-node-vp .org-node-title { font-size: 0.82rem; }
+  .org-node-vp .org-node-name { font-size: 0.9rem; }
 }
 
 /* ───── Desktop single-view (no-scroll, 100vh flex column) ─────
@@ -1012,72 +1233,68 @@ body.home-single .tool-desc {
    bottom ~50vh splits into departments section + tools section. */
 @media (min-width: 1024px) {
   body.home-single {
-    height: 100vh;
-    max-height: 100vh;
-    overflow: hidden;
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
+    overflow-x: hidden;
   }
 
-  /* --- HERO (big splash, ~36vh) --- */
+  /* --- HERO (compact splash) --- */
   body.home-single .hero-compact {
-    min-height: 36vh;
+    min-height: 0;
     height: auto;
-    padding: 56px 32px 24px;
+    padding: 14px 32px 22px;
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
     text-align: center;
   }
   body.home-single .hero-compact .hero-badge {
-    margin-bottom: 22px;
-    padding: 6px 22px;
-    font-size: 0.65rem;
+    margin-bottom: 10px;
+    padding: 5px 20px;
+    font-size: 0.62rem;
     letter-spacing: 0.32em;
   }
   body.home-single .hero-compact h1 {
-    font-size: clamp(2.6rem, 5.2vw, 4.2rem);
-    margin-bottom: 18px;
-    line-height: 1.08;
+    font-size: clamp(2.4rem, 4.8vw, 3.6rem);
+    margin-bottom: 8px;
+    line-height: 1.05;
     letter-spacing: 0.14em;
   }
-  body.home-single .hero-compact h1 span { display: block; margin-left: 0; }
+  body.home-single .hero-compact h1 span { display: inline; margin-left: 0.3em; }
   body.home-single .hero-compact .hero-subtitle {
     margin-bottom: 0;
-    font-size: clamp(0.9rem, 1.4vw, 1.1rem);
+    font-size: clamp(0.85rem, 1.3vw, 1rem);
     letter-spacing: 0.22em;
   }
 
-  .hero-theme-btn { top: 22px; right: 26px; width: 40px; height: 40px; }
-  .hero-theme-btn svg { width: 18px; height: 18px; }
+  .hero-theme-btn { top: 14px; right: 20px; width: 36px; height: 36px; }
+  .hero-theme-btn svg { width: 16px; height: 16px; }
 
-  /* --- MISSION (beefier, ~14vh) --- */
+  /* --- MISSION (tight) --- */
   .home-mission {
     flex-shrink: 0;
-    padding: 12px 32px 22px;
+    padding: 18px 32px 14px;
   }
   .home-mission-label {
     font-size: 0.68rem;
     letter-spacing: 0.35em;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
   }
   .home-mission-text {
-    font-size: 1.05rem;
-    line-height: 1.65;
-    max-width: 780px;
+    font-size: 1rem;
+    line-height: 1.55;
+    max-width: 1200px;
     margin: 0 auto;
   }
 
-  /* --- ROWS (each section = its own row in the bottom half) --- */
+  /* --- ROWS (stacked content blocks) --- */
   .home-row {
-    flex: 1 1 0;
-    min-height: 0;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    padding: 10px 48px;
+    padding: 24px 48px;
   }
   .home-row-head {
     margin-bottom: 16px;
@@ -1099,19 +1316,21 @@ body.home-single .tool-desc {
 
   .home-footer {
     flex-shrink: 0;
-    padding: 8px 20px;
+    padding: 2px 20px;
   }
 }
 
 /* Shorter laptops — keep the split but tighten metrics */
 @media (min-width: 1024px) and (max-height: 800px) {
-  body.home-single .hero-compact { min-height: 34vh; padding: 38px 32px 18px; }
-  body.home-single .hero-compact .hero-badge { margin-bottom: 16px; padding: 5px 18px; font-size: 0.58rem; }
-  body.home-single .hero-compact h1 { font-size: clamp(2.2rem, 4.4vw, 3.2rem); margin-bottom: 12px; }
-  body.home-single .hero-compact .hero-subtitle { font-size: 0.9rem; }
-  .hero-theme-btn { top: 16px; right: 20px; width: 36px; height: 36px; }
-  .home-mission { padding: 8px 32px 14px; }
-  .home-mission-label { font-size: 0.6rem; margin-bottom: 6px; }
+  body.home-single .hero-compact { min-height: 0; padding: 10px 32px 16px; }
+  body.home-single .hero-compact .hero-badge { margin-bottom: 8px; padding: 4px 16px; font-size: 0.55rem; }
+  body.home-single .hero-compact h1 { font-size: clamp(2rem, 4vw, 2.8rem); margin-bottom: 6px; }
+  body.home-single .hero-compact h1 span { display: inline; margin-left: 0.3em; }
+  .home-mission-text { max-width: 1100px; }
+  .home-mission { padding: 12px 32px 10px; }
+  body.home-single .hero-compact .hero-subtitle { font-size: 0.85rem; }
+  .hero-theme-btn { top: 12px; right: 18px; width: 32px; height: 32px; }
+  .home-mission-label { font-size: 0.58rem; margin-bottom: 4px; }
   .home-mission-text { font-size: 0.92rem; line-height: 1.5; }
   .home-row { padding: 6px 40px; }
   .home-row-head { margin-bottom: 12px; }
@@ -1130,7 +1349,7 @@ body.home-single .tool-desc {
   body.home-single .tool-name { font-size: 0.88rem; }
   body.home-single .dept-desc,
   body.home-single .tool-desc { font-size: 0.64rem; }
-  .home-footer { padding: 6px 20px; font-size: 0.5rem; }
+  .home-footer { padding: 4px 20px; font-size: 0.65rem; }
 }
 
 /* Mobile / tablet fallback — scrolling stack on the same splash bg */
@@ -1182,8 +1401,8 @@ body.home-single .tool-desc {
   }
 
   .home-footer {
-    padding: 18px 20px;
-    margin-top: 24px;
+    padding: 4px 20px;
+    margin-top: 8px;
   }
 }
 

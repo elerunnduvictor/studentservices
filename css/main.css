@@ -1177,24 +1177,42 @@ body.home-single .tool-desc {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  margin-top: 14px;
+  margin-top: 0;
+  padding-top: 14px;
+  padding-left: 26px;
   position: relative;
 }
 
-/* Vertical connector above each sub card */
+/* Trunk + bridge: an L coming out of director-center bottom, turning left, then
+   running down the left side as a single trunk that every sub-card connects to. */
+.org-sub::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 10px;
+  width: calc(50% - 10px);
+  height: calc(100% - 28px);
+  border-top: 2px solid var(--dc);
+  border-left: 2px solid var(--dc);
+  border-top-left-radius: 8px;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+/* Horizontal arm from the trunk into each sub card */
 .org-sub .org-node {
   position: relative;
 }
 .org-sub .org-node::before {
   content: '';
   position: absolute;
-  top: -14px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 2px;
-  height: 14px;
+  top: 50%;
+  left: -16px;
+  width: 16px;
+  height: 2px;
   background: var(--dc);
-  opacity: 0.5;
+  opacity: 0.55;
+  transform: translateY(-50%);
 }
 
 /* Mobile/tablet — stack branches vertically, drop the multi-column bar */

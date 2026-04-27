@@ -140,7 +140,7 @@
     +     '<div class="dd-bars">' + barHtml + '</div>'
     +   '</div>'
     +   '<div class="dd-card">'
-    +     '<div class="dd-card-title">Employment Type Mix</div>'
+    +     '<div class="dd-card-title">Employee Type Mix</div>'
     +     donutHtml
     +   '</div>'
     + '</div>';

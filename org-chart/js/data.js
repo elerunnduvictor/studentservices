@@ -6,7 +6,7 @@ window.OC = window.OC || {};
 
 OC.DEPARTMENTS = {
   executive:  { name: 'Executive', color: '#FFC328', colorR: '255,195,40' },
-  records:    { name: 'Records, Registration & Support', color: '#3A929D', colorR: '58,146,157' },
+  records:    { name: 'Student Records, Registration, and Support', color: '#3A929D', colorR: '58,146,157' },
   enrollment: { name: 'Enrollment & Retention', color: '#B687AC', colorR: '182,135,172' },
   dean:       { name: 'Dean of Students', color: '#A2C23D', colorR: '162,194,61' },
   digital:    { name: 'Digital Operations', color: '#CB4A27', colorR: '203,74,39' }
@@ -27,7 +27,7 @@ OC.employees = [
     kpis: ['Overall student satisfaction scores', 'Student retention and completion rates', 'Operational efficiency across departments'], email: '', photoUrl: '' },
 
   // ── LEVEL 2: DIRECTORS ──
-  { id: 'mark-gefrom', name: 'Mark Gefrom', title: 'Director of Student Records, Registration & Support', dept: 'records', level: 2, status: 'FTE', reportsTo: 'vp',
+  { id: 'mark-gefrom', name: 'Mark Gefrom', title: 'Director of Student Records, Registration, and Support', dept: 'records', level: 2, status: 'FTE', reportsTo: 'vp',
     responsibilities: ['Registrar, student support, tech support oversight', 'Help center', 'Customer relations systems', 'Ticket systems'],
     kpis: ['All Records, Registration, and Support teams meeting or exceeding service-level agreements for response, resolution, QA, CSAT, and first contact resolution', 'Records, registration, and support department budget', 'Overall student autonomy (primary)', 'Overall student satisfaction (secondary)'], email: '', photoUrl: '', roleInventoryUrl: 'https://churchofjesuschrist.sharepoint.com/:w:/s/BYU-PathwayStudentSuccessRoleInventory/IQBpfBRqxg1FTqAoAyYTtdYhAQZ58j2DOREbCoKMFpxpPBY?e=WczgAk' },
   { id: 'alison-cundiff', name: 'Alison Cundiff', title: 'Director of Enrollment & Retention', dept: 'enrollment', level: 2, status: 'FTE', reportsTo: 'vp',
@@ -147,7 +147,7 @@ OC.employees = [
     responsibilities: ['Business Partner collaboration', 'Architect & Engineer engagement (IT/ICS)', 'Development & QA lead', 'AI Compliance & advancement'],
     kpis: ['Team meeting project deadlines', 'Companion feature C-Sat', 'Companion usage rates', 'Companion C-Sat', 'AI retention effect'], email: '', photoUrl: '', roleInventoryUrl: 'https://churchofjesuschrist.sharepoint.com/:w:/s/BYU-PathwayStudentSuccessRoleInventory/IQA_Pg4UzvhTS7QJCBFKoz33AfnpJQE-bSz0L_2WnenPqRk?e=fV14kS' },
   // Level 4
-  { id: 'joshua-hadden', name: 'Joshua Stafford Hadden', title: 'System & Operations Manager', dept: 'digital', level: 4, status: 'FTE', reportsTo: 'ricky-kailiponi',
+  { id: 'joshua-hadden', name: 'Joshua Stafford Hadden', title: 'System & Operations Manager', dept: 'digital', level: 3, status: 'FTE', reportsTo: 'jacob-adams',
     responsibilities: ['Registrar business solutions', 'Operational data & reporting', 'SIS support & configuration'],
     kpis: ['Team meeting project timelines rate', 'Stakeholder CSAT on team\'s projects', 'Cost reductions in service areas (secondary)'], email: '', photoUrl: '', roleInventoryUrl: 'https://churchofjesuschrist.sharepoint.com/:w:/s/BYU-PathwayStudentSuccessRoleInventory/IQDAfxv5-z3nRIuCZ8cuqVLrAetuZhsS26bV2B5GVKjLtkk?e=we7VuH' },
   { id: 'sebastian-vargas', name: 'Sebastian Vargas', title: 'Dev Manager', dept: 'digital', level: 4, status: 'Contractor', reportsTo: 'ricky-kailiponi',
@@ -176,23 +176,23 @@ OC.employees = [
   // ── PROJECT MANAGERS (displayed beside their director/VP) ──
   { id: 'jess-swinburne', name: 'Jess Swinburne', title: 'Project Manager', dept: 'executive', level: 2, status: 'Contractor', reportsTo: 'vp', role: 'pm', pmPosition: 'right',
     responsibilities: ['Coordinate cross-departmental strategic initiatives for Student Services', 'Track project milestones, deliverables, and resource allocation across all departments', 'Facilitate executive reporting and stakeholder communication for the VP'],
-    kpis: ['On-time delivery of cross-departmental projects', 'Stakeholder satisfaction with project communication and reporting', 'Resource utilization efficiency across initiatives'], email: '', photoUrl: '', roleInventoryUrl: '' },
+    kpis: ['On-time delivery of cross-departmental projects', 'Stakeholder satisfaction with project communication and reporting', 'Resource utilization efficiency across initiatives'], email: '', photoUrl: '', roleInventoryUrl: 'https://churchofjesuschrist.sharepoint.com/:w:/s/BYU-PathwayStudentSuccessRoleInventory/IQAmevpt63HgTreXjEGL0M9EAdyu6hNqyeGnyn7WtrmFhic?e=7CZh4x' },
   { id: 'david-koomson', name: 'David De-Graft Koomson', title: 'Assistant Project Manager', dept: 'executive', level: 2, status: 'Contractor', reportsTo: 'jess-swinburne', role: 'pm', pmPosition: 'right',
     responsibilities: ['Support project coordination and documentation for VP-level initiatives', 'Manage project timelines, meeting agendas, and action item tracking', 'Assist with cross-team communication and follow-up on deliverables'],
-    kpis: ['Action item completion rate across VP initiatives', 'Meeting cadence adherence and documentation quality', 'Timely escalation of project risks and blockers'], email: '', photoUrl: '', roleInventoryUrl: '' },
+    kpis: ['Action item completion rate across VP initiatives', 'Meeting cadence adherence and documentation quality', 'Timely escalation of project risks and blockers'], email: '', photoUrl: '', roleInventoryUrl: 'https://churchofjesuschrist.sharepoint.com/:w:/s/BYU-PathwayStudentSuccessRoleInventory/IQAmevpt63HgTreXjEGL0M9EAdyu6hNqyeGnyn7WtrmFhic?e=7CZh4x' },
   { id: 'victor-elerunndu', name: 'Victor Oluwapelumi Elerunndu', title: 'Project Manager', dept: 'records', level: 3, status: 'Contractor', reportsTo: 'mark-gefrom', role: 'pm', pmPosition: 'left',
     responsibilities: ['Coordinate student support improvement projects and initiatives', 'Track Help Center and ticket system optimization milestones', 'Manage cross-functional project timelines within student support operations'],
-    kpis: ['On-time delivery of student support projects', 'Project milestone completion rate', 'Stakeholder satisfaction with project communication'], email: '', photoUrl: '', roleInventoryUrl: '' },
+    kpis: ['On-time delivery of student support projects', 'Project milestone completion rate', 'Stakeholder satisfaction with project communication'], email: '', photoUrl: '', roleInventoryUrl: 'https://churchofjesuschrist.sharepoint.com/:w:/s/BYU-PathwayStudentSuccessRoleInventory/IQAmevpt63HgTreXjEGL0M9EAdyu6hNqyeGnyn7WtrmFhic?e=7CZh4x' },
   { id: 'moses-abioye', name: 'Moses Abioye', title: 'Project Manager', dept: 'records', level: 3, status: 'Contractor', reportsTo: 'mark-gefrom', role: 'pm', pmPosition: 'right',
     responsibilities: ['Coordinate registration and records process improvement projects', 'Track registrar system updates and compliance initiative timelines', 'Manage project documentation and reporting for records operations'],
-    kpis: ['On-time delivery of registrar and records projects', 'Registration process improvement milestones met', 'Project documentation completeness and accuracy'], email: '', photoUrl: '', roleInventoryUrl: '' },
+    kpis: ['On-time delivery of registrar and records projects', 'Registration process improvement milestones met', 'Project documentation completeness and accuracy'], email: '', photoUrl: '', roleInventoryUrl: 'https://churchofjesuschrist.sharepoint.com/:w:/s/BYU-PathwayStudentSuccessRoleInventory/IQAmevpt63HgTreXjEGL0M9EAdyu6hNqyeGnyn7WtrmFhic?e=7CZh4x' },
   { id: 'james-etukudo', name: 'James Etukudo Jr.', title: 'Project Manager', dept: 'enrollment', level: 3, status: 'Contractor', reportsTo: 'alison-cundiff', role: 'pm', pmPosition: 'right',
     responsibilities: ['Coordinate enrollment funnel and retention initiative projects', 'Track admissions system design, testing, and deployment milestones', 'Manage project reporting and cross-team coordination for enrollment services'],
-    kpis: ['On-time delivery of enrollment and retention projects', 'Enrollment initiative milestone completion rate', 'Stakeholder satisfaction with project updates and communication'], email: '', photoUrl: '', roleInventoryUrl: '' },
+    kpis: ['On-time delivery of enrollment and retention projects', 'Enrollment initiative milestone completion rate', 'Stakeholder satisfaction with project updates and communication'], email: '', photoUrl: '', roleInventoryUrl: 'https://churchofjesuschrist.sharepoint.com/:w:/s/BYU-PathwayStudentSuccessRoleInventory/IQAmevpt63HgTreXjEGL0M9EAdyu6hNqyeGnyn7WtrmFhic?e=7CZh4x' },
   { id: 'mariela-pezzali', name: 'Mariela Gisell Pezzali', title: 'Project Manager', dept: 'dean', level: 3, status: 'Contractor', reportsTo: 'steven-thomas', role: 'pm', pmPosition: 'right',
     responsibilities: ['Coordinate Dean of Students office projects and compliance initiatives', 'Track Title IX, ADA/504, and student conduct process improvement timelines', 'Manage cross-office project documentation and stakeholder reporting'],
-    kpis: ['On-time delivery of DOS compliance and policy projects', 'Project milestone completion rate for student services initiatives', 'Stakeholder satisfaction with project coordination and reporting'], email: '', photoUrl: '', roleInventoryUrl: '' },
+    kpis: ['On-time delivery of DOS compliance and policy projects', 'Project milestone completion rate for student services initiatives', 'Stakeholder satisfaction with project coordination and reporting'], email: '', photoUrl: '', roleInventoryUrl: 'https://churchofjesuschrist.sharepoint.com/:w:/s/BYU-PathwayStudentSuccessRoleInventory/IQAmevpt63HgTreXjEGL0M9EAdyu6hNqyeGnyn7WtrmFhic?e=7CZh4x' },
   { id: 'karina-vargas', name: 'Karina Andrea Vargas', title: 'Project Manager', dept: 'digital', level: 3, status: 'Contractor', reportsTo: 'jacob-adams', role: 'pm', pmPosition: 'right',
     responsibilities: ['Coordinate digital operations development and deployment projects', 'Track sprint deliverables, feature releases, and system integration milestones', 'Manage stakeholder reporting and project communication for digital initiatives'],
-    kpis: ['On-time delivery of digital operations projects', 'Sprint and release milestone completion rate', 'Stakeholder satisfaction with project timeliness and communication'], email: '', photoUrl: '', roleInventoryUrl: '' }
+    kpis: ['On-time delivery of digital operations projects', 'Sprint and release milestone completion rate', 'Stakeholder satisfaction with project timeliness and communication'], email: '', photoUrl: '', roleInventoryUrl: 'https://churchofjesuschrist.sharepoint.com/:w:/s/BYU-PathwayStudentSuccessRoleInventory/IQAmevpt63HgTreXjEGL0M9EAdyu6hNqyeGnyn7WtrmFhic?e=7CZh4x' }
 ];

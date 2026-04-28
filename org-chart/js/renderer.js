@@ -58,12 +58,17 @@ OC.renderTile = function(emp) {
     '</div></div></div>';
 };
 
+// Directors render PMs as inline children (handled in renderSubtree).
+// Everyone else (VP, PMs with sub-PMs) keeps the flanking layout.
 OC.renderTileWithAssistants = function(emp) {
+  var isDirector = emp.level === 2 && emp.role !== 'pm';
+  if (isDirector) return OC.renderTile(emp);
+
   var assistants = OC.getAssistants(emp.id);
   if (assistants.length === 0) return OC.renderTile(emp);
 
   var left = assistants.filter(function(a) { return a.pmPosition === 'left'; });
-  var right = assistants.filter(function(a) { return a.pmPosition === 'right'; });
+  var right = assistants.filter(function(a) { return a.pmPosition !== 'left'; });
 
   var html = '<div class="tile-with-assistants">';
   html += OC.renderTile(emp);
@@ -90,7 +95,19 @@ OC.renderTileWithAssistants = function(emp) {
 
 OC.renderSubtree = function(parentId) {
   var parent = OC.employees.find(function(e) { return e.id === parentId; });
-  var children = OC.getTreeChildren(parentId);
+  var nonPMs = OC.getTreeChildren(parentId);
+  var children;
+  // Only directors merge their PMs into the children row.
+  // Other parents (VP, PMs) keep their PMs flanking via renderTileWithAssistants.
+  var parentIsDirector = parent && parent.level === 2 && parent.role !== 'pm';
+  if (parentIsDirector) {
+    var pms = OC.getAssistants(parentId);
+    // PMs sit centered under the director, between the SMs.
+    var splitIndex = Math.ceil(nonPMs.length / 2);
+    children = nonPMs.slice(0, splitIndex).concat(pms).concat(nonPMs.slice(splitIndex));
+  } else {
+    children = nonPMs;
+  }
   if (children.length === 0) return '';
 
   var parentLevel = parent ? parent.level : 0;
@@ -98,20 +115,30 @@ OC.renderSubtree = function(parentId) {
   var html = '<ul>';
 
   children.forEach(function(child) {
-    var isDeptBranch = child.level === 2;
+    var isPM = child.role === 'pm';
+    var isDeptBranch = child.level === 2 && !isPM;
     var deptColor = OC.getDeptInfo(child.dept).color;
 
-    // Check if this child has assistants and calculate extra padding
-    var childAssistants = OC.getAssistants(child.id);
-    var hasLeftPM = childAssistants.some(function(a) { return a.pmPosition === 'left'; });
-    var hasRightPM = childAssistants.some(function(a) { return a.pmPosition === 'right'; });
+    // Children that flank their own PMs (e.g. Jess flanks David) need
+    // padding so the flanking tiles don't get clipped.
+    var childIsDirector = isDeptBranch;
     var extraStyles = '';
-    if (hasLeftPM) extraStyles += 'padding-left:260px;--extra-pl:260px;';
-    if (hasRightPM) extraStyles += 'padding-right:260px;--extra-pr:260px;';
+    if (!childIsDirector) {
+      var childAssistants = OC.getAssistants(child.id);
+      var hasLeftPM = childAssistants.some(function(a) { return a.pmPosition === 'left'; });
+      var hasRightPM = childAssistants.some(function(a) { return a.pmPosition !== 'left'; });
+      if (hasLeftPM) extraStyles += 'padding-left:208px;--extra-pl:208px;';
+      if (hasRightPM) extraStyles += 'padding-right:208px;--extra-pr:208px;';
+    }
 
-    var branchAttr = isDeptBranch
-      ? ' class="dept-branch" data-branch-dept="' + child.dept + '" data-lvl="' + child.level + '" style="--dc:' + deptColor + ';' + extraStyles + '"'
-      : ' data-lvl="' + child.level + '"' + (extraStyles ? ' style="' + extraStyles + '"' : '');
+    var classNames = [];
+    if (isDeptBranch) classNames.push('dept-branch');
+    if (isPM) classNames.push('pm-branch');
+    var classAttr = classNames.length ? ' class="' + classNames.join(' ') + '"' : '';
+    var inlineStyles = (isDeptBranch ? '--dc:' + deptColor + ';' : '') + extraStyles;
+    var styleAttr = inlineStyles ? ' style="' + inlineStyles + '"' : '';
+    var deptAttr = isDeptBranch ? ' data-branch-dept="' + child.dept + '"' : '';
+    var branchAttr = classAttr + deptAttr + ' data-lvl="' + child.level + '"' + styleAttr;
     var gap = child.level - parentLevel - 1;
 
     if (gap > 0) {

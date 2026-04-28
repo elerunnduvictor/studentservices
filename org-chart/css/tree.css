@@ -128,8 +128,13 @@
   --extra-pr: 0px !important;
 }
 
-/* Hide all PM assistant groups in leadership view */
+/* Leadership view shows only senior managers — hide PMs (both flanking and inline) */
+.tree.leadership-view .pm-branch { display: none !important; }
 .tree.leadership-view .assistant-group { display: none !important; }
+/* When hiding PMs leaves a single SM child, suppress its orphan half-bar */
+.tree.leadership-view .dept-branch > ul:not(:has(> li:not(.pm-branch) ~ li:not(.pm-branch))) > li:not(.pm-branch)::after {
+  display: none !important;
+}
 
 /* Single dept filter: hide the orphaned horizontal bar */
 .tree.single-dept-view > ul > li::after { display: none !important; }

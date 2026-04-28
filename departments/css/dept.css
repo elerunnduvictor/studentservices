@@ -492,14 +492,28 @@ body {
   color: var(--dept-color); opacity: 0.7;
   margin-top: 20px; margin-bottom: 8px;
 }
-/* Dept structure inline chart wrap */
+/* Dept structure inline chart wrap — horizontally scrollable when chart exceeds viewport */
 .dept-chart-wrap {
   width: 100%;
   padding: 16px 0 40px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(var(--dept-color-r), 0.4) transparent;
+}
+.dept-chart-wrap::-webkit-scrollbar { height: 8px; }
+.dept-chart-wrap::-webkit-scrollbar-track { background: transparent; }
+.dept-chart-wrap::-webkit-scrollbar-thumb {
+  background: rgba(var(--dept-color-r), 0.4);
+  border-radius: 4px;
+}
+.dept-chart-wrap::-webkit-scrollbar-thumb:hover { background: rgba(var(--dept-color-r), 0.6); }
+.dept-chart-wrap > div {
+  min-width: max-content;
   display: flex;
   justify-content: center;
+  padding: 0 clamp(16px, 4vw, 48px);
 }
-.dept-chart-wrap > div { width: 100%; display: flex; justify-content: center; }
 .dept-chart-wrap .tree { padding-top: 16px; margin: 0 auto; }
 
 /* ══════════════ FOCUS AREAS ══════════════ */

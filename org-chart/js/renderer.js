@@ -43,7 +43,7 @@ OC.renderTile = function(emp) {
   return '<div class="' + tileClass + '" data-id="' + emp.id + '" data-dept="' + emp.dept + '" data-level="' + emp.level + '" data-name="' + emp.name.toLowerCase() + '" data-title="' + emp.title.toLowerCase() + '" style="--tile-color:' + dept.color + '; --tile-color-r:' + dept.colorR + ';">' +
     '<div class="tile-accent" style="background:' + dept.color + '"></div>' +
     '<div class="tile-header">' +
-      '<div class="avatar">' + (emp.photoUrl ? '<img src="' + emp.photoUrl + '" alt="' + emp.name + '">' : OC.getInitials(emp.name)) + '</div>' +
+      '<div class="avatar">' + (emp.photoUrl ? '<img src="' + emp.photoUrl + '" alt="' + emp.name + '" loading="lazy" onerror="this.outerHTML=\'' + OC.getInitials(emp.name) + '\'">' : OC.getInitials(emp.name)) + '</div>' +
       '<div class="tile-name">' + emp.name + '</div>' +
       '<div class="tile-title">' + emp.title + '</div>' +
       '<div class="tile-level-badge">' + levelBadge + '</div>' +

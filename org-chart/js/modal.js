@@ -8,7 +8,7 @@ OC.buildCardContent = function(empId) {
 
   var content = '<div class="modal-accent" style="background:' + dept.color + '"></div>' +
     '<div class="modal-header" style="--tile-color:' + dept.color + '; --tile-color-r:' + dept.colorR + ';">' +
-      '<div class="avatar">' + (emp.photoUrl ? '<img src="' + emp.photoUrl + '" alt="' + emp.name + '">' : OC.getInitials(emp.name)) + '</div>' +
+      '<div class="avatar">' + (emp.photoUrl ? '<img src="' + emp.photoUrl + '" alt="' + emp.name + '" loading="lazy" onerror="this.outerHTML=\'' + OC.getInitials(emp.name) + '\'">' : OC.getInitials(emp.name)) + '</div>' +
       '<div class="tile-name">' + emp.name + '</div>' +
       '<div class="tile-title" style="color:' + dept.color + '">' + emp.title + '</div>' +
       '<div class="tile-level-badge">' + (emp.role === 'pm' ? 'Contractor' : emp.level === 1 ? OC.LEVELS[emp.level] : (emp.status || 'FTE') + ' \u00b7 ' + OC.LEVELS[emp.level]) + '</div>' +

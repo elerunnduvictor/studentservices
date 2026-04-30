@@ -117,7 +117,7 @@ OC.employees = [
     kpis: ['Application processing rate', 'Application manual review turnaround rate', 'Number of admissions support cases', 'Admissions case resolution rate'], email: '', photoUrl: '../photos/enrollment/ely-zmolek.jpeg', roleInventoryUrl: 'https://churchofjesuschrist.sharepoint.com/:w:/s/BYU-PathwayStudentSuccessRoleInventory/IQDyS1zVpuz3SI8qQdzkXt4eAa5v6mtHteW4fZK3kCJ5twA?e=C1jcso' },
   { id: 'trey-mooney', name: 'Trey Mooney', title: 'University Chaplain', dept: 'enrollment', level: 5, status: 'FTE', reportsTo: 'trevor-shelton',
     responsibilities: ['Ecclesiastical endorsements for non-member students'],
-    kpis: ['Non-member endorsement completion rate', 'Number of support cases with non-member endorsement concerns'], email: '', photoUrl: '', roleInventoryUrl: 'https://churchofjesuschrist.sharepoint.com/:w:/s/BYU-PathwayStudentSuccessRoleInventory/IQCr-O7RTvhPRaqywK1WC3PeAfbXS3wjfPjtPewsh_8PD3M?e=5EgIUj' },
+    kpis: ['Non-member endorsement completion rate', 'Number of support cases with non-member endorsement concerns'], email: '', photoUrl: '../photos/enrollment/trey-mooney.png', roleInventoryUrl: 'https://churchofjesuschrist.sharepoint.com/:w:/s/BYU-PathwayStudentSuccessRoleInventory/IQCr-O7RTvhPRaqywK1WC3PeAfbXS3wjfPjtPewsh_8PD3M?e=5EgIUj' },
 
   // ── DEAN OF STUDENTS ──
   // Level 3
@@ -192,7 +192,7 @@ OC.employees = [
   { id: 'mariela-pezzali', name: 'Mariela Gisell Pezzali', title: 'Project Manager', dept: 'dean', level: 3, status: 'Contractor', reportsTo: 'steven-thomas', role: 'pm', pmPosition: 'right',
     responsibilities: ['Coordinate Dean of Students office projects and compliance initiatives', 'Track Title IX, ADA/504, and student conduct process improvement timelines', 'Manage cross-office project documentation and stakeholder reporting'],
     kpis: ['On-time delivery of DOS compliance and policy projects', 'Project milestone completion rate for student services initiatives', 'Stakeholder satisfaction with project coordination and reporting'], email: '', photoUrl: '../photos/dean/mariela-pezzali.png', roleInventoryUrl: 'https://churchofjesuschrist.sharepoint.com/:w:/s/BYU-PathwayStudentSuccessRoleInventory/IQAmevpt63HgTreXjEGL0M9EAdyu6hNqyeGnyn7WtrmFhic?e=7CZh4x' },
-  { id: 'karina-vargas', name: 'Karina Andrea Vargas', title: 'Project Manager', dept: 'digital', level: 3, status: 'Contractor', reportsTo: 'jacob-adams', role: 'pm', pmPosition: 'right',
+  { id: 'karina-vargas', name: 'Karina Andrea Vargas', title: 'Coordinator', dept: 'digital', level: 3, status: 'Contractor', reportsTo: 'jacob-adams', role: 'pm', pmPosition: 'right',
     responsibilities: ['Coordinate digital operations development and deployment projects', 'Track sprint deliverables, feature releases, and system integration milestones', 'Manage stakeholder reporting and project communication for digital initiatives'],
     kpis: ['On-time delivery of digital operations projects', 'Sprint and release milestone completion rate', 'Stakeholder satisfaction with project timeliness and communication'], email: '', photoUrl: '../photos/digital/karina-vargas.jpeg', roleInventoryUrl: 'https://churchofjesuschrist.sharepoint.com/:w:/s/BYU-PathwayStudentSuccessRoleInventory/IQAmevpt63HgTreXjEGL0M9EAdyu6hNqyeGnyn7WtrmFhic?e=7CZh4x' }
 ];

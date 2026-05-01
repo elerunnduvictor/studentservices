@@ -906,14 +906,14 @@ body.home-single .dept-card-accent { display: none; }
 body.home-single .dept-card-inner {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 20px 18px;
+  gap: 18px;
+  padding: 28px 22px;
   height: auto;
 }
 body.home-single .dept-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
   background: rgba(var(--dc-r), 0.2);
   color: var(--dc);
   display: flex;
@@ -926,21 +926,21 @@ body.home-single .dept-card:hover .dept-icon {
   transform: scale(1.08);
   box-shadow: 0 0 16px rgba(var(--dc-r), 0.3);
 }
-body.home-single .dept-icon svg { width: 18px; height: 18px; }
+body.home-single .dept-icon svg { width: 22px; height: 22px; }
 body.home-single .dept-info { flex: 1; min-width: 0; }
 body.home-single .dept-name {
   color: #fff;
   font-family: 'Jost', sans-serif;
   font-weight: 600;
-  font-size: 0.9rem;
-  margin-bottom: 2px;
+  font-size: 1rem;
+  margin-bottom: 4px;
   letter-spacing: 0.02em;
   line-height: 1.25;
 }
 body.home-single .dept-desc {
-  color: rgba(255,255,255,0.55);
-  font-size: 0.66rem;
-  line-height: 1.35;
+  color: rgba(255,255,255,0.6);
+  font-size: 0.76rem;
+  line-height: 1.4;
 }
 body.home-single .dept-arrow { display: none; }
 
@@ -952,8 +952,8 @@ body.home-single .tool-card {
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   color: #fff;
-  padding: 20px 18px;
-  gap: 14px;
+  padding: 28px 20px;
+  gap: 18px;
   display: flex;
   align-items: center;
   box-shadow: 0 4px 16px rgba(0,0,0,0.15);
@@ -968,9 +968,9 @@ body.home-single .tool-card:hover {
   box-shadow: 0 10px 28px rgba(0,0,0,0.25), 0 0 24px rgba(255, 195, 40, 0.18);
 }
 body.home-single .tool-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
   background: rgba(255, 195, 40, 0.22);
   color: var(--gold);
   display: flex;
@@ -982,21 +982,21 @@ body.home-single .tool-icon {
 body.home-single .tool-card:hover .tool-icon {
   transform: scale(1.08) rotate(-3deg);
 }
-body.home-single .tool-icon svg { width: 18px; height: 18px; }
+body.home-single .tool-icon svg { width: 22px; height: 22px; }
 body.home-single .tool-info { flex: 1; min-width: 0; position: relative; z-index: 1; }
 body.home-single .tool-name {
   color: #fff;
   font-family: 'Jost', sans-serif;
   font-weight: 600;
-  font-size: 0.9rem;
-  margin-bottom: 2px;
+  font-size: 1rem;
+  margin-bottom: 4px;
   letter-spacing: 0.03em;
   line-height: 1.25;
 }
 body.home-single .tool-desc {
-  color: rgba(255,255,255,0.55);
-  font-size: 0.66rem;
-  line-height: 1.35;
+  color: rgba(255,255,255,0.6);
+  font-size: 0.76rem;
+  line-height: 1.4;
   opacity: 1;
 }
 
@@ -1102,8 +1102,8 @@ body.home-single .tool-desc {
   background: rgba(255,255,255,0.06);
   border: 1px solid rgba(255,255,255,0.14);
   border-left: 3px solid var(--dc, rgba(255,255,255,0.35));
-  border-radius: 10px;
-  padding: 12px 14px;
+  border-radius: 11px;
+  padding: 16px 20px;
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   text-align: center;
@@ -1119,7 +1119,7 @@ body.home-single .tool-desc {
 
 .org-node-title {
   font-family: 'Jost', sans-serif;
-  font-size: 0.78rem;
+  font-size: 0.88rem;
   font-weight: 600;
   letter-spacing: 0.02em;
   line-height: 1.25;
@@ -1128,11 +1128,11 @@ body.home-single .tool-desc {
 
 .org-node-name {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   font-weight: 500;
   font-style: italic;
-  color: rgba(255,255,255,0.78);
-  margin-top: 4px;
+  color: rgba(255,255,255,0.8);
+  margin-top: 5px;
   letter-spacing: 0.01em;
 }
 
@@ -1141,17 +1141,17 @@ body.home-single .tool-desc {
   border-color: rgba(var(--gold-r), 0.35);
   border-left: 3px solid var(--gold);
   background: linear-gradient(135deg, rgba(var(--gold-r),0.12), rgba(255,255,255,0.05));
-  padding: 16px 32px;
-  min-width: 260px;
+  padding: 22px 44px;
+  min-width: 320px;
 }
 
 .org-node-vp .org-node-title {
-  font-size: 0.92rem;
+  font-size: 1.05rem;
   color: var(--gold);
 }
 
 .org-node-vp .org-node-name {
-  font-size: 1rem;
+  font-size: 1.15rem;
   color: #fff;
 }
 
@@ -1159,27 +1159,27 @@ body.home-single .tool-desc {
 .org-node-dir {
   background: linear-gradient(135deg, rgba(var(--dc-r),0.18), rgba(255,255,255,0.04));
   border-color: rgba(var(--dc-r), 0.35);
-  padding: 14px 16px;
+  padding: 18px 22px;
 }
 
 .org-node-dir .org-node-title {
-  font-size: 0.8rem;
+  font-size: 0.92rem;
   color: #fff;
 }
 
 .org-node-dir .org-node-name {
-  font-size: 0.9rem;
-  color: rgba(255,255,255,0.85);
+  font-size: 1rem;
+  color: rgba(255,255,255,0.88);
 }
 
 /* ─── Sub-team stack under each director ─── */
 .org-sub {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
   margin-top: 0;
-  padding-top: 14px;
-  padding-left: 26px;
+  padding-top: 16px;
+  padding-left: 28px;
   position: relative;
 }
 
@@ -1294,16 +1294,16 @@ body.home-single .tool-desc {
   /* --- MISSION (tight) --- */
   .home-mission {
     flex-shrink: 0;
-    padding: 18px 32px 14px;
+    padding: 24px 32px 18px;
   }
   .home-mission-label {
-    font-size: 0.68rem;
+    font-size: 0.72rem;
     letter-spacing: 0.35em;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
   }
   .home-mission-text {
-    font-size: 1rem;
-    line-height: 1.55;
+    font-size: 1.1rem;
+    line-height: 1.6;
     max-width: 1200px;
     margin: 0 auto;
   }
@@ -1313,27 +1313,27 @@ body.home-single .tool-desc {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    padding: 24px 48px;
+    padding: 28px 48px;
     flex: 1 1 auto;
   }
   .home-row-head {
-    margin-bottom: 16px;
+    margin-bottom: 20px;
     flex-shrink: 0;
   }
-  .home-row-title { font-size: 1.7rem; }
-  .home-row-divider { margin-top: 8px; }
+  .home-row-title { font-size: 1.95rem; }
+  .home-row-divider { margin-top: 10px; }
 
-  .home-org { flex-shrink: 0; }
+  .home-org { flex-shrink: 0; padding: 28px 48px 16px; }
 
   body.home-single .dept-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 14px;
+    gap: 18px;
   }
   body.home-single .tools-grid {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    gap: 14px;
+    gap: 18px;
   }
 
   .home-footer {

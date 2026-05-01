@@ -1308,11 +1308,13 @@ body.home-single .tool-desc {
     margin: 0 auto;
   }
 
-  /* --- ROWS (stacked content blocks) --- */
+  /* --- ROWS (stacked content blocks; expand to absorb leftover height) --- */
   .home-row {
     display: flex;
     flex-direction: column;
+    justify-content: center;
     padding: 24px 48px;
+    flex: 1 1 auto;
   }
   .home-row-head {
     margin-bottom: 16px;
@@ -1320,6 +1322,8 @@ body.home-single .tool-desc {
   }
   .home-row-title { font-size: 1.7rem; }
   .home-row-divider { margin-top: 8px; }
+
+  .home-org { flex-shrink: 0; }
 
   body.home-single .dept-grid {
     display: grid;

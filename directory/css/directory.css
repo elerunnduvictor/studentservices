@@ -339,6 +339,36 @@ body {
   .bar-label { width: 120px; font-size: 0.72rem; }
 }
 
+/* ── Student Contractors card ── */
+.dir-card:has(.sc-card-head) { margin-bottom: 28px; }
+.sc-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+.sc-card-head .dir-card-title { margin-bottom: 4px; }
+.sc-card-sub {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  letter-spacing: 0.02em;
+}
+.sc-card-total {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.bar-zero {
+  height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.72rem; font-weight: 600;
+  color: var(--text-dim);
+}
+
 .donut-wrap {
   display: flex; align-items: center; gap: 24px;
   flex-wrap: wrap; justify-content: center;

@@ -121,8 +121,20 @@ window.DEPT_COLORS = {
 };
 
 window.TYPE_COLORS = {
-  "Full-Time Employee":  "#065577",
-  "Full-Time Temporary": "#28738A",
-  "Part-Time Temporary": "#FFC328",
-  "Contractor":          "#7F898A",
+  "Full-Time Employee":      "#065577",
+  "Full-Time Temporary":     "#28738A",
+  "Part-Time Temporary":     "#FFC328",
+  "Professional Contractor": "#7F898A",
+  "Student Contractor":      "#B687AC",
+};
+
+/* ═══════════════ STUDENT CONTRACTOR AGGREGATE COUNTS ═══════════════
+   Counts only — student contractors aren't tracked individually here,
+   so they don't appear in the directory table or per-person filters.
+   These feed the dedicated "Student Contractors" card on the page. */
+window.STUDENT_CONTRACTORS = {
+  "Student Records, Registration, and Support": 338,
+  "Enrollment & Retention":                     455,
+  "Digital Operations":                         0,
+  "Dean of Students":                           0,
 };

@@ -136,8 +136,11 @@
   display: none !important;
 }
 
-/* Single dept filter: hide the orphaned horizontal bar */
-.tree.single-dept-view > ul > li::after { display: none !important; }
+/* Single-dept filter on the main org chart: hide the orphan bar that
+   would otherwise extend from the lone visible dept-branch toward the
+   hidden sibling depts. Scoped to .dept-branch so it doesn't strip the
+   connector bar between a director's children on the dept pages. */
+.tree.single-dept-view > ul > li.dept-branch::after { display: none !important; }
 
 
 .tree .dept-branch .spacer-connector {

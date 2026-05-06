@@ -1,7 +1,7 @@
 /* ═══════════════ PER-DEPT MINI DASHBOARD ═══════════════
-   Requires window.EMPLOYEES, window.DEPT_COLORS, window.TYPE_COLORS
-   (loaded from directory/js/employees.js), and window.DEPT_NAME
-   set inline on the dept page. */
+   Requires window.EMPLOYEES, window.DEPT_COLORS, window.TYPE_COLORS,
+   window.STUDENT_CONTRACTORS (loaded from directory/js/employees.js),
+   and window.DEPT_NAME set inline on the dept page. */
 (function() {
   var DEPT = window.DEPT_NAME;
   if (!DEPT || !window.EMPLOYEES) return;
@@ -20,12 +20,13 @@
   var fte = filtered.filter(function(e) { return e.type === "Full-Time Employee"; }).length;
   var ftt = filtered.filter(function(e) { return e.type === "Full-Time Temporary"; }).length;
   var ptt = filtered.filter(function(e) { return e.type === "Part-Time Temporary"; }).length;
-  var contractors = filtered.filter(function(e) { return e.type === "Contractor"; }).length;
+  var proContractors = filtered.filter(function(e) { return e.type === "Professional Contractor"; }).length;
+  var studentContractors = (window.STUDENT_CONTRACTORS && window.STUDENT_CONTRACTORS[DEPT]) || 0;
+  var contractors = proContractors + studentContractors;
   var subSet = {};
   filtered.forEach(function(e) { if (e.subDept) subSet[e.subDept] = true; });
   var subCount = Object.keys(subSet).length;
   var ftePct = total ? Math.round(fte / total * 100) : 0;
-  var contractorPct = total ? Math.round(contractors / total * 100) : 0;
 
   var deptC = (window.DEPT_COLORS && window.DEPT_COLORS[DEPT]) || { bg: "#065577", light: "#28738A" };
   var typeC = window.TYPE_COLORS || {};
@@ -45,7 +46,9 @@
     + '<div class="dd-kpi" style="--kpi-color:#7F898A;">'
     +   '<div class="dd-kpi-label">Contractors</div>'
     +   '<div class="dd-kpi-value">' + contractors + '</div>'
-    +   '<div class="dd-kpi-sub">' + contractorPct + '% of dept</div>'
+    +   '<div class="dd-kpi-sub">' + (studentContractors > 0
+          ? proContractors + ' professional · ' + studentContractors + ' student'
+          : proContractors + ' professional') + '</div>'
     + '</div>'
     + '<div class="dd-kpi" style="--kpi-color:#FFC328;">'
     +   '<div class="dd-kpi-label">Sub-Departments</div>'
@@ -82,26 +85,28 @@
     barHtml = '<div class="dd-empty">No sub-department data.</div>';
   }
 
-  // Employment-type donut
+  // Employment-type donut (includes both professional and student contractors)
   var typeBreakdown = [
-    { label: "Full-Time Employee",  value: fte,         color: typeC["Full-Time Employee"]  || "#065577" },
-    { label: "Full-Time Temporary", value: ftt,         color: typeC["Full-Time Temporary"] || "#28738A" },
-    { label: "Part-Time Temporary", value: ptt,         color: typeC["Part-Time Temporary"] || "#FFC328" },
-    { label: "Contractor",          value: contractors, color: typeC["Contractor"]          || "#7F898A" },
+    { label: "Full-Time Employee",     value: fte,                color: typeC["Full-Time Employee"]      || "#065577" },
+    { label: "Full-Time Temporary",    value: ftt,                color: typeC["Full-Time Temporary"]     || "#28738A" },
+    { label: "Part-Time Temporary",    value: ptt,                color: typeC["Part-Time Temporary"]     || "#FFC328" },
+    { label: "Professional Contractor",value: proContractors,     color: typeC["Professional Contractor"] || "#7F898A" },
+    { label: "Student Contractor",     value: studentContractors, color: typeC["Student Contractor"]      || "#B687AC" },
   ].filter(function(d) { return d.value > 0; });
 
+  var donutTotal = total + studentContractors;
   var donutHtml;
-  if (!total) {
+  if (!donutTotal) {
     donutHtml = '<div class="dd-empty">No data.</div>';
   } else {
     var size = 180, cx = size / 2, cy = size / 2, r = size * 0.36, strokeW = size * 0.14;
     var cumulative = 0;
     var segs = typeBreakdown.map(function(d) {
       var start = cumulative;
-      cumulative += d.value / total;
+      cumulative += d.value / donutTotal;
       var startA = start * 2 * Math.PI - Math.PI / 2;
       var endA = cumulative * 2 * Math.PI - Math.PI / 2;
-      var largeArc = d.value / total > 0.5 ? 1 : 0;
+      var largeArc = d.value / donutTotal > 0.5 ? 1 : 0;
       var x1 = cx + r * Math.cos(startA);
       var y1 = cy + r * Math.sin(startA);
       var x2 = cx + r * Math.cos(endA);
@@ -125,7 +130,7 @@
       + '<div class="dd-donut-wrap">'
       +   '<svg width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + ' ' + size + '">'
       +     segs
-      +     '<text x="' + cx + '" y="' + (cy - 4) + '" text-anchor="middle" class="dd-donut-center-val">' + total + '</text>'
+      +     '<text x="' + cx + '" y="' + (cy - 4) + '" text-anchor="middle" class="dd-donut-center-val">' + donutTotal + '</text>'
       +     '<text x="' + cx + '" y="' + (cy + 16) + '" text-anchor="middle" class="dd-donut-center-label">Total</text>'
       +   '</svg>'
       +   '<div class="dd-legend">' + legend + '</div>'

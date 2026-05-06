@@ -70,7 +70,7 @@ const EMPLOYEES = [
   { name: "Peter Abarte", role: "Senior Manager-Mentoring", dept: "Enrollment & Retention", type: "Contractor", stakeholder: "Kelley Richardson", subDept: "Mentoring", org: "Springboard", tier: "3" },
   { name: "Kelley Richardson", role: "Mentoring Manager", dept: "Enrollment & Retention", type: "Full-Time Employee", stakeholder: "Alison Cundiff", subDept: "Mentoring", org: "", tier: "" },
   { name: "Mandy Schwab", role: "Mentor Development Specialist", dept: "Enrollment & Retention", type: "Part-Time Temporary", stakeholder: "Kelley Richardson", subDept: "Mentoring", org: "", tier: "" },
-  { name: "Johanna Relkin", role: "Mentor Operations Specialist", dept: "Enrollment & Retention", type: "Part-Time Temporary", stakeholder: "Kelley Richardson", subDept: "Mentoring", org: "", tier: "" },
+  { name: "Joanna Relken", role: "Mentor Operations Specialist", dept: "Enrollment & Retention", type: "Part-Time Temporary", stakeholder: "Kelley Richardson", subDept: "Mentoring", org: "", tier: "" },
   { name: "Moses Abioye", role: "Project Manager", dept: "Student Records, Registration, and Support", type: "Contractor", stakeholder: "Mark Gefrom", subDept: "Department Leadership", org: "Springboard", tier: "3" },
   { name: "Victor Oluwapelumi Elerunndu", role: "Project Manager", dept: "Student Records, Registration, and Support", type: "Contractor", stakeholder: "Mark Gefrom", subDept: "Department Leadership", org: "Springboard", tier: "3" },
   { name: "Mark Gefrom", role: "Director of Student Records, Registration, and Support", dept: "Student Records, Registration, and Support", type: "Full-Time Employee", stakeholder: "VP of Student Services", subDept: "Department Leadership", org: "", tier: "" },

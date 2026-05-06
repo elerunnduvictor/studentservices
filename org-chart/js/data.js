@@ -99,7 +99,7 @@ OC.employees = [
   { id: 'mandy-schwab', name: 'Mandy Schwab', title: 'Mentor Development Specialist', dept: 'enrollment', level: 5, status: 'PTT', reportsTo: 'kelley-richardson',
     responsibilities: ['Mentoring program development'],
     kpis: ['Mentor interaction QA', 'Mentor CSAT'], email: '', photoUrl: '../photos/enrollment/mandy-schwab.png', roleInventoryUrl: 'https://churchofjesuschrist.sharepoint.com/:w:/s/BYU-PathwayStudentSuccessRoleInventory/IQBy2LVzDoldRZisyIODLh8zAQMURc-jWPshlLW15i3qb1A?e=U7sRj2' },
-  { id: 'johanna-relkin', name: 'Joanna Relkin', title: 'Mentor Operations Specialist', dept: 'enrollment', level: 5, status: 'PTT', reportsTo: 'kelley-richardson',
+  { id: 'johanna-relkin', name: 'Joanna Relken', title: 'Mentor Operations Specialist', dept: 'enrollment', level: 5, status: 'PTT', reportsTo: 'kelley-richardson',
     responsibilities: ['Mentoring program operations'],
     kpis: ['Mentor required action completion rate', 'Mentor concern case QA'], email: '', photoUrl: '../photos/enrollment/johanna-relkin.jpeg', roleInventoryUrl: 'https://churchofjesuschrist.sharepoint.com/:w:/s/BYU-PathwayStudentSuccessRoleInventory/IQAD6qmcBdXESLblm4Cwxcq-AQzexoG57ED2rJSulZnrW7A?e=istmOr' },
   { id: 'kimarie-howard', name: 'Kimarie Howard', title: 'Enrollment Counseling Development & Performance Coordinator', dept: 'enrollment', level: 5, status: 'Contractor', reportsTo: 'rachel-kirk',

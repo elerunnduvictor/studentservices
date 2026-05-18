@@ -67,7 +67,7 @@ OC.employees = [
   { id: 'alyssa-burrell', name: 'Alyssa Burrell', title: 'Student Support Coordinator (Phone Support)', dept: 'records', level: 5, status: 'FTE', reportsTo: 'brad-lester',
     responsibilities: ['Phone support', 'General support'],
     kpis: ['General support case response and resolution rates', 'Phone support answer speed, handle rate, agent availability, QA, CSAT, and first contact resolution'], email: 'Burrell3@byupw.edu', photoUrl: '../photos/records/alyssa-burrell.jpg', roleInventoryUrl: 'https://churchofjesuschrist.sharepoint.com/:w:/s/BYU-PathwayStudentSuccessRoleInventory/IQBwUBFZyWZaSLXU28SQe4_cAUirTYoW8S2Th63JomM1XhM?e=YVQEeX' },
-  { id: 'kira-hayes', name: 'Kira Hayes', title: 'Consistency Coordinator (QA & Knowledge Base)', dept: 'records', level: 5, status: 'FTE', reportsTo: 'brad-lester',
+  { id: 'kira-hayes', name: 'Kira Hayes', title: 'Consistency Coordinator (QA & Knowledge Base)', dept: 'records', level: 5, status: 'FTE', reportsTo: 'hilary-bagley',
     responsibilities: ['Ticketing QA', 'External Knowledge Base articles', 'Support agent onboarding and training'],
     kpis: ['KB publishing rate', 'QA evaluation completion rate', 'DSAT and critical violation delivery rate'], email: 'khayes@byupw.edu', photoUrl: '../photos/records/kira-hayes.png', roleInventoryUrl: 'https://churchofjesuschrist.sharepoint.com/:w:/s/BYU-PathwayStudentSuccessRoleInventory/IQCtk6Visur9S73CLrYxUHrpAd25rc-Xrtvfnt3SO0KwFLM?e=H5naai' },
   { id: 'geraldine-bean', name: 'Geraldine Susan Bean', title: 'Graduation Coordinator', dept: 'records', level: 5, status: 'FTE', reportsTo: 'tyson-bell',

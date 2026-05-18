@@ -320,6 +320,36 @@
   opacity: 1;
 }
 
+/* Email button (sits under the role inventory button, opens mailto:) */
+.tile-email {
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  color: var(--tile-color);
+  background: rgba(var(--tile-color-r), 0.08);
+  border: 1px solid rgba(var(--tile-color-r), 0.4);
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: background var(--transition), color var(--transition), border-color var(--transition);
+  margin-left: auto;
+}
+.tile-email svg { width: 14px; height: 14px; flex-shrink: 0; }
+.tile-email:hover {
+  background: var(--tile-color);
+  color: #fff;
+  border-color: var(--tile-color);
+}
+
 /* ── VP TILE (color accent only, size matches regular tiles) ── */
 .tile.vp-tile {
   border-color: rgba(var(--gold-r), 0.3);

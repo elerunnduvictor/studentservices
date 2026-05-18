@@ -21,6 +21,7 @@
   var ftt = filtered.filter(function(e) { return e.type === "Full-Time Temporary"; }).length;
   var ptt = filtered.filter(function(e) { return e.type === "Part-Time Temporary"; }).length;
   var proContractors = filtered.filter(function(e) { return e.type === "Professional Contractor"; }).length;
+  var studentEmployees = filtered.filter(function(e) { return e.type === "Student Employee"; }).length;
   var studentContractors = (window.STUDENT_CONTRACTORS && window.STUDENT_CONTRACTORS[DEPT]) || 0;
   var contractors = proContractors + studentContractors;
   var subSet = {};
@@ -49,6 +50,11 @@
     +   '<div class="dd-kpi-sub">' + (studentContractors > 0
           ? proContractors + ' professional · ' + studentContractors + ' student'
           : proContractors + ' professional') + '</div>'
+    + '</div>'
+    + '<div class="dd-kpi" style="--kpi-color:' + (typeC["Student Employee"] || "#5E60CE") + ';">'
+    +   '<div class="dd-kpi-label">Student Employees</div>'
+    +   '<div class="dd-kpi-value">' + studentEmployees + '</div>'
+    +   '<div class="dd-kpi-sub">on payroll roster</div>'
     + '</div>'
     + '<div class="dd-kpi" style="--kpi-color:#FFC328;">'
     +   '<div class="dd-kpi-label">Sub-Departments</div>'
@@ -91,6 +97,7 @@
     { label: "Full-Time Temporary",    value: ftt,                color: typeC["Full-Time Temporary"]     || "#28738A" },
     { label: "Part-Time Temporary",    value: ptt,                color: typeC["Part-Time Temporary"]     || "#FFC328" },
     { label: "Professional Contractor",value: proContractors,     color: typeC["Professional Contractor"] || "#7F898A" },
+    { label: "Student Employee",       value: studentEmployees,   color: typeC["Student Employee"]        || "#5E60CE" },
     { label: "Student Contractor",     value: studentContractors, color: typeC["Student Contractor"]      || "#B687AC" },
   ].filter(function(d) { return d.value > 0; });
 

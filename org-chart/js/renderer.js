@@ -31,8 +31,9 @@ OC.renderTile = function(emp) {
   var reportsToHtml = manager
     ? '<div class="tile-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Reports to: ' + manager.name + '</div>' : '';
 
-  var emailHtml = emp.email
-    ? '<div class="tile-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><a href="mailto:' + emp.email + '">' + emp.email + '</a></div>' : '';
+  var emailButtonHtml = emp.email
+    ? '<a class="tile-email" href="mailto:' + emp.email + '" data-view-more><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>' + emp.email + '</a>'
+    : '';
 
   var deptHtml = '<div class="tile-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>' + dept.name + '</div>';
 
@@ -53,7 +54,7 @@ OC.renderTile = function(emp) {
       responsibilitiesHtml + kpisHtml + directReportsHtml +
       '<div class="tile-meta">' +
         '<div class="tile-meta-row">' + reportsToHtml + viewMoreHtml + '</div>' +
-        deptHtml + emailHtml +
+        '<div class="tile-meta-row">' + deptHtml + emailButtonHtml + '</div>' +
       '</div>' +
     '</div></div></div>';
 };

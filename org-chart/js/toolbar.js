@@ -11,18 +11,20 @@ OC.initToolbar = function() {
 
   // Print — build one-card-per-page layout, print it, then remove it
   document.getElementById('printBtn').addEventListener('click', function() {
-    // Build print-only container with one card per page
     var container = document.createElement('div');
     container.id = 'printPages';
     container.className = 'print-pages';
 
-    // Helper: walk the tree under a parent, depth-first, by level
+    // Helper: walk the tree under a parent, depth-first.
+    // Recurses into PMs as well so people who report to a PM (e.g. David
+    // Koomson reports to Jess) aren't dropped from the printout.
     function collectTree(parentId) {
       var result = [];
-      // Get PMs for this parent first
       var pms = OC.getAssistants(parentId);
-      pms.forEach(function(pm) { result.push(pm); });
-      // Then non-PM children, sorted by level then name
+      pms.forEach(function(pm) {
+        result.push(pm);
+        result = result.concat(collectTree(pm.id));
+      });
       var children = OC.getTreeChildren(parentId).sort(function(a, b) {
         if (a.level !== b.level) return a.level - b.level;
         return a.name.localeCompare(b.name);
@@ -37,9 +39,10 @@ OC.initToolbar = function() {
     var deptOrder = ['records', 'enrollment', 'dean', 'digital'];
     var vp = OC.employees.find(function(e) { return e.level === 1; });
     var ordered = [vp];
-    // VP's PMs
-    OC.getAssistants(vp.id).forEach(function(pm) { ordered.push(pm); });
-    // Each department: director first, then full subtree
+    OC.getAssistants(vp.id).forEach(function(pm) {
+      ordered.push(pm);
+      ordered = ordered.concat(collectTree(pm.id));
+    });
     deptOrder.forEach(function(deptKey) {
       var director = OC.employees.find(function(e) {
         return e.reportsTo === vp.id && e.dept === deptKey && e.role !== 'pm';

@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // ── Tile click (expand/collapse) ──
   chartContainer.addEventListener('click', function(e) {
+    if (e.target.closest('[data-view-more]')) return;
     var tile = e.target.closest('.tile:not(.spacer-tile)');
     if (!tile) return;
     tile.classList.toggle('expanded');

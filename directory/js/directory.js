@@ -60,9 +60,11 @@ function renderKpis(filtered) {
   const total = filtered.length;
   const fte = filtered.filter(e => e.type === "Full-Time Employee").length;
   const contractors = filtered.filter(e => e.type === "Professional Contractor").length;
+  const studentEmployees = filtered.filter(e => e.type === "Student Employee").length;
   const deptCount = new Set(filtered.map(e => e.dept)).size;
   const ftePct = total ? Math.round(fte / total * 100) : 0;
   const contractorPct = total ? Math.round(contractors / total * 100) : 0;
+  const studentPct = total ? Math.round(studentEmployees / total * 100) : 0;
 
   document.getElementById("dirKpis").innerHTML = `
     <div class="kpi-card" style="--kpi-color: var(--bp-teal);">
@@ -76,9 +78,14 @@ function renderKpis(filtered) {
       <div class="kpi-sub">${ftePct}% of filtered</div>
     </div>
     <div class="kpi-card" style="--kpi-color: var(--type-contractor);">
-      <div class="kpi-label">Contractors</div>
+      <div class="kpi-label">Professional Contractors</div>
       <div class="kpi-value">${contractors}</div>
       <div class="kpi-sub">${contractorPct}% of filtered</div>
+    </div>
+    <div class="kpi-card" style="--kpi-color: var(--type-student-employee);">
+      <div class="kpi-label">Student Employees</div>
+      <div class="kpi-value">${studentEmployees}</div>
+      <div class="kpi-sub">${studentPct}% of filtered</div>
     </div>
     <div class="kpi-card" style="--kpi-color: var(--bp-gold);">
       <div class="kpi-label">Departments</div>

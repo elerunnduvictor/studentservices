@@ -31,6 +31,22 @@ function getFiltered() {
   });
 }
 
+/* Student contractors are aggregate-only — they have no individual records,
+   sub-dept, or name to search. Include them only when the active filters
+   don't exclude them (no sub-dept narrowing, no search term, and the type
+   filter is either "All" or "Student Contractor"). Returns a { dept: count }
+   map scoped to the active dept filter. */
+function getFilteredStudentContractors() {
+  if (state.type !== "All" && state.type !== "Student Contractor") return {};
+  if (state.subDept !== "All") return {};
+  if (state.search) return {};
+  if (state.dept === "All") return Object.assign({}, STUDENT_CONTRACTORS);
+  if (STUDENT_CONTRACTORS[state.dept] != null) {
+    return { [state.dept]: STUDENT_CONTRACTORS[state.dept] };
+  }
+  return {};
+}
+
 /* ═══════════════ RENDER: FILTERS ═══════════════ */
 function renderFilters() {
   const deptSel = document.getElementById("filterDept");
@@ -57,20 +73,29 @@ function renderFilters() {
 
 /* ═══════════════ RENDER: KPIs ═══════════════ */
 function renderKpis(filtered) {
-  const total = filtered.length;
+  const scByDept = getFilteredStudentContractors();
+  const studentContractors = Object.values(scByDept).reduce((s, n) => s + n, 0);
+  const orgTotalSC = Object.values(STUDENT_CONTRACTORS).reduce((s, n) => s + n, 0);
+  const orgTotal = EMPLOYEES.length + orgTotalSC;
+
+  const total = filtered.length + studentContractors;
   const fte = filtered.filter(e => e.type === "Full-Time Employee").length;
   const contractors = filtered.filter(e => e.type === "Professional Contractor").length;
   const studentEmployees = filtered.filter(e => e.type === "Student Employee").length;
-  const deptCount = new Set(filtered.map(e => e.dept)).size;
+  const deptCount = new Set([
+    ...filtered.map(e => e.dept),
+    ...Object.keys(scByDept).filter(d => scByDept[d] > 0),
+  ]).size;
   const ftePct = total ? Math.round(fte / total * 100) : 0;
   const contractorPct = total ? Math.round(contractors / total * 100) : 0;
-  const studentPct = total ? Math.round(studentEmployees / total * 100) : 0;
+  const studentEmpPct = total ? Math.round(studentEmployees / total * 100) : 0;
+  const studentConPct = total ? Math.round(studentContractors / total * 100) : 0;
 
   document.getElementById("dirKpis").innerHTML = `
     <div class="kpi-card" style="--kpi-color: var(--bp-teal);">
       <div class="kpi-label">Total Employees</div>
       <div class="kpi-value">${total}</div>
-      <div class="kpi-sub">of ${EMPLOYEES.length} in org</div>
+      <div class="kpi-sub">of ${orgTotal} in org</div>
     </div>
     <div class="kpi-card" style="--kpi-color: var(--type-fte);">
       <div class="kpi-label">Full-Time</div>
@@ -85,7 +110,12 @@ function renderKpis(filtered) {
     <div class="kpi-card" style="--kpi-color: var(--type-student-employee);">
       <div class="kpi-label">Student Employees</div>
       <div class="kpi-value">${studentEmployees}</div>
-      <div class="kpi-sub">${studentPct}% of filtered</div>
+      <div class="kpi-sub">${studentEmpPct}% of filtered</div>
+    </div>
+    <div class="kpi-card" style="--kpi-color: var(--type-student-contractor);">
+      <div class="kpi-label">Student Contractors</div>
+      <div class="kpi-value">${studentContractors}</div>
+      <div class="kpi-sub">${studentConPct}% of filtered</div>
     </div>
     <div class="kpi-card" style="--kpi-color: var(--bp-gold);">
       <div class="kpi-label">Departments</div>
@@ -99,6 +129,10 @@ function renderKpis(filtered) {
 function renderBarChart(filtered) {
   const counts = {};
   filtered.forEach(e => { counts[e.dept] = (counts[e.dept] || 0) + 1; });
+  const scByDept = getFilteredStudentContractors();
+  Object.entries(scByDept).forEach(([dept, n]) => {
+    if (n > 0) counts[dept] = (counts[dept] || 0) + n;
+  });
   const rows = Object.entries(counts).map(([label, value]) => ({ label, value })).sort((a,b) => b.value - a.value);
   const max = Math.max(...rows.map(r => r.value), 1);
 
@@ -128,18 +162,9 @@ function renderDonut(filtered) {
   const counts = {};
   filtered.forEach(e => { counts[e.type] = (counts[e.type] || 0) + 1; });
 
-  // Include Student Contractor totals (scoped by the active dept filter, and
-  // respected by the active type filter — only added if the user is looking
-  // at "All" types or has explicitly selected Student Contractor).
-  if (state.type === "All" || state.type === "Student Contractor") {
-    let sc = 0;
-    if (state.dept === "All") {
-      sc = Object.values(STUDENT_CONTRACTORS).reduce((s, n) => s + n, 0);
-    } else if (STUDENT_CONTRACTORS[state.dept] != null) {
-      sc = STUDENT_CONTRACTORS[state.dept];
-    }
-    if (sc > 0) counts["Student Contractor"] = sc;
-  }
+  // Include Student Contractor totals, scoped by all active filters.
+  const sc = Object.values(getFilteredStudentContractors()).reduce((s, n) => s + n, 0);
+  if (sc > 0) counts["Student Contractor"] = sc;
 
   const data = Object.entries(counts)
     .map(([label, value]) => ({ label, value, color: TYPE_COLORS[label] || "#7F898A" }))
@@ -186,40 +211,6 @@ function renderDonut(filtered) {
   `;
 }
 
-/* ═══════════════ RENDER: STUDENT CONTRACTORS ═══════════════ */
-function renderStudentContractors() {
-  const target = document.getElementById("studentContractorBars");
-  const totalEl = document.getElementById("studentContractorTotal");
-  const rows = Object.entries(STUDENT_CONTRACTORS)
-    .map(([label, value]) => ({ label, value }))
-    .sort((a, b) => b.value - a.value);
-  const total = rows.reduce((s, r) => s + r.value, 0);
-  const max = Math.max(...rows.map(r => r.value), 1);
-
-  if (totalEl) totalEl.textContent = total.toLocaleString() + " total";
-
-  if (!rows.length) {
-    target.innerHTML = `<div class="dir-empty">No student contractor data.</div>`;
-    return;
-  }
-  target.innerHTML = rows.map(r => {
-    const c = DEPT_COLORS[r.label] || { bg: "#065577", light: "#28738A" };
-    const pct = (r.value / max) * 100;
-    return `
-      <div class="bar-row">
-        <div class="bar-label" title="${escapeHtml(r.label)}">${escapeHtml(r.label)}</div>
-        <div class="bar-track">
-          ${r.value > 0
-            ? `<div class="bar-fill" style="width: ${pct}%; --bar-color: ${c.bg}; --bar-color-light: ${c.light};">
-                 <span class="bar-value">${r.value}</span>
-               </div>`
-            : `<div class="bar-zero">0</div>`}
-        </div>
-      </div>
-    `;
-  }).join("");
-}
-
 /* ═══════════════ RENDER: TABLE ═══════════════ */
 function renderTable(filtered) {
   const body = document.getElementById("dirTableBody");
@@ -228,13 +219,15 @@ function renderTable(filtered) {
 
   if (!filtered.length) {
     const msg = state.type === "Student Contractor"
-      ? "Student contractors are tracked as aggregate counts only — see the Student Contractors card above for the per-department breakdown."
+      ? "Student contractors are tracked as aggregate counts only — see the KPI card above for the per-department breakdown."
       : "No employees match your filters.";
     body.innerHTML = `<tr><td colspan="6"><div class="dir-empty">${msg}</div></td></tr>`;
     return;
   }
 
-  body.innerHTML = filtered.map(e => {
+  const sorted = filtered.slice().sort((a, b) => a.name.localeCompare(b.name));
+
+  body.innerHTML = sorted.map(e => {
     const c = DEPT_COLORS[e.dept] || { bg: "#065577", pale: "#e8f4f5" };
     const tc = TYPE_COLORS[e.type] || "#7F898A";
     return `
@@ -262,7 +255,6 @@ function renderAll() {
   renderKpis(filtered);
   renderBarChart(filtered);
   renderDonut(filtered);
-  renderStudentContractors();
   renderTable(filtered);
 }
 

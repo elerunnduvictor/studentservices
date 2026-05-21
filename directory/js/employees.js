@@ -81,7 +81,6 @@ window.EMPLOYEES = [
   { name: "Shaunasee Janette James", role: "Enrollment Coordinator", dept: "Enrollment & Retention", type: "Full-Time Employee", stakeholder: "Trevor Shelton", subDept: "Enrollment Services", org: "", tier: "" },
   { name: "Ely Zmolek", role: "Enrollment Services Specialist", dept: "Enrollment & Retention", type: "Full-Time Employee", stakeholder: "Trevor Shelton", subDept: "Enrollment Services", org: "", tier: "" },
   { name: "Trevor Shelton", role: "Senior Manager of Enrollment Services", dept: "Enrollment & Retention", type: "Full-Time Employee", stakeholder: "Alison Cundiff", subDept: "Enrollment Services", org: "", tier: "" },
-  { name: "Trey Mooney", role: "University Chaplain", dept: "Enrollment & Retention", type: "Full-Time Employee", stakeholder: "Alison Cundiff", subDept: "Enrollment Services", org: "", tier: "" },
   { name: "Peter Abarte", role: "Senior Success Manager for Mentoring", dept: "Enrollment & Retention", type: "Professional Contractor", stakeholder: "Kelley Richardson", subDept: "Mentoring", org: "Springboard", tier: "3" },
   { name: "Kelley Richardson", role: "Mentoring Manager", dept: "Enrollment & Retention", type: "Full-Time Employee", stakeholder: "Alison Cundiff", subDept: "Mentoring", org: "", tier: "" },
   { name: "Mandy Schwab", role: "Mentor Development Specialist", dept: "Enrollment & Retention", type: "Part-Time Temporary", stakeholder: "Kelley Richardson", subDept: "Mentoring", org: "", tier: "" },

@@ -114,10 +114,6 @@ OC.employees = [
   { id: 'ely-zmolek', name: 'Ely Zmolek', title: 'Enrollment Services Specialist', dept: 'enrollment', level: 5, status: 'FTE', reportsTo: 'trevor-shelton',
     responsibilities: ['Application processing', 'Admissons exceptions', 'Admissions systems'],
     kpis: ['Application processing rate', 'Application manual review turnaround rate', 'Number of admissions support cases', 'Admissions case resolution rate'], email: 'Elizabeth.Zmolek@byupw.edu', photoUrl: '../photos/enrollment/ely-zmolek.jpeg', roleInventoryUrl: 'https://churchofjesuschrist.sharepoint.com/:w:/s/BYU-PathwayStudentSuccessRoleInventory/IQDyS1zVpuz3SI8qQdzkXt4eAa5v6mtHteW4fZK3kCJ5twA?e=C1jcso' },
-  { id: 'trey-mooney', name: 'Trey Mooney', title: 'University Chaplain', dept: 'enrollment', level: 5, status: 'FTE', reportsTo: 'trevor-shelton',
-    responsibilities: ['Ecclesiastical endorsements for non-member students'],
-    kpis: ['Non-member endorsement completion rate', 'Number of support cases with non-member endorsement concerns'], email: 'cMooney@byupw.edu', photoUrl: '../photos/enrollment/trey-mooney.png', roleInventoryUrl: 'https://churchofjesuschrist.sharepoint.com/:w:/s/BYU-PathwayStudentSuccessRoleInventory/IQCr-O7RTvhPRaqywK1WC3PeAfbXS3wjfPjtPewsh_8PD3M?e=5EgIUj' },
-
   // ── DEAN OF STUDENTS ──
   // Level 3
   { id: 'anne-clark', name: 'Anne Marie Clark', title: 'Associate Dean of Students', dept: 'dean', level: 3, status: 'FTE', reportsTo: 'steven-thomas',

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Profit.co Monthly Reports — BYU-Pathway Worldwide</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/profitco.css">
+</head>
+<body>
+
+<!-- ═══════════════ NAVBAR ═══════════════ -->
+<nav class="navbar" id="navbar">
+  <a href="../index.html" class="nav-brand">Student Services</a>
+  <button class="nav-hamburger" id="navHamburger" aria-label="Menu">
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
+  <div class="nav-links" id="navLinks">
+    <a href="../index.html" class="nav-link">Home</a>
+    <a href="../index.html#departments" class="nav-link">Departments</a>
+    <a href="../index.html#tools" class="nav-link">Tools &amp; Resources</a>
+    <a href="../directory/index.html" class="nav-link">Directory</a>
+    <a href="../org-chart/index.html" class="nav-link">Org Chart</a>
+  </div>
+  <button class="nav-theme-btn" id="themeToggle" title="Toggle theme">
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  </button>
+</nav>
+
+<!-- ═══════════════ HERO ═══════════════ -->
+<header class="pc-hero">
+  <div class="hero-pattern"></div>
+  <div class="pc-hero-content">
+    <div class="hero-badge">BYU-Pathway Worldwide</div>
+    <h1>Profit.co <span>Monthly Reports</span></h1>
+    <p class="pc-hero-sub">Track progress on every Objective, Key Result, and Sub-Key Result across Student Services — search the goal tree, compare planned vs actual, and surface what needs attention.</p>
+
+    <!-- Spotlight Search -->
+    <div class="spotlight" id="spotlight">
+      <div class="spotlight-input-wrap">
+        <svg class="spotlight-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input id="spotlightInput" class="spotlight-input" type="search" placeholder="Search OKRs, Key Results, or Sub-Key Results..." autocomplete="off" spellcheck="false" aria-label="Spotlight search">
+        <kbd class="spotlight-kbd" id="spotlightKbd">↵</kbd>
+      </div>
+      <div class="spotlight-dropdown" id="spotlightDropdown" hidden></div>
+    </div>
+  </div>
+</header>
+
+<!-- ═══════════════ DASHBOARD ═══════════════ -->
+<main class="pc-section">
+  <div class="pc-inner">
+
+    <!-- Filters -->
+    <div class="pc-filters" data-reveal>
+      <span class="pc-filters-label">Filters</span>
+      <select id="filterOkr" class="pc-select" aria-label="Filter by OKR"></select>
+      <select id="filterStatus" class="pc-select" aria-label="Filter by status"></select>
+      <select id="filterStakeholder" class="pc-select" aria-label="Filter by stakeholder"></select>
+      <select id="filterPm" class="pc-select" aria-label="Filter by project manager"></select>
+      <select id="filterPeriod" class="pc-select" aria-label="Filter by period"></select>
+      <input id="filterSearch" class="pc-search" type="search" placeholder="Filter table rows..." aria-label="Filter table">
+      <button id="filterClear" class="pc-clear" type="button">Clear</button>
+    </div>
+
+    <!-- KPI cards -->
+    <div id="pcKpis" class="pc-kpis" data-reveal></div>
+
+    <!-- OKR overview cards -->
+    <div class="pc-okr-grid" id="pcOkrGrid" data-reveal></div>
+
+    <!-- Status donut + Stakeholder bars -->
+    <div class="pc-charts">
+      <div class="pc-card" data-reveal>
+        <div class="pc-card-title">Sub-Key Results by Status</div>
+        <div id="statusDonut"></div>
+      </div>
+      <div class="pc-card" data-reveal>
+        <div class="pc-card-title">Workload by Stakeholder</div>
+        <div id="stakeholderBars"></div>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="pc-card pc-table-card" data-reveal>
+      <div class="pc-table-header">
+        <div class="pc-card-title">Sub-Key Results</div>
+        <div id="pcCount" class="pc-table-count"></div>
+      </div>
+      <div class="pc-table-wrap">
+        <table class="pc-table">
+          <thead>
+            <tr>
+              <th>OKR</th>
+              <th>Key Result</th>
+              <th>Sub-Key Result</th>
+              <th>Stakeholder</th>
+              <th>Project Manager</th>
+              <th>Period</th>
+              <th class="pc-th-progress">Progress</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="pcTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- ═══════════════ DETAIL MODAL (Fancy Card) ═══════════════ -->
+<div class="pc-modal" id="pcModal" hidden>
+  <div class="pc-modal-backdrop" id="pcModalBackdrop"></div>
+  <div class="pc-modal-card" id="pcModalCard" role="dialog" aria-modal="true" aria-labelledby="pcModalTitle">
+    <button class="pc-modal-close" id="pcModalClose" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div class="pc-modal-body" id="pcModalBody"></div>
+  </div>
+</div>
+
+<!-- ═══════════════ FOOTER ═══════════════ -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-brand">Student Services &middot; BYU-Pathway Worldwide</div>
+    <div class="footer-links">
+      <a href="../index.html" class="footer-link">Home</a>
+      <a href="../directory/index.html" class="footer-link">Directory</a>
+      <a href="../org-chart/index.html" class="footer-link">Org Chart</a>
+    </div>
+    <div class="footer-copy">&copy; 2026 BYU-Pathway Worldwide. All rights reserved.</div>
+  </div>
+</footer>
+
+<script src="js/profitco-data.js"></script>
+<script src="js/profitco.js"></script>
+</body>
+</html>

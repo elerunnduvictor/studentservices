@@ -1,0 +1,963 @@
+/* ═══════════════ PROFIT.CO MONTHLY REPORTS — LOGIC ═══════════════ */
+const ROWS = window.PROFITCO_ROWS;
+const OKR_COLORS = window.OKR_COLORS;
+const STATUS_COLORS = window.STATUS_COLORS;
+
+/* Resolve effective status — Excel leaves it blank on some rows. Derive a
+   safe display value so visuals don't have a "missing" bucket. */
+function effectiveStatus(r) {
+  if (r.status) return r.status;
+  if (r.progress == null) return "Not Started";
+  if (r.plannedProgress != null && r.progress >= r.plannedProgress) return "On Track";
+  return "On Track";
+}
+
+/* ═══════════════ STATE ═══════════════ */
+const state = {
+  okr: "All",
+  status: "All",
+  stakeholder: "All",
+  pm: "All",
+  period: "All",
+  search: "",
+  spotlight: "",
+  spotlightIdx: -1,
+  spotlightOpen: false,
+};
+
+/* ═══════════════ HELPERS ═══════════════ */
+function escapeHtml(s) {
+  return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;"
+  }[c]));
+}
+function unique(arr) { return Array.from(new Set(arr.filter(x => x != null && x !== ""))); }
+function pct(v) { return Math.round((v || 0) * 100); }
+function initials(name) {
+  if (!name) return "—";
+  return name.trim().split(/\s+/).map(w => w[0]).join("").slice(0, 2).toUpperCase();
+}
+function okrPalette(name) {
+  return OKR_COLORS[name] || { bg: "#065577", light: "#28738A", pale: "rgba(6,85,119,0.12)" };
+}
+function statusPalette(s) {
+  return STATUS_COLORS[s] || STATUS_COLORS["Not Started"];
+}
+function highlight(text, q) {
+  if (!q) return escapeHtml(text);
+  const safe = escapeHtml(text);
+  const re = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "ig");
+  return safe.replace(re, '<span class="hl">$1</span>');
+}
+function darken(hex, amt = 0.18) {
+  const c = hex.replace("#", "");
+  const r = parseInt(c.slice(0,2), 16), g = parseInt(c.slice(2,4), 16), b = parseInt(c.slice(4,6), 16);
+  const f = (n) => Math.max(0, Math.min(255, Math.round(n * (1 - amt))));
+  return `rgb(${f(r)}, ${f(g)}, ${f(b)})`;
+}
+
+/* ═══════════════ FILTER ═══════════════ */
+function getFiltered() {
+  const q = state.search.trim().toLowerCase();
+  return ROWS.filter(r => {
+    if (state.okr !== "All" && r.okr !== state.okr) return false;
+    if (state.status !== "All" && effectiveStatus(r) !== state.status) return false;
+    if (state.stakeholder !== "All" && r.stakeholder !== state.stakeholder) return false;
+    if (state.pm !== "All" && r.projectManager !== state.pm) return false;
+    if (state.period !== "All" && r.period !== state.period) return false;
+    if (q) {
+      const hay = `${r.okr} ${r.keyResult} ${r.subKeyResult} ${r.stakeholder} ${r.projectManager}`.toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+}
+
+/* ═══════════════ RENDER: FILTERS ═══════════════ */
+function renderFilters() {
+  const okrs = ["All", ...unique(ROWS.map(r => r.okr))];
+  const statuses = ["All", ...unique(ROWS.map(r => effectiveStatus(r))).sort()];
+  const stakeholders = ["All", ...unique(ROWS.map(r => r.stakeholder)).sort()];
+  const pms = ["All", ...unique(ROWS.map(r => r.projectManager)).sort()];
+  const periods = ["All", ...unique(ROWS.map(r => r.period)).sort()];
+
+  const setOpts = (id, list, sel, labelMap) => {
+    const el = document.getElementById(id);
+    el.innerHTML = list.map(v =>
+      `<option value="${escapeHtml(v)}"${v === sel ? " selected" : ""}>${escapeHtml(labelMap ? labelMap(v) : v)}</option>`
+    ).join("");
+  };
+  setOpts("filterOkr", okrs, state.okr, v => v === "All" ? "All OKRs" : v);
+  setOpts("filterStatus", statuses, state.status, v => v === "All" ? "All Statuses" : v);
+  setOpts("filterStakeholder", stakeholders, state.stakeholder, v => v === "All" ? "All Stakeholders" : v);
+  setOpts("filterPm", pms, state.pm, v => v === "All" ? "All Project Managers" : v);
+  setOpts("filterPeriod", periods, state.period, v => v === "All" ? "All Periods" : v);
+
+  const dirty = state.okr !== "All" || state.status !== "All" || state.stakeholder !== "All"
+             || state.pm !== "All" || state.period !== "All" || state.search;
+  document.getElementById("filterClear").disabled = !dirty;
+}
+
+/* ═══════════════ RENDER: KPIs ═══════════════ */
+function renderKpis(filtered) {
+  const okrCount = unique(filtered.map(r => r.okr)).length;
+  const krCount = unique(filtered.map(r => `${r.okr}||${r.keyResult}`)).length;
+  const total = filtered.length;
+  const onTrack = filtered.filter(r => effectiveStatus(r) === "On Track").length;
+  const atRisk = filtered.filter(r => effectiveStatus(r) === "At Risk").length;
+  const completed = filtered.filter(r => effectiveStatus(r) === "Completed").length;
+  const avgProgress = total
+    ? Math.round(filtered.reduce((s, r) => s + (r.progress || 0), 0) / total * 100)
+    : 0;
+
+  document.getElementById("pcKpis").innerHTML = `
+    <div class="kpi-card" style="--kpi-color: var(--bp-teal);">
+      <div class="kpi-label">OKRs</div>
+      <div class="kpi-value">${okrCount}</div>
+      <div class="kpi-sub">in view</div>
+    </div>
+    <div class="kpi-card" style="--kpi-color: #3A929D;">
+      <div class="kpi-label">Key Results</div>
+      <div class="kpi-value">${krCount}</div>
+      <div class="kpi-sub">tracked</div>
+    </div>
+    <div class="kpi-card" style="--kpi-color: #B687AC;">
+      <div class="kpi-label">Sub-Key Results</div>
+      <div class="kpi-value">${total}</div>
+      <div class="kpi-sub">measurable</div>
+    </div>
+    <div class="kpi-card" style="--kpi-color: var(--status-track);">
+      <div class="kpi-label">On Track</div>
+      <div class="kpi-value">${onTrack}</div>
+      <div class="kpi-sub">${total ? Math.round(onTrack/total*100) : 0}% of view</div>
+    </div>
+    <div class="kpi-card" style="--kpi-color: var(--status-risk);">
+      <div class="kpi-label">At Risk</div>
+      <div class="kpi-value">${atRisk}</div>
+      <div class="kpi-sub">need attention</div>
+    </div>
+    <div class="kpi-card" style="--kpi-color: var(--bp-gold);">
+      <div class="kpi-label">Avg Progress</div>
+      <div class="kpi-value">${avgProgress}%</div>
+      <div class="kpi-sub">across view</div>
+    </div>
+  `;
+}
+
+/* ═══════════════ RENDER: OKR CARDS ═══════════════ */
+function renderOkrCards(filtered) {
+  const target = document.getElementById("pcOkrGrid");
+  const byOkr = {};
+  filtered.forEach(r => {
+    if (!byOkr[r.okr]) byOkr[r.okr] = [];
+    byOkr[r.okr].push(r);
+  });
+
+  const cards = Object.entries(byOkr).map(([okr, rows]) => {
+    const c = okrPalette(okr);
+    const krCount = unique(rows.map(r => r.keyResult)).length;
+    const avg = Math.round(rows.reduce((s, r) => s + (r.progress || 0), 0) / rows.length * 100);
+
+    // Status segment widths
+    const statusBuckets = {};
+    rows.forEach(r => {
+      const s = effectiveStatus(r);
+      statusBuckets[s] = (statusBuckets[s] || 0) + 1;
+    });
+    const segHtml = Object.entries(statusBuckets).map(([s, n]) => {
+      const sc = statusPalette(s).bg;
+      return `<div class="okr-status-seg" style="flex: ${n}; background: ${sc};" title="${escapeHtml(s)}: ${n}"></div>`;
+    }).join("");
+    const legendHtml = Object.entries(statusBuckets).map(([s, n]) => {
+      const sc = statusPalette(s).bg;
+      return `<span class="okr-legend-item"><span class="okr-legend-dot" style="background:${sc};"></span>${escapeHtml(s)} <b>${n}</b></span>`;
+    }).join("");
+
+    // Mini ring
+    const size = 70, r = 26, cx = size/2, cy = size/2, sw = 7;
+    const circ = 2 * Math.PI * r;
+    const dash = circ * (avg / 100);
+    return `
+      <div class="okr-card" style="--okr-color: ${c.bg};" data-okr="${escapeHtml(okr)}">
+        <div class="okr-card-eyebrow">Objective</div>
+        <div class="okr-card-title">${escapeHtml(okr)}</div>
+        <div class="okr-card-stats">
+          <div class="okr-ring-wrap">
+            <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+              <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--bg-elevated)" stroke-width="${sw}"/>
+              <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${c.bg}" stroke-width="${sw}"
+                stroke-dasharray="${dash} ${circ}" stroke-linecap="round"
+                transform="rotate(-90 ${cx} ${cy})"/>
+            </svg>
+            <div class="okr-ring-val">${avg}%</div>
+          </div>
+          <div class="okr-card-metrics">
+            <div class="okr-metric-row"><span>Key Results</span><b>${krCount}</b></div>
+            <div class="okr-metric-row"><span>Sub-KRs</span><b>${rows.length}</b></div>
+            <div class="okr-metric-row"><span>Avg Progress</span><b>${avg}%</b></div>
+          </div>
+        </div>
+        <div class="okr-card-status-strip">${segHtml || `<div class="okr-status-seg" style="flex:1; background: var(--bg-elevated);"></div>`}</div>
+        <div class="okr-card-legend">${legendHtml}</div>
+      </div>
+    `;
+  }).join("");
+
+  target.innerHTML = cards || `<div class="pc-empty" style="grid-column: 1/-1;">No objectives in view.</div>`;
+
+  // Click to filter
+  target.querySelectorAll(".okr-card").forEach(el => {
+    el.addEventListener("click", () => {
+      state.okr = el.dataset.okr;
+      renderAll();
+      document.querySelector(".pc-filters").scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  });
+}
+
+/* ═══════════════ RENDER: DONUT (status) ═══════════════ */
+function renderStatusDonut(filtered) {
+  const counts = {};
+  filtered.forEach(r => { const s = effectiveStatus(r); counts[s] = (counts[s] || 0) + 1; });
+
+  const data = Object.entries(counts)
+    .map(([label, value]) => ({ label, value, color: statusPalette(label).bg }))
+    .sort((a, b) => b.value - a.value);
+  const total = data.reduce((s, d) => s + d.value, 0);
+
+  const target = document.getElementById("statusDonut");
+  if (!total) { target.innerHTML = `<div class="pc-empty">No data.</div>`; return; }
+
+  const size = 180, cx = size/2, cy = size/2, r = size*0.36, sw = size*0.14;
+  let cumulative = 0;
+  const segs = data.map(d => {
+    const start = cumulative; cumulative += d.value/total;
+    const sa = start*2*Math.PI - Math.PI/2;
+    const ea = cumulative*2*Math.PI - Math.PI/2;
+    const large = d.value/total > 0.5 ? 1 : 0;
+    const x1 = cx + r*Math.cos(sa), y1 = cy + r*Math.sin(sa);
+    const x2 = cx + r*Math.cos(ea), y2 = cy + r*Math.sin(ea);
+    return `<path d="M ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2}" fill="none" stroke="${d.color}" stroke-width="${sw}"/>`;
+  }).join("");
+
+  target.innerHTML = `
+    <div class="donut-wrap">
+      <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+        ${segs}
+        <text x="${cx}" y="${cy-4}" text-anchor="middle" class="donut-center-val">${total}</text>
+        <text x="${cx}" y="${cy+16}" text-anchor="middle" class="donut-center-label">Sub-KRs</text>
+      </svg>
+      <div class="donut-legend">
+        ${data.map(d => `
+          <div class="donut-legend-item">
+            <span class="donut-dot" style="background:${d.color};"></span>
+            <span>${escapeHtml(d.label)}: <b>${d.value}</b></span>
+          </div>
+        `).join("")}
+      </div>
+    </div>
+  `;
+}
+
+/* ═══════════════ RENDER: STAKEHOLDER BARS ═══════════════ */
+function renderStakeholderBars(filtered) {
+  const counts = {};
+  filtered.forEach(r => { counts[r.stakeholder] = (counts[r.stakeholder] || 0) + 1; });
+  const rows = Object.entries(counts).map(([label, value]) => ({ label, value })).sort((a,b) => b.value - a.value);
+  const max = Math.max(...rows.map(r => r.value), 1);
+
+  const target = document.getElementById("stakeholderBars");
+  if (!rows.length) { target.innerHTML = `<div class="pc-empty">No data.</div>`; return; }
+
+  target.innerHTML = rows.map(r => {
+    const pctW = (r.value / max) * 100;
+    return `
+      <div class="bar-row">
+        <div class="bar-label" title="${escapeHtml(r.label)}">${escapeHtml(r.label)}</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:${pctW}%; --bar-color: var(--bp-teal); --bar-color-light: #3A929D;">
+            <span class="bar-value">${r.value}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+/* ═══════════════ RENDER: TABLE ═══════════════ */
+function renderTable(filtered) {
+  const body = document.getElementById("pcTableBody");
+  const count = document.getElementById("pcCount");
+  count.textContent = `Showing ${filtered.length} of ${ROWS.length}`;
+
+  if (!filtered.length) {
+    body.innerHTML = `<tr><td colspan="8"><div class="pc-empty">No sub-key results match your filters.</div></td></tr>`;
+    return;
+  }
+  const sorted = filtered.slice().sort((a,b) => {
+    if (a.okr !== b.okr) return a.okr.localeCompare(b.okr);
+    if (a.keyResult !== b.keyResult) return a.keyResult.localeCompare(b.keyResult);
+    return a.subKeyResult.localeCompare(b.subKeyResult);
+  });
+
+  body.innerHTML = sorted.map(r => {
+    const c = okrPalette(r.okr);
+    const s = effectiveStatus(r);
+    const sc = statusPalette(s);
+    const p = pct(r.progress);
+    const pp = pct(r.plannedProgress);
+    const progressHtml = r.progress == null
+      ? `<span style="color: var(--text-dim); font-size: 0.74rem;">—</span>`
+      : `
+        <div class="mini-progress" title="Progress ${p}% / Planned ${pp}%">
+          <div class="mini-progress-actual" style="width:${p}%; --mp-color: ${c.bg}; --mp-color-light: ${c.light};"></div>
+          ${r.plannedProgress != null ? `<div class="mini-progress-planned" style="left:${pp}%;"></div>` : ""}
+          <div class="mini-progress-label">${p}%</div>
+        </div>
+      `;
+    return `
+      <tr data-id="${r.id}">
+        <td class="cell-okr"><span class="okr-badge" style="background:${c.pale}; color:${c.bg};">${escapeHtml(r.okr)}</span></td>
+        <td class="cell-kr">${escapeHtml(r.keyResult)}</td>
+        <td class="cell-skr">${escapeHtml(r.subKeyResult)}</td>
+        <td class="cell-person">${escapeHtml(r.stakeholder)}</td>
+        <td class="cell-person">${escapeHtml(r.projectManager)}</td>
+        <td class="cell-period">${escapeHtml(r.period)}</td>
+        <td>${progressHtml}</td>
+        <td><span class="status-pill" style="background:${sc.pale}; color:${sc.bg};"><span class="status-dot" style="background:${sc.bg};"></span>${escapeHtml(s)}</span></td>
+      </tr>
+    `;
+  }).join("");
+
+  body.querySelectorAll("tr[data-id]").forEach(tr => {
+    tr.addEventListener("click", () => openDetailById(parseInt(tr.dataset.id, 10)));
+  });
+}
+
+/* ═══════════════ RENDER: ALL ═══════════════ */
+function renderAll() {
+  const filtered = getFiltered();
+  renderFilters();
+  renderKpis(filtered);
+  renderOkrCards(filtered);
+  renderStatusDonut(filtered);
+  renderStakeholderBars(filtered);
+  renderTable(filtered);
+}
+
+/* ═══════════════ SPOTLIGHT SEARCH ═══════════════ */
+function buildSpotlightMatches(q) {
+  if (!q) return null;
+  const lower = q.toLowerCase();
+
+  // Collect distinct OKRs / KRs / SKRs
+  const okrMap = {}, krMap = {}, skrItems = [];
+  ROWS.forEach(r => {
+    if (!okrMap[r.okr]) okrMap[r.okr] = { name: r.okr, rows: [] };
+    okrMap[r.okr].rows.push(r);
+
+    const krKey = `${r.okr}||${r.keyResult}`;
+    if (!krMap[krKey]) krMap[krKey] = { name: r.keyResult, okr: r.okr, rows: [] };
+    krMap[krKey].rows.push(r);
+
+    skrItems.push(r);
+  });
+
+  const matchOkr = Object.values(okrMap)
+    .filter(o => o.name.toLowerCase().includes(lower))
+    .slice(0, 5);
+  const matchKr = Object.values(krMap)
+    .filter(k => k.name.toLowerCase().includes(lower))
+    .slice(0, 6);
+  const matchSkr = skrItems
+    .filter(r => r.subKeyResult.toLowerCase().includes(lower))
+    .slice(0, 8);
+
+  return { okr: matchOkr, kr: matchKr, skr: matchSkr };
+}
+
+function positionSpotlightDropdown() {
+  const dd = document.getElementById("spotlightDropdown");
+  const wrap = document.querySelector(".spotlight-input-wrap");
+  if (!dd || !wrap || dd.hidden) return;
+  const r = wrap.getBoundingClientRect();
+  dd.style.left = r.left + "px";
+  dd.style.top = (r.bottom + 8) + "px";
+  dd.style.width = r.width + "px";
+}
+
+function renderSpotlight() {
+  const dd = document.getElementById("spotlightDropdown");
+  const q = state.spotlight.trim();
+  if (!q) { dd.hidden = true; dd.innerHTML = ""; state.spotlightOpen = false; return; }
+
+  const m = buildSpotlightMatches(q);
+  const totalHits = (m.okr.length + m.kr.length + m.skr.length);
+  dd.hidden = false; state.spotlightOpen = true;
+  positionSpotlightDropdown();
+
+  if (!totalHits) {
+    dd.innerHTML = `<div class="sd-empty">No matches for <b>${escapeHtml(q)}</b></div>`;
+    return;
+  }
+
+  // Build flat index of selectable items (for keyboard nav)
+  const flat = [];
+
+  const okrHtml = m.okr.length ? `
+    <div class="sd-group">
+      <div class="sd-group-label">Objectives <span class="sd-group-count">${m.okr.length}</span></div>
+      ${m.okr.map(o => {
+        const c = okrPalette(o.name);
+        const idx = flat.length;
+        flat.push({ kind: "okr", key: o.name });
+        const avg = Math.round(o.rows.reduce((s,r)=> s + (r.progress||0), 0) / o.rows.length * 100);
+        return `
+          <div class="sd-item" data-flat="${idx}" style="--sd-color:${c.bg}; --sd-color-pale:${c.pale};">
+            <div class="sd-item-icon">OKR</div>
+            <div class="sd-item-body">
+              <div class="sd-item-title">${highlight(o.name, q)}</div>
+              <div class="sd-item-meta"><b>${o.rows.length}</b> sub-KRs · <b>${avg}%</b> avg progress</div>
+            </div>
+          </div>
+        `;
+      }).join("")}
+    </div>` : "";
+
+  const krHtml = m.kr.length ? `
+    <div class="sd-group">
+      <div class="sd-group-label">Key Results <span class="sd-group-count">${m.kr.length}</span></div>
+      ${m.kr.map(k => {
+        const c = okrPalette(k.okr);
+        const idx = flat.length;
+        flat.push({ kind: "kr", key: `${k.okr}||${k.name}` });
+        const avg = Math.round(k.rows.reduce((s,r)=> s + (r.progress||0), 0) / k.rows.length * 100);
+        return `
+          <div class="sd-item" data-flat="${idx}" style="--sd-color:${c.bg}; --sd-color-pale:${c.pale};">
+            <div class="sd-item-icon">KR</div>
+            <div class="sd-item-body">
+              <div class="sd-item-title">${highlight(k.name, q)}</div>
+              <div class="sd-item-meta">${escapeHtml(k.okr)} · <b>${k.rows.length}</b> sub-KRs · <b>${avg}%</b></div>
+            </div>
+          </div>
+        `;
+      }).join("")}
+    </div>` : "";
+
+  const skrHtml = m.skr.length ? `
+    <div class="sd-group">
+      <div class="sd-group-label">Sub-Key Results <span class="sd-group-count">${m.skr.length}</span></div>
+      ${m.skr.map(r => {
+        const c = okrPalette(r.okr);
+        const s = effectiveStatus(r);
+        const sc = statusPalette(s);
+        const idx = flat.length;
+        flat.push({ kind: "skr", key: r.id });
+        return `
+          <div class="sd-item" data-flat="${idx}" style="--sd-color:${c.bg}; --sd-color-pale:${c.pale};">
+            <div class="sd-item-icon">SKR</div>
+            <div class="sd-item-body">
+              <div class="sd-item-title">${highlight(r.subKeyResult, q)}</div>
+              <div class="sd-item-meta">
+                <span>${escapeHtml(r.okr)}</span>
+                <span><b>${pct(r.progress)}%</b></span>
+                <span style="color:${sc.bg}; font-weight:600;">${escapeHtml(s)}</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join("")}
+    </div>` : "";
+
+  dd.innerHTML = okrHtml + krHtml + skrHtml;
+  state._spotlightFlat = flat;
+
+  // Wire clicks
+  dd.querySelectorAll(".sd-item").forEach(el => {
+    el.addEventListener("click", () => {
+      const i = parseInt(el.dataset.flat, 10);
+      const f = state._spotlightFlat[i];
+      handleSpotlightSelect(f);
+    });
+    el.addEventListener("mouseenter", () => {
+      state.spotlightIdx = parseInt(el.dataset.flat, 10);
+      highlightSpotlightActive();
+    });
+  });
+
+  state.spotlightIdx = 0;
+  highlightSpotlightActive();
+}
+
+function highlightSpotlightActive() {
+  const dd = document.getElementById("spotlightDropdown");
+  dd.querySelectorAll(".sd-item").forEach(el => {
+    el.classList.toggle("is-active", parseInt(el.dataset.flat, 10) === state.spotlightIdx);
+  });
+  const active = dd.querySelector(".sd-item.is-active");
+  if (active) active.scrollIntoView({ block: "nearest" });
+}
+
+function handleSpotlightSelect(f) {
+  if (!f) return;
+  if (f.kind === "okr") openOkrDetail(f.key);
+  else if (f.kind === "kr") {
+    const [okr, kr] = f.key.split("||");
+    openKrDetail(okr, kr);
+  } else if (f.kind === "skr") {
+    openDetailById(f.key);
+  }
+  closeSpotlight();
+}
+
+function closeSpotlight() {
+  document.getElementById("spotlightDropdown").hidden = true;
+  state.spotlightOpen = false;
+  state.spotlightIdx = -1;
+}
+
+function initSpotlight() {
+  const input = document.getElementById("spotlightInput");
+  const dd = document.getElementById("spotlightDropdown");
+
+  input.addEventListener("input", e => {
+    state.spotlight = e.target.value;
+    renderSpotlight();
+  });
+  input.addEventListener("focus", () => { if (state.spotlight.trim()) renderSpotlight(); });
+  input.addEventListener("keydown", e => {
+    if (!state.spotlightOpen) return;
+    const n = (state._spotlightFlat || []).length;
+    if (e.key === "ArrowDown") { e.preventDefault(); state.spotlightIdx = (state.spotlightIdx + 1) % n; highlightSpotlightActive(); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); state.spotlightIdx = (state.spotlightIdx - 1 + n) % n; highlightSpotlightActive(); }
+    else if (e.key === "Enter") { e.preventDefault(); handleSpotlightSelect(state._spotlightFlat[state.spotlightIdx]); }
+    else if (e.key === "Escape") { closeSpotlight(); input.blur(); }
+  });
+
+  document.addEventListener("click", e => {
+    if (!document.getElementById("spotlight").contains(e.target)) closeSpotlight();
+  });
+
+  window.addEventListener("scroll", positionSpotlightDropdown, { passive: true });
+  window.addEventListener("resize", positionSpotlightDropdown);
+
+  // Cmd/Ctrl-K shortcut
+  document.addEventListener("keydown", e => {
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+      e.preventDefault();
+      input.focus(); input.select();
+    }
+  });
+}
+
+/* ═══════════════ FANCY DETAIL MODAL ═══════════════ */
+function openDetailById(id) {
+  const r = ROWS.find(x => x.id === id);
+  if (!r) return;
+  renderSkrDetail(r);
+  showModal();
+}
+
+function openKrDetail(okr, kr) {
+  const rows = ROWS.filter(r => r.okr === okr && r.keyResult === kr);
+  if (!rows.length) return;
+  renderAggregateDetail({
+    kind: "Key Result",
+    okr, title: kr, rows
+  });
+  showModal();
+}
+
+function openOkrDetail(okr) {
+  const rows = ROWS.filter(r => r.okr === okr);
+  if (!rows.length) return;
+  renderAggregateDetail({
+    kind: "Objective",
+    okr, title: okr, rows
+  });
+  showModal();
+}
+
+function showModal() {
+  document.getElementById("pcModal").hidden = false;
+  document.body.classList.add("modal-open");
+}
+function closeModal() {
+  document.getElementById("pcModal").hidden = true;
+  document.body.classList.remove("modal-open");
+}
+
+function ringSvg(cx, cy, r, sw, pct, color) {
+  const circ = 2 * Math.PI * r;
+  const dash = circ * (pct / 100);
+  return `
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--bg-card)" stroke-width="${sw}"/>
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${color}" stroke-width="${sw}"
+      stroke-dasharray="${dash} ${circ}" stroke-linecap="round"
+      transform="rotate(-90 ${cx} ${cy})"
+      style="transition: stroke-dasharray 0.9s cubic-bezier(0.4,0,0.2,1);"/>
+  `;
+}
+
+function renderSkrDetail(r) {
+  const c = okrPalette(r.okr);
+  const s = effectiveStatus(r);
+  const sc = statusPalette(s);
+  const p = pct(r.progress);
+  const pp = pct(r.plannedProgress);
+  const delta = (r.progress != null && r.plannedProgress != null) ? p - pp : null;
+
+  const bannerCss = `--mc-color: ${c.bg}; --mc-color-light: ${c.light}; --mc-color-dark: ${darken(c.bg, 0.25)}; --mc-color-pale: ${c.pale}; --mc-status-color: ${sc.bg}; --mc-status-pale: ${sc.pale};`;
+
+  // Related SKRs in same KR
+  const related = ROWS.filter(x => x.okr === r.okr && x.keyResult === r.keyResult && x.id !== r.id);
+  const relatedHtml = related.length ? `
+    <div class="mc-related">
+      <h5>Other Sub-KRs in this Key Result</h5>
+      <div class="mc-related-list">
+        ${related.map(rr => {
+          const ss = effectiveStatus(rr);
+          const ssc = statusPalette(ss);
+          return `
+            <div class="mc-related-item" data-id="${rr.id}">
+              <div class="mc-related-skr">${escapeHtml(rr.subKeyResult)}</div>
+              <div class="mc-related-meta">
+                <span class="status-pill" style="background:${ssc.pale}; color:${ssc.bg};"><span class="status-dot" style="background:${ssc.bg};"></span>${escapeHtml(ss)}</span>
+                <span class="mc-related-progress">${pct(rr.progress)}%</span>
+              </div>
+            </div>
+          `;
+        }).join("")}
+      </div>
+    </div>
+  ` : "";
+
+  const ringSize = 140, ringR = 56, ringCx = ringSize/2, ringCy = ringSize/2, ringSw = 12;
+  const trendUp = r.trend && /up/i.test(r.trend);
+  const trendDown = r.trend && /down/i.test(r.trend);
+  const trendIcon = trendUp
+    ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="14 7 21 7 21 14"/></svg>`
+    : trendDown
+    ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 7 9 13 13 9 21 17"/><polyline points="14 17 21 17 21 10"/></svg>`
+    : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>`;
+
+  const body = `
+    <div class="mc-banner" style="${bannerCss}">
+      <div class="mc-banner-grid"></div>
+      <div class="mc-breadcrumb">
+        <span>${escapeHtml(r.okr)}</span>
+        <span class="mc-breadcrumb-sep">›</span>
+        <b>${escapeHtml(r.keyResult)}</b>
+      </div>
+      <div class="mc-level-badge">Sub-Key Result</div>
+      <h2 class="mc-title" id="pcModalTitle">${escapeHtml(r.subKeyResult)}</h2>
+      <div class="mc-banner-meta">
+        <span class="mc-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>${escapeHtml(r.period)}</span>
+        <span class="mc-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/></svg>${escapeHtml(r.stakeholder)}</span>
+        <span class="mc-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>PM · ${escapeHtml(r.projectManager)}</span>
+      </div>
+    </div>
+
+    <div class="mc-body" style="${bannerCss}">
+
+      <div class="mc-progress-card">
+        <div class="mc-ring">
+          <svg width="${ringSize}" height="${ringSize}" viewBox="0 0 ${ringSize} ${ringSize}">
+            ${ringSvg(ringCx, ringCy, ringR, ringSw, p, c.bg)}
+          </svg>
+          <div class="mc-ring-center">
+            <div>
+              <div class="mc-ring-value">${p}%</div>
+              <div class="mc-ring-label">Progress</div>
+            </div>
+          </div>
+        </div>
+        <div class="mc-progress-detail">
+          <h4>Performance vs Plan</h4>
+          <div class="mc-comparison">
+            <div class="mc-comp-block">
+              <div class="mc-comp-label">Actual</div>
+              <div class="mc-comp-value">${r.progress == null ? "—" : p + "%"}</div>
+            </div>
+            <div class="mc-comp-block">
+              <div class="mc-comp-label">Planned</div>
+              <div class="mc-comp-value">${r.plannedProgress == null ? "—" : pp + "%"}</div>
+            </div>
+            ${delta != null ? `
+              <div class="mc-comp-block">
+                <div class="mc-comp-label">Delta</div>
+                <div class="mc-comp-value">
+                  <span class="mc-delta ${delta > 0 ? "positive" : delta < 0 ? "negative" : "neutral"}">
+                    ${delta > 0 ? "▲" : delta < 0 ? "▼" : "■"} ${Math.abs(delta)} pts
+                  </span>
+                </div>
+              </div>
+            ` : ""}
+          </div>
+          <div class="mc-progress-bar-wrap">
+            <div class="mc-progress-bar-actual" style="width:${p}%;"></div>
+            ${r.plannedProgress != null ? `<div class="mc-progress-bar-planned" style="left:${pp}%;"></div>` : ""}
+          </div>
+        </div>
+      </div>
+
+      <div class="mc-info-card">
+        <h5>Status</h5>
+        <div class="mc-status-display" style="--mc-status-color:${sc.bg}; --mc-status-pale:${sc.pale};">
+          <div class="mc-status-pulse"></div>
+          <div>
+            <div class="mc-status-label">Current</div>
+            <div class="mc-status-name">${escapeHtml(s)}</div>
+          </div>
+        </div>
+        ${r.trend ? `
+          <div style="margin-top:14px;">
+            <div class="mc-info-role" style="margin-bottom:4px;">Trend</div>
+            <div class="mc-trend ${trendUp ? "up" : trendDown ? "down" : ""}">${trendIcon}${escapeHtml(r.trend)}</div>
+          </div>
+        ` : ""}
+      </div>
+
+      <div class="mc-info-card">
+        <h5>People</h5>
+        <div class="mc-info-row">
+          <div class="mc-avatar" style="--mc-color:${c.bg}; --mc-color-pale:${c.pale};">${initials(r.stakeholder)}</div>
+          <div class="mc-info-text">
+            <div class="mc-info-role">Stakeholder</div>
+            <div class="mc-info-name">${escapeHtml(r.stakeholder)}</div>
+          </div>
+        </div>
+        <div class="mc-info-row">
+          <div class="mc-avatar" style="--mc-color:${c.bg}; --mc-color-pale:${c.pale};">${initials(r.projectManager)}</div>
+          <div class="mc-info-text">
+            <div class="mc-info-role">Project Manager</div>
+            <div class="mc-info-name">${escapeHtml(r.projectManager)}</div>
+          </div>
+        </div>
+      </div>
+
+      ${r.comment ? `
+        <div class="mc-comment-card" style="--mc-color:${c.bg};">
+          <h5>Comment</h5>
+          <div class="mc-comment-body">"${escapeHtml(r.comment)}"</div>
+        </div>
+      ` : ""}
+
+      ${relatedHtml}
+
+    </div>
+  `;
+  document.getElementById("pcModalBody").innerHTML = body;
+
+  // Wire related-item clicks
+  document.querySelectorAll(".mc-related-item").forEach(el => {
+    el.addEventListener("click", () => openDetailById(parseInt(el.dataset.id, 10)));
+  });
+}
+
+function renderAggregateDetail({ kind, okr, title, rows }) {
+  const c = okrPalette(okr);
+  const avg = Math.round(rows.reduce((s,r)=> s + (r.progress||0), 0) / rows.length * 100);
+  const avgPlan = Math.round(rows.reduce((s,r)=> s + (r.plannedProgress||0), 0) / rows.length * 100);
+  const delta = avg - avgPlan;
+
+  const bannerCss = `--mc-color: ${c.bg}; --mc-color-light: ${c.light}; --mc-color-dark: ${darken(c.bg, 0.25)}; --mc-color-pale: ${c.pale};`;
+
+  const ringSize = 140, ringR = 56, ringCx = ringSize/2, ringCy = ringSize/2, ringSw = 12;
+
+  const statusCounts = {};
+  rows.forEach(r => { const s = effectiveStatus(r); statusCounts[s] = (statusCounts[s] || 0) + 1; });
+
+  const krCount = unique(rows.map(r => r.keyResult)).length;
+  const stakeholders = unique(rows.map(r => r.stakeholder));
+  const pms = unique(rows.map(r => r.projectManager));
+
+  const breadcrumbHtml = kind === "Objective"
+    ? `<b>Objective</b>`
+    : `<span>${escapeHtml(okr)}</span><span class="mc-breadcrumb-sep">›</span><b>Key Result</b>`;
+
+  const body = `
+    <div class="mc-banner" style="${bannerCss}">
+      <div class="mc-banner-grid"></div>
+      <div class="mc-breadcrumb">${breadcrumbHtml}</div>
+      <div class="mc-level-badge">${escapeHtml(kind)}</div>
+      <h2 class="mc-title" id="pcModalTitle">${escapeHtml(title)}</h2>
+      <div class="mc-banner-meta">
+        <span class="mc-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${rows.length} Sub-KRs</span>
+        ${kind === "Objective" ? `<span class="mc-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>${krCount} Key Results</span>` : ""}
+        <span class="mc-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/></svg>${stakeholders.length} Stakeholder${stakeholders.length !== 1 ? "s" : ""}</span>
+      </div>
+    </div>
+
+    <div class="mc-body" style="${bannerCss}">
+
+      <div class="mc-progress-card">
+        <div class="mc-ring">
+          <svg width="${ringSize}" height="${ringSize}" viewBox="0 0 ${ringSize} ${ringSize}">
+            ${ringSvg(ringCx, ringCy, ringR, ringSw, avg, c.bg)}
+          </svg>
+          <div class="mc-ring-center">
+            <div>
+              <div class="mc-ring-value">${avg}%</div>
+              <div class="mc-ring-label">Avg Progress</div>
+            </div>
+          </div>
+        </div>
+        <div class="mc-progress-detail">
+          <h4>Aggregate Performance</h4>
+          <div class="mc-comparison">
+            <div class="mc-comp-block">
+              <div class="mc-comp-label">Avg Actual</div>
+              <div class="mc-comp-value">${avg}%</div>
+            </div>
+            <div class="mc-comp-block">
+              <div class="mc-comp-label">Avg Planned</div>
+              <div class="mc-comp-value">${avgPlan}%</div>
+            </div>
+            <div class="mc-comp-block">
+              <div class="mc-comp-label">Delta</div>
+              <div class="mc-comp-value">
+                <span class="mc-delta ${delta > 0 ? "positive" : delta < 0 ? "negative" : "neutral"}">
+                  ${delta > 0 ? "▲" : delta < 0 ? "▼" : "■"} ${Math.abs(delta)} pts
+                </span>
+              </div>
+            </div>
+          </div>
+          <div class="mc-progress-bar-wrap">
+            <div class="mc-progress-bar-actual" style="width:${avg}%;"></div>
+            <div class="mc-progress-bar-planned" style="left:${avgPlan}%;"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mc-info-card">
+        <h5>Status Breakdown</h5>
+        ${Object.entries(statusCounts).map(([s, n]) => {
+          const ssc = statusPalette(s);
+          const pctW = Math.round(n / rows.length * 100);
+          return `
+            <div style="margin-bottom: 10px;">
+              <div style="display:flex; justify-content:space-between; font-size:0.78rem; color: var(--text); margin-bottom:4px;">
+                <span><span class="status-dot" style="display:inline-block; width:8px; height:8px; border-radius:50%; background:${ssc.bg}; margin-right:6px;"></span>${escapeHtml(s)}</span>
+                <b>${n}</b>
+              </div>
+              <div style="height:6px; background: var(--bg-card); border-radius:3px; overflow:hidden;">
+                <div style="height:100%; width:${pctW}%; background:${ssc.bg}; transition: width 0.6s var(--smooth);"></div>
+              </div>
+            </div>
+          `;
+        }).join("")}
+      </div>
+
+      <div class="mc-info-card">
+        <h5>${kind === "Objective" ? "Stakeholders & PMs" : "People"}</h5>
+        ${stakeholders.map(p => `
+          <div class="mc-info-row">
+            <div class="mc-avatar" style="--mc-color:${c.bg}; --mc-color-pale:${c.pale};">${initials(p)}</div>
+            <div class="mc-info-text">
+              <div class="mc-info-role">Stakeholder</div>
+              <div class="mc-info-name">${escapeHtml(p)}</div>
+            </div>
+          </div>
+        `).join("")}
+        ${pms.map(p => `
+          <div class="mc-info-row">
+            <div class="mc-avatar" style="--mc-color:${c.bg}; --mc-color-pale:${c.pale};">${initials(p)}</div>
+            <div class="mc-info-text">
+              <div class="mc-info-role">Project Manager</div>
+              <div class="mc-info-name">${escapeHtml(p)}</div>
+            </div>
+          </div>
+        `).join("")}
+      </div>
+
+      <div class="mc-related">
+        <h5>${kind === "Objective" ? "All Sub-Key Results" : "Sub-Key Results"}</h5>
+        <div class="mc-related-list">
+          ${rows.map(rr => {
+            const ss = effectiveStatus(rr);
+            const ssc = statusPalette(ss);
+            return `
+              <div class="mc-related-item" data-id="${rr.id}">
+                <div class="mc-related-skr">${escapeHtml(rr.subKeyResult)}</div>
+                <div class="mc-related-meta">
+                  <span class="status-pill" style="background:${ssc.pale}; color:${ssc.bg};"><span class="status-dot" style="background:${ssc.bg};"></span>${escapeHtml(ss)}</span>
+                  <span class="mc-related-progress">${pct(rr.progress)}%</span>
+                </div>
+              </div>
+            `;
+          }).join("")}
+        </div>
+      </div>
+
+    </div>
+  `;
+  document.getElementById("pcModalBody").innerHTML = body;
+  document.querySelectorAll(".mc-related-item").forEach(el => {
+    el.addEventListener("click", () => openDetailById(parseInt(el.dataset.id, 10)));
+  });
+}
+
+function initModal() {
+  document.getElementById("pcModalClose").addEventListener("click", closeModal);
+  document.getElementById("pcModalBackdrop").addEventListener("click", closeModal);
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape" && !document.getElementById("pcModal").hidden) closeModal();
+  });
+}
+
+/* ═══════════════ FILTER EVENTS ═══════════════ */
+function initFilters() {
+  document.getElementById("filterOkr").addEventListener("change", e => { state.okr = e.target.value; renderAll(); });
+  document.getElementById("filterStatus").addEventListener("change", e => { state.status = e.target.value; renderAll(); });
+  document.getElementById("filterStakeholder").addEventListener("change", e => { state.stakeholder = e.target.value; renderAll(); });
+  document.getElementById("filterPm").addEventListener("change", e => { state.pm = e.target.value; renderAll(); });
+  document.getElementById("filterPeriod").addEventListener("change", e => { state.period = e.target.value; renderAll(); });
+  document.getElementById("filterSearch").addEventListener("input", e => { state.search = e.target.value; renderAll(); });
+  document.getElementById("filterClear").addEventListener("click", () => {
+    Object.assign(state, { okr: "All", status: "All", stakeholder: "All", pm: "All", period: "All", search: "" });
+    document.getElementById("filterSearch").value = "";
+    renderAll();
+  });
+}
+
+/* ═══════════════ NAV + THEME ═══════════════ */
+function initNav() {
+  const hamburger = document.getElementById("navHamburger");
+  const links = document.getElementById("navLinks");
+  if (hamburger && links) {
+    hamburger.addEventListener("click", () => links.classList.toggle("open"));
+  }
+  const themeBtn = document.getElementById("themeToggle");
+  const saved = localStorage.getItem("ss-theme");
+  if (saved === "dark") document.documentElement.setAttribute("data-theme", "dark");
+  if (themeBtn) {
+    themeBtn.addEventListener("click", () => {
+      const cur = document.documentElement.getAttribute("data-theme");
+      const next = cur === "dark" ? "light" : "dark";
+      if (next === "dark") document.documentElement.setAttribute("data-theme", "dark");
+      else document.documentElement.removeAttribute("data-theme");
+      localStorage.setItem("ss-theme", next);
+    });
+  }
+}
+
+/* ═══════════════ REVEAL ANIMATIONS ═══════════════ */
+function initReveal() {
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add("revealed"); io.unobserve(e.target); }
+    });
+  }, { threshold: 0.1 });
+  document.querySelectorAll("[data-reveal]").forEach(el => io.observe(el));
+}
+
+/* ═══════════════ BOOT ═══════════════ */
+document.addEventListener("DOMContentLoaded", () => {
+  initNav();
+  initFilters();
+  initSpotlight();
+  initModal();
+  renderAll();
+  initReveal();
+});

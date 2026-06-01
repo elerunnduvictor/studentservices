@@ -64,7 +64,7 @@ const EMPLOYEES = [
   { name: "Kimarie Howard", role: "Enrollment Counseling Development & Performance Coordinator", dept: "Enrollment & Retention", type: "Part-Time Temporary", stakeholder: "Rachel Kirk", subDept: "Enrollment Counseling", org: "", tier: "" },
   { name: "Megan Niblett", role: "Enrollment Counseling Operations Coordinator", dept: "Enrollment & Retention", type: "Part-Time Temporary", stakeholder: "Rachel Kirk", subDept: "Enrollment Counseling", org: "", tier: "" },
   { name: "Shaunasee Janette James", role: "Enrollment Coordinator", dept: "Enrollment & Retention", type: "Full-Time Employee", stakeholder: "Trevor Shelton", subDept: "Enrollment Services", org: "", tier: "" },
-  { name: "Ely Zmolek", role: "Enrollment Services Specialist", dept: "Enrollment & Retention", type: "Full-Time Employee", stakeholder: "Trevor Shelton", subDept: "Enrollment Services", org: "", tier: "" },
+  { name: "Ely Zmolek", role: "Enrollment Coordinator", dept: "Enrollment & Retention", type: "Full-Time Employee", stakeholder: "Trevor Shelton", subDept: "Enrollment Services", org: "", tier: "" },
   { name: "Trevor Shelton", role: "Senior Manager of Enrollment Services", dept: "Enrollment & Retention", type: "Full-Time Employee", stakeholder: "Alison Cundiff", subDept: "Enrollment Services", org: "", tier: "" },
   { name: "Peter Abarte", role: "Senior Manager-Mentoring", dept: "Enrollment & Retention", type: "Contractor", stakeholder: "Kelley Richardson", subDept: "Mentoring", org: "Springboard", tier: "3" },
   { name: "Kelley Richardson", role: "Mentoring Manager", dept: "Enrollment & Retention", type: "Full-Time Employee", stakeholder: "Alison Cundiff", subDept: "Mentoring", org: "", tier: "" },

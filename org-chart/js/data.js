@@ -111,7 +111,7 @@ OC.employees = [
   { id: 'shaunasee-james', name: 'Shaunasee Janette James', title: 'Enrollment Coordinator', dept: 'enrollment', level: 5, status: 'FTE', reportsTo: 'trevor-shelton',
     responsibilities: ['Transfer evaluation', 'Ecclesiastical endorsement', 'Chaplain partnership'],
     kpis: ['Transfer evaluation processing rate', 'Number of transfer evaluation and endorsement cases', 'Transfer evaluation and endorsement case resolution rate'], email: 'scjames@byupw.edu', photoUrl: '../photos/enrollment/shaunasee-james.jpg', roleInventoryUrl: 'https://churchofjesuschrist.sharepoint.com/:w:/s/BYU-PathwayStudentSuccessRoleInventory/IQBHJEF4d22UQ4TOTp6j8queASopK9ehmaq4-SfVdUQwo1g?e=qSPQFY' },
-  { id: 'ely-zmolek', name: 'Ely Zmolek', title: 'Enrollment Services Specialist', dept: 'enrollment', level: 5, status: 'FTE', reportsTo: 'trevor-shelton',
+  { id: 'ely-zmolek', name: 'Ely Zmolek', title: 'Enrollment Coordinator', dept: 'enrollment', level: 5, status: 'FTE', reportsTo: 'trevor-shelton',
     responsibilities: ['Application processing', 'Admissons exceptions', 'Admissions systems'],
     kpis: ['Application processing rate', 'Application manual review turnaround rate', 'Number of admissions support cases', 'Admissions case resolution rate'], email: 'Elizabeth.Zmolek@byupw.edu', photoUrl: '../photos/enrollment/ely-zmolek.jpeg', roleInventoryUrl: 'https://churchofjesuschrist.sharepoint.com/:w:/s/BYU-PathwayStudentSuccessRoleInventory/IQDyS1zVpuz3SI8qQdzkXt4eAa5v6mtHteW4fZK3kCJ5twA?e=C1jcso' },
   // ── DEAN OF STUDENTS ──

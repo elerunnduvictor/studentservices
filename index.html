@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Student Services — BYU-Pathway Worldwide</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/shared.css">
 <link rel="stylesheet" href="css/main.css">
 </head>
 <body class="home-single">
@@ -37,85 +38,206 @@
     <div class="home-row-divider"></div>
   </div>
 
-  <div class="home-org-tree">
-    <!-- Level 1: VP -->
-    <div class="org-level org-level-top">
-      <div class="org-node org-node-vp">
-        <div class="org-node-title">Student Services</div>
-        <div class="org-node-name">Ben Packer</div>
+  <div class="home-org-layout">
+    <div class="home-org-tree-wrap">
+      <div class="home-org-tree">
+        <!-- Level 1: VP -->
+        <div class="org-level org-level-top">
+          <div class="org-node org-node-vp">
+            <div class="org-node-title">Student Services</div>
+            <div class="org-node-name">Ben Packer</div>
+          </div>
+        </div>
+
+        <!-- Level 2: Directors + their sub-teams -->
+        <div class="org-level org-level-directors">
+          <div class="org-branch" style="--dc:#3A929D;--dc-r:58,146,157;">
+            <div class="org-node org-node-dir">
+              <div class="org-node-title">Student Records, Registration, and Support</div>
+              <div class="org-node-name">Mark Gefrom</div>
+            </div>
+            <div class="org-sub">
+              <div class="org-node">
+                <div class="org-node-title">Registrar</div>
+                <div class="org-node-name">Kari Johnson</div>
+              </div>
+              <div class="org-node">
+                <div class="org-node-title">Support &amp; Advising</div>
+                <div class="org-node-name">Brad Lester</div>
+              </div>
+              <div class="org-node">
+                <div class="org-node-title">IT Support</div>
+                <div class="org-node-name">Matt Smith</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="org-branch" style="--dc:#B687AC;--dc-r:182,135,172;">
+            <div class="org-node org-node-dir">
+              <div class="org-node-title">Enrollment &amp; Retention</div>
+              <div class="org-node-name">Alison Cundiff</div>
+            </div>
+            <div class="org-sub">
+              <div class="org-node">
+                <div class="org-node-title">Enrollment Services</div>
+                <div class="org-node-name">Trevor Shelton</div>
+              </div>
+              <div class="org-node">
+                <div class="org-node-title">Mentoring</div>
+                <div class="org-node-name">Kelley Richardson</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="org-branch" style="--dc:#A2C23D;--dc-r:162,194,61;">
+            <div class="org-node org-node-dir">
+              <div class="org-node-title">Dean of Students</div>
+              <div class="org-node-name">Steven K. Thomas</div>
+            </div>
+            <div class="org-sub">
+              <div class="org-node">
+                <div class="org-node-title">Associate Dean</div>
+                <div class="org-node-name">Anne Marie Clark</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="org-branch" style="--dc:#CB4A27;--dc-r:203,74,39;">
+            <div class="org-node org-node-dir">
+              <div class="org-node-title">Digital Operations</div>
+              <div class="org-node-name">Jacob Adams</div>
+            </div>
+            <div class="org-sub">
+              <div class="org-node">
+                <div class="org-node-title">Project Management</div>
+                <div class="org-node-name">Ricky Kailiponi</div>
+              </div>
+              <div class="org-node">
+                <div class="org-node-title">Research &amp; Reporting</div>
+                <div class="org-node-name">Josh Hadden</div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- Level 2: Directors + their sub-teams -->
-    <div class="org-level org-level-directors">
-      <div class="org-branch" style="--dc:#3A929D;--dc-r:58,146,157;">
-        <div class="org-node org-node-dir">
-          <div class="org-node-title">Student Records, Registration, and Support</div>
-          <div class="org-node-name">Mark Gefrom</div>
+    <aside class="home-org-cta">
+      <a href="org-chart/index.html" class="home-org-cta-card" data-cta-color="teal">
+        <div class="home-org-cta-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+            <circle cx="12" cy="5" r="3"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="5" y1="12" x2="19" y2="12"/>
+            <line x1="5" y1="12" x2="5" y2="15"/>
+            <line x1="12" y1="12" x2="12" y2="15"/>
+            <line x1="19" y1="12" x2="19" y2="15"/>
+            <rect x="3" y="15" width="4" height="3" rx="0.5"/>
+            <rect x="10" y="15" width="4" height="3" rx="0.5"/>
+            <rect x="17" y="15" width="4" height="3" rx="0.5"/>
+          </svg>
         </div>
-        <div class="org-sub">
-          <div class="org-node">
-            <div class="org-node-title">Registrar</div>
-            <div class="org-node-name">Kari Johnson</div>
-          </div>
-          <div class="org-node">
-            <div class="org-node-title">Support &amp; Advising</div>
-            <div class="org-node-name">Brad Lester</div>
-          </div>
-          <div class="org-node">
-            <div class="org-node-title">IT Support</div>
-            <div class="org-node-name">Matt Smith</div>
-          </div>
+        <div class="home-org-cta-body">
+          <div class="home-org-cta-eyebrow">Interactive Hierarchy</div>
+          <div class="home-org-cta-title">Organizational Chart</div>
+          <div class="home-org-cta-desc">Zoom, search, and filter every team relationship in one canvas.</div>
         </div>
-      </div>
+        <svg class="home-org-cta-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>
+      </a>
 
-      <div class="org-branch" style="--dc:#B687AC;--dc-r:182,135,172;">
-        <div class="org-node org-node-dir">
-          <div class="org-node-title">Enrollment &amp; Retention</div>
-          <div class="org-node-name">Alison Cundiff</div>
+      <a href="directory/index.html" class="home-org-cta-card" data-cta-color="mauve">
+        <div class="home-org-cta-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            <line x1="19" y1="8" x2="19" y2="14"/>
+            <line x1="22" y1="11" x2="16" y2="11"/>
+          </svg>
         </div>
-        <div class="org-sub">
-          <div class="org-node">
-            <div class="org-node-title">Enrollment Services</div>
-            <div class="org-node-name">Trevor Shelton</div>
-          </div>
-          <div class="org-node">
-            <div class="org-node-title">Mentoring</div>
-            <div class="org-node-name">Kelley Richardson</div>
-          </div>
+        <div class="home-org-cta-body">
+          <div class="home-org-cta-eyebrow">Team Roster</div>
+          <div class="home-org-cta-title">Complete List of Directory</div>
+          <div class="home-org-cta-desc">Search every team member by name, role, department, or employment type.</div>
         </div>
-      </div>
+        <svg class="home-org-cta-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>
+      </a>
+    </aside>
+  </div>
+</section>
 
-      <div class="org-branch" style="--dc:#A2C23D;--dc-r:162,194,61;">
-        <div class="org-node org-node-dir">
-          <div class="org-node-title">Dean of Students</div>
-          <div class="org-node-name">Steven K. Thomas</div>
-        </div>
-        <div class="org-sub">
-          <div class="org-node">
-            <div class="org-node-title">Associate Dean</div>
-            <div class="org-node-name">Anne Marie Clark</div>
-          </div>
-        </div>
+<!-- ═══════════════ KPI SNAPSHOT ROW ═══════════════ -->
+<section class="home-row home-kpis" id="kpis" data-reveal>
+  <div class="home-row-head">
+    <div class="home-row-eyebrow">Performance Snapshot</div>
+    <h2 class="home-row-title">Key Performance Indicators (KPIs)</h2>
+    <div class="home-row-divider"></div>
+  </div>
+  <div class="home-kpi-grid">
+    <article class="kpi-card" data-accent="teal" data-reveal data-reveal-delay="0">
+      <div class="kpi-card-media">
+        <img src="dashboard-screenshots/Autonomy.png" alt="Autonomy dashboard snapshot" loading="lazy"
+             onerror="this.parentElement.classList.add('kpi-card-media--missing'); this.remove();">
       </div>
+      <div class="kpi-card-body">
+        <div class="kpi-card-eyebrow">Metric</div>
+        <h3 class="kpi-card-header">Autonomy</h3>
+        <div class="kpi-card-underline"></div>
+        <p class="kpi-card-subheader">Percent of students not needing help from the home office.</p>
+      </div>
+    </article>
 
-      <div class="org-branch" style="--dc:#CB4A27;--dc-r:203,74,39;">
-        <div class="org-node org-node-dir">
-          <div class="org-node-title">Digital Operations</div>
-          <div class="org-node-name">Jacob Adams</div>
-        </div>
-        <div class="org-sub">
-          <div class="org-node">
-            <div class="org-node-title">Project Management</div>
-            <div class="org-node-name">Ricky Kailiponi</div>
-          </div>
-          <div class="org-node">
-            <div class="org-node-title">Research &amp; Reporting</div>
-            <div class="org-node-name">Josh Hadden</div>
-          </div>
-        </div>
+    <article class="kpi-card" data-accent="mauve" data-reveal data-reveal-delay="1">
+      <div class="kpi-card-media">
+        <img src="dashboard-screenshots/Satisfaction.png" alt="Satisfaction dashboard snapshot" loading="lazy"
+             onerror="this.parentElement.classList.add('kpi-card-media--missing'); this.remove();">
       </div>
-    </div>
+      <div class="kpi-card-body">
+        <div class="kpi-card-eyebrow">Metric</div>
+        <h3 class="kpi-card-header">Satisfaction</h3>
+        <div class="kpi-card-underline"></div>
+        <p class="kpi-card-subheader">Percent of students indicating satisfaction with BYU-Pathway services and supports.</p>
+      </div>
+    </article>
+
+    <article class="kpi-card" data-accent="gold" data-reveal data-reveal-delay="2">
+      <div class="kpi-card-media">
+        <img src="dashboard-screenshots/Completion.png" alt="Completion dashboard snapshot" loading="lazy"
+             onerror="this.parentElement.classList.add('kpi-card-media--missing'); this.remove();">
+      </div>
+      <div class="kpi-card-body">
+        <div class="kpi-card-eyebrow">Metric</div>
+        <h3 class="kpi-card-header">Completion</h3>
+        <div class="kpi-card-underline"></div>
+        <p class="kpi-card-subheader">Percent of certificate and degree students completing their first certificate within eight blocks.</p>
+      </div>
+    </article>
+  </div>
+  <div class="home-kpi-cta">
+    <a href="https://app.powerbi.com/groups/me/apps/d4fe7f49-1b93-41aa-9e7d-6ee6d5ec3eb0/reports/0e27c81e-b983-4456-89aa-4aa064935967/b752672c08e74c969e5e?experience=power-bi&amp;clientSideAuth=0"
+       target="_blank" rel="noopener" class="home-kpi-cta-btn">
+      <span>Complete List of KPIs</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>
+    </a>
+  </div>
+</section>
+
+<!-- ═══════════════ OKR SUMMARY ROW ═══════════════ -->
+<section class="home-row home-okrs" id="okrs" data-reveal>
+  <div class="home-row-head">
+    <div class="home-row-eyebrow">Strategic Goals</div>
+    <h2 class="home-row-title">Objectives and Key Results (OKRs)</h2>
+    <div class="home-row-divider"></div>
+  </div>
+  <div class="home-okr-grid" id="homeOkrGrid">
+    <div class="home-okr-loading">Loading OKR summary…</div>
+  </div>
+  <div class="home-okr-cta">
+    <a href="okr-progress/index.html" class="home-okr-cta-btn">
+      <span>Complete OKR Report</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>
+    </a>
   </div>
 </section>
 
@@ -183,85 +305,102 @@
   </div>
 </section>
 
-<!-- ═══════════════ TOOLS ROW ═══════════════ -->
-<section class="home-row" id="tools">
-  <div class="home-row-head">
-    <div class="home-row-eyebrow">Quick Access</div>
-    <h2 class="home-row-title">Tools &amp; Resources</h2>
-    <div class="home-row-divider"></div>
-  </div>
-  <div class="tools-grid">
-
-    <a href="org-chart/index.html" class="tool-card" data-reveal>
-      <div class="tool-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="5" r="3"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="5" y1="12" x2="19" y2="12"/><line x1="5" y1="12" x2="5" y2="15"/><line x1="12" y1="12" x2="12" y2="15"/><line x1="19" y1="12" x2="19" y2="15"/><rect x="3" y="15" width="4" height="3" rx="0.5"/><rect x="10" y="15" width="4" height="3" rx="0.5"/><rect x="17" y="15" width="4" height="3" rx="0.5"/></svg>
-      </div>
-      <div class="tool-info">
-        <div class="tool-name">Org Chart</div>
-        <div class="tool-desc">Search, filters, and department breakdowns</div>
-      </div>
-    </a>
-
-    <a href="directory/index.html" class="tool-card" data-reveal>
-      <div class="tool-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
-      </div>
-      <div class="tool-info">
-        <div class="tool-name">Directory</div>
-        <div class="tool-desc">Team members, filters &amp; KPIs</div>
-      </div>
-    </a>
-
-    <a href="profitco/index.html" class="tool-card" data-reveal>
-      <div class="tool-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
-      </div>
-      <div class="tool-info">
-        <div class="tool-name">Profit.co Monthly Reports</div>
-        <div class="tool-desc">OKRs, Key Results &amp; progress tracking</div>
-      </div>
-    </a>
-
-    <a href="https://app.powerbi.com/groups/me/apps/d4fe7f49-1b93-41aa-9e7d-6ee6d5ec3eb0/reports/0e27c81e-b983-4456-89aa-4aa064935967/b752672c08e74c969e5e?experience=power-bi&amp;clientSideAuth=0" target="_blank" class="tool-card" data-reveal>
-      <div class="tool-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3v18h18"/><rect x="7" y="13" width="3" height="7"/><rect x="12" y="9" width="3" height="11"/><rect x="17" y="5" width="3" height="15"/></svg>
-      </div>
-      <div class="tool-info">
-        <div class="tool-name">SS Dashboard</div>
-        <div class="tool-desc">Metrics, KPIs &amp; analytics</div>
-      </div>
-    </a>
-
-    <a href="https://app.powerbi.com/groups/4f9c84ba-b5d3-4eda-a86b-41fbb3b3bc4a/reports/af9ba6b3-8092-4e0c-bb52-4f8903b1b861/b4f5a8a463b9d5aef9c3?experience=power-bi&amp;clientSideAuth=0" target="_blank" class="tool-card" data-reveal>
-      <div class="tool-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/><path d="M7 10l3-3 2 2 4-4"/></svg>
-      </div>
-      <div class="tool-info">
-        <div class="tool-name">Support Metrics</div>
-        <div class="tool-desc">Tickets, performance &amp; team KPIs</div>
-      </div>
-    </a>
-
-    <a href="https://studentservices.byupathway.edu/studentservices/academic-calendar" target="_blank" class="tool-card" data-reveal>
-      <div class="tool-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/></svg>
-      </div>
-      <div class="tool-info">
-        <div class="tool-name">Academic Calendar</div>
-        <div class="tool-desc">Key dates &amp; semester schedules</div>
-      </div>
-    </a>
-
-  </div>
-</section>
-
 <!-- ═══════════════ THIN FOOTER ═══════════════ -->
 <footer class="home-footer">
   <span>&copy; 2026 BYU-Pathway Worldwide &middot; Student Services</span>
 </footer>
 
+<!-- OKR data is shared with the OKR Progress page — same monthly refresh
+     populates this section automatically. -->
+<script src="okr-progress/js/okr-progress-data.js"></script>
+
 <!-- ═══════════════ JAVASCRIPT ═══════════════ -->
 <script>
+/* Render the 3 OKR overview cards from the shared OKR_PROGRESS_ROWS data.
+   Self-contained so this page has no JS dependencies on the OKR Progress page. */
+function renderHomeOkrCards() {
+  var target = document.getElementById('homeOkrGrid');
+  if (!target || !window.OKR_PROGRESS_ROWS || !window.OKR_COLORS || !window.STATUS_COLORS) return;
+  var ROWS = window.OKR_PROGRESS_ROWS;
+  var OKR_COLORS = window.OKR_COLORS;
+  var STATUS_COLORS = window.STATUS_COLORS;
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function uniq(arr) { return Array.from(new Set(arr.filter(function(x){ return x != null && x !== ''; }))); }
+  function effectiveStatus(r) {
+    if (r.status) return r.status;
+    if (r.progress == null) return 'Not Started';
+    return 'On Track';
+  }
+  function okrPal(name) {
+    return OKR_COLORS[name] || { bg: '#065577', light: '#28738A', pale: 'rgba(6,85,119,0.12)' };
+  }
+  function statusPal(s) { return STATUS_COLORS[s] || STATUS_COLORS['Not Started']; }
+
+  var byOkr = {};
+  ROWS.forEach(function(r) {
+    if (!byOkr[r.okr]) byOkr[r.okr] = [];
+    byOkr[r.okr].push(r);
+  });
+
+  var cards = Object.keys(byOkr).map(function(okr) {
+    var rows = byOkr[okr];
+    var c = okrPal(okr);
+    var krCount = uniq(rows.map(function(r){ return r.keyResult; })).length;
+    var avg = Math.round(rows.reduce(function(s, r){ return s + (r.progress || 0); }, 0) / rows.length * 100);
+
+    var statusBuckets = {};
+    rows.forEach(function(r) {
+      var s = effectiveStatus(r);
+      statusBuckets[s] = (statusBuckets[s] || 0) + 1;
+    });
+    var segHtml = Object.keys(statusBuckets).map(function(s) {
+      var sc = statusPal(s).bg;
+      var n = statusBuckets[s];
+      return '<div class="okr-status-seg" style="flex: ' + n + '; background: ' + sc + ';" title="' + esc(s) + ': ' + n + '"></div>';
+    }).join('');
+    var legendHtml = Object.keys(statusBuckets).map(function(s) {
+      var sc = statusPal(s).bg;
+      var n = statusBuckets[s];
+      return '<span class="okr-legend-item"><span class="okr-legend-dot" style="background:' + sc + ';"></span>' + esc(s) + ' <b>' + n + '</b></span>';
+    }).join('');
+
+    var size = 70, rad = 26, cx = size/2, cy = size/2, sw = 7;
+    var circ = 2 * Math.PI * rad;
+    var dash = circ * (avg / 100);
+
+    return ''
+      + '<a href="okr-progress/index.html?okr=' + encodeURIComponent(okr) + '" class="okr-card" style="--okr-color: ' + c.bg + ';" data-reveal>'
+      +   '<div class="okr-card-eyebrow">Objective</div>'
+      +   '<div class="okr-card-title">' + esc(okr) + '</div>'
+      +   '<div class="okr-card-stats">'
+      +     '<div class="okr-ring-wrap">'
+      +       '<svg width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + ' ' + size + '">'
+      +         '<circle cx="' + cx + '" cy="' + cy + '" r="' + rad + '" fill="none" stroke="var(--bg-elevated)" stroke-width="' + sw + '"/>'
+      +         '<circle cx="' + cx + '" cy="' + cy + '" r="' + rad + '" fill="none" stroke="' + c.bg + '" stroke-width="' + sw + '" '
+      +           'stroke-dasharray="' + dash + ' ' + circ + '" stroke-linecap="round" '
+      +           'transform="rotate(-90 ' + cx + ' ' + cy + ')"/>'
+      +       '</svg>'
+      +       '<div class="okr-ring-val">' + avg + '%</div>'
+      +     '</div>'
+      +     '<div class="okr-card-metrics">'
+      +       '<div class="okr-metric-row"><span>Key Results</span><b>' + krCount + '</b></div>'
+      +       '<div class="okr-metric-row"><span>Sub-KRs</span><b>' + rows.length + '</b></div>'
+      +       '<div class="okr-metric-row"><span>Avg Progress</span><b>' + avg + '%</b></div>'
+      +     '</div>'
+      +   '</div>'
+      +   '<div class="okr-card-status-strip">' + (segHtml || '<div class="okr-status-seg" style="flex:1; background: var(--bg-elevated);"></div>') + '</div>'
+      +   '<div class="okr-card-legend">' + legendHtml + '</div>'
+      + '</a>';
+  }).join('');
+
+  target.innerHTML = cards;
+}
+
 function initScrollReveal() {
   var elements = document.querySelectorAll('[data-reveal]');
   var observer = new IntersectionObserver(function(entries) {
@@ -320,6 +459,7 @@ function initTilt() {
 
 document.addEventListener('DOMContentLoaded', function() {
   initTheme();
+  renderHomeOkrCards();
   initScrollReveal();
   initTilt();
 });

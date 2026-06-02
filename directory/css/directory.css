@@ -55,16 +55,7 @@
   --shadow-hover: 0 8px 30px rgba(0,0,0,0.4);
 }
 
-/* ══════════════ RESET ══════════════ */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
-body {
-  font-family: 'Jost', sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  line-height: 1.6;
-  overflow-x: hidden;
-}
+/* Reset, body base, and .hero-pattern + patternDrift live in /css/shared.css. */
 
 /* ══════════════ NAVBAR ══════════════ */
 .navbar {
@@ -135,18 +126,6 @@ body {
   position: absolute; bottom: 0; left: 0; right: 0;
   height: 120px;
   background: linear-gradient(to top, var(--bg) 0%, transparent 100%);
-}
-.hero-pattern {
-  position: absolute; inset: 0; opacity: 0.04;
-  background-image:
-    linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px);
-  background-size: 40px 40px;
-  animation: patternDrift 20s linear infinite;
-}
-@keyframes patternDrift {
-  0% { transform: translate(0,0); }
-  100% { transform: translate(40px,40px); }
 }
 .dir-hero-content {
   position: relative; z-index: 2;

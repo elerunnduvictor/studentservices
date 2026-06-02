@@ -3,9 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Profit.co Monthly Reports — BYU-Pathway Worldwide</title>
+<title>OKR Progress — BYU-Pathway Worldwide</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/profitco.css">
+<link rel="stylesheet" href="../css/shared.css">
+<link rel="stylesheet" href="css/okr-progress.css">
 </head>
 <body>
 
@@ -18,7 +19,8 @@
   <div class="nav-links" id="navLinks">
     <a href="../index.html" class="nav-link">Home</a>
     <a href="../index.html#departments" class="nav-link">Departments</a>
-    <a href="../index.html#tools" class="nav-link">Tools &amp; Resources</a>
+    <a href="../index.html#kpis" class="nav-link">KPIs</a>
+    <a href="../index.html#okrs" class="nav-link">OKRs</a>
     <a href="../directory/index.html" class="nav-link">Directory</a>
     <a href="../org-chart/index.html" class="nav-link">Org Chart</a>
   </div>
@@ -28,12 +30,12 @@
 </nav>
 
 <!-- ═══════════════ HERO ═══════════════ -->
-<header class="pc-hero">
+<header class="okrp-hero">
   <div class="hero-pattern"></div>
-  <div class="pc-hero-content">
+  <div class="okrp-hero-content">
     <div class="hero-badge">BYU-Pathway Worldwide</div>
-    <h1>Profit.co <span>Monthly Reports</span></h1>
-    <p class="pc-hero-sub">Track progress on every Objective, Key Result, and Sub-Key Result across Student Services — search the goal tree, compare planned vs actual, and surface what needs attention.</p>
+    <h1>OKR <span>Progress</span></h1>
+    <p class="okrp-hero-sub">Track progress on every Objective, Key Result, and Sub-Key Result across Student Services — search the goal tree, compare progress vs goal, and surface what needs attention.</p>
 
     <!-- Spotlight Search -->
     <div class="spotlight" id="spotlight">
@@ -48,47 +50,47 @@
 </header>
 
 <!-- ═══════════════ DASHBOARD ═══════════════ -->
-<main class="pc-section">
-  <div class="pc-inner">
+<main class="okrp-section">
+  <div class="okrp-inner">
 
     <!-- Filters -->
-    <div class="pc-filters" data-reveal>
-      <span class="pc-filters-label">Filters</span>
-      <select id="filterOkr" class="pc-select" aria-label="Filter by OKR"></select>
-      <select id="filterStatus" class="pc-select" aria-label="Filter by status"></select>
-      <select id="filterStakeholder" class="pc-select" aria-label="Filter by stakeholder"></select>
-      <select id="filterPm" class="pc-select" aria-label="Filter by project manager"></select>
-      <select id="filterPeriod" class="pc-select" aria-label="Filter by period"></select>
-      <input id="filterSearch" class="pc-search" type="search" placeholder="Filter table rows..." aria-label="Filter table">
-      <button id="filterClear" class="pc-clear" type="button">Clear</button>
+    <div class="okrp-filters" data-reveal>
+      <span class="okrp-filters-label">Filters</span>
+      <select id="filterOkr" class="okrp-select" aria-label="Filter by OKR"></select>
+      <select id="filterStatus" class="okrp-select" aria-label="Filter by status"></select>
+      <select id="filterStakeholder" class="okrp-select" aria-label="Filter by stakeholder"></select>
+      <select id="filterPm" class="okrp-select" aria-label="Filter by project manager"></select>
+      <select id="filterPeriod" class="okrp-select" aria-label="Filter by period"></select>
+      <input id="filterSearch" class="okrp-search" type="search" placeholder="Filter table rows..." aria-label="Filter table">
+      <button id="filterClear" class="okrp-clear" type="button">Clear</button>
     </div>
 
     <!-- KPI cards -->
-    <div id="pcKpis" class="pc-kpis" data-reveal></div>
+    <div id="okrpKpis" class="okrp-kpis" data-reveal></div>
 
     <!-- OKR overview cards -->
-    <div class="pc-okr-grid" id="pcOkrGrid" data-reveal></div>
+    <div class="okrp-okr-grid" id="okrpOkrGrid" data-reveal></div>
 
     <!-- Status donut + Stakeholder bars -->
-    <div class="pc-charts">
-      <div class="pc-card" data-reveal>
-        <div class="pc-card-title">Sub-Key Results by Status</div>
+    <div class="okrp-charts">
+      <div class="okrp-card" data-reveal>
+        <div class="okrp-card-title">Sub-Key Results by Status</div>
         <div id="statusDonut"></div>
       </div>
-      <div class="pc-card" data-reveal>
-        <div class="pc-card-title">Workload by Stakeholder</div>
+      <div class="okrp-card" data-reveal>
+        <div class="okrp-card-title">Workload by Stakeholder</div>
         <div id="stakeholderBars"></div>
       </div>
     </div>
 
     <!-- Table -->
-    <div class="pc-card pc-table-card" data-reveal>
-      <div class="pc-table-header">
-        <div class="pc-card-title">Sub-Key Results</div>
-        <div id="pcCount" class="pc-table-count"></div>
+    <div class="okrp-card okrp-table-card" data-reveal>
+      <div class="okrp-table-header">
+        <div class="okrp-card-title">Sub-Key Results</div>
+        <div id="okrpCount" class="okrp-table-count"></div>
       </div>
-      <div class="pc-table-wrap">
-        <table class="pc-table">
+      <div class="okrp-table-wrap">
+        <table class="okrp-table">
           <thead>
             <tr>
               <th>OKR</th>
@@ -97,11 +99,11 @@
               <th>Stakeholder</th>
               <th>Project Manager</th>
               <th>Period</th>
-              <th class="pc-th-progress">Progress</th>
+              <th class="okrp-th-progress">Progress</th>
               <th>Status</th>
             </tr>
           </thead>
-          <tbody id="pcTableBody"></tbody>
+          <tbody id="okrpTableBody"></tbody>
         </table>
       </div>
     </div>
@@ -110,13 +112,13 @@
 </main>
 
 <!-- ═══════════════ DETAIL MODAL (Fancy Card) ═══════════════ -->
-<div class="pc-modal" id="pcModal" hidden>
-  <div class="pc-modal-backdrop" id="pcModalBackdrop"></div>
-  <div class="pc-modal-card" id="pcModalCard" role="dialog" aria-modal="true" aria-labelledby="pcModalTitle">
-    <button class="pc-modal-close" id="pcModalClose" aria-label="Close">
+<div class="okrp-modal" id="okrpModal" hidden>
+  <div class="okrp-modal-backdrop" id="okrpModalBackdrop"></div>
+  <div class="okrp-modal-card" id="okrpModalCard" role="dialog" aria-modal="true" aria-labelledby="okrpModalTitle">
+    <button class="okrp-modal-close" id="okrpModalClose" aria-label="Close">
       <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
     </button>
-    <div class="pc-modal-body" id="pcModalBody"></div>
+    <div class="okrp-modal-body" id="okrpModalBody"></div>
   </div>
 </div>
 
@@ -133,7 +135,8 @@
   </div>
 </footer>
 
-<script src="js/profitco-data.js"></script>
-<script src="js/profitco.js"></script>
+<script src="../js/shared.js"></script>
+<script src="js/okr-progress-data.js"></script>
+<script src="js/okr-progress.js"></script>
 </body>
 </html>

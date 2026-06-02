@@ -12,13 +12,9 @@ const state = {
   search: "",
 };
 
-/* ═══════════════ HELPERS ═══════════════ */
-function unique(arr) { return Array.from(new Set(arr)); }
-function escapeHtml(s) {
-  return String(s || "").replace(/[&<>"']/g, c => ({
-    "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;"
-  }[c]));
-}
+/* ═══════════════ HELPERS (shared via window.SS) ═══════════════ */
+const escapeHtml = window.SS.escapeHtml;
+const unique = window.SS.unique;
 
 function getFiltered() {
   const q = state.search.trim().toLowerCase();
@@ -284,42 +280,10 @@ function initFilters() {
   });
 }
 
-/* ═══════════════ NAV + THEME ═══════════════ */
-function initNav() {
-  const hamburger = document.getElementById("navHamburger");
-  const links = document.getElementById("navLinks");
-  if (hamburger && links) {
-    hamburger.addEventListener("click", () => links.classList.toggle("open"));
-  }
-
-  const themeBtn = document.getElementById("themeToggle");
-  const saved = localStorage.getItem("ss-theme");
-  if (saved === "dark") document.documentElement.setAttribute("data-theme", "dark");
-  if (themeBtn) {
-    themeBtn.addEventListener("click", () => {
-      const cur = document.documentElement.getAttribute("data-theme");
-      const next = cur === "dark" ? "light" : "dark";
-      if (next === "dark") document.documentElement.setAttribute("data-theme", "dark");
-      else document.documentElement.removeAttribute("data-theme");
-      localStorage.setItem("ss-theme", next);
-    });
-  }
-}
-
-/* ═══════════════ REVEAL ANIMATIONS ═══════════════ */
-function initReveal() {
-  const io = new IntersectionObserver(entries => {
-    entries.forEach(e => {
-      if (e.isIntersecting) { e.target.classList.add("revealed"); io.unobserve(e.target); }
-    });
-  }, { threshold: 0.1 });
-  document.querySelectorAll("[data-reveal]").forEach(el => io.observe(el));
-}
-
-/* ═══════════════ BOOT ═══════════════ */
+/* ═══════════════ BOOT ═══════════════
+   Theme, nav hamburger, and scroll-reveal are auto-initialized by shared.js. */
 document.addEventListener("DOMContentLoaded", () => {
-  initNav();
   initFilters();
   renderAll();
-  initReveal();
+  window.SS.initReveal();
 });

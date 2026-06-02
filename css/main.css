@@ -53,22 +53,7 @@
   --hero-bg: linear-gradient(135deg, #041c2a 0%, #0a3347 40%, #0d4a5c 100%);
 }
 
-/* ══════════════════════════════════════════════════════════
-   RESET & BASE
-   ══════════════════════════════════════════════════════════ */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
-
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: 'Jost', sans-serif;
-  line-height: 1.6;
-  overflow-x: hidden;
-}
-
-a { color: inherit; text-decoration: none; }
-img { max-width: 100%; }
+/* Reset, body base, and a/img defaults live in /css/shared.css. */
 
 /* ══════════════════════════════════════════════════════════
    SCROLL REVEAL
@@ -883,6 +868,295 @@ body.home-single .hero-compact::before { display: none; }
   margin-top: 10px;
 }
 
+/* ══════════════════════════════════════════════════════════
+   HOME KPI SNAPSHOT (3 Power BI screenshots + CTA)
+   Each card has its own brand accent color (teal / mauve / gold)
+   that drives the eyebrow text + underline. Images live in
+   /dashboard-screenshots/<Header>.png and are refreshed manually
+   on the bi-weekly cadence (see project memory).
+   ══════════════════════════════════════════════════════════ */
+.home-kpis {
+  margin-top: 56px;   /* clear separation from the org-structure section above */
+}
+.home-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+  margin-bottom: 28px;
+}
+@media (max-width: 980px) {
+  .home-kpi-grid { grid-template-columns: 1fr; }
+}
+
+.kpi-card {
+  position: relative;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.35s var(--spring), box-shadow 0.35s var(--spring);
+  --kpi-accent: var(--deep-teal); /* per-card override via [data-accent] below */
+}
+.kpi-card[data-accent="teal"]  { --kpi-accent: var(--deep-teal); }
+.kpi-card[data-accent="mauve"] { --kpi-accent: var(--purple); }
+.kpi-card[data-accent="gold"]  { --kpi-accent: var(--gold); }
+
+.kpi-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-hover);
+}
+.kpi-card:hover .kpi-card-media img { transform: scale(1.04); }
+.kpi-card:hover .kpi-card-underline { width: 64px; }
+
+.kpi-card-media {
+  position: relative;
+  aspect-ratio: 2 / 1;
+  overflow: hidden;
+  /* Always white — the Power BI screenshots are dark-themed, so a white
+     matte frames them cleanly in both light and dark mode (only the card
+     body around it switches with the theme; headers/subheaders below
+     still adapt via var(--text) / var(--text-muted)). */
+  background: #ffffff;
+  border-bottom: 1px solid var(--border);
+  padding: 6px;
+}
+.kpi-card-media img {
+  width: 100%; height: 100%;
+  object-fit: contain;
+  display: block;
+  transition: transform 0.6s var(--smooth);
+}
+.kpi-card-media::after {
+  /* soft gradient blends the bottom edge of the image into the card body */
+  content: '';
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 56px;
+  background: linear-gradient(to top, rgba(0,0,0,0.06) 0%, transparent 100%);
+  pointer-events: none;
+}
+[data-theme="dark"] .kpi-card-media::after {
+  background: linear-gradient(to top, rgba(0,0,0,0.22) 0%, transparent 100%);
+}
+/* Graceful fallback: if the screenshot 404s the onerror handler tags the
+   container, and we show a "coming soon" placeholder in its place. */
+.kpi-card-media--missing::before {
+  content: 'Screenshot coming soon';
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--text-dim);
+  font-size: 0.82rem;
+  font-style: italic;
+  letter-spacing: 0.04em;
+}
+
+.kpi-card-body {
+  padding: 18px 22px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.kpi-card-eyebrow {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--kpi-accent);
+  opacity: 0.85;
+}
+.kpi-card-header {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 700;
+  font-size: 1.7rem;
+  letter-spacing: 0.02em;
+  color: var(--text);
+  margin: 0;
+  line-height: 1.15;
+}
+.kpi-card-underline {
+  width: 38px;
+  height: 2px;
+  background: var(--kpi-accent);
+  border-radius: 1px;
+  margin: 6px 0 8px;
+  transition: width 0.4s var(--spring);
+}
+.kpi-card-subheader {
+  font-size: 0.85rem;
+  font-weight: 400;
+  line-height: 1.55;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* Mauve-gradient pill CTA — distinct from the teal OKR CTA below it. */
+.home-kpi-cta {
+  display: flex;
+  justify-content: center;
+}
+.home-kpi-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 26px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #8e5f84 0%, #a06596 55%, var(--purple) 100%);
+  color: #fff;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.92rem;
+  letter-spacing: 0.04em;
+  box-shadow: 0 6px 22px rgba(142,95,132,0.28);
+  transition: transform 0.3s var(--spring), box-shadow 0.3s var(--spring);
+}
+.home-kpi-cta-btn svg {
+  width: 18px; height: 18px;
+  color: var(--gold);
+  transition: transform 0.3s var(--spring);
+}
+.home-kpi-cta-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(142,95,132,0.36);
+}
+.home-kpi-cta-btn:hover svg { transform: translateX(4px); }
+
+/* ══════════════════════════════════════════════════════════
+   HOME OKR SUMMARY (3 OKR overview cards + CTA button)
+   Data is shared with the OKR Progress page so this section
+   updates whenever okr-progress-data.js is regenerated.
+
+   Sits below the KPI section, so no extra top margin — the
+   standard .home-row padding handles spacing.
+   ══════════════════════════════════════════════════════════ */
+.home-okrs {
+  /* no margin-top: flows naturally from the KPI section above */
+}
+.home-okr-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  margin-bottom: 22px;
+}
+.home-okr-loading {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  padding: 32px;
+}
+@media (max-width: 980px) {
+  .home-okr-grid { grid-template-columns: 1fr; }
+}
+
+/* OKR overview card — mirrors the OKR Progress page so a click takes the
+   user to the full report with the same visual context. */
+.okr-card {
+  position: relative;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 22px 24px 20px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  transition: transform var(--transition), box-shadow var(--transition);
+}
+.okr-card::before {
+  content: '';
+  position: absolute; left: 0; top: 0; bottom: 0;
+  width: 4px; background: var(--okr-color, var(--deep-teal));
+}
+.okr-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-hover); }
+.okr-card-eyebrow {
+  font-size: 0.62rem; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--text-dim);
+  margin-bottom: 8px;
+}
+.okr-card-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 700; font-size: 1.28rem;
+  letter-spacing: 0.01em;
+  color: var(--text);
+  margin-bottom: 16px;
+  line-height: 1.3;
+}
+.okr-card-stats {
+  display: flex; align-items: center; gap: 16px;
+  margin-bottom: 14px;
+}
+.okr-ring-wrap {
+  position: relative;
+  width: 70px; height: 70px;
+  flex-shrink: 0;
+}
+.okr-ring-val {
+  position: absolute; inset: 0;
+  display: grid; place-items: center;
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 700; font-size: 1.15rem;
+  color: var(--text);
+}
+.okr-card-metrics { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+.okr-metric-row {
+  display: flex; justify-content: space-between;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+.okr-metric-row b { color: var(--text); font-weight: 600; }
+.okr-card-status-strip {
+  display: flex; gap: 6px;
+  height: 6px; border-radius: 3px;
+  overflow: hidden;
+  background: var(--bg-elevated);
+}
+.okr-status-seg { transition: flex 0.5s var(--smooth); }
+.okr-card-legend {
+  display: flex; flex-wrap: wrap; gap: 10px;
+  margin-top: 10px;
+  font-size: 0.7rem; color: var(--text-dim);
+}
+.okr-legend-item { display: flex; align-items: center; gap: 5px; }
+.okr-legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+/* Centered CTA button below the OKR grid. */
+.home-okr-cta {
+  display: flex;
+  justify-content: center;
+}
+.home-okr-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 26px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--deep-teal) 0%, var(--deep-teal-blue) 100%);
+  color: #fff;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.92rem;
+  letter-spacing: 0.04em;
+  box-shadow: 0 6px 22px rgba(6,71,98,0.28);
+  transition: transform 0.3s var(--spring), box-shadow 0.3s var(--spring);
+}
+.home-okr-cta-btn svg {
+  width: 18px; height: 18px;
+  color: var(--gold);
+  transition: transform 0.3s var(--spring);
+}
+.home-okr-cta-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(6,71,98,0.36);
+}
+.home-okr-cta-btn:hover svg { transform: translateX(4px); }
+
 /* --- DEPT CARDS (glass on teal) --- */
 body.home-single .dept-card {
   background: rgba(255,255,255,0.05);
@@ -1017,8 +1291,8 @@ body.home-single .tool-desc {
    HOME ORG STRUCTURE (hierarchical tree on homepage)
    ══════════════════════════════════════════════════════════ */
 .home-org {
-  padding: 24px 48px 12px;
-  max-width: 1320px;
+  padding: 24px 32px 12px;
+  max-width: 1520px;
   margin: 0 auto;
   width: 100%;
 }
@@ -1028,12 +1302,129 @@ body.home-single .tool-desc {
   text-align: center;
 }
 
-.home-org-tree {
+/* 2-column wrapper: chart on the left, CTA cards stacked on the right.
+   Generous gap keeps the chart and CTA visually separate. Collapses to a
+   single column at <1024px so the chart still breathes. */
+.home-org-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 2.4fr) minmax(290px, 1fr);
+  gap: 56px;
+  align-items: stretch;
   margin-top: 16px;
+}
+.home-org-tree-wrap { min-width: 0; }
+
+.home-org-tree {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0;
+}
+
+/* Right column: two big vertical CTA cards stacked. */
+.home-org-cta {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+.home-org-cta-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px 22px 20px;
+  border-radius: var(--radius-lg);
+  color: #fff;
+  text-decoration: none;
+  overflow: hidden;
+  box-shadow: 0 4px 18px rgba(6,71,98,0.18);
+  transition: transform 0.35s var(--spring), box-shadow 0.35s var(--spring);
+}
+.home-org-cta-card[data-cta-color="teal"] {
+  background: linear-gradient(135deg, var(--deep-teal) 0%, var(--deep-teal-blue) 60%, var(--teal) 100%);
+}
+.home-org-cta-card[data-cta-color="mauve"] {
+  background: linear-gradient(135deg, #8e5f84 0%, #a06596 55%, var(--purple) 100%);
+  box-shadow: 0 4px 18px rgba(142,95,132,0.22);
+}
+.home-org-cta-card::before {
+  /* Soft brand-gold highlight in the corner. */
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 70% 70% at 100% 0%, rgba(var(--gold-r), 0.16) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 60% at 0% 100%, rgba(255,255,255,0.06) 0%, transparent 60%);
+  pointer-events: none;
+}
+.home-org-cta-card:hover {
+  transform: translateY(-3px) scale(1.012);
+  box-shadow: 0 12px 32px rgba(6,71,98,0.32);
+}
+.home-org-cta-card[data-cta-color="mauve"]:hover {
+  box-shadow: 0 12px 32px rgba(142,95,132,0.36);
+}
+
+.home-org-cta-icon {
+  position: relative; z-index: 1;
+  width: 44px; height: 44px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.14);
+  display: grid; place-items: center;
+  color: rgba(255,255,255,0.96);
+  transition: transform 0.35s var(--spring);
+}
+.home-org-cta-icon svg { width: 22px; height: 22px; }
+.home-org-cta-card:hover .home-org-cta-icon { transform: rotate(-4deg) scale(1.06); }
+
+.home-org-cta-body {
+  position: relative; z-index: 1;
+  display: flex; flex-direction: column;
+  gap: 4px;
+}
+.home-org-cta-eyebrow {
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold);
+  opacity: 0.95;
+}
+.home-org-cta-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 700;
+  font-size: 1.45rem;
+  letter-spacing: 0.02em;
+  line-height: 1.18;
+  text-shadow: 0 1px 6px rgba(0,0,0,0.18);
+}
+.home-org-cta-desc {
+  font-size: 0.82rem;
+  font-weight: 300;
+  color: rgba(255,255,255,0.86);
+  line-height: 1.5;
+  max-width: 360px;
+}
+.home-org-cta-arrow {
+  position: absolute; right: 20px; bottom: 18px;
+  width: 20px; height: 20px;
+  color: rgba(255,255,255,0.78);
+  transition: transform 0.3s var(--spring), color 0.3s var(--spring);
+}
+.home-org-cta-card:hover .home-org-cta-arrow {
+  transform: translateX(5px);
+  color: var(--gold);
+}
+
+@media (max-width: 1023px) {
+  .home-org-layout {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+  .home-org-cta { flex-direction: row; }
+}
+@media (max-width: 640px) {
+  .home-org-cta { flex-direction: column; }
 }
 
 .org-level {
@@ -1323,7 +1714,7 @@ body.home-single .tool-desc {
   .home-row-title { font-size: 1.78rem; }
   .home-row-divider { margin-top: 8px; }
 
-  .home-org { flex-shrink: 0; padding: 22px 48px 12px; }
+  .home-org { flex-shrink: 0; padding: 22px 32px 12px; }
 
   body.home-single .dept-grid {
     display: grid;
@@ -1332,7 +1723,7 @@ body.home-single .tool-desc {
   }
   body.home-single .tools-grid {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 14px;
   }
 

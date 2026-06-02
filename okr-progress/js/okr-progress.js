@@ -1,7 +1,8 @@
-/* ═══════════════ PROFIT.CO MONTHLY REPORTS — LOGIC ═══════════════ */
-const ROWS = window.PROFITCO_ROWS;
+/* ═══════════════ OKR PROGRESS — LOGIC ═══════════════ */
+const ROWS = window.OKR_PROGRESS_ROWS;
 const OKR_COLORS = window.OKR_COLORS;
 const STATUS_COLORS = window.STATUS_COLORS;
+const SKR_COLORS = window.SKR_COLORS;
 
 /* Resolve effective status — Excel leaves it blank on some rows. Derive a
    safe display value so visuals don't have a "missing" bucket. */
@@ -25,13 +26,9 @@ const state = {
   spotlightOpen: false,
 };
 
-/* ═══════════════ HELPERS ═══════════════ */
-function escapeHtml(s) {
-  return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({
-    "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;"
-  }[c]));
-}
-function unique(arr) { return Array.from(new Set(arr.filter(x => x != null && x !== ""))); }
+/* ═══════════════ HELPERS (shared via window.SS) ═══════════════ */
+const escapeHtml = window.SS.escapeHtml;
+const unique = window.SS.unique;
 function pct(v) { return Math.round((v || 0) * 100); }
 function initials(name) {
   if (!name) return "—";
@@ -39,6 +36,9 @@ function initials(name) {
 }
 function okrPalette(name) {
   return OKR_COLORS[name] || { bg: "#065577", light: "#28738A", pale: "rgba(6,85,119,0.12)" };
+}
+function skrPalette(r) {
+  return (SKR_COLORS && SKR_COLORS[r.id]) || okrPalette(r.okr);
 }
 function statusPalette(s) {
   return STATUS_COLORS[s] || STATUS_COLORS["Not Started"];
@@ -54,6 +54,59 @@ function darken(hex, amt = 0.18) {
   const r = parseInt(c.slice(0,2), 16), g = parseInt(c.slice(2,4), 16), b = parseInt(c.slice(4,6), 16);
   const f = (n) => Math.max(0, Math.min(255, Math.round(n * (1 - amt))));
   return `rgb(${f(r)}, ${f(g)}, ${f(b)})`;
+}
+
+/* Decide how a row's progress bar should be scaled:
+   - "completion" — goal is full completion (1.0) or unset. Bar fills 0→100%
+     reading the raw progress fraction; the bar IS the journey to 100%.
+   - "target"     — goal is a specific target (< 1.0) and progress is still
+     below it (e.g. 69% actual vs 75% goal). Bar fills 0→goal, so "full bar"
+     = goal achieved, and you can see how close you are.
+   - "exceeded"   — goal is a specific target (< 1.0) and progress is at or
+     above it (e.g. 87% actual vs 85% goal). Bar switches to the 0→100 scale
+     so the real achievement shows on the bar instead of clamping to "full."
+   Returns null if there is no progress value to plot. */
+function progressBarInfo(r) {
+  if (r.progress == null) return null;
+  const progressPct = pct(r.progress);
+  const goalPct = r.plannedProgress != null ? pct(r.plannedProgress) : null;
+
+  // No goal, or goal is full completion — straight 0-100 scale.
+  if (r.plannedProgress == null || r.plannedProgress >= 1) {
+    return {
+      mode: "completion",
+      progressPct,
+      goalPct,
+      barFill: Math.max(0, Math.min(100, progressPct)),
+      exceeded: false,
+      tooltip: goalPct != null
+        ? `Progress ${progressPct}% / Goal ${goalPct}%`
+        : `Progress ${progressPct}%`
+    };
+  }
+
+  // Target met or exceeded — switch to 0-100 scale so the real value is visible.
+  if (r.progress >= r.plannedProgress) {
+    return {
+      mode: "exceeded",
+      progressPct,
+      goalPct,
+      barFill: Math.max(0, Math.min(100, progressPct)),
+      exceeded: true,
+      tooltip: `Progress ${progressPct}% / Goal ${goalPct}% · goal met`
+    };
+  }
+
+  // Target not yet met — 0-goal scale, so the bar tracks "how close to goal."
+  const ratio = (r.progress / r.plannedProgress) * 100;
+  return {
+    mode: "target",
+    progressPct,
+    goalPct,
+    barFill: Math.max(0, Math.min(100, ratio)),
+    exceeded: false,
+    tooltip: `Progress ${progressPct}% / Goal ${goalPct}%`
+  };
 }
 
 /* ═══════════════ FILTER ═══════════════ */
@@ -110,7 +163,7 @@ function renderKpis(filtered) {
     ? Math.round(filtered.reduce((s, r) => s + (r.progress || 0), 0) / total * 100)
     : 0;
 
-  document.getElementById("pcKpis").innerHTML = `
+  document.getElementById("okrpKpis").innerHTML = `
     <div class="kpi-card" style="--kpi-color: var(--bp-teal);">
       <div class="kpi-label">OKRs</div>
       <div class="kpi-value">${okrCount}</div>
@@ -146,7 +199,7 @@ function renderKpis(filtered) {
 
 /* ═══════════════ RENDER: OKR CARDS ═══════════════ */
 function renderOkrCards(filtered) {
-  const target = document.getElementById("pcOkrGrid");
+  const target = document.getElementById("okrpOkrGrid");
   const byOkr = {};
   filtered.forEach(r => {
     if (!byOkr[r.okr]) byOkr[r.okr] = [];
@@ -203,14 +256,14 @@ function renderOkrCards(filtered) {
     `;
   }).join("");
 
-  target.innerHTML = cards || `<div class="pc-empty" style="grid-column: 1/-1;">No objectives in view.</div>`;
+  target.innerHTML = cards || `<div class="okrp-empty" style="grid-column: 1/-1;">No objectives in view.</div>`;
 
   // Click to filter
   target.querySelectorAll(".okr-card").forEach(el => {
     el.addEventListener("click", () => {
       state.okr = el.dataset.okr;
       renderAll();
-      document.querySelector(".pc-filters").scrollIntoView({ behavior: "smooth", block: "start" });
+      document.querySelector(".okrp-filters").scrollIntoView({ behavior: "smooth", block: "start" });
     });
   });
 }
@@ -226,7 +279,7 @@ function renderStatusDonut(filtered) {
   const total = data.reduce((s, d) => s + d.value, 0);
 
   const target = document.getElementById("statusDonut");
-  if (!total) { target.innerHTML = `<div class="pc-empty">No data.</div>`; return; }
+  if (!total) { target.innerHTML = `<div class="okrp-empty">No data.</div>`; return; }
 
   const size = 180, cx = size/2, cy = size/2, r = size*0.36, sw = size*0.14;
   let cumulative = 0;
@@ -267,7 +320,7 @@ function renderStakeholderBars(filtered) {
   const max = Math.max(...rows.map(r => r.value), 1);
 
   const target = document.getElementById("stakeholderBars");
-  if (!rows.length) { target.innerHTML = `<div class="pc-empty">No data.</div>`; return; }
+  if (!rows.length) { target.innerHTML = `<div class="okrp-empty">No data.</div>`; return; }
 
   target.innerHTML = rows.map(r => {
     const pctW = (r.value / max) * 100;
@@ -286,12 +339,12 @@ function renderStakeholderBars(filtered) {
 
 /* ═══════════════ RENDER: TABLE ═══════════════ */
 function renderTable(filtered) {
-  const body = document.getElementById("pcTableBody");
-  const count = document.getElementById("pcCount");
+  const body = document.getElementById("okrpTableBody");
+  const count = document.getElementById("okrpCount");
   count.textContent = `Showing ${filtered.length} of ${ROWS.length}`;
 
   if (!filtered.length) {
-    body.innerHTML = `<tr><td colspan="8"><div class="pc-empty">No sub-key results match your filters.</div></td></tr>`;
+    body.innerHTML = `<tr><td colspan="8"><div class="okrp-empty">No sub-key results match your filters.</div></td></tr>`;
     return;
   }
   const sorted = filtered.slice().sort((a,b) => {
@@ -302,24 +355,29 @@ function renderTable(filtered) {
 
   body.innerHTML = sorted.map(r => {
     const c = okrPalette(r.okr);
+    const skr = skrPalette(r);
     const s = effectiveStatus(r);
     const sc = statusPalette(s);
-    const p = pct(r.progress);
-    const pp = pct(r.plannedProgress);
-    const progressHtml = r.progress == null
+    const info = progressBarInfo(r);
+    const showGoal = info && info.goalPct != null && info.mode !== "completion";
+    const progressHtml = !info
       ? `<span style="color: var(--text-dim); font-size: 0.74rem;">—</span>`
       : `
-        <div class="mini-progress" title="Progress ${p}% / Planned ${pp}%">
-          <div class="mini-progress-actual" style="width:${p}%; --mp-color: ${c.bg}; --mp-color-light: ${c.light};"></div>
-          ${r.plannedProgress != null ? `<div class="mini-progress-planned" style="left:${pp}%;"></div>` : ""}
-          <div class="mini-progress-label">${p}%</div>
+        <div class="mini-progress is-${info.mode} ${info.exceeded ? "is-exceeded" : ""}" title="${info.tooltip}">
+          <div class="mini-progress-actual" style="width:${info.barFill}%; --mp-color: ${c.bg}; --mp-color-light: ${c.light};"></div>
+          <div class="mini-progress-label">${info.progressPct}%${showGoal ? ` <span class="mp-goal">/ ${info.goalPct}%</span>` : ""}</div>
         </div>
       `;
     return `
       <tr data-id="${r.id}">
         <td class="cell-okr"><span class="okr-badge" style="background:${c.pale}; color:${c.bg};">${escapeHtml(r.okr)}</span></td>
         <td class="cell-kr">${escapeHtml(r.keyResult)}</td>
-        <td class="cell-skr">${escapeHtml(r.subKeyResult)}</td>
+        <td class="cell-skr">
+          <div class="skr-wrap" style="background:${skr.pale}; border-left-color:${skr.bg};">
+            <span class="skr-dot" style="background:${skr.bg};"></span>
+            <span class="skr-text">${escapeHtml(r.subKeyResult)}</span>
+          </div>
+        </td>
         <td class="cell-person">${escapeHtml(r.stakeholder)}</td>
         <td class="cell-person">${escapeHtml(r.projectManager)}</td>
         <td class="cell-period">${escapeHtml(r.period)}</td>
@@ -448,13 +506,13 @@ function renderSpotlight() {
     <div class="sd-group">
       <div class="sd-group-label">Sub-Key Results <span class="sd-group-count">${m.skr.length}</span></div>
       ${m.skr.map(r => {
-        const c = okrPalette(r.okr);
+        const skr = skrPalette(r);
         const s = effectiveStatus(r);
         const sc = statusPalette(s);
         const idx = flat.length;
         flat.push({ kind: "skr", key: r.id });
         return `
-          <div class="sd-item" data-flat="${idx}" style="--sd-color:${c.bg}; --sd-color-pale:${c.pale};">
+          <div class="sd-item" data-flat="${idx}" style="--sd-color:${skr.bg}; --sd-color-pale:${skr.pale};">
             <div class="sd-item-icon">SKR</div>
             <div class="sd-item-body">
               <div class="sd-item-title">${highlight(r.subKeyResult, q)}</div>
@@ -579,11 +637,11 @@ function openOkrDetail(okr) {
 }
 
 function showModal() {
-  document.getElementById("pcModal").hidden = false;
+  document.getElementById("okrpModal").hidden = false;
   document.body.classList.add("modal-open");
 }
 function closeModal() {
-  document.getElementById("pcModal").hidden = true;
+  document.getElementById("okrpModal").hidden = true;
   document.body.classList.remove("modal-open");
 }
 
@@ -601,13 +659,15 @@ function ringSvg(cx, cy, r, sw, pct, color) {
 
 function renderSkrDetail(r) {
   const c = okrPalette(r.okr);
+  const skr = skrPalette(r);
   const s = effectiveStatus(r);
   const sc = statusPalette(s);
   const p = pct(r.progress);
   const pp = pct(r.plannedProgress);
   const delta = (r.progress != null && r.plannedProgress != null) ? p - pp : null;
+  const info = progressBarInfo(r);
 
-  const bannerCss = `--mc-color: ${c.bg}; --mc-color-light: ${c.light}; --mc-color-dark: ${darken(c.bg, 0.25)}; --mc-color-pale: ${c.pale}; --mc-status-color: ${sc.bg}; --mc-status-pale: ${sc.pale};`;
+  const bannerCss = `--mc-color: ${c.bg}; --mc-color-light: ${c.light}; --mc-color-dark: ${darken(c.bg, 0.25)}; --mc-color-pale: ${c.pale}; --mc-status-color: ${sc.bg}; --mc-status-pale: ${sc.pale}; --mc-skr-color: ${skr.bg}; --mc-skr-pale: ${skr.pale};`;
 
   // Related SKRs in same KR
   const related = ROWS.filter(x => x.okr === r.okr && x.keyResult === r.keyResult && x.id !== r.id);
@@ -618,8 +678,9 @@ function renderSkrDetail(r) {
         ${related.map(rr => {
           const ss = effectiveStatus(rr);
           const ssc = statusPalette(ss);
+          const rskr = skrPalette(rr);
           return `
-            <div class="mc-related-item" data-id="${rr.id}">
+            <div class="mc-related-item" data-id="${rr.id}" style="background:${rskr.pale}; border-left:3px solid ${rskr.bg};">
               <div class="mc-related-skr">${escapeHtml(rr.subKeyResult)}</div>
               <div class="mc-related-meta">
                 <span class="status-pill" style="background:${ssc.pale}; color:${ssc.bg};"><span class="status-dot" style="background:${ssc.bg};"></span>${escapeHtml(ss)}</span>
@@ -650,12 +711,13 @@ function renderSkrDetail(r) {
         <b>${escapeHtml(r.keyResult)}</b>
       </div>
       <div class="mc-level-badge">Sub-Key Result</div>
-      <h2 class="mc-title" id="pcModalTitle">${escapeHtml(r.subKeyResult)}</h2>
+      <h2 class="mc-title" id="okrpModalTitle">${escapeHtml(r.subKeyResult)}</h2>
       <div class="mc-banner-meta">
         <span class="mc-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>${escapeHtml(r.period)}</span>
         <span class="mc-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/></svg>${escapeHtml(r.stakeholder)}</span>
         <span class="mc-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>PM · ${escapeHtml(r.projectManager)}</span>
       </div>
+      <div class="mc-skr-stripe" style="background:${skr.bg};"></div>
     </div>
 
     <div class="mc-body" style="${bannerCss}">
@@ -673,14 +735,14 @@ function renderSkrDetail(r) {
           </div>
         </div>
         <div class="mc-progress-detail">
-          <h4>Performance vs Plan</h4>
+          <h4>Performance vs Goal</h4>
           <div class="mc-comparison">
             <div class="mc-comp-block">
-              <div class="mc-comp-label">Actual</div>
+              <div class="mc-comp-label">Progress</div>
               <div class="mc-comp-value">${r.progress == null ? "—" : p + "%"}</div>
             </div>
             <div class="mc-comp-block">
-              <div class="mc-comp-label">Planned</div>
+              <div class="mc-comp-label">Goal</div>
               <div class="mc-comp-value">${r.plannedProgress == null ? "—" : pp + "%"}</div>
             </div>
             ${delta != null ? `
@@ -694,10 +756,18 @@ function renderSkrDetail(r) {
               </div>
             ` : ""}
           </div>
-          <div class="mc-progress-bar-wrap">
-            <div class="mc-progress-bar-actual" style="width:${p}%;"></div>
-            ${r.plannedProgress != null ? `<div class="mc-progress-bar-planned" style="left:${pp}%;"></div>` : ""}
-          </div>
+          ${info ? `
+            <div class="mc-progress-bar-wrap ${info.exceeded ? "is-exceeded" : ""}">
+              <div class="mc-progress-bar-actual" style="width:${info.barFill}%;"></div>
+            </div>
+            <div class="mc-progress-scale-note">
+              ${info.mode === "target"
+                ? `Scale: 0–${info.goalPct}% (bar full = goal reached)`
+                : info.mode === "exceeded"
+                ? `Scale: 0–100% · <b>goal met</b>`
+                : `Scale: 0–100% (full completion)`}
+            </div>
+          ` : ""}
         </div>
       </div>
 
@@ -747,7 +817,7 @@ function renderSkrDetail(r) {
 
     </div>
   `;
-  document.getElementById("pcModalBody").innerHTML = body;
+  document.getElementById("okrpModalBody").innerHTML = body;
 
   // Wire related-item clicks
   document.querySelectorAll(".mc-related-item").forEach(el => {
@@ -781,7 +851,7 @@ function renderAggregateDetail({ kind, okr, title, rows }) {
       <div class="mc-banner-grid"></div>
       <div class="mc-breadcrumb">${breadcrumbHtml}</div>
       <div class="mc-level-badge">${escapeHtml(kind)}</div>
-      <h2 class="mc-title" id="pcModalTitle">${escapeHtml(title)}</h2>
+      <h2 class="mc-title" id="okrpModalTitle">${escapeHtml(title)}</h2>
       <div class="mc-banner-meta">
         <span class="mc-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${rows.length} Sub-KRs</span>
         ${kind === "Objective" ? `<span class="mc-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>${krCount} Key Results</span>` : ""}
@@ -807,11 +877,11 @@ function renderAggregateDetail({ kind, okr, title, rows }) {
           <h4>Aggregate Performance</h4>
           <div class="mc-comparison">
             <div class="mc-comp-block">
-              <div class="mc-comp-label">Avg Actual</div>
+              <div class="mc-comp-label">Avg Progress</div>
               <div class="mc-comp-value">${avg}%</div>
             </div>
             <div class="mc-comp-block">
-              <div class="mc-comp-label">Avg Planned</div>
+              <div class="mc-comp-label">Avg Goal</div>
               <div class="mc-comp-value">${avgPlan}%</div>
             </div>
             <div class="mc-comp-block">
@@ -827,6 +897,7 @@ function renderAggregateDetail({ kind, okr, title, rows }) {
             <div class="mc-progress-bar-actual" style="width:${avg}%;"></div>
             <div class="mc-progress-bar-planned" style="left:${avgPlan}%;"></div>
           </div>
+          <div class="mc-progress-scale-note">Averaged across ${rows.length} Sub-KR${rows.length !== 1 ? "s" : ""} on a 0–100% scale.</div>
         </div>
       </div>
 
@@ -877,8 +948,9 @@ function renderAggregateDetail({ kind, okr, title, rows }) {
           ${rows.map(rr => {
             const ss = effectiveStatus(rr);
             const ssc = statusPalette(ss);
+            const rskr = skrPalette(rr);
             return `
-              <div class="mc-related-item" data-id="${rr.id}">
+              <div class="mc-related-item" data-id="${rr.id}" style="background:${rskr.pale}; border-left:3px solid ${rskr.bg};">
                 <div class="mc-related-skr">${escapeHtml(rr.subKeyResult)}</div>
                 <div class="mc-related-meta">
                   <span class="status-pill" style="background:${ssc.pale}; color:${ssc.bg};"><span class="status-dot" style="background:${ssc.bg};"></span>${escapeHtml(ss)}</span>
@@ -892,17 +964,17 @@ function renderAggregateDetail({ kind, okr, title, rows }) {
 
     </div>
   `;
-  document.getElementById("pcModalBody").innerHTML = body;
+  document.getElementById("okrpModalBody").innerHTML = body;
   document.querySelectorAll(".mc-related-item").forEach(el => {
     el.addEventListener("click", () => openDetailById(parseInt(el.dataset.id, 10)));
   });
 }
 
 function initModal() {
-  document.getElementById("pcModalClose").addEventListener("click", closeModal);
-  document.getElementById("pcModalBackdrop").addEventListener("click", closeModal);
+  document.getElementById("okrpModalClose").addEventListener("click", closeModal);
+  document.getElementById("okrpModalBackdrop").addEventListener("click", closeModal);
   document.addEventListener("keydown", e => {
-    if (e.key === "Escape" && !document.getElementById("pcModal").hidden) closeModal();
+    if (e.key === "Escape" && !document.getElementById("okrpModal").hidden) closeModal();
   });
 }
 
@@ -921,43 +993,21 @@ function initFilters() {
   });
 }
 
-/* ═══════════════ NAV + THEME ═══════════════ */
-function initNav() {
-  const hamburger = document.getElementById("navHamburger");
-  const links = document.getElementById("navLinks");
-  if (hamburger && links) {
-    hamburger.addEventListener("click", () => links.classList.toggle("open"));
-  }
-  const themeBtn = document.getElementById("themeToggle");
-  const saved = localStorage.getItem("ss-theme");
-  if (saved === "dark") document.documentElement.setAttribute("data-theme", "dark");
-  if (themeBtn) {
-    themeBtn.addEventListener("click", () => {
-      const cur = document.documentElement.getAttribute("data-theme");
-      const next = cur === "dark" ? "light" : "dark";
-      if (next === "dark") document.documentElement.setAttribute("data-theme", "dark");
-      else document.documentElement.removeAttribute("data-theme");
-      localStorage.setItem("ss-theme", next);
-    });
-  }
+/* ═══════════════ BOOT ═══════════════
+   Theme, nav hamburger, and scroll-reveal are auto-initialized by shared.js. */
+/* Read deep-link query params (e.g. ?okr=...) and seed the filter state.
+   Lets the home-page OKR cards jump straight into a filtered view here. */
+function applyUrlFilters() {
+  const params = new URLSearchParams(window.location.search);
+  const okrParam = params.get("okr");
+  if (okrParam && ROWS.some(r => r.okr === okrParam)) state.okr = okrParam;
 }
 
-/* ═══════════════ REVEAL ANIMATIONS ═══════════════ */
-function initReveal() {
-  const io = new IntersectionObserver(entries => {
-    entries.forEach(e => {
-      if (e.isIntersecting) { e.target.classList.add("revealed"); io.unobserve(e.target); }
-    });
-  }, { threshold: 0.1 });
-  document.querySelectorAll("[data-reveal]").forEach(el => io.observe(el));
-}
-
-/* ═══════════════ BOOT ═══════════════ */
 document.addEventListener("DOMContentLoaded", () => {
-  initNav();
+  applyUrlFilters();
   initFilters();
   initSpotlight();
   initModal();
   renderAll();
-  initReveal();
+  window.SS.initReveal();
 });

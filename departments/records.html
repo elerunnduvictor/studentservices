@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Student Records, Registration, and Support — Student Services</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/shared.css">
 <link rel="stylesheet" href="css/dept.css">
 <link rel="stylesheet" href="../org-chart/css/variables.css">
 <link rel="stylesheet" href="../org-chart/css/tree.css">
@@ -221,37 +222,6 @@
   });
 })();
 </script>
-<script>
-/* Theme Toggle */
-(function() {
-  var saved = localStorage.getItem('ss-theme');
-  if (saved) document.documentElement.setAttribute('data-theme', saved);
-  document.getElementById('themeToggle').addEventListener('click', function() {
-    var current = document.documentElement.getAttribute('data-theme');
-    var next = current === 'dark' ? 'light' : 'dark';
-    document.documentElement.setAttribute('data-theme', next);
-    localStorage.setItem('ss-theme', next);
-  });
-})();
-
-/* Mobile Nav */
-document.getElementById('navHamburger').addEventListener('click', function() {
-  document.getElementById('navLinks').classList.toggle('open');
-});
-
-/* Scroll Reveal */
-(function() {
-  var els = document.querySelectorAll('[data-reveal]');
-  var observer = new IntersectionObserver(function(entries) {
-    entries.forEach(function(entry) {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('revealed');
-        observer.unobserve(entry.target);
-      }
-    });
-  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
-  els.forEach(function(el) { observer.observe(el); });
-})();
-</script>
+<script src="../js/shared.js"></script>
 </body>
 </html>

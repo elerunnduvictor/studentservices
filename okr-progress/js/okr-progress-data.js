@@ -1,12 +1,12 @@
-/* ═══════════════ PROFIT.CO MONTHLY REPORTS — DATA ═══════════════
-   Source: "Profit.co Monthly Reports.xlsx" → Sheet1
+/* ═══════════════ OKR PROGRESS — DATA ═══════════════
+   Source: monthly OKR report (Sheet1)
    Columns: OKR, Key Result, Sub-Key Result, Period, Stakeholder,
             Project Manager, Progress, Planned Progress, Status,
             Trend, Comment, Update Date
    Progress / Planned Progress are stored as 0–1 fractions.
-   ══════════════════════════════════════════════════════════════════ */
+   ══════════════════════════════════════════════════════════ */
 
-window.PROFITCO_ROWS = [
+window.OKR_PROGRESS_ROWS = [
   { id: 1,  okr: "Clarify and refine the Student Services organization", keyResult: "Implement performance evaluation and professional development plans", subKeyResult: "Implement professional development plans for all Student Service employees to begin being utilized by each team member in Q4", period: "Annual - 2026", stakeholder: "Ben Packer", projectManager: "Jess Swinburne", progress: 0.15, plannedProgress: 1, status: "On Track", trend: null, comment: null, updateDate: null },
   { id: 2,  okr: "Clarify and refine the Student Services organization", keyResult: "Implement performance evaluation and professional development plans", subKeyResult: "Design and implement revised performance evaluation program by September 1 to be conducted with each team member in Q4", period: "Annual - 2026", stakeholder: "Ben Packer", projectManager: "Jess Swinburne", progress: 0.30, plannedProgress: 1, status: "On Track", trend: null, comment: null, updateDate: null },
   { id: 3,  okr: "Clarify and refine the Student Services organization", keyResult: "Create Student Services team member awareness & role development", subKeyResult: "Student Services Survey Results: Confusion of Student Services Roles (other departments)", period: "Annual - 2026", stakeholder: "Ben Packer", projectManager: "Jess Swinburne", progress: 0.09, plannedProgress: 0.09, status: "On Track", trend: null, comment: null, updateDate: null },
@@ -59,3 +59,50 @@ window.STATUS_COLORS = {
   "Not Started": { bg: "#7F898A", pale: "rgba(127,137,138,0.14)" },
   "Archived":    { bg: "#58595B", pale: "rgba(88,89,91,0.14)" }
 };
+
+/* ─────────────────────────────────────────────────────────────────────────
+   SKR_COLORS — one distinct, brand-derived color per Sub-Key Result.
+
+   Generated from 8 BYU-Pathway HSL anchors (deep teal, teal, green-teal,
+   mauve, gold, green, red-orange, purple) × 4 lightness/hue variants. The
+   8 anchors cycle on the inner loop so consecutive SKR ids land on
+   maximally-different hues, then the 4 variants nudge lightness/hue to
+   keep each of the 32 results visually distinct while staying inside the
+   brand palette.
+
+   Keyed by `id` so each SKR keeps the same color across the monthly data
+   refresh. Same hex in light + dark mode (matches OKR_COLORS behavior).
+   ───────────────────────────────────────────────────────────────────── */
+window.SKR_COLORS = (function () {
+  var anchors = [
+    { h: 198, s: 90, l: 23 },  // Deep teal       ~#065577
+    { h: 188, s: 45, l: 42 },  // Teal            ~#3A929D
+    { h: 175, s: 75, l: 30 },  // Green-teal      ~#138980
+    { h: 318, s: 25, l: 62 },  // Mauve           ~#B687AC
+    { h:  40, s: 75, l: 47 },  // Brand gold      ~#D4A020
+    { h:  71, s: 53, l: 50 },  // Green           ~#A2C23D
+    { h:  13, s: 67, l: 47 },  // Red / orange    ~#CB4A27
+    { h: 239, s: 50, l: 56 }   // Purple          ~#5E60CE
+  ];
+  var lightnessDeltas = [-12, -3, 6, 14];
+  var hueShifts        = [ -6,  0, 4, -2];
+
+  function clamp(n, lo, hi) { return Math.max(lo, Math.min(hi, n)); }
+  function hsl(h, s, l) { return "hsl(" + h + ", " + s + "%, " + l + "%)"; }
+  function hsla(h, s, l, a) { return "hsla(" + h + ", " + s + "%, " + l + "%, " + a + ")"; }
+
+  var out = {};
+  for (var id = 1; id <= 32; id++) {
+    var ai = (id - 1) % anchors.length;
+    var vi = Math.floor((id - 1) / anchors.length) % lightnessDeltas.length;
+    var a  = anchors[ai];
+    var L  = clamp(a.l + lightnessDeltas[vi], 18, 70);
+    var H  = ((a.h + hueShifts[vi]) % 360 + 360) % 360;
+    out[id] = {
+      bg:    hsl(H, a.s, L),
+      light: hsl(H, a.s, clamp(L + 12, 0, 82)),
+      pale:  hsla(H, a.s, L, 0.14)
+    };
+  }
+  return out;
+})();

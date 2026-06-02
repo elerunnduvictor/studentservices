@@ -1450,78 +1450,8 @@ body .okr-modal[hidden],
   .home-okr-grid { grid-template-columns: 1fr; }
 }
 
-/* OKR overview card — mirrors the OKR Progress page so a click takes the
-   user to the full report with the same visual context. */
-.okr-card {
-  position: relative;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 22px 24px 20px;
-  box-shadow: var(--shadow);
-  overflow: hidden;
-  cursor: pointer;
-  text-decoration: none;
-  color: inherit;
-  display: block;
-  transition: transform var(--transition), box-shadow var(--transition);
-}
-.okr-card::before {
-  content: '';
-  position: absolute; left: 0; top: 0; bottom: 0;
-  width: 4px; background: var(--okr-color, var(--deep-teal));
-}
-.okr-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-hover); }
-.okr-card-eyebrow {
-  font-size: 0.62rem; letter-spacing: 0.18em;
-  text-transform: uppercase; color: var(--text-dim);
-  margin-bottom: 8px;
-}
-.okr-card-title {
-  font-family: 'Cormorant Garamond', serif;
-  font-weight: 700; font-size: 1.28rem;
-  letter-spacing: 0.01em;
-  color: var(--text);
-  margin-bottom: 16px;
-  line-height: 1.3;
-}
-.okr-card-stats {
-  display: flex; align-items: center; gap: 16px;
-  margin-bottom: 14px;
-}
-.okr-ring-wrap {
-  position: relative;
-  width: 70px; height: 70px;
-  flex-shrink: 0;
-}
-.okr-ring-val {
-  position: absolute; inset: 0;
-  display: grid; place-items: center;
-  font-family: 'Cormorant Garamond', serif;
-  font-weight: 700; font-size: 1.15rem;
-  color: var(--text);
-}
-.okr-card-metrics { flex: 1; display: flex; flex-direction: column; gap: 4px; }
-.okr-metric-row {
-  display: flex; justify-content: space-between;
-  font-size: 0.78rem;
-  color: var(--text-muted);
-}
-.okr-metric-row b { color: var(--text); font-weight: 600; }
-.okr-card-status-strip {
-  display: flex; gap: 6px;
-  height: 6px; border-radius: 3px;
-  overflow: hidden;
-  background: var(--bg-elevated);
-}
-.okr-status-seg { transition: flex 0.5s var(--smooth); }
-.okr-card-legend {
-  display: flex; flex-wrap: wrap; gap: 10px;
-  margin-top: 10px;
-  font-size: 0.7rem; color: var(--text-dim);
-}
-.okr-legend-item { display: flex; align-items: center; gap: 5px; }
-.okr-legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+/* .okr-card and its child rules live in /css/okr-cards.css — shared
+   between the home OKR summary grid and the full OKR Progress page. */
 
 /* Centered CTA button below the OKR grid. */
 .home-okr-cta {

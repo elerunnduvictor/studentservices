@@ -197,68 +197,26 @@ function renderKpis(filtered) {
   `;
 }
 
-/* ═══════════════ RENDER: OKR CARDS ═══════════════ */
+/* ═══════════════ RENDER: OKR CARDS ═══════════════
+   Card markup is built by the shared window.OkrCards renderer
+   (see /js/okr-cards.js). We only wire up the click-to-filter
+   behavior here, since that's specific to this dashboard. */
 function renderOkrCards(filtered) {
   const target = document.getElementById("okrpOkrGrid");
-  const byOkr = {};
-  filtered.forEach(r => {
-    if (!byOkr[r.okr]) byOkr[r.okr] = [];
-    byOkr[r.okr].push(r);
+  if (!target) return;
+
+  if (!filtered.length) {
+    target.innerHTML = `<div class="okrp-empty" style="grid-column: 1/-1;">No objectives in view.</div>`;
+    return;
+  }
+
+  window.OkrCards.render({
+    target: target,
+    rows: filtered,
+    okrColors: OKR_COLORS,
+    statusColors: STATUS_COLORS
   });
 
-  const cards = Object.entries(byOkr).map(([okr, rows]) => {
-    const c = okrPalette(okr);
-    const krCount = unique(rows.map(r => r.keyResult)).length;
-    const avg = Math.round(rows.reduce((s, r) => s + (r.progress || 0), 0) / rows.length * 100);
-
-    // Status segment widths
-    const statusBuckets = {};
-    rows.forEach(r => {
-      const s = effectiveStatus(r);
-      statusBuckets[s] = (statusBuckets[s] || 0) + 1;
-    });
-    const segHtml = Object.entries(statusBuckets).map(([s, n]) => {
-      const sc = statusPalette(s).bg;
-      return `<div class="okr-status-seg" style="flex: ${n}; background: ${sc};" title="${escapeHtml(s)}: ${n}"></div>`;
-    }).join("");
-    const legendHtml = Object.entries(statusBuckets).map(([s, n]) => {
-      const sc = statusPalette(s).bg;
-      return `<span class="okr-legend-item"><span class="okr-legend-dot" style="background:${sc};"></span>${escapeHtml(s)} <b>${n}</b></span>`;
-    }).join("");
-
-    // Mini ring
-    const size = 70, r = 26, cx = size/2, cy = size/2, sw = 7;
-    const circ = 2 * Math.PI * r;
-    const dash = circ * (avg / 100);
-    return `
-      <div class="okr-card" style="--okr-color: ${c.bg};" data-okr="${escapeHtml(okr)}">
-        <div class="okr-card-eyebrow">Objective</div>
-        <div class="okr-card-title">${escapeHtml(okr)}</div>
-        <div class="okr-card-stats">
-          <div class="okr-ring-wrap">
-            <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
-              <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--bg-elevated)" stroke-width="${sw}"/>
-              <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${c.bg}" stroke-width="${sw}"
-                stroke-dasharray="${dash} ${circ}" stroke-linecap="round"
-                transform="rotate(-90 ${cx} ${cy})"/>
-            </svg>
-            <div class="okr-ring-val">${avg}%</div>
-          </div>
-          <div class="okr-card-metrics">
-            <div class="okr-metric-row"><span>Key Results</span><b>${krCount}</b></div>
-            <div class="okr-metric-row"><span>Sub-KRs</span><b>${rows.length}</b></div>
-            <div class="okr-metric-row"><span>Avg Progress</span><b>${avg}%</b></div>
-          </div>
-        </div>
-        <div class="okr-card-status-strip">${segHtml || `<div class="okr-status-seg" style="flex:1; background: var(--bg-elevated);"></div>`}</div>
-        <div class="okr-card-legend">${legendHtml}</div>
-      </div>
-    `;
-  }).join("");
-
-  target.innerHTML = cards || `<div class="okrp-empty" style="grid-column: 1/-1;">No objectives in view.</div>`;
-
-  // Click to filter
   target.querySelectorAll(".okr-card").forEach(el => {
     el.addEventListener("click", () => {
       state.okr = el.dataset.okr;

@@ -6,6 +6,7 @@
 <title>Student Services — BYU-Pathway Worldwide</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/shared.css">
+<link rel="stylesheet" href="css/okr-cards.css">
 <link rel="stylesheet" href="css/main.css">
 </head>
 <body class="home-single">
@@ -355,93 +356,18 @@
 <!-- OKR data is shared with the OKR Progress page — same monthly refresh
      populates this section automatically. -->
 <script src="okr-progress/js/okr-progress-data.js"></script>
+<script src="js/okr-cards.js"></script>
 
 <!-- ═══════════════ JAVASCRIPT ═══════════════ -->
 <script>
-/* Render the 3 OKR overview cards from the shared OKR_PROGRESS_ROWS data.
-   Self-contained so this page has no JS dependencies on the OKR Progress page. */
+/* Render the 3 OKR overview cards via the shared renderer. */
 function renderHomeOkrCards() {
-  var target = document.getElementById('homeOkrGrid');
-  if (!target || !window.OKR_PROGRESS_ROWS || !window.OKR_COLORS || !window.STATUS_COLORS) return;
-  var ROWS = window.OKR_PROGRESS_ROWS;
-  var OKR_COLORS = window.OKR_COLORS;
-  var STATUS_COLORS = window.STATUS_COLORS;
-
-  function esc(s) {
-    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c) {
-      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
-    });
-  }
-  function uniq(arr) { return Array.from(new Set(arr.filter(function(x){ return x != null && x !== ''; }))); }
-  function effectiveStatus(r) {
-    if (r.status) return r.status;
-    if (r.progress == null) return 'Not Started';
-    return 'On Track';
-  }
-  function okrPal(name) {
-    return OKR_COLORS[name] || { bg: '#065577', light: '#28738A', pale: 'rgba(6,85,119,0.12)' };
-  }
-  function statusPal(s) { return STATUS_COLORS[s] || STATUS_COLORS['Not Started']; }
-
-  var byOkr = {};
-  ROWS.forEach(function(r) {
-    if (!byOkr[r.okr]) byOkr[r.okr] = [];
-    byOkr[r.okr].push(r);
+  window.OkrCards.render({
+    target: document.getElementById('homeOkrGrid'),
+    rows: window.OKR_PROGRESS_ROWS,
+    okrColors: window.OKR_COLORS,
+    statusColors: window.STATUS_COLORS
   });
-
-  var cards = Object.keys(byOkr).map(function(okr) {
-    var rows = byOkr[okr];
-    var c = okrPal(okr);
-    var krCount = uniq(rows.map(function(r){ return r.keyResult; })).length;
-    var avg = Math.round(rows.reduce(function(s, r){ return s + (r.progress || 0); }, 0) / rows.length * 100);
-
-    var statusBuckets = {};
-    rows.forEach(function(r) {
-      var s = effectiveStatus(r);
-      statusBuckets[s] = (statusBuckets[s] || 0) + 1;
-    });
-    var segHtml = Object.keys(statusBuckets).map(function(s) {
-      var sc = statusPal(s).bg;
-      var n = statusBuckets[s];
-      return '<div class="okr-status-seg" style="flex: ' + n + '; background: ' + sc + ';" title="' + esc(s) + ': ' + n + '"></div>';
-    }).join('');
-    var legendHtml = Object.keys(statusBuckets).map(function(s) {
-      var sc = statusPal(s).bg;
-      var n = statusBuckets[s];
-      return '<span class="okr-legend-item"><span class="okr-legend-dot" style="background:' + sc + ';"></span>' + esc(s) + ' <b>' + n + '</b></span>';
-    }).join('');
-
-    var size = 70, rad = 26, cx = size/2, cy = size/2, sw = 7;
-    var circ = 2 * Math.PI * rad;
-    var dash = circ * (avg / 100);
-
-    return ''
-      + '<div class="okr-card" role="button" tabindex="0" data-okr="' + esc(okr) + '" '
-      +      'style="--okr-color: ' + c.bg + ';" data-reveal aria-label="Expand ' + esc(okr) + '">'
-      +   '<div class="okr-card-eyebrow">Objective</div>'
-      +   '<div class="okr-card-title">' + esc(okr) + '</div>'
-      +   '<div class="okr-card-stats">'
-      +     '<div class="okr-ring-wrap">'
-      +       '<svg width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + ' ' + size + '">'
-      +         '<circle cx="' + cx + '" cy="' + cy + '" r="' + rad + '" fill="none" stroke="var(--bg-elevated)" stroke-width="' + sw + '"/>'
-      +         '<circle cx="' + cx + '" cy="' + cy + '" r="' + rad + '" fill="none" stroke="' + c.bg + '" stroke-width="' + sw + '" '
-      +           'stroke-dasharray="' + dash + ' ' + circ + '" stroke-linecap="round" '
-      +           'transform="rotate(-90 ' + cx + ' ' + cy + ')"/>'
-      +       '</svg>'
-      +       '<div class="okr-ring-val">' + avg + '%</div>'
-      +     '</div>'
-      +     '<div class="okr-card-metrics">'
-      +       '<div class="okr-metric-row"><span>Key Results</span><b>' + krCount + '</b></div>'
-      +       '<div class="okr-metric-row"><span>Sub-KRs</span><b>' + rows.length + '</b></div>'
-      +       '<div class="okr-metric-row"><span>Avg Progress</span><b>' + avg + '%</b></div>'
-      +     '</div>'
-      +   '</div>'
-      +   '<div class="okr-card-status-strip">' + (segHtml || '<div class="okr-status-seg" style="flex:1; background: var(--bg-elevated);"></div>') + '</div>'
-      +   '<div class="okr-card-legend">' + legendHtml + '</div>'
-      + '</div>';
-  }).join('');
-
-  target.innerHTML = cards;
 }
 
 function initScrollReveal() {

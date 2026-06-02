@@ -994,6 +994,403 @@ body.home-single .hero-compact::before { display: none; }
   margin: 0;
 }
 
+/* Cards are clickable to open a lightbox modal — keep the cursor obvious. */
+.kpi-card { cursor: pointer; }
+.kpi-card:focus-visible {
+  outline: 2px solid var(--kpi-accent);
+  outline-offset: 3px;
+}
+
+/* ──────── KPI lightbox modal ────────
+   Opens when a card is clicked. Shows the full screenshot at natural
+   aspect (max-height: 70vh) plus the header/subheader. Matches the
+   OKR Progress detail-modal pattern. */
+/* Higher specificity needed because `body.home-single > *` forces
+   position: relative / z-index: 1 on every direct child of <body>. */
+body .kpi-modal,
+.kpi-modal {
+  position: fixed; inset: 0; z-index: 9999;
+  display: grid; place-items: center;
+  padding: 24px;
+  animation: kpiModalFade 0.22s var(--smooth);
+}
+body .kpi-modal[hidden],
+.kpi-modal[hidden] { display: none; }
+@keyframes kpiModalFade { from { opacity: 0; } to { opacity: 1; } }
+
+.kpi-modal-backdrop {
+  position: absolute; inset: 0;
+  background: rgba(8, 26, 36, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+[data-theme="dark"] .kpi-modal-backdrop { background: rgba(0,0,0,0.7); }
+
+.kpi-modal-card {
+  position: relative;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 30px 90px rgba(6,71,98,0.25);
+  border: 1px solid var(--border);
+  width: 100%;
+  max-width: min(1100px, 92vw);
+  max-height: 92vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: kpiModalRise 0.32s var(--smooth);
+  --kpi-modal-accent: var(--deep-teal);
+}
+.kpi-modal[data-accent="teal"]  .kpi-modal-card { --kpi-modal-accent: var(--deep-teal); }
+.kpi-modal[data-accent="mauve"] .kpi-modal-card { --kpi-modal-accent: var(--purple); }
+.kpi-modal[data-accent="gold"]  .kpi-modal-card { --kpi-modal-accent: var(--gold); }
+[data-theme="dark"] .kpi-modal-card { box-shadow: 0 30px 90px rgba(0,0,0,0.7); }
+@keyframes kpiModalRise {
+  from { opacity: 0; transform: translateY(20px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)   scale(1); }
+}
+
+.kpi-modal-close {
+  position: absolute; top: 14px; right: 14px;
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: rgba(20, 20, 24, 0.55);
+  border: 1px solid rgba(255,255,255,0.25);
+  color: #fff;
+  display: grid; place-items: center;
+  cursor: pointer;
+  z-index: 5;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: transform var(--transition), background var(--transition);
+}
+.kpi-modal-close:hover {
+  background: rgba(20, 20, 24, 0.78);
+  transform: rotate(90deg);
+}
+
+/* Image area always white (matches the small card behaviour the user
+   requested) — Power BI screenshots are dark, so a white matte frames
+   them in both themes. */
+.kpi-modal-image {
+  background: #ffffff;
+  padding: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: auto;
+}
+.kpi-modal-image img {
+  max-width: 100%;
+  max-height: 68vh;
+  display: block;
+  object-fit: contain;
+}
+.kpi-modal-image--missing::before {
+  content: 'Screenshot coming soon';
+  color: #7F898A;
+  font-size: 0.95rem;
+  font-style: italic;
+  letter-spacing: 0.04em;
+  padding: 80px 24px;
+}
+
+.kpi-modal-meta {
+  padding: 22px 32px 28px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-card);
+}
+.kpi-modal-eyebrow {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--kpi-modal-accent);
+  margin-bottom: 6px;
+}
+.kpi-modal-header {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 700;
+  font-size: clamp(1.6rem, 3vw, 2.1rem);
+  letter-spacing: 0.02em;
+  color: var(--text);
+  line-height: 1.15;
+  margin: 0;
+}
+.kpi-modal-underline {
+  width: 52px;
+  height: 2px;
+  background: var(--kpi-modal-accent);
+  border-radius: 1px;
+  margin: 8px 0 12px;
+}
+.kpi-modal-subheader {
+  font-size: 0.95rem;
+  font-weight: 400;
+  line-height: 1.55;
+  color: var(--text-muted);
+  margin: 0;
+  max-width: 720px;
+}
+
+body.modal-open { overflow: hidden; }
+
+/* ──────── OKR detail modal (home page) ────────
+   Same `body .selector` specificity bump as the KPI modal so it beats
+   the `body.home-single > *` rule that forces position:relative;z-index:1
+   on every direct child of <body>. */
+body .okr-modal,
+.okr-modal {
+  position: fixed; inset: 0; z-index: 9999;
+  display: grid; place-items: center;
+  padding: 24px;
+  animation: kpiModalFade 0.22s var(--smooth);
+}
+body .okr-modal[hidden],
+.okr-modal[hidden] { display: none; }
+
+.okr-modal-backdrop {
+  position: absolute; inset: 0;
+  background: rgba(8, 26, 36, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+[data-theme="dark"] .okr-modal-backdrop { background: rgba(0,0,0,0.7); }
+
+.okr-modal-card {
+  position: relative;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 30px 90px rgba(6,71,98,0.25);
+  border: 1px solid var(--border);
+  width: 100%;
+  max-width: min(820px, 92vw);
+  max-height: 92vh;
+  overflow: auto;
+  animation: kpiModalRise 0.32s var(--smooth);
+}
+[data-theme="dark"] .okr-modal-card { box-shadow: 0 30px 90px rgba(0,0,0,0.7); }
+
+.okr-modal-close {
+  position: absolute; top: 14px; right: 14px;
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.18);
+  border: 1px solid rgba(255,255,255,0.28);
+  color: #fff;
+  display: grid; place-items: center;
+  cursor: pointer;
+  z-index: 5;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: transform var(--transition), background var(--transition);
+}
+.okr-modal-close:hover {
+  background: rgba(255,255,255,0.32);
+  transform: rotate(90deg);
+}
+
+.okr-modal-banner {
+  position: relative;
+  padding: 36px 40px 28px;
+  background: linear-gradient(135deg, var(--okrm-color-dark, var(--deep-teal)) 0%, var(--okrm-color, var(--deep-teal)) 100%);
+  color: #fff;
+  overflow: hidden;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+.okr-modal-banner::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(circle at 90% 10%, rgba(255,255,255,0.10) 0%, transparent 50%),
+    radial-gradient(circle at 10% 90%, rgba(255,195,40,0.08) 0%, transparent 50%);
+}
+.okr-modal-banner-grid {
+  position: absolute; inset: 0; opacity: 0.06;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.4) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.4) 1px, transparent 1px);
+  background-size: 36px 36px;
+}
+.okr-modal-eyebrow {
+  position: relative;
+  display: inline-block;
+  padding: 4px 12px;
+  background: rgba(255,255,255,0.18);
+  border: 1px solid rgba(255,255,255,0.28);
+  border-radius: 14px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 14px;
+  backdrop-filter: blur(8px);
+}
+.okr-modal-title {
+  position: relative;
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 600;
+  font-size: clamp(1.6rem, 3vw, 2.1rem);
+  letter-spacing: 0.01em;
+  color: #fff;
+  line-height: 1.2;
+  margin: 0 0 16px;
+  text-shadow: 0 2px 14px rgba(0,0,0,0.3);
+}
+.okr-modal-chips {
+  position: relative;
+  display: flex; flex-wrap: wrap; gap: 10px;
+}
+.okr-modal-chip {
+  padding: 4px 12px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.22);
+  font-size: 0.72rem;
+  color: rgba(255,255,255,0.94);
+  font-weight: 500;
+  backdrop-filter: blur(6px);
+}
+
+.okr-modal-body {
+  padding: 24px 32px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.okr-modal-ring-card {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 28px;
+  align-items: center;
+  padding: 20px;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-lg);
+}
+@media (max-width: 600px) {
+  .okr-modal-ring-card { grid-template-columns: 1fr; text-align: center; }
+}
+
+.okr-modal-ring {
+  position: relative;
+  width: 140px; height: 140px;
+  justify-self: center;
+}
+.okr-modal-ring-center {
+  position: absolute; inset: 0;
+  display: grid; place-items: center;
+  text-align: center;
+}
+.okr-modal-ring-val {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1;
+}
+.okr-modal-ring-label {
+  font-size: 0.6rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+
+.okr-modal-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+.okr-modal-stat {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle, var(--border));
+  border-radius: var(--radius);
+  padding: 12px 14px;
+}
+.okr-modal-stat-label {
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 4px;
+}
+.okr-modal-stat-value {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 700;
+  font-size: 1.35rem;
+  color: var(--text);
+}
+
+.okr-modal-status .okr-modal-section-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: 0.01em;
+  color: var(--text);
+  margin: 0 0 12px;
+}
+.okr-modal-status-row {
+  margin-bottom: 10px;
+}
+.okr-modal-status-row:last-child { margin-bottom: 0; }
+.okr-modal-status-label {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 0.78rem;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.okr-modal-status-label b {
+  color: var(--text);
+  font-weight: 700;
+}
+.okr-modal-status-dot {
+  display: inline-block;
+  width: 8px; height: 8px; border-radius: 50%;
+  margin-right: 6px;
+}
+.okr-modal-status-bar {
+  height: 6px;
+  background: var(--bg-elevated);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.okr-modal-status-bar > div {
+  height: 100%;
+  transition: width 0.6s var(--smooth);
+}
+
+.okr-modal-cta-row {
+  display: flex; justify-content: center;
+  margin-top: 4px;
+}
+.okr-modal-cta {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 10px 22px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--deep-teal) 0%, var(--deep-teal-blue) 100%);
+  color: #fff;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.88rem;
+  letter-spacing: 0.04em;
+  box-shadow: 0 6px 22px rgba(6,71,98,0.28);
+  transition: transform 0.3s var(--spring), box-shadow 0.3s var(--spring);
+}
+.okr-modal-cta svg {
+  width: 16px; height: 16px;
+  color: var(--gold);
+  transition: transform 0.3s var(--spring);
+}
+.okr-modal-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(6,71,98,0.36);
+}
+.okr-modal-cta:hover svg { transform: translateX(4px); }
+
 /* Mauve-gradient pill CTA — distinct from the teal OKR CTA below it. */
 .home-kpi-cta {
   display: flex;

@@ -175,7 +175,9 @@
     <div class="home-row-divider"></div>
   </div>
   <div class="home-kpi-grid">
-    <article class="kpi-card" data-accent="teal" data-reveal data-reveal-delay="0">
+    <article class="kpi-card" data-accent="teal" data-img="dashboard-screenshots/Autonomy.png"
+             role="button" tabindex="0" aria-label="Expand Autonomy KPI"
+             data-reveal data-reveal-delay="0">
       <div class="kpi-card-media">
         <img src="dashboard-screenshots/Autonomy.png" alt="Autonomy dashboard snapshot" loading="lazy"
              onerror="this.parentElement.classList.add('kpi-card-media--missing'); this.remove();">
@@ -188,7 +190,9 @@
       </div>
     </article>
 
-    <article class="kpi-card" data-accent="mauve" data-reveal data-reveal-delay="1">
+    <article class="kpi-card" data-accent="mauve" data-img="dashboard-screenshots/Satisfaction.png"
+             role="button" tabindex="0" aria-label="Expand Satisfaction KPI"
+             data-reveal data-reveal-delay="1">
       <div class="kpi-card-media">
         <img src="dashboard-screenshots/Satisfaction.png" alt="Satisfaction dashboard snapshot" loading="lazy"
              onerror="this.parentElement.classList.add('kpi-card-media--missing'); this.remove();">
@@ -201,7 +205,9 @@
       </div>
     </article>
 
-    <article class="kpi-card" data-accent="gold" data-reveal data-reveal-delay="2">
+    <article class="kpi-card" data-accent="gold" data-img="dashboard-screenshots/Completion.png"
+             role="button" tabindex="0" aria-label="Expand Completion KPI"
+             data-reveal data-reveal-delay="2">
       <div class="kpi-card-media">
         <img src="dashboard-screenshots/Completion.png" alt="Completion dashboard snapshot" loading="lazy"
              onerror="this.parentElement.classList.add('kpi-card-media--missing'); this.remove();">
@@ -305,6 +311,42 @@
   </div>
 </section>
 
+<!-- ═══════════════ KPI LIGHTBOX MODAL ═══════════════ -->
+<div class="kpi-modal" id="kpiModal" hidden>
+  <div class="kpi-modal-backdrop" data-close></div>
+  <div class="kpi-modal-card" role="dialog" aria-modal="true" aria-labelledby="kpiModalHeader">
+    <button class="kpi-modal-close" data-close aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div class="kpi-modal-image">
+      <img id="kpiModalImg" alt="" onerror="this.style.display='none'; this.parentElement.classList.add('kpi-modal-image--missing');">
+    </div>
+    <div class="kpi-modal-meta">
+      <div class="kpi-modal-eyebrow">Metric</div>
+      <h3 class="kpi-modal-header" id="kpiModalHeader"></h3>
+      <div class="kpi-modal-underline"></div>
+      <p class="kpi-modal-subheader" id="kpiModalSubheader"></p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ OKR DETAIL MODAL ═══════════════ -->
+<div class="okr-modal" id="okrModal" hidden>
+  <div class="okr-modal-backdrop" data-close></div>
+  <div class="okr-modal-card" role="dialog" aria-modal="true" aria-labelledby="okrModalTitle">
+    <button class="okr-modal-close" data-close aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div class="okr-modal-banner" id="okrModalBanner">
+      <div class="okr-modal-banner-grid"></div>
+      <div class="okr-modal-eyebrow">Objective</div>
+      <h2 class="okr-modal-title" id="okrModalTitle"></h2>
+      <div class="okr-modal-chips" id="okrModalChips"></div>
+    </div>
+    <div class="okr-modal-body" id="okrModalBody"></div>
+  </div>
+</div>
+
 <!-- ═══════════════ THIN FOOTER ═══════════════ -->
 <footer class="home-footer">
   <span>&copy; 2026 BYU-Pathway Worldwide &middot; Student Services</span>
@@ -374,7 +416,8 @@ function renderHomeOkrCards() {
     var dash = circ * (avg / 100);
 
     return ''
-      + '<a href="okr-progress/index.html?okr=' + encodeURIComponent(okr) + '" class="okr-card" style="--okr-color: ' + c.bg + ';" data-reveal>'
+      + '<div class="okr-card" role="button" tabindex="0" data-okr="' + esc(okr) + '" '
+      +      'style="--okr-color: ' + c.bg + ';" data-reveal aria-label="Expand ' + esc(okr) + '">'
       +   '<div class="okr-card-eyebrow">Objective</div>'
       +   '<div class="okr-card-title">' + esc(okr) + '</div>'
       +   '<div class="okr-card-stats">'
@@ -395,7 +438,7 @@ function renderHomeOkrCards() {
       +   '</div>'
       +   '<div class="okr-card-status-strip">' + (segHtml || '<div class="okr-status-seg" style="flex:1; background: var(--bg-elevated);"></div>') + '</div>'
       +   '<div class="okr-card-legend">' + legendHtml + '</div>'
-      + '</a>';
+      + '</div>';
   }).join('');
 
   target.innerHTML = cards;
@@ -440,6 +483,197 @@ function initTheme() {
   update();
 }
 
+/* Click any OKR card on the home page to open a detail modal showing the
+   ring, metrics, status breakdown, and a CTA to the full OKR Progress page.
+   Re-uses the shared OKR_PROGRESS_ROWS / OKR_COLORS / STATUS_COLORS data. */
+function initOkrModal() {
+  var modal = document.getElementById('okrModal');
+  if (!modal || !window.OKR_PROGRESS_ROWS || !window.OKR_COLORS || !window.STATUS_COLORS) return;
+  var ROWS = window.OKR_PROGRESS_ROWS;
+  var OKR_COLORS = window.OKR_COLORS;
+  var STATUS_COLORS = window.STATUS_COLORS;
+  var banner = document.getElementById('okrModalBanner');
+  var titleEl = document.getElementById('okrModalTitle');
+  var chipsEl = document.getElementById('okrModalChips');
+  var bodyEl = document.getElementById('okrModalBody');
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function uniq(arr) { return Array.from(new Set(arr.filter(function(x){ return x != null && x !== ''; }))); }
+  function effectiveStatus(r) {
+    if (r.status) return r.status;
+    if (r.progress == null) return 'Not Started';
+    return 'On Track';
+  }
+  function okrPal(name) {
+    return OKR_COLORS[name] || { bg: '#065577', light: '#28738A', pale: 'rgba(6,85,119,0.12)' };
+  }
+  function statusPal(s) { return STATUS_COLORS[s] || STATUS_COLORS['Not Started']; }
+  function darken(hex, amt) {
+    amt = amt || 0.25;
+    var h = hex.replace('#','');
+    var r = parseInt(h.slice(0,2),16), g = parseInt(h.slice(2,4),16), b = parseInt(h.slice(4,6),16);
+    function f(n){ return Math.max(0, Math.min(255, Math.round(n*(1-amt)))); }
+    return 'rgb(' + f(r) + ',' + f(g) + ',' + f(b) + ')';
+  }
+
+  function render(okrName) {
+    var rows = ROWS.filter(function(r){ return r.okr === okrName; });
+    if (!rows.length) return;
+    var c = okrPal(okrName);
+    var krCount = uniq(rows.map(function(r){ return r.keyResult; })).length;
+    var avg = Math.round(rows.reduce(function(s, r){ return s + (r.progress || 0); }, 0) / rows.length * 100);
+    var stakeholders = uniq(rows.map(function(r){ return r.stakeholder; }));
+    var pms = uniq(rows.map(function(r){ return r.projectManager; }));
+
+    // Status counts
+    var statusCounts = {};
+    rows.forEach(function(r){
+      var s = effectiveStatus(r);
+      statusCounts[s] = (statusCounts[s] || 0) + 1;
+    });
+
+    // Banner gradient using the OKR color
+    banner.setAttribute('style',
+      '--okrm-color:' + c.bg + ';' +
+      '--okrm-color-light:' + c.light + ';' +
+      '--okrm-color-dark:' + darken(c.bg, 0.25) + ';'
+    );
+    titleEl.textContent = okrName;
+    chipsEl.innerHTML = ''
+      + '<span class="okr-modal-chip">' + rows.length + ' Sub-KRs</span>'
+      + '<span class="okr-modal-chip">' + krCount + ' Key Results</span>'
+      + '<span class="okr-modal-chip">' + stakeholders.length + ' Stakeholder' + (stakeholders.length === 1 ? '' : 's') + '</span>';
+
+    // Big ring
+    var size = 140, rad = 56, cx = size/2, cy = size/2, sw = 12;
+    var circ = 2 * Math.PI * rad;
+    var dash = circ * (avg / 100);
+
+    // Status breakdown bars
+    var statusBars = Object.keys(statusCounts).map(function(s){
+      var ssc = statusPal(s);
+      var pct = Math.round(statusCounts[s] / rows.length * 100);
+      return ''
+        + '<div class="okr-modal-status-row">'
+        +   '<div class="okr-modal-status-label">'
+        +     '<span class="okr-modal-status-dot" style="background:' + ssc.bg + ';"></span>' + esc(s)
+        +     '<b>' + statusCounts[s] + '</b>'
+        +   '</div>'
+        +   '<div class="okr-modal-status-bar"><div style="width:' + pct + '%; background:' + ssc.bg + ';"></div></div>'
+        + '</div>';
+    }).join('');
+
+    bodyEl.innerHTML = ''
+      + '<div class="okr-modal-ring-card">'
+      +   '<div class="okr-modal-ring" style="--okrm-color:' + c.bg + ';">'
+      +     '<svg width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + ' ' + size + '">'
+      +       '<circle cx="' + cx + '" cy="' + cy + '" r="' + rad + '" fill="none" stroke="var(--bg-elevated)" stroke-width="' + sw + '"/>'
+      +       '<circle cx="' + cx + '" cy="' + cy + '" r="' + rad + '" fill="none" stroke="' + c.bg + '" stroke-width="' + sw + '" '
+      +         'stroke-dasharray="' + dash + ' ' + circ + '" stroke-linecap="round" '
+      +         'transform="rotate(-90 ' + cx + ' ' + cy + ')"/>'
+      +     '</svg>'
+      +     '<div class="okr-modal-ring-center"><div class="okr-modal-ring-val">' + avg + '%</div><div class="okr-modal-ring-label">Avg Progress</div></div>'
+      +   '</div>'
+      +   '<div class="okr-modal-stat-grid">'
+      +     '<div class="okr-modal-stat"><div class="okr-modal-stat-label">Sub-KRs</div><div class="okr-modal-stat-value">' + rows.length + '</div></div>'
+      +     '<div class="okr-modal-stat"><div class="okr-modal-stat-label">Key Results</div><div class="okr-modal-stat-value">' + krCount + '</div></div>'
+      +     '<div class="okr-modal-stat"><div class="okr-modal-stat-label">Stakeholders</div><div class="okr-modal-stat-value">' + stakeholders.length + '</div></div>'
+      +     '<div class="okr-modal-stat"><div class="okr-modal-stat-label">PMs</div><div class="okr-modal-stat-value">' + pms.length + '</div></div>'
+      +   '</div>'
+      + '</div>'
+      + '<div class="okr-modal-status">'
+      +   '<h4 class="okr-modal-section-title">Status Breakdown</h4>'
+      +   statusBars
+      + '</div>'
+      + '<div class="okr-modal-cta-row">'
+      +   '<a class="okr-modal-cta" href="okr-progress/index.html?okr=' + encodeURIComponent(okrName) + '">'
+      +     '<span>View Full Report</span>'
+      +     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>'
+      +   '</a>'
+      + '</div>';
+  }
+
+  function open(okrName) {
+    render(okrName);
+    modal.hidden = false;
+    document.body.classList.add('modal-open');
+  }
+  function close() {
+    modal.hidden = true;
+    document.body.classList.remove('modal-open');
+  }
+
+  // Delegate clicks on the home OKR grid (cards are rendered dynamically)
+  var grid = document.getElementById('homeOkrGrid');
+  if (grid) {
+    grid.addEventListener('click', function(e) {
+      var card = e.target.closest('.okr-card');
+      if (card && card.dataset.okr) open(card.dataset.okr);
+    });
+    grid.addEventListener('keydown', function(e) {
+      var card = e.target.closest('.okr-card');
+      if (card && card.dataset.okr && (e.key === 'Enter' || e.key === ' ')) {
+        e.preventDefault();
+        open(card.dataset.okr);
+      }
+    });
+  }
+  modal.querySelectorAll('[data-close]').forEach(function(el) {
+    el.addEventListener('click', close);
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && !modal.hidden) close();
+  });
+}
+
+/* Click any KPI card to expand its full screenshot in a lightbox modal.
+   Lets the user actually see the chart even if its native aspect ratio
+   doesn't fit the compact grid card. */
+function initKpiModal() {
+  var modal = document.getElementById('kpiModal');
+  if (!modal) return;
+  var img = document.getElementById('kpiModalImg');
+  var headerEl = document.getElementById('kpiModalHeader');
+  var subEl = document.getElementById('kpiModalSubheader');
+
+  function open(card) {
+    var src = card.getAttribute('data-img') || '';
+    var header = (card.querySelector('.kpi-card-header') || {}).textContent || '';
+    var sub = (card.querySelector('.kpi-card-subheader') || {}).textContent || '';
+    var accent = card.getAttribute('data-accent') || 'teal';
+    img.style.display = '';
+    img.parentElement.classList.remove('kpi-modal-image--missing');
+    img.src = src;
+    img.alt = header + ' dashboard snapshot';
+    headerEl.textContent = header;
+    subEl.textContent = sub;
+    modal.setAttribute('data-accent', accent);
+    modal.hidden = false;
+    document.body.classList.add('modal-open');
+  }
+  function close() {
+    modal.hidden = true;
+    document.body.classList.remove('modal-open');
+  }
+
+  document.querySelectorAll('.kpi-card').forEach(function(card) {
+    card.addEventListener('click', function() { open(card); });
+    card.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(card); }
+    });
+  });
+  modal.querySelectorAll('[data-close]').forEach(function(el) {
+    el.addEventListener('click', close);
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && !modal.hidden) close();
+  });
+}
+
 function initTilt() {
   if (window.matchMedia('(max-width: 1023px)').matches) return;
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
@@ -460,6 +694,8 @@ function initTilt() {
 document.addEventListener('DOMContentLoaded', function() {
   initTheme();
   renderHomeOkrCards();
+  initOkrModal();
+  initKpiModal();
   initScrollReveal();
   initTilt();
 });

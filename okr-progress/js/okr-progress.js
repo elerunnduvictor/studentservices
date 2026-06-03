@@ -30,6 +30,19 @@ const state = {
 const escapeHtml = window.SS.escapeHtml;
 const unique = window.SS.unique;
 function pct(v) { return Math.round((v || 0) * 100); }
+/* Display unit for a row's metric — KPI #-typed rows are raw counts
+   (e.g. "9 / 5"), everything else renders as a percentage. */
+function unitOf(r) { return r && r.type && /#/.test(r.type) ? "" : "%"; }
+function formatValue(v, r) {
+  if (v == null) return "—";
+  return pct(v) + unitOf(r);
+}
+/* Stretch goals come in three shapes from Profit.co:
+     • a positive number (a real stretch target)
+     • null            (no stretch goal recorded)
+     • 0               (placeholder when there's no stretch beyond the goal)
+   The 0 case is treated as "no stretch goal" for display. */
+function hasStretch(r) { return r && r.stretchGoal != null && r.stretchGoal !== 0; }
 function initials(name) {
   if (!name) return "—";
   return name.trim().split(/\s+/).map(w => w[0]).join("").slice(0, 2).toUpperCase();
@@ -75,44 +88,63 @@ function formatDate(iso) {
    Returns null if there is no progress value to plot. */
 function progressBarInfo(r) {
   if (r.progress == null) return null;
+  const isDecrease = r.type && /Decrease/i.test(r.type);
   const progressPct = pct(r.progress);
   const goalPct = r.goal != null ? pct(r.goal) : null;
+  const progressDisplay = formatValue(r.progress, r);
+  const goalDisplay = goalPct != null ? formatValue(r.goal, r) : null;
 
-  // No goal, or goal is full completion — straight 0-100 scale.
-  if (r.goal == null || r.goal >= 1) {
+  // No goal — straight 0-100 scale showing the raw value.
+  if (r.goal == null) {
     return {
       mode: "completion",
-      progressPct,
-      goalPct,
+      progressPct, goalPct, progressDisplay, goalDisplay,
       barFill: Math.max(0, Math.min(100, progressPct)),
       exceeded: false,
-      tooltip: goalPct != null
-        ? `Progress ${progressPct}% / Goal ${goalPct}%`
-        : `Progress ${progressPct}%`
+      tooltip: `Progress ${progressDisplay}`
     };
   }
 
-  // Target met or exceeded — switch to 0-100 scale so the real value is visible.
-  if (r.progress >= r.goal) {
+  // Increase-style item with a "full completion" goal (1.0): 0–100 scale.
+  if (!isDecrease && r.goal >= 1) {
+    return {
+      mode: "completion",
+      progressPct, goalPct, progressDisplay, goalDisplay,
+      barFill: Math.max(0, Math.min(100, progressPct)),
+      exceeded: false,
+      tooltip: `Progress ${progressDisplay} / Goal ${goalDisplay}`
+    };
+  }
+
+  // Has the goal been met? Direction depends on whether we want
+  // the metric to go up (Increase / Milestone) or down (Decrease).
+  const goalMet = isDecrease ? (r.progress <= r.goal) : (r.progress >= r.goal);
+
+  if (goalMet) {
     return {
       mode: "exceeded",
-      progressPct,
-      goalPct,
-      barFill: Math.max(0, Math.min(100, progressPct)),
+      progressPct, goalPct, progressDisplay, goalDisplay,
+      // Increase: show the raw 0-100 value so the achievement is visible.
+      // Decrease: meeting/beating a low number → just show the bar full.
+      barFill: isDecrease ? 100 : Math.max(0, Math.min(100, progressPct)),
       exceeded: true,
-      tooltip: `Progress ${progressPct}% / Goal ${goalPct}% · goal met`
+      tooltip: `Progress ${progressDisplay} / Goal ${goalDisplay} · goal met`
     };
   }
 
-  // Target not yet met — 0-goal scale, so the bar tracks "how close to goal."
-  const ratio = (r.progress / r.goal) * 100;
+  // Goal not met yet — bar tracks "how close to goal":
+  //   Increase: progress / goal  (climbing toward goal)
+  //   Decrease: goal / progress  (shrinking toward goal)
+  const ratio = isDecrease
+    ? (r.goal / r.progress) * 100
+    : (r.progress / r.goal) * 100;
   return {
     mode: "target",
-    progressPct,
-    goalPct,
+    progressPct, goalPct, progressDisplay, goalDisplay,
+    direction: isDecrease ? "decrease" : "increase",
     barFill: Math.max(0, Math.min(100, ratio)),
     exceeded: false,
-    tooltip: `Progress ${progressPct}% / Goal ${goalPct}%`
+    tooltip: `Progress ${progressDisplay} / Goal ${goalDisplay}`
   };
 }
 
@@ -326,20 +358,20 @@ function renderTable(filtered) {
     const s = effectiveStatus(r);
     const sc = statusPalette(s);
     const info = progressBarInfo(r);
-    const showGoal = info && info.goalPct != null && info.mode !== "completion";
+    const showGoal = info && info.goalDisplay != null && info.mode !== "completion";
     const progressHtml = !info
       ? `<span style="color: var(--text-dim); font-size: 0.74rem;">—</span>`
       : `
         <div class="mini-progress is-${info.mode} ${info.exceeded ? "is-exceeded" : ""}" title="${info.tooltip}">
           <div class="mini-progress-actual" style="width:${info.barFill}%; --mp-color: ${c.bg}; --mp-color-light: ${c.light};"></div>
-          <div class="mini-progress-label">${info.progressPct}%${showGoal ? ` <span class="mp-goal">/ ${info.goalPct}%</span>` : ""}</div>
+          <div class="mini-progress-label">${info.progressDisplay}${showGoal ? ` <span class="mp-goal">/ ${info.goalDisplay}</span>` : ""}</div>
         </div>
       `;
     const childHtml = r.subKeyResultChild
       ? `<span class="cell-skr-child-text">${escapeHtml(r.subKeyResultChild)}</span>`
       : `<span class="cell-dash">—</span>`;
-    const stretchHtml = r.stretchGoal != null
-      ? `<span class="cell-stretch-val">${pct(r.stretchGoal)}%</span>`
+    const stretchHtml = hasStretch(r)
+      ? `<span class="cell-stretch-val">${formatValue(r.stretchGoal, r)}</span>`
       : `<span class="cell-dash">—</span>`;
     return `
       <tr data-id="${r.id}">
@@ -714,7 +746,7 @@ function renderSkrDetail(r) {
           </svg>
           <div class="mc-ring-center">
             <div>
-              <div class="mc-ring-value">${p}%</div>
+              <div class="mc-ring-value">${formatValue(r.progress, r)}</div>
               <div class="mc-ring-label">Progress</div>
             </div>
           </div>
@@ -724,16 +756,16 @@ function renderSkrDetail(r) {
           <div class="mc-comparison">
             <div class="mc-comp-block">
               <div class="mc-comp-label">Progress</div>
-              <div class="mc-comp-value">${r.progress == null ? "—" : p + "%"}</div>
+              <div class="mc-comp-value">${formatValue(r.progress, r)}</div>
             </div>
             <div class="mc-comp-block">
               <div class="mc-comp-label">Goal</div>
-              <div class="mc-comp-value">${r.goal == null ? "—" : pp + "%"}</div>
+              <div class="mc-comp-value">${formatValue(r.goal, r)}</div>
             </div>
-            ${r.stretchGoal != null ? `
+            ${hasStretch(r) ? `
               <div class="mc-comp-block">
                 <div class="mc-comp-label">Stretch</div>
-                <div class="mc-comp-value">${pct(r.stretchGoal)}%</div>
+                <div class="mc-comp-value">${formatValue(r.stretchGoal, r)}</div>
               </div>
             ` : ""}
             ${delta != null ? `
@@ -752,10 +784,12 @@ function renderSkrDetail(r) {
               <div class="mc-progress-bar-actual" style="width:${info.barFill}%;"></div>
             </div>
             <div class="mc-progress-scale-note">
-              ${info.mode === "target"
-                ? `Scale: 0–${info.goalPct}% (bar full = goal reached)`
+              ${info.mode === "target" && info.direction === "decrease"
+                ? `Bar shows reduction toward goal of ${info.goalDisplay} (full = goal reached)`
+                : info.mode === "target"
+                ? `Scale: 0–${info.goalDisplay} (bar full = goal reached)`
                 : info.mode === "exceeded"
-                ? `Scale: 0–100% · <b>goal met</b>`
+                ? `<b>Goal met</b> · ${info.progressDisplay} ${unitOf(r) === "%" ? "achieved" : "(at or below " + info.goalDisplay + ")"}`
                 : `Scale: 0–100% (full completion)`}
             </div>
           ` : ""}

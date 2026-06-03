@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Student Services">
+  <!-- BYU-Pathway brand: deep teal #065577 background, gold #FFC328 accents -->
+  <rect width="64" height="64" rx="13" fill="#065577"/>
+  <!-- Subtle radial highlight in the top-right corner (matches the site's hero treatment) -->
+  <circle cx="56" cy="8" r="22" fill="#FFC328" fill-opacity="0.07"/>
+  <!-- "SS" monogram — serif to echo Cormorant Garamond headings on the site -->
+  <text x="32" y="42"
+        text-anchor="middle"
+        font-family="'Cormorant Garamond', 'EB Garamond', Georgia, 'Times New Roman', serif"
+        font-size="34"
+        font-weight="700"
+        letter-spacing="-1"
+        fill="#FFC328">SS</text>
+  <!-- Gold accent divider — echoes the .home-row-divider stripe -->
+  <rect x="22" y="50" width="20" height="2.5" rx="1.25" fill="#FFC328" fill-opacity="0.85"/>
+</svg>

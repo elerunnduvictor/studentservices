@@ -4,12 +4,12 @@ const OKR_COLORS = window.OKR_COLORS;
 const STATUS_COLORS = window.STATUS_COLORS;
 const SKR_COLORS = window.SKR_COLORS;
 
-/* Resolve effective status — Excel leaves it blank on some rows. Derive a
-   safe display value so visuals don't have a "missing" bucket. */
+/* Resolve effective status — most rows now carry an explicit Status from
+   Excel, but a handful are blank. Fall back so visuals never have a
+   "missing" bucket. */
 function effectiveStatus(r) {
   if (r.status) return r.status;
   if (r.progress == null) return "Not Started";
-  if (r.plannedProgress != null && r.progress >= r.plannedProgress) return "On Track";
   return "On Track";
 }
 
@@ -55,6 +55,13 @@ function darken(hex, amt = 0.18) {
   const f = (n) => Math.max(0, Math.min(255, Math.round(n * (1 - amt))));
   return `rgb(${f(r)}, ${f(g)}, ${f(b)})`;
 }
+/* Format an ISO date string (yyyy-mm-dd) as "Mon DD, YYYY". */
+function formatDate(iso) {
+  if (!iso) return null;
+  const d = new Date(iso + "T00:00:00");
+  if (isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+}
 
 /* Decide how a row's progress bar should be scaled:
    - "completion" — goal is full completion (1.0) or unset. Bar fills 0→100%
@@ -69,10 +76,10 @@ function darken(hex, amt = 0.18) {
 function progressBarInfo(r) {
   if (r.progress == null) return null;
   const progressPct = pct(r.progress);
-  const goalPct = r.plannedProgress != null ? pct(r.plannedProgress) : null;
+  const goalPct = r.goal != null ? pct(r.goal) : null;
 
   // No goal, or goal is full completion — straight 0-100 scale.
-  if (r.plannedProgress == null || r.plannedProgress >= 1) {
+  if (r.goal == null || r.goal >= 1) {
     return {
       mode: "completion",
       progressPct,
@@ -86,7 +93,7 @@ function progressBarInfo(r) {
   }
 
   // Target met or exceeded — switch to 0-100 scale so the real value is visible.
-  if (r.progress >= r.plannedProgress) {
+  if (r.progress >= r.goal) {
     return {
       mode: "exceeded",
       progressPct,
@@ -98,7 +105,7 @@ function progressBarInfo(r) {
   }
 
   // Target not yet met — 0-goal scale, so the bar tracks "how close to goal."
-  const ratio = (r.progress / r.plannedProgress) * 100;
+  const ratio = (r.progress / r.goal) * 100;
   return {
     mode: "target",
     progressPct,
@@ -239,7 +246,7 @@ function renderStatusDonut(filtered) {
   const target = document.getElementById("statusDonut");
   if (!total) { target.innerHTML = `<div class="okrp-empty">No data.</div>`; return; }
 
-  const size = 180, cx = size/2, cy = size/2, r = size*0.36, sw = size*0.14;
+  const size = 260, cx = size/2, cy = size/2, r = size*0.36, sw = size*0.14;
   let cumulative = 0;
   const segs = data.map(d => {
     const start = cumulative; cumulative += d.value/total;
@@ -255,8 +262,8 @@ function renderStatusDonut(filtered) {
     <div class="donut-wrap">
       <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
         ${segs}
-        <text x="${cx}" y="${cy-4}" text-anchor="middle" class="donut-center-val">${total}</text>
-        <text x="${cx}" y="${cy+16}" text-anchor="middle" class="donut-center-label">Sub-KRs</text>
+        <text x="${cx}" y="${cy-6}" text-anchor="middle" class="donut-center-val">${total}</text>
+        <text x="${cx}" y="${cy+22}" text-anchor="middle" class="donut-center-label">Sub-KRs</text>
       </svg>
       <div class="donut-legend">
         ${data.map(d => `
@@ -302,13 +309,15 @@ function renderTable(filtered) {
   count.textContent = `Showing ${filtered.length} of ${ROWS.length}`;
 
   if (!filtered.length) {
-    body.innerHTML = `<tr><td colspan="8"><div class="okrp-empty">No sub-key results match your filters.</div></td></tr>`;
+    body.innerHTML = `<tr><td colspan="10"><div class="okrp-empty">No sub-key results match your filters.</div></td></tr>`;
     return;
   }
   const sorted = filtered.slice().sort((a,b) => {
     if (a.okr !== b.okr) return a.okr.localeCompare(b.okr);
     if (a.keyResult !== b.keyResult) return a.keyResult.localeCompare(b.keyResult);
-    return a.subKeyResult.localeCompare(b.subKeyResult);
+    if (a.subKeyResult !== b.subKeyResult) return a.subKeyResult.localeCompare(b.subKeyResult);
+    // Keep Q1 → Q2 → Q3 → Q4 ordering when multiple Children share a Parent.
+    return (a.subKeyResultChild || "").localeCompare(b.subKeyResultChild || "");
   });
 
   body.innerHTML = sorted.map(r => {
@@ -326,6 +335,12 @@ function renderTable(filtered) {
           <div class="mini-progress-label">${info.progressPct}%${showGoal ? ` <span class="mp-goal">/ ${info.goalPct}%</span>` : ""}</div>
         </div>
       `;
+    const childHtml = r.subKeyResultChild
+      ? `<span class="cell-skr-child-text">${escapeHtml(r.subKeyResultChild)}</span>`
+      : `<span class="cell-dash">—</span>`;
+    const stretchHtml = r.stretchGoal != null
+      ? `<span class="cell-stretch-val">${pct(r.stretchGoal)}%</span>`
+      : `<span class="cell-dash">—</span>`;
     return `
       <tr data-id="${r.id}">
         <td class="cell-okr"><span class="okr-badge" style="background:${c.pale}; color:${c.bg};">${escapeHtml(r.okr)}</span></td>
@@ -336,10 +351,12 @@ function renderTable(filtered) {
             <span class="skr-text">${escapeHtml(r.subKeyResult)}</span>
           </div>
         </td>
+        <td class="cell-skr-child">${childHtml}</td>
         <td class="cell-person">${escapeHtml(r.stakeholder)}</td>
         <td class="cell-person">${escapeHtml(r.projectManager)}</td>
         <td class="cell-period">${escapeHtml(r.period)}</td>
         <td>${progressHtml}</td>
+        <td class="cell-stretch">${stretchHtml}</td>
         <td><span class="status-pill" style="background:${sc.pale}; color:${sc.bg};"><span class="status-dot" style="background:${sc.bg};"></span>${escapeHtml(s)}</span></td>
       </tr>
     `;
@@ -621,8 +638,8 @@ function renderSkrDetail(r) {
   const s = effectiveStatus(r);
   const sc = statusPalette(s);
   const p = pct(r.progress);
-  const pp = pct(r.plannedProgress);
-  const delta = (r.progress != null && r.plannedProgress != null) ? p - pp : null;
+  const pp = pct(r.goal);
+  const delta = (r.progress != null && r.goal != null) ? p - pp : null;
   const info = progressBarInfo(r);
 
   const bannerCss = `--mc-color: ${c.bg}; --mc-color-light: ${c.light}; --mc-color-dark: ${darken(c.bg, 0.25)}; --mc-color-pale: ${c.pale}; --mc-status-color: ${sc.bg}; --mc-status-pale: ${sc.pale}; --mc-skr-color: ${skr.bg}; --mc-skr-pale: ${skr.pale};`;
@@ -660,18 +677,28 @@ function renderSkrDetail(r) {
     ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 7 9 13 13 9 21 17"/><polyline points="14 17 21 17 21 10"/></svg>`
     : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>`;
 
+  /* When a Sub-Key Result (Child) is present, treat the Child as the
+     focus (it's the more specific item — e.g. "Q2 Admissions ITD
+     roadmap") and demote the Parent into the breadcrumb. Rows without a
+     Child show the Parent as the title (current behavior). */
+  const titleText = r.subKeyResultChild || r.subKeyResult;
+  const breadcrumbHtml = r.subKeyResultChild
+    ? `<span>${escapeHtml(r.okr)}</span><span class="mc-breadcrumb-sep">›</span><span>${escapeHtml(r.keyResult)}</span><span class="mc-breadcrumb-sep">›</span><b>${escapeHtml(r.subKeyResult)}</b>`
+    : `<span>${escapeHtml(r.okr)}</span><span class="mc-breadcrumb-sep">›</span><b>${escapeHtml(r.keyResult)}</b>`;
+  const updatedOn = formatDate(r.updateDate);
+  const typeIcon = r.type && /KPI/i.test(r.type)
+    ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><polyline points="7 14 11 10 15 13 21 7"/></svg>`
+    : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>`;
+
   const body = `
     <div class="mc-banner" style="${bannerCss}">
       <div class="mc-banner-grid"></div>
-      <div class="mc-breadcrumb">
-        <span>${escapeHtml(r.okr)}</span>
-        <span class="mc-breadcrumb-sep">›</span>
-        <b>${escapeHtml(r.keyResult)}</b>
-      </div>
-      <div class="mc-level-badge">Sub-Key Result</div>
-      <h2 class="mc-title" id="okrpModalTitle">${escapeHtml(r.subKeyResult)}</h2>
+      <div class="mc-breadcrumb">${breadcrumbHtml}</div>
+      <div class="mc-level-badge">${r.subKeyResultChild ? "Quarterly Sub-Key Result" : "Sub-Key Result"}</div>
+      <h2 class="mc-title" id="okrpModalTitle">${escapeHtml(titleText)}</h2>
       <div class="mc-banner-meta">
         <span class="mc-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>${escapeHtml(r.period)}</span>
+        ${r.type ? `<span class="mc-chip">${typeIcon}${escapeHtml(r.type)}</span>` : ""}
         <span class="mc-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/></svg>${escapeHtml(r.stakeholder)}</span>
         <span class="mc-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>PM · ${escapeHtml(r.projectManager)}</span>
       </div>
@@ -701,8 +728,14 @@ function renderSkrDetail(r) {
             </div>
             <div class="mc-comp-block">
               <div class="mc-comp-label">Goal</div>
-              <div class="mc-comp-value">${r.plannedProgress == null ? "—" : pp + "%"}</div>
+              <div class="mc-comp-value">${r.goal == null ? "—" : pp + "%"}</div>
             </div>
+            ${r.stretchGoal != null ? `
+              <div class="mc-comp-block">
+                <div class="mc-comp-label">Stretch</div>
+                <div class="mc-comp-value">${pct(r.stretchGoal)}%</div>
+              </div>
+            ` : ""}
             ${delta != null ? `
               <div class="mc-comp-block">
                 <div class="mc-comp-label">Delta</div>
@@ -744,6 +777,12 @@ function renderSkrDetail(r) {
             <div class="mc-trend ${trendUp ? "up" : trendDown ? "down" : ""}">${trendIcon}${escapeHtml(r.trend)}</div>
           </div>
         ` : ""}
+        ${updatedOn ? `
+          <div style="margin-top:14px;">
+            <div class="mc-info-role" style="margin-bottom:4px;">Last Update</div>
+            <div class="mc-info-name">${escapeHtml(updatedOn)}</div>
+          </div>
+        ` : ""}
       </div>
 
       <div class="mc-info-card">
@@ -766,8 +805,11 @@ function renderSkrDetail(r) {
 
       ${r.comment ? `
         <div class="mc-comment-card" style="--mc-color:${c.bg};">
-          <h5>Comment</h5>
-          <div class="mc-comment-body">"${escapeHtml(r.comment)}"</div>
+          <div class="mc-comment-head">
+            <h5>Latest Update</h5>
+            ${updatedOn ? `<span class="mc-comment-date">${escapeHtml(updatedOn)}</span>` : ""}
+          </div>
+          <div class="mc-comment-body">${escapeHtml(r.comment)}</div>
         </div>
       ` : ""}
 
@@ -786,7 +828,7 @@ function renderSkrDetail(r) {
 function renderAggregateDetail({ kind, okr, title, rows }) {
   const c = okrPalette(okr);
   const avg = Math.round(rows.reduce((s,r)=> s + (r.progress||0), 0) / rows.length * 100);
-  const avgPlan = Math.round(rows.reduce((s,r)=> s + (r.plannedProgress||0), 0) / rows.length * 100);
+  const avgPlan = Math.round(rows.reduce((s,r)=> s + (r.goal||0), 0) / rows.length * 100);
   const delta = avg - avgPlan;
 
   const bannerCss = `--mc-color: ${c.bg}; --mc-color-light: ${c.light}; --mc-color-dark: ${darken(c.bg, 0.25)}; --mc-color-pale: ${c.pale};`;

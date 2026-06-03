@@ -309,7 +309,7 @@
   position: relative;
   z-index: 3;
 }
-.okrp-inner { max-width: 1480px; margin: 0 auto; }
+.okrp-inner { max-width: 1720px; margin: 0 auto; }
 
 /* ══════════════ FILTERS ══════════════ */
 .okrp-filters {
@@ -444,12 +444,12 @@
 .donut-legend-item b { color: var(--text); font-weight: 600; }
 .donut-center-val {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 1.8rem; font-weight: 700;
+  font-size: 2.6rem; font-weight: 700;
   fill: var(--text);
 }
 .donut-center-label {
-  font-size: 0.62rem; fill: var(--text-dim);
-  letter-spacing: 0.12em; text-transform: uppercase;
+  font-size: 0.72rem; fill: var(--text-dim);
+  letter-spacing: 0.14em; text-transform: uppercase;
 }
 
 /* Stakeholder bars */
@@ -545,6 +545,39 @@
   margin-top: 5px;
 }
 .cell-skr .skr-text { flex: 1; }
+
+/* Sub-Key Result (Child) column — quarterly subdivision when present
+   (e.g. "Q2 Admissions ITD roadmap"), em-dash otherwise. */
+.cell-skr-child {
+  width: 200px;
+  min-width: 180px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  vertical-align: middle;
+}
+.cell-skr-child-text {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: var(--bg-elevated);
+  color: var(--text);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  line-height: 1.35;
+}
+
+/* Stretch Goal column — small numeric value, em-dash when absent. */
+.cell-stretch {
+  white-space: nowrap;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+  text-align: center;
+}
+.cell-stretch-val { color: var(--text); }
+.cell-dash { color: var(--text-dim); font-weight: 400; }
+
 .cell-person { white-space: nowrap; font-size: 0.78rem; }
 .cell-period {
   white-space: nowrap; font-size: 0.74rem;
@@ -1006,7 +1039,7 @@
   grid-column: 1 / -1;
   background: var(--bg-elevated);
   border-radius: var(--radius-lg);
-  padding: 18px 20px;
+  padding: 18px 22px 20px;
   border-left: 3px solid var(--mc-color, var(--bp-teal));
 }
 .mc-comment-card h5 {
@@ -1015,13 +1048,30 @@
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--text-dim);
-  margin-bottom: 8px;
+  margin: 0;
+}
+.mc-comment-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 14px;
+  margin-bottom: 10px;
+}
+.mc-comment-date {
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--mc-color, var(--bp-teal));
+  white-space: nowrap;
 }
 .mc-comment-body {
-  font-size: 0.92rem;
+  font-size: 0.9rem;
   color: var(--text);
-  font-style: italic;
-  line-height: 1.5;
+  line-height: 1.6;
+  /* Preserve newlines from the Excel comment so multi-paragraph updates
+     keep their structure. */
+  white-space: pre-wrap;
 }
 
 .mc-related {

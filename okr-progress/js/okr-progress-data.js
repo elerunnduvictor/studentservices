@@ -69,6 +69,7 @@ window.STATUS_COLORS = {
   "Completed - On time":  { bg: "#065577", pale: "rgba(6,85,119,0.14)" },
   "Completed - Late":     { bg: "#7E80CE", pale: "rgba(126,128,206,0.14)" },
   "Not Started":          { bg: "#7F898A", pale: "rgba(127,137,138,0.14)" },
+  "Canceled":             { bg: "#5C5C5C", pale: "rgba(92,92,92,0.14)" },
   "Archived":             { bg: "#58595B", pale: "rgba(88,89,91,0.14)" }
 };
 

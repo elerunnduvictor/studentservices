@@ -79,7 +79,7 @@ OC.employees = [
   { id: 'cindi-putnam', name: 'Cindi C Putnam', title: 'Planning Coordinator', dept: 'records', level: 5, status: 'FTE', reportsTo: 'kim-overdiek',
     responsibilities: ['Degree progress audit corrections'],
     kpis: ['Degree planning escalation case resolution rate, QA, and CSAT'], email: 'cputnam@byupw.edu', photoUrl: '../photos/records/cindi-putnam.jpg', roleInventoryUrl: 'https://churchofjesuschrist.sharepoint.com/:w:/s/BYU-PathwayStudentSuccessRoleInventory/IQDM5kWdtj6eTobfhfYTnaukATgc2h46N2asN0nMbPnj9eA?e=vikaN5' },
-  { id: 'nikki-chambers', name: 'Nikki Jane Chambers', title: 'Enrollment Verification Specialist', dept: 'records', level: 5, status: 'FTT', reportsTo: 'kim-overdiek',
+  { id: 'nikki-chambers', name: 'Nikki Jane Chambers', title: 'Enrollment Verification Specialist', dept: 'records', level: 5, status: 'FTT', reportsTo: 'tyson-bell',
     responsibilities: ['Enrollment verification', 'Partner transfer evaluation', 'Apostilles', 'Student verification letters'],
     kpis: ['Enrollment verification and apostille completion rate', 'Enrollment verification QA, and CSAT', 'Apostille QA, and CSAT'], email: 'NChambers@byupw.edu', photoUrl: '../photos/records/nikki-chambers.png', roleInventoryUrl: 'https://churchofjesuschrist.sharepoint.com/:w:/s/BYU-PathwayStudentSuccessRoleInventory/IQBkohdpEKodQoL-ghZzzwCRAQKlxkR8j_9LVGL0oGq1t5Y?e=8brGcT' },
 

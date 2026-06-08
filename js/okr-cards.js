@@ -47,6 +47,24 @@
     return STATUS_COLORS[s] || STATUS_COLORS["Not Started"];
   }
 
+  /* Canonical left-to-right order for the status segment strip + legend
+     on each OKR card. Anything not listed falls to the end. */
+  var STATUS_ORDER = [
+    "Completed - On time",
+    "Completed - Late",
+    "On Track",
+    "Not Started",
+    "Delayed",
+    "Canceled",
+    "At Risk",
+    "In Trouble",
+    "Archived"
+  ];
+  function statusRank(s) {
+    var i = STATUS_ORDER.indexOf(s);
+    return i === -1 ? STATUS_ORDER.length : i;
+  }
+
   function render(opts) {
     var target = opts.target;
     var ROWS = opts.rows;
@@ -68,18 +86,22 @@
       var krCount = uniq(rows.map(function (r) { return r.keyResult; })).length;
       var avg = Math.round(rows.reduce(function (s, r) { return s + (r.progress || 0); }, 0) / rows.length * 100);
 
-      /* Status bucket counts for the segment strip + legend. */
+      /* Status bucket counts for the segment strip + legend. Sorted by
+         STATUS_ORDER so each card reads left→right in the canonical order. */
       var statusBuckets = {};
       rows.forEach(function (r) {
         var s = effectiveStatus(r);
         statusBuckets[s] = (statusBuckets[s] || 0) + 1;
       });
-      var segHtml = Object.keys(statusBuckets).map(function (s) {
+      var statusKeys = Object.keys(statusBuckets).sort(function (a, b) {
+        return statusRank(a) - statusRank(b);
+      });
+      var segHtml = statusKeys.map(function (s) {
         var sc = statusPal(s, STATUS_COLORS).bg;
         var n = statusBuckets[s];
         return '<div class="okr-status-seg" style="flex:' + n + ';background:' + sc + ';" title="' + esc(s) + ': ' + n + '"></div>';
       }).join("");
-      var legendHtml = Object.keys(statusBuckets).map(function (s) {
+      var legendHtml = statusKeys.map(function (s) {
         var sc = statusPal(s, STATUS_COLORS).bg;
         var n = statusBuckets[s];
         return '<span class="okr-legend-item"><span class="okr-legend-dot" style="background:' + sc + ';"></span>' + esc(s) + ' <b>' + n + '</b></span>';

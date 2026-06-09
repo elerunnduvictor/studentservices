@@ -1391,10 +1391,12 @@ body .okr-modal[hidden],
 }
 .okr-modal-cta:hover svg { transform: translateX(4px); }
 
-/* Mauve-gradient pill CTA — distinct from the teal OKR CTA below it. */
+/* Mauve-gradient pill CTA + green-teal NWCCU pill, side by side. */
 .home-kpi-cta {
   display: flex;
   justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 .home-kpi-cta-btn {
   display: inline-flex;
@@ -1421,6 +1423,16 @@ body .okr-modal[hidden],
   box-shadow: 0 12px 32px rgba(142,95,132,0.36);
 }
 .home-kpi-cta-btn:hover svg { transform: translateX(4px); }
+
+/* NWCCU Standards variant — green-teal gradient, distinct from the mauve
+   KPI pill so the two CTAs read as separate destinations. */
+.home-kpi-cta-btn--nwccu {
+  background: linear-gradient(135deg, #0d4f57 0%, #168980 55%, #239B91 100%);
+  box-shadow: 0 6px 22px rgba(22,137,128,0.28);
+}
+.home-kpi-cta-btn--nwccu:hover {
+  box-shadow: 0 12px 32px rgba(22,137,128,0.40);
+}
 
 /* ══════════════════════════════════════════════════════════
    HOME OKR SUMMARY (3 OKR overview cards + CTA button)

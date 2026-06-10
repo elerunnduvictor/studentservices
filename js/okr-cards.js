@@ -112,9 +112,14 @@
       var circ = 2 * Math.PI * rad;
       var dash = circ * (avg / 100);
 
+      /* Note: no data-reveal on the card itself — the grid container
+         (#okrpOkrGrid / #homeOkrGrid) carries data-reveal for the entry
+         animation. Putting it on each card would re-hide them every time
+         we re-render (filter change / Clear button) since the
+         IntersectionObserver only runs once per element. */
       return ''
         + '<div class="okr-card" role="button" tabindex="0" data-okr="' + esc(okr) + '" '
-        +      'style="--okr-color:' + c.bg + ';" data-reveal aria-label="Open ' + esc(okr) + '">'
+        +      'style="--okr-color:' + c.bg + ';" aria-label="Open ' + esc(okr) + '">'
         +   '<div class="okr-card-eyebrow">Objective</div>'
         +   '<div class="okr-card-title">' + esc(okr) + '</div>'
         +   '<div class="okr-card-stats">'

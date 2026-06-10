@@ -461,6 +461,17 @@
   opacity: 0.7;
 }
 .nw-metric-text { color: var(--text-muted); }
+/* Small italic note appended to metrics where the team has flagged the
+   dashboard as pending ("not sure", "no great report for this yet", etc.). */
+.nw-metric-pending {
+  display: inline-block;
+  margin-left: 4px;
+  font-size: 0.74rem;
+  font-style: italic;
+  color: var(--text-dim);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
 
 /* ──────── Search highlight ──────── */
 mark {

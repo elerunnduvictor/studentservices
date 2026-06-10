@@ -63,6 +63,16 @@
     return LINK_INDEX[text.toLowerCase()] || null;
   }
 
+  /* Case-insensitive lookup for metrics that should get the
+     "(no report for now)" suffix. */
+  var NO_REPORT_INDEX = {};
+  (window.NWCCU_METRIC_NO_REPORT || []).forEach(function (k) {
+    NO_REPORT_INDEX[k.toLowerCase()] = true;
+  });
+  function isNoReport(text) {
+    return !!(text && NO_REPORT_INDEX[text.toLowerCase()]);
+  }
+
   /* ──────── State ──────── */
   var state = {
     standard: "All",
@@ -207,12 +217,18 @@
         }).join('');
 
         var metricUrl = metricLink(svc.keyMetrics);
-        var metricHtml = metricUrl
-          ? '<a class="nw-metric-link" href="' + esc(metricUrl) + '" target="_blank" rel="noopener" title="Open dashboard for ' + esc(svc.keyMetrics) + '">'
+        var metricHtml;
+        if (metricUrl) {
+          metricHtml = '<a class="nw-metric-link" href="' + esc(metricUrl) + '" target="_blank" rel="noopener" title="Open dashboard for ' + esc(svc.keyMetrics) + '">'
             + '<span>' + highlight(svc.keyMetrics, q) + '</span>'
             + '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3h7v7"/><path d="M10 14L21 3"/><path d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5"/></svg>'
-            + '</a>'
-          : '<span class="nw-metric-text">' + highlight(svc.keyMetrics, q) + '</span>';
+            + '</a>';
+        } else if (isNoReport(svc.keyMetrics)) {
+          metricHtml = '<span class="nw-metric-text">' + highlight(svc.keyMetrics, q) + '</span>'
+            + ' <span class="nw-metric-pending">(no report for now)</span>';
+        } else {
+          metricHtml = '<span class="nw-metric-text">' + highlight(svc.keyMetrics, q) + '</span>';
+        }
 
         return ''
           + '<tr>'

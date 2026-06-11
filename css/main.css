@@ -1391,7 +1391,7 @@ body .okr-modal[hidden],
 }
 .okr-modal-cta:hover svg { transform: translateX(4px); }
 
-/* Mauve-gradient pill CTA + green-teal NWCCU pill, side by side. */
+/* Mauve-gradient pill CTA + green-teal Performance Standards pill, side by side. */
 .home-kpi-cta {
   display: flex;
   justify-content: center;
@@ -1424,13 +1424,13 @@ body .okr-modal[hidden],
 }
 .home-kpi-cta-btn:hover svg { transform: translateX(4px); }
 
-/* NWCCU Standards variant — green-teal gradient, distinct from the mauve
+/* Performance Standards variant — green-teal gradient, distinct from the mauve
    KPI pill so the two CTAs read as separate destinations. */
-.home-kpi-cta-btn--nwccu {
+.home-kpi-cta-btn--performance {
   background: linear-gradient(135deg, #0d4f57 0%, #168980 55%, #239B91 100%);
   box-shadow: 0 6px 22px rgba(22,137,128,0.28);
 }
-.home-kpi-cta-btn--nwccu:hover {
+.home-kpi-cta-btn--performance:hover {
   box-shadow: 0 12px 32px rgba(22,137,128,0.40);
 }
 

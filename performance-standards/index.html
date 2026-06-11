@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NWCCU Standards — Student Services — BYU-Pathway Worldwide</title>
+<title>Performance Standards — Student Services — BYU-Pathway Worldwide</title>
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../css/shared.css">
-<link rel="stylesheet" href="css/nwccu.css">
+<link rel="stylesheet" href="css/performance-standards.css">
 </head>
 <body>
 
@@ -32,48 +32,48 @@
 </nav>
 
 <!-- ═══════════════ HERO ═══════════════ -->
-<header class="nw-hero">
+<header class="ps-hero">
   <div class="hero-pattern"></div>
-  <div class="nw-hero-content">
+  <div class="ps-hero-content">
     <div class="hero-badge">Appendix E · Accreditation Mapping</div>
-    <h1>NWCCU <span>Standards</span></h1>
-    <p class="nw-hero-sub" id="nwHeroSub"></p>
+    <h1>Performance <span>Standards</span></h1>
+    <p class="ps-hero-sub" id="nwHeroSub"></p>
   </div>
 </header>
 
 <!-- ═══════════════ REPORT ═══════════════ -->
-<main class="nw-section">
-  <div class="nw-inner">
+<main class="ps-section">
+  <div class="ps-inner">
 
     <!-- Quick stats -->
-    <div id="nwKpis" class="nw-kpis" data-reveal></div>
+    <div id="nwKpis" class="ps-kpis" data-reveal></div>
 
     <!-- Filters -->
-    <div class="nw-filters" data-reveal>
-      <span class="nw-filters-label">Filter</span>
-      <select id="filterStandard" class="nw-select" aria-label="Filter by NWCCU standard"></select>
-      <select id="filterSteward" class="nw-select" aria-label="Filter by steward"></select>
-      <input id="filterSearch" class="nw-search" type="search" placeholder="Search services, evidence, metrics..." aria-label="Search">
-      <button id="filterClear" class="nw-clear" type="button">Clear</button>
-      <span id="nwMatchCount" class="nw-match-count"></span>
+    <div class="ps-filters" data-reveal>
+      <span class="ps-filters-label">Filter</span>
+      <select id="filterStandard" class="ps-select" aria-label="Filter by performance standard"></select>
+      <select id="filterSteward" class="ps-select" aria-label="Filter by steward"></select>
+      <input id="filterSearch" class="ps-search" type="search" placeholder="Search services, evidence, metrics..." aria-label="Search">
+      <button id="filterClear" class="ps-clear" type="button">Clear</button>
+      <span id="nwMatchCount" class="ps-match-count"></span>
     </div>
 
     <!-- Jump-to section navigation -->
-    <div class="nw-toc" data-reveal>
-      <div class="nw-toc-label">Jump to section</div>
-      <div id="nwToc" class="nw-toc-list"></div>
+    <div class="ps-toc" data-reveal>
+      <div class="ps-toc-label">Jump to section</div>
+      <div id="nwToc" class="ps-toc-list"></div>
     </div>
 
     <!-- Sections rendered dynamically -->
     <div id="nwSections"></div>
 
     <!-- Empty state for when filters match nothing -->
-    <div id="nwEmpty" class="nw-empty" hidden>
-      <div class="nw-empty-icon">
+    <div id="nwEmpty" class="ps-empty" hidden>
+      <div class="ps-empty-icon">
         <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
       </div>
-      <div class="nw-empty-title">No services match your filters</div>
-      <div class="nw-empty-sub">Try a different standard code or clear the search.</div>
+      <div class="ps-empty-title">No services match your filters</div>
+      <div class="ps-empty-sub">Try a different standard code or clear the search.</div>
     </div>
 
   </div>
@@ -94,7 +94,7 @@
 </footer>
 
 <script src="../js/shared.js"></script>
-<script src="js/nwccu-data.js"></script>
-<script src="js/nwccu.js"></script>
+<script src="js/performance-standards-data.js"></script>
+<script src="js/performance-standards.js"></script>
 </body>
 </html>

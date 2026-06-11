@@ -1,15 +1,15 @@
-/* ═══════════════ NWCCU STANDARDS — RENDERER + FILTERS ═══════════════
-   Renders the 12 sectioned tables from window.NWCCU_SECTIONS and wires
+/* ═══════════════ PERFORMANCE STANDARDS — RENDERER + FILTERS ═══════════════
+   Renders the 12 sectioned tables from window.PERFORMANCE_SECTIONS and wires
    the search / standard / steward filters on top. Each Key Metric gets
-   converted to a clickable link when window.NWCCU_METRIC_LINKS has a URL
+   converted to a clickable link when window.PERFORMANCE_METRIC_LINKS has a URL
    for that exact metric label.
    ════════════════════════════════════════════════════════════════════ */
 (function () {
   "use strict";
 
-  var SECTIONS = window.NWCCU_SECTIONS || [];
-  var INTRO    = window.NWCCU_INTRO || "";
-  var LINKS    = window.NWCCU_METRIC_LINKS || {};
+  var SECTIONS = window.PERFORMANCE_SECTIONS || [];
+  var INTRO    = window.PERFORMANCE_INTRO || "";
+  var LINKS    = window.PERFORMANCE_METRIC_LINKS || {};
   var esc      = window.SS.escapeHtml;
   var uniq     = window.SS.unique;
 
@@ -34,7 +34,7 @@
     return { bg: bg, pale: pale };
   }
 
-  /* NWCCU standard family colors — e.g. "1.B.1" → family "1.B" → color.
+  /* Standard family colors — e.g. "1.B.1" → family "1.B" → color.
      Lets every chip with the same family share a visual identity. */
   var STANDARD_COLORS = {
     "1.A": { bg: "#3A929D", pale: "rgba(58,146,157,0.14)" },
@@ -66,7 +66,7 @@
   /* Case-insensitive lookup for metrics that should get the
      "(no report for now)" suffix. */
   var NO_REPORT_INDEX = {};
-  (window.NWCCU_METRIC_NO_REPORT || []).forEach(function (k) {
+  (window.PERFORMANCE_METRIC_NO_REPORT || []).forEach(function (k) {
     NO_REPORT_INDEX[k.toLowerCase()] = true;
   });
   function isNoReport(text) {
@@ -122,10 +122,10 @@
       + '<div class="kpi-card" style="--kpi-color: #3A929D;">'
       +   '<div class="kpi-label">Services Mapped</div>'
       +   '<div class="kpi-value">' + serviceTotal + '</div>'
-      +   '<div class="kpi-sub">to NWCCU standards</div>'
+      +   '<div class="kpi-sub">to performance standards</div>'
       + '</div>'
       + '<div class="kpi-card" style="--kpi-color: #B687AC;">'
-      +   '<div class="kpi-label">NWCCU Standards</div>'
+      +   '<div class="kpi-label">Performance Standards</div>'
       +   '<div class="kpi-value">' + Object.keys(standards).length + '</div>'
       +   '<div class="kpi-sub">distinct codes referenced</div>'
       + '</div>'
@@ -172,9 +172,9 @@
   function renderToc() {
     var html = SECTIONS.map(function (sec) {
       var c = sectionColor(sec.index);
-      return '<a href="#' + esc(sec.id) + '" class="nw-toc-pill" style="--sec-color:' + c.bg + ';--sec-pale:' + c.pale + ';">'
-           +   '<span class="nw-toc-num">' + sec.index + '</span>'
-           +   '<span class="nw-toc-name">' + esc(sec.title) + '</span>'
+      return '<a href="#' + esc(sec.id) + '" class="ps-toc-pill" style="--sec-color:' + c.bg + ';--sec-pale:' + c.pale + ';">'
+           +   '<span class="ps-toc-num">' + sec.index + '</span>'
+           +   '<span class="ps-toc-name">' + esc(sec.title) + '</span>'
            + '</a>';
     }).join("");
     document.getElementById("nwToc").innerHTML = html;
@@ -209,56 +209,56 @@
       var rowsHtml = rows.map(function (svc) {
         var stdChips = svc.standards.map(function (st) {
           var sc = standardColor(st);
-          return '<span class="nw-std-chip" style="background:' + sc.pale + ';color:' + sc.bg + ';">' + esc(st) + '</span>';
+          return '<span class="ps-std-chip" style="background:' + sc.pale + ';color:' + sc.bg + ';">' + esc(st) + '</span>';
         }).join('');
 
         var stwHtml = svc.stewards.map(function (sw) {
-          return '<span class="nw-steward">' + esc(sw) + '</span>';
+          return '<span class="ps-steward">' + esc(sw) + '</span>';
         }).join('');
 
         var metricUrl = metricLink(svc.keyMetrics);
         var metricHtml;
         if (metricUrl) {
-          metricHtml = '<a class="nw-metric-link" href="' + esc(metricUrl) + '" target="_blank" rel="noopener" title="Open dashboard for ' + esc(svc.keyMetrics) + '">'
+          metricHtml = '<a class="ps-metric-link" href="' + esc(metricUrl) + '" target="_blank" rel="noopener" title="Open dashboard for ' + esc(svc.keyMetrics) + '">'
             + '<span>' + highlight(svc.keyMetrics, q) + '</span>'
             + '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3h7v7"/><path d="M10 14L21 3"/><path d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5"/></svg>'
             + '</a>';
         } else if (isNoReport(svc.keyMetrics)) {
-          metricHtml = '<span class="nw-metric-text">' + highlight(svc.keyMetrics, q) + '</span>'
-            + ' <span class="nw-metric-pending">(no report for now)</span>';
+          metricHtml = '<span class="ps-metric-text">' + highlight(svc.keyMetrics, q) + '</span>'
+            + ' <span class="ps-metric-pending">(no report for now)</span>';
         } else {
-          metricHtml = '<span class="nw-metric-text">' + highlight(svc.keyMetrics, q) + '</span>';
+          metricHtml = '<span class="ps-metric-text">' + highlight(svc.keyMetrics, q) + '</span>';
         }
 
         return ''
           + '<tr>'
-          +   '<td class="nw-cell-service">' + highlight(svc.service, q) + '</td>'
-          +   '<td class="nw-cell-standards">' + stdChips + '</td>'
-          +   '<td class="nw-cell-stewards">' + stwHtml + '</td>'
-          +   '<td class="nw-cell-evidence">' + highlight(svc.evidence, q) + '</td>'
-          +   '<td class="nw-cell-metrics">' + metricHtml + '</td>'
-          +   '<td class="nw-cell-cadence"><em>' + highlight(svc.cadence, q) + '</em></td>'
+          +   '<td class="ps-cell-service">' + highlight(svc.service, q) + '</td>'
+          +   '<td class="ps-cell-standards">' + stdChips + '</td>'
+          +   '<td class="ps-cell-stewards">' + stwHtml + '</td>'
+          +   '<td class="ps-cell-evidence">' + highlight(svc.evidence, q) + '</td>'
+          +   '<td class="ps-cell-metrics">' + metricHtml + '</td>'
+          +   '<td class="ps-cell-cadence"><em>' + highlight(svc.cadence, q) + '</em></td>'
           + '</tr>';
       }).join("");
 
       return ''
-        + '<section class="nw-sec" id="' + esc(sec.id) + '" style="--sec-color:' + c.bg + ';--sec-pale:' + c.pale + ';"' + hidden + ' data-reveal>'
-        +   '<div class="nw-sec-head">'
-        +     '<div class="nw-sec-num">' + sec.index + '</div>'
-        +     '<div class="nw-sec-titles">'
-        +       '<div class="nw-sec-eyebrow">Service Category ' + sec.index + ' of ' + SECTIONS.length + '</div>'
-        +       '<h2 class="nw-sec-title">' + esc(sec.title) + '</h2>'
-        +       '<div class="nw-sec-meta">' + headerNote + '</div>'
+        + '<section class="ps-sec" id="' + esc(sec.id) + '" style="--sec-color:' + c.bg + ';--sec-pale:' + c.pale + ';"' + hidden + ' data-reveal>'
+        +   '<div class="ps-sec-head">'
+        +     '<div class="ps-sec-num">' + sec.index + '</div>'
+        +     '<div class="ps-sec-titles">'
+        +       '<div class="ps-sec-eyebrow">Service Category ' + sec.index + ' of ' + SECTIONS.length + '</div>'
+        +       '<h2 class="ps-sec-title">' + esc(sec.title) + '</h2>'
+        +       '<div class="ps-sec-meta">' + headerNote + '</div>'
         +     '</div>'
-        +     '<a href="#nwToc" class="nw-sec-totop" title="Back to top">'
+        +     '<a href="#nwToc" class="ps-sec-totop" title="Back to top">'
         +       '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg>'
         +     '</a>'
         +   '</div>'
-        +   '<div class="nw-table-wrap">'
-        +     '<table class="nw-table">'
+        +   '<div class="ps-table-wrap">'
+        +     '<table class="ps-table">'
         +       '<thead><tr>'
         +         '<th>Service</th>'
-        +         '<th>NWCCU Standards</th>'
+        +         '<th>Performance Standards</th>'
         +         '<th>Steward(s)</th>'
         +         '<th>Evidence / Artifact</th>'
         +         '<th>Key Metrics</th>'

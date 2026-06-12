@@ -306,7 +306,7 @@ export default function Dashboard() {
 
         {/* KPIs */}
         <div style={{ display: "flex", gap: 16, marginBottom: 20, flexWrap: "wrap" }}>
-          <KPICard label="Total Employees" value={filtered.length} sub={`of ${EMPLOYEES.length} in org`} color="#2c5282" />
+          <KPICard label="Total Workforce" value={filtered.length} sub={`of ${EMPLOYEES.length} in org`} color="#2c5282" />
           <KPICard label="Full-Time" value={fte} sub={`${Math.round(fte / filtered.length * 100 || 0)}% of filtered`} color="#2196F3" />
           <KPICard label="Contractors" value={contractors} sub={`${Math.round(contractors / filtered.length * 100 || 0)}% of filtered`} color="#78909C" />
           <KPICard label="Departments" value={new Set(filtered.map(e => e.dept)).size} color="#27AE60" />

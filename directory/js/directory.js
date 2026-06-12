@@ -89,7 +89,7 @@ function renderKpis(filtered) {
 
   document.getElementById("dirKpis").innerHTML = `
     <div class="kpi-card" style="--kpi-color: var(--bp-teal);">
-      <div class="kpi-label">Total Employees</div>
+      <div class="kpi-label">Total Workforce</div>
       <div class="kpi-value">${total}</div>
       <div class="kpi-sub">of ${orgTotal} in org</div>
     </div>

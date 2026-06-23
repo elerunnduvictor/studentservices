@@ -1,0 +1,73 @@
+* { 
+  box-sizing: border-box; 
+  margin: 0; 
+  padding: 0; 
+  font-family: 'Jost', sans-serif; 
+}
+body { 
+  background-color: #ECEFF2; 
+  display: flex; 
+  justify-content: center; 
+  align-items: center; 
+  height: 100vh; 
+}
+.login-card { 
+  background: white; 
+  padding: 40px; 
+  border-radius: 12px; 
+  box-shadow: 0 8px 24px rgba(0,0,0,0.05); 
+  width: 100%; 
+  max-width: 400px; 
+  text-align: center; 
+}
+.badge { 
+  background-color: #FFC328; 
+  color: #1C2325;
+  font-weight: 600; 
+  font-size: 11px; 
+  text-transform: uppercase; 
+  letter-spacing: 1.5px; 
+  margin: 0 auto 16px auto;
+  padding: 12px;
+  border-radius: 20px;
+  display: inline-block;
+}
+h1 { 
+  color: #1C2325; 
+  margin-bottom: 24px; 
+  font-size: 28px; 
+}
+input[type="email"] { 
+  width: 100%; 
+  padding: 12px 16px; 
+  border: 2px solid #BCBEC0; 
+  border-radius: 6px; 
+  margin-bottom: 16px; 
+  font-size: 16px; 
+  outline: none; 
+  transition: border-color 0.2s; 
+}
+input[type="email"]:focus { 
+  border-color: #065577; 
+}
+button { 
+  width: 100%; 
+  padding: 12px; 
+  background-color: #065577; 
+  color: white; 
+  border: none; 
+  border-radius: 6px; 
+  font-size: 16px; 
+  font-weight: 600; 
+  cursor: pointer; 
+  transition: background-color 0.2s; 
+}
+button:hover { 
+  background-color: #1B4D5C; 
+}
+.error-msg { 
+  color: #BB4A4A; 
+  font-size: 14px; 
+  margin-top: 12px; 
+  display: none; 
+}

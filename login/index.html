@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login — Student Services</title>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght=400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="login.css">
+</head>
+<body>
+
+<div class="login-card">
+  <div class="badge">BYU-Pathway Worldwide</div>
+  <h1>Student Services</h1>
+  <form id="loginForm">
+    <input type="email" id="emailInput" placeholder="Enter your email address" required />
+    <button type="submit">Sign In</button>
+  </form>
+  <div class="error-msg" id="errorMsg">Access denied. Your email is not registered.</div>
+</div>
+
+<script src="../js/allowed-users.js"></script>
+<script src="../js/login.js"></script>
+
+</body>
+</html>

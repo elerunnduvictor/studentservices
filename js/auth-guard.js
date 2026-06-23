@@ -2,7 +2,7 @@
 (function() {
   const session = localStorage.getItem('ss_user_session');
   const lastActivity = localStorage.getItem('ss_last_activity');
-  const TIMEOUT_DURATION = 30 * 60 * 1000; // 30 minutes in milliseconds
+  const TIMEOUT_DURATION = 60 * 60 * 1000; //  changed to 60 instead of 30 minutes in milliseconds
 
   // Compute common conditional flags
   const isSubfolder = window.location.pathname.includes('/directory/') || 

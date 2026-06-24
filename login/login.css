@@ -126,7 +126,7 @@ body {
   position: relative;
   z-index: 1;
   width: 100%;
-  max-width: 420px;
+  max-width: 560px;
   padding: 48px 44px 40px;
   text-align: center;
   border-radius: 20px;
@@ -166,6 +166,13 @@ body {
   text-transform: uppercase;
   color: #FFFFFF;
   line-height: 1.15;
+  /* Reserve two lines of height so the one-line title keeps the box
+     the same height it had when "Services" wrapped. */
+  min-height: 2.3em;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .login-card h1 span { color: var(--gold); margin-left: 0.25em; }
 

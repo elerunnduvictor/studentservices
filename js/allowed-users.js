@@ -1,5 +1,9 @@
 
 window.ALLOWED_USERS = [
+  "sthomas@byupw.edu",
+  "acundiff@byupw.edu",
+  "mgefrom@byupw.edu",
+  "jadams@byupw.edu",
   "Aitanantc@churchofjesuschrist.org",
   "alexlovelyn99@byupw.edu",
   "Burrell3@byupw.edu",
@@ -45,5 +49,11 @@ window.ALLOWED_USERS = [
   "JSwinburne@churchofjesuschrist.org",
   "davidkoomson@churchofjesuschrist.org",
   "MAbioye@churchofjesuschrist.org",
-  "gillesravelmambou@churchofjesuschrist.org"
+  "gillesravelmambou@churchofjesuschrist.org",
+  "karijohnson32@byupw.edu",
+  "msmith@byupw.edu",
+  "tshelton@byupw.edu",
+  "KRichardson@byupw.edu",
+  "rkailiponi@byupw.edu",
+  "jhadden@byupw.edu",
 ];

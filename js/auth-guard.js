@@ -1,16 +1,16 @@
-// js/auth-guard.js
-(function() {
+
+(function () {
   const session = localStorage.getItem('ss_user_session');
   const lastActivity = localStorage.getItem('ss_last_activity');
-  const TIMEOUT_DURATION = 60 * 60 * 1000; //  changed to 60 instead of 30 minutes in milliseconds
+  const TIMEOUT_DURATION = 1 * 60 * 1000; // 30 minutes
 
-  // Compute common conditional flags
-  const isSubfolder = window.location.pathname.includes('/directory/') || 
-                      window.location.pathname.includes('/departments/') || 
-                      window.location.pathname.includes('/okr-progress/') || 
-                      window.location.pathname.includes('/org-chart/') || 
-                      window.location.pathname.includes('/performance-standards/');
-  
+  // FIX: Remove trailing slashes so matching is highly reliable locally and in production
+  const isSubfolder = window.location.pathname.includes('/directory') ||
+    window.location.pathname.includes('/departments') ||
+    window.location.pathname.includes('/okr-progress') ||
+    window.location.pathname.includes('/org-chart') ||
+    window.location.pathname.includes('/performance-standards');
+
   const loginPath = isSubfolder ? '../login/index.html' : 'login/index.html';
 
   function logout() {
@@ -19,29 +19,47 @@
     window.location.replace(loginPath);
   }
 
-  // Gate Check 1: Is user logged in?
-  if (!session) {
-    window.location.replace(loginPath);
-    return;
+  function checkSessionValidity() {
+    const currentSession = localStorage.getItem('ss_user_session');
+    const currentActivity = localStorage.getItem('ss_last_activity');
+
+    if (!currentSession) {
+      window.location.replace(loginPath);
+      return false;
+    }
+
+    if (currentActivity && (Date.now() - currentActivity > TIMEOUT_DURATION)) {
+      logout();
+      return false;
+    }
+    return true;
   }
 
-  // Gate Check 2: Has user timed out from inactivity?
-  if (lastActivity && (Date.now() - lastActivity > TIMEOUT_DURATION)) {
-    logout();
-    return;
-  }
+  // Initial gate check
+  if (!checkSessionValidity()) return;
 
-  // Step 4: Keep resetting timer if active interactions occur
+  // Check every 5 seconds for suspended/sleeping background tabs
+  setInterval(function () {
+    if (!document.hidden) {
+      checkSessionValidity();
+    }
+  }, 5000);
+
   function resetTimer() {
+    if (document.hidden) return;
     localStorage.setItem('ss_last_activity', Date.now());
   }
 
-  // Listen to mouse actions, typing, and clicks to keep session alive
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden) {
+      checkSessionValidity();
+    }
+  });
+
   window.addEventListener('mousemove', resetTimer);
   window.addEventListener('keydown', resetTimer);
   window.addEventListener('click', resetTimer);
   window.addEventListener('scroll', resetTimer);
 
-  // Instantly record current view hit
   resetTimer();
 })();

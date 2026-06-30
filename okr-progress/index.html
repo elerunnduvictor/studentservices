@@ -1,149 +1,170 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<script src="js/auth-guard.js"></script>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OKR Progress — BYU-Pathway Worldwide</title>
-<link rel="icon" type="image/svg+xml" href="../favicon.svg">
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../css/shared.css">
-<link rel="stylesheet" href="../css/okr-cards.css">
-<link rel="stylesheet" href="css/okr-progress.css">
+  <meta charset="UTF-8">
+  <script src="../js/auth-guard.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OKR Progress — BYU-Pathway Worldwide</title>
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Jost:wght@300;400;500;600&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="../css/shared.css">
+  <link rel="stylesheet" href="../css/okr-cards.css">
+  <link rel="stylesheet" href="css/okr-progress.css">
 </head>
+
 <body>
 
-<!-- ═══════════════ NAVBAR ═══════════════ -->
-<nav class="navbar" id="navbar">
-  <a href="../index.html" class="nav-brand">Student Services</a>
-  <button class="nav-hamburger" id="navHamburger" aria-label="Menu">
-    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-  </button>
-  <div class="nav-links" id="navLinks">
-    <a href="../index.html" class="nav-link">Home</a>
-    <a href="../index.html#departments" class="nav-link">Departments</a>
-    <a href="../index.html#kpis" class="nav-link">KPIs</a>
-    <a href="../index.html#okrs" class="nav-link">OKRs</a>
-    <a href="../directory/index.html" class="nav-link">Directory</a>
-    <a href="../org-chart/index.html" class="nav-link">Org Chart</a>
-    <a href="../performance-standards/index.html" class="nav-link">Performance Report</a>
-  </div>
-  <button class="nav-theme-btn" id="themeToggle" title="Toggle theme">
-    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-  </button>
-</nav>
-
-<!-- ═══════════════ HERO ═══════════════ -->
-<header class="okrp-hero">
-  <div class="hero-pattern"></div>
-  <div class="okrp-hero-content">
-    <div class="hero-badge">BYU-Pathway Worldwide</div>
-    <h1>OKR <span>Progress</span></h1>
-    <p class="okrp-hero-sub">Track progress on every Objective, Key Result, and Sub-Key Result across Student Services — search the goal tree, compare progress vs goal, and surface what needs attention.</p>
-
-    <!-- Spotlight Search -->
-    <div class="spotlight" id="spotlight">
-      <div class="spotlight-input-wrap">
-        <svg class="spotlight-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input id="spotlightInput" class="spotlight-input" type="search" placeholder="Search OKRs, Key Results, or Sub-Key Results..." autocomplete="off" spellcheck="false" aria-label="Spotlight search">
-        <kbd class="spotlight-kbd" id="spotlightKbd">↵</kbd>
-      </div>
-      <div class="spotlight-dropdown" id="spotlightDropdown" hidden></div>
-    </div>
-  </div>
-</header>
-
-<!-- ═══════════════ DASHBOARD ═══════════════ -->
-<main class="okrp-section">
-  <div class="okrp-inner">
-
-    <!-- Filters -->
-    <div class="okrp-filters" data-reveal>
-      <span class="okrp-filters-label">Filters</span>
-      <select id="filterOkr" class="okrp-select" aria-label="Filter by OKR"></select>
-      <select id="filterStatus" class="okrp-select" aria-label="Filter by status"></select>
-      <select id="filterStakeholder" class="okrp-select" aria-label="Filter by stakeholder"></select>
-      <select id="filterPm" class="okrp-select" aria-label="Filter by project manager"></select>
-      <select id="filterPeriod" class="okrp-select" aria-label="Filter by period"></select>
-      <input id="filterSearch" class="okrp-search" type="search" placeholder="Filter table rows..." aria-label="Filter table">
-      <button id="filterClear" class="okrp-clear" type="button">Clear</button>
-    </div>
-
-    <!-- KPI cards -->
-    <div id="okrpKpis" class="okrp-kpis" data-reveal></div>
-
-    <!-- OKR overview cards -->
-    <div class="okrp-okr-grid" id="okrpOkrGrid" data-reveal></div>
-
-    <!-- Status donut + Stakeholder bars -->
-    <div class="okrp-charts">
-      <div class="okrp-card" data-reveal>
-        <div class="okrp-card-title">Sub-Key Results by Status</div>
-        <div id="statusDonut"></div>
-      </div>
-      <div class="okrp-card" data-reveal>
-        <div class="okrp-card-title">Workload by Stakeholder</div>
-        <div id="stakeholderBars"></div>
-      </div>
-    </div>
-
-    <!-- Table -->
-    <div class="okrp-card okrp-table-card" data-reveal>
-      <div class="okrp-table-header">
-        <div class="okrp-card-title">Sub-Key Results</div>
-        <div id="okrpCount" class="okrp-table-count"></div>
-      </div>
-      <div class="okrp-table-wrap">
-        <table class="okrp-table">
-          <thead>
-            <tr>
-              <th>OKR</th>
-              <th>Key Result</th>
-              <th>Sub-Key Result (Parent)</th>
-              <th>Sub-Key Result (Child)</th>
-              <th>Stakeholder</th>
-              <th>Project Manager</th>
-              <th>Period</th>
-              <th class="okrp-th-progress">Progress</th>
-              <th>Stretch Goal</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody id="okrpTableBody"></tbody>
-        </table>
-      </div>
-    </div>
-
-  </div>
-</main>
-
-<!-- ═══════════════ DETAIL MODAL (Fancy Card) ═══════════════ -->
-<div class="okrp-modal" id="okrpModal" hidden>
-  <div class="okrp-modal-backdrop" id="okrpModalBackdrop"></div>
-  <div class="okrp-modal-card" id="okrpModalCard" role="dialog" aria-modal="true" aria-labelledby="okrpModalTitle">
-    <button class="okrp-modal-close" id="okrpModalClose" aria-label="Close">
-      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+  <!-- ═══════════════ NAVBAR ═══════════════ -->
+  <nav class="navbar" id="navbar">
+    <a href="../index.html" class="nav-brand">Student Services</a>
+    <button class="nav-hamburger" id="navHamburger" aria-label="Menu">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="3" y1="6" x2="21" y2="6" />
+        <line x1="3" y1="12" x2="21" y2="12" />
+        <line x1="3" y1="18" x2="21" y2="18" />
+      </svg>
     </button>
-    <div class="okrp-modal-body" id="okrpModalBody"></div>
-  </div>
-</div>
-
-<!-- ═══════════════ FOOTER ═══════════════ -->
-<footer class="site-footer">
-  <div class="footer-inner">
-    <div class="footer-brand">Student Services &middot; BYU-Pathway Worldwide</div>
-    <div class="footer-links">
-      <a href="../index.html" class="footer-link">Home</a>
-      <a href="../directory/index.html" class="footer-link">Directory</a>
-      <a href="../org-chart/index.html" class="footer-link">Org Chart</a>
+    <div class="nav-links" id="navLinks">
+      <a href="../index.html" class="nav-link">Home</a>
+      <a href="../index.html#departments" class="nav-link">Departments</a>
+      <a href="../index.html#kpis" class="nav-link">KPIs</a>
+      <a href="../index.html#okrs" class="nav-link">OKRs</a>
+      <a href="../directory/index.html" class="nav-link">Directory</a>
+      <a href="../org-chart/index.html" class="nav-link">Org Chart</a>
+      <a href="../performance-standards/index.html" class="nav-link">Performance Report</a>
     </div>
-    <div class="footer-copy">&copy; 2026 BYU-Pathway Worldwide. All rights reserved.</div>
-  </div>
-</footer>
+    <button class="nav-theme-btn" id="themeToggle" title="Toggle theme">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+      </svg>
+    </button>
+  </nav>
 
-<script src="../js/shared.js"></script>
-<script src="../js/okr-cards.js"></script>
-<script src="js/okr-progress-data.js"></script>
-<script src="js/okr-progress.js"></script>
+  <!-- ═══════════════ HERO ═══════════════ -->
+  <header class="okrp-hero">
+    <div class="hero-pattern"></div>
+    <div class="okrp-hero-content">
+      <div class="hero-badge">BYU-Pathway Worldwide</div>
+      <h1>OKR <span>Progress</span></h1>
+      <p class="okrp-hero-sub">Track progress on every Objective, Key Result, and Sub-Key Result across Student Services
+        — search the goal tree, compare progress vs goal, and surface what needs attention.</p>
+
+      <!-- Spotlight Search -->
+      <div class="spotlight" id="spotlight">
+        <div class="spotlight-input-wrap">
+          <svg class="spotlight-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="7" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          <input id="spotlightInput" class="spotlight-input" type="search"
+            placeholder="Search OKRs, Key Results, or Sub-Key Results..." autocomplete="off" spellcheck="false"
+            aria-label="Spotlight search">
+          <kbd class="spotlight-kbd" id="spotlightKbd">↵</kbd>
+        </div>
+        <div class="spotlight-dropdown" id="spotlightDropdown" hidden></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ═══════════════ DASHBOARD ═══════════════ -->
+  <main class="okrp-section">
+    <div class="okrp-inner">
+
+      <!-- Filters -->
+      <div class="okrp-filters" data-reveal>
+        <span class="okrp-filters-label">Filters</span>
+        <select id="filterOkr" class="okrp-select" aria-label="Filter by OKR"></select>
+        <select id="filterStatus" class="okrp-select" aria-label="Filter by status"></select>
+        <select id="filterStakeholder" class="okrp-select" aria-label="Filter by stakeholder"></select>
+        <select id="filterPm" class="okrp-select" aria-label="Filter by project manager"></select>
+        <select id="filterPeriod" class="okrp-select" aria-label="Filter by period"></select>
+        <input id="filterSearch" class="okrp-search" type="search" placeholder="Filter table rows..."
+          aria-label="Filter table">
+        <button id="filterClear" class="okrp-clear" type="button">Clear</button>
+      </div>
+
+      <!-- KPI cards -->
+      <div id="okrpKpis" class="okrp-kpis" data-reveal></div>
+
+      <!-- OKR overview cards -->
+      <div class="okrp-okr-grid" id="okrpOkrGrid" data-reveal></div>
+
+      <!-- Status donut + Stakeholder bars -->
+      <div class="okrp-charts">
+        <div class="okrp-card" data-reveal>
+          <div class="okrp-card-title">Sub-Key Results by Status</div>
+          <div id="statusDonut"></div>
+        </div>
+        <div class="okrp-card" data-reveal>
+          <div class="okrp-card-title">Workload by Stakeholder</div>
+          <div id="stakeholderBars"></div>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="okrp-card okrp-table-card" data-reveal>
+        <div class="okrp-table-header">
+          <div class="okrp-card-title">Sub-Key Results</div>
+          <div id="okrpCount" class="okrp-table-count"></div>
+        </div>
+        <div class="okrp-table-wrap">
+          <table class="okrp-table">
+            <thead>
+              <tr>
+                <th>OKR</th>
+                <th>Key Result</th>
+                <th>Sub-Key Result (Parent)</th>
+                <th>Sub-Key Result (Child)</th>
+                <th>Stakeholder</th>
+                <th>Project Manager</th>
+                <th>Period</th>
+                <th class="okrp-th-progress">Progress</th>
+                <th>Stretch Goal</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="okrpTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ═══════════════ DETAIL MODAL (Fancy Card) ═══════════════ -->
+  <div class="okrp-modal" id="okrpModal" hidden>
+    <div class="okrp-modal-backdrop" id="okrpModalBackdrop"></div>
+    <div class="okrp-modal-card" id="okrpModalCard" role="dialog" aria-modal="true" aria-labelledby="okrpModalTitle">
+      <button class="okrp-modal-close" id="okrpModalClose" aria-label="Close">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
+      <div class="okrp-modal-body" id="okrpModalBody"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ FOOTER ═══════════════ -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">Student Services &middot; BYU-Pathway Worldwide</div>
+      <div class="footer-links">
+        <a href="../index.html" class="footer-link">Home</a>
+        <a href="../directory/index.html" class="footer-link">Directory</a>
+        <a href="../org-chart/index.html" class="footer-link">Org Chart</a>
+      </div>
+      <div class="footer-copy">&copy; 2026 BYU-Pathway Worldwide. All rights reserved.</div>
+    </div>
+  </footer>
+
+  <script src="../js/shared.js"></script>
+  <script src="../js/okr-cards.js"></script>
+  <script src="js/okr-progress-data.js"></script>
+  <script src="js/okr-progress.js"></script>
 </body>
+
 </html>

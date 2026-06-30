@@ -1,229 +1,282 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<script src="js/auth-guard.js"></script>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Student Records, Registration, and Support — Student Services</title>
-<link rel="icon" type="image/svg+xml" href="../favicon.svg">
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../css/shared.css">
-<link rel="stylesheet" href="css/dept.css">
-<link rel="stylesheet" href="../org-chart/css/variables.css">
-<link rel="stylesheet" href="../org-chart/css/tree.css">
-<link rel="stylesheet" href="../org-chart/css/tiles.css">
-<link rel="stylesheet" href="../org-chart/css/modal.css">
-<style>
-:root {
-  --dept-color: #3A929D;
-  --dept-color-r: 58,146,157;
-  --dept-dark: #2a7a84;
-  --dept-light: #e8f4f5;
-  --dept-from: #065577;
-  --dept-to: #28738A;
-}
-[data-theme="dark"] { --dept-light: rgba(58,146,157,0.08); }
-</style>
+  <meta charset="UTF-8">
+  <script src="../js/auth-guard.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Records, Registration, and Support — Student Services</title>
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Jost:wght@300;400;500;600&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="../css/shared.css">
+  <link rel="stylesheet" href="css/dept.css">
+  <link rel="stylesheet" href="../org-chart/css/variables.css">
+  <link rel="stylesheet" href="../org-chart/css/tree.css">
+  <link rel="stylesheet" href="../org-chart/css/tiles.css">
+  <link rel="stylesheet" href="../org-chart/css/modal.css">
+  <style>
+    :root {
+      --dept-color: #3A929D;
+      --dept-color-r: 58, 146, 157;
+      --dept-dark: #2a7a84;
+      --dept-light: #e8f4f5;
+      --dept-from: #065577;
+      --dept-to: #28738A;
+    }
+
+    [data-theme="dark"] {
+      --dept-light: rgba(58, 146, 157, 0.08);
+    }
+  </style>
 </head>
+
 <body>
 
-<!-- ═══════════════ NAVBAR ═══════════════ -->
-<nav class="navbar">
-  <a href="../index.html" class="nav-brand">Student Services</a>
-  <button class="nav-hamburger" id="navHamburger" aria-label="Menu">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-  </button>
-  <div class="nav-links" id="navLinks">
-    <a href="../index.html" class="nav-link">Home</a>
-    <a href="#mission" class="nav-link">Mission</a>
-    <a href="#team" class="nav-link">Team</a>
-    <a href="#departments" class="nav-link">Other Depts</a>
-  </div>
-  <button class="nav-theme-btn" id="themeToggle" title="Toggle theme">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-  </button>
-</nav>
-
-<!-- ═══════════════ HERO ═══════════════ -->
-<section class="dept-hero">
-  <div class="hero-pattern"></div>
-  <div class="hero-content">
-    <div class="hero-breadcrumb">
-      <a href="../index.html">Home</a>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>
-      <span>Departments</span>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>
-      <span>Records</span>
-    </div>
-    <div class="hero-icon">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-    </div>
-    <h1>Student Records, Registration, <span>and Support</span></h1>
-    <p class="hero-tagline">Managing student records, registration processes, Help Center, and support operations</p>
-  </div>
-</section>
-
-<!-- ═══════════════ MISSION ═══════════════ -->
-<section class="section" id="mission">
-  <div class="section-inner">
-    <div data-reveal>
-      <div class="section-label">Our Purpose</div>
-      <div class="section-title">Strategy Statement</div>
-      <div class="section-divider"></div>
-    </div>
-    <div class="mission-card" data-reveal>
-      <div class="mission-accent">&ldquo;</div>
-      <div class="mission-text">
-        <p>We balance student needs with organizational policies, and we remove barriers which might otherwise impede students from reaching their educational and spiritual goals. We accomplish this by focusing on:</p>
-        <ul class="mission-list">
-          <li>Establishing simple/intuitive processes for students</li>
-          <li>Clearly communicating resources, processes, and policies</li>
-          <li>Being responsive and knowledgeable</li>
-        </ul>
-      </div>
-    </div>
-
-    <!-- Live dept dashboard -->
-    <div id="deptDashboard" class="dept-dashboard" data-reveal></div>
-  </div>
-</section>
-
-<!-- ═══════════════ FOCUS AREAS ═══════════════ -->
-<section class="section" style="background: var(--bg-elevated);">
-  <div class="section-inner">
-    <div data-reveal>
-      <div class="section-label">What We Do</div>
-      <div class="section-title">Key Focus Areas</div>
-      <div class="section-divider"></div>
-    </div>
-    <div class="focus-grid">
-      <div class="focus-card" data-reveal="left">
-        <div class="focus-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-        </div>
-        <div class="focus-name">Student Records</div>
-        <div class="focus-desc">Secure management and maintenance of academic records, transcripts, and enrollment documentation.</div>
-      </div>
-      <div class="focus-card" data-reveal>
-        <div class="focus-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-        </div>
-        <div class="focus-name">Registration</div>
-        <div class="focus-desc">Streamlined course registration, scheduling, and enrollment verification processes.</div>
-      </div>
-      <div class="focus-card" data-reveal="right">
-        <div class="focus-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        </div>
-        <div class="focus-name">Help Center</div>
-        <div class="focus-desc">First-line student support, issue resolution, and routing across all service areas.</div>
-      </div>
-      <div class="focus-card" data-reveal="left">
-        <div class="focus-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-        </div>
-        <div class="focus-name">Training &amp; QA</div>
-        <div class="focus-desc">Quality assurance, staff training programs, and continuous service improvement initiatives.</div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ═══════════════ TEAM ORG CHART ═══════════════ -->
-<section class="section" id="team">
-  <div class="section-inner">
-    <div data-reveal>
-      <div class="section-label">Our People</div>
-      <div class="section-title">Department Structure</div>
-      <div class="section-divider"></div>
-    </div>
-    <div class="dept-chart-wrap" data-reveal="scale">
-      <div id="deptChart"></div>
-    </div>
-  </div>
-</section>
-
-<!-- ═══════════════ OTHER DEPARTMENTS ═══════════════ -->
-<section class="section" id="departments">
-  <div class="section-inner">
-    <div data-reveal>
-      <div class="section-label">Navigate</div>
-      <div class="section-title">Other Departments</div>
-      <div class="section-divider"></div>
-    </div>
-    <div class="dept-nav" data-reveal>
-      <a href="enrollment.html" class="dept-nav-card">
-        <div class="dept-nav-dot" style="background:#B687AC;"></div>
-        <div class="dept-nav-name">Enrollment &amp; Retention</div>
-        <svg class="dept-nav-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polyline points="9 18 15 12 9 6"/></svg>
-      </a>
-      <a href="dean.html" class="dept-nav-card">
-        <div class="dept-nav-dot" style="background:#A2C23D;"></div>
-        <div class="dept-nav-name">Dean of Students</div>
-        <svg class="dept-nav-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polyline points="9 18 15 12 9 6"/></svg>
-      </a>
-      <a href="digital.html" class="dept-nav-card">
-        <div class="dept-nav-dot" style="background:#CB4A27;"></div>
-        <div class="dept-nav-name">Digital Operations</div>
-        <svg class="dept-nav-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polyline points="9 18 15 12 9 6"/></svg>
-      </a>
-    </div>
-  </div>
-</section>
-
-<!-- ═══════════════ FOOTER ═══════════════ -->
-<footer class="site-footer">
-  <div class="footer-brand">Student Services &middot; BYU-Pathway Worldwide</div>
-  <div class="footer-links">
-    <a href="../index.html" class="footer-link">Home</a>
-    <a href="../org-chart/index.html" class="footer-link">Org Chart</a>
-    <a href="enrollment.html" class="footer-link">Enrollment</a>
-    <a href="dean.html" class="footer-link">Dean of Students</a>
-    <a href="digital.html" class="footer-link">Digital Ops</a>
-  </div>
-  <div>&copy; 2026 BYU-Pathway Worldwide. All rights reserved.</div>
-</footer>
-
-<!-- ═══════════════ MODAL ═══════════════ -->
-<div class="modal-overlay" id="modalOverlay">
-  <div class="modal" id="modal">
-    <button class="modal-close" id="modalClose">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+  <!-- ═══════════════ NAVBAR ═══════════════ -->
+  <nav class="navbar">
+    <a href="../index.html" class="nav-brand">Student Services</a>
+    <button class="nav-hamburger" id="navHamburger" aria-label="Menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22">
+        <line x1="3" y1="6" x2="21" y2="6" />
+        <line x1="3" y1="12" x2="21" y2="12" />
+        <line x1="3" y1="18" x2="21" y2="18" />
+      </svg>
     </button>
-    <div id="modalContent"></div>
+    <div class="nav-links" id="navLinks">
+      <a href="../index.html" class="nav-link">Home</a>
+      <a href="#mission" class="nav-link">Mission</a>
+      <a href="#team" class="nav-link">Team</a>
+      <a href="#departments" class="nav-link">Other Depts</a>
+    </div>
+    <button class="nav-theme-btn" id="themeToggle" title="Toggle theme">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+      </svg>
+    </button>
+  </nav>
+
+  <!-- ═══════════════ HERO ═══════════════ -->
+  <section class="dept-hero">
+    <div class="hero-pattern"></div>
+    <div class="hero-content">
+      <div class="hero-breadcrumb">
+        <a href="../index.html">Home</a>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+          <polyline points="9 18 15 12 9 6" />
+        </svg>
+        <span>Departments</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+          <polyline points="9 18 15 12 9 6" />
+        </svg>
+        <span>Records</span>
+      </div>
+      <div class="hero-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+          <polyline points="14 2 14 8 20 8" />
+          <line x1="16" y1="13" x2="8" y2="13" />
+          <line x1="16" y1="17" x2="8" y2="17" />
+          <polyline points="10 9 9 9 8 9" />
+        </svg>
+      </div>
+      <h1>Student Records, Registration, <span>and Support</span></h1>
+      <p class="hero-tagline">Managing student records, registration processes, Help Center, and support operations</p>
+    </div>
+  </section>
+
+  <!-- ═══════════════ MISSION ═══════════════ -->
+  <section class="section" id="mission">
+    <div class="section-inner">
+      <div data-reveal>
+        <div class="section-label">Our Purpose</div>
+        <div class="section-title">Strategy Statement</div>
+        <div class="section-divider"></div>
+      </div>
+      <div class="mission-card" data-reveal>
+        <div class="mission-accent">&ldquo;</div>
+        <div class="mission-text">
+          <p>We balance student needs with organizational policies, and we remove barriers which might otherwise impede
+            students from reaching their educational and spiritual goals. We accomplish this by focusing on:</p>
+          <ul class="mission-list">
+            <li>Establishing simple/intuitive processes for students</li>
+            <li>Clearly communicating resources, processes, and policies</li>
+            <li>Being responsive and knowledgeable</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Live dept dashboard -->
+      <div id="deptDashboard" class="dept-dashboard" data-reveal></div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ FOCUS AREAS ═══════════════ -->
+  <section class="section" style="background: var(--bg-elevated);">
+    <div class="section-inner">
+      <div data-reveal>
+        <div class="section-label">What We Do</div>
+        <div class="section-title">Key Focus Areas</div>
+        <div class="section-divider"></div>
+      </div>
+      <div class="focus-grid">
+        <div class="focus-card" data-reveal="left">
+          <div class="focus-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+            </svg>
+          </div>
+          <div class="focus-name">Student Records</div>
+          <div class="focus-desc">Secure management and maintenance of academic records, transcripts, and enrollment
+            documentation.</div>
+        </div>
+        <div class="focus-card" data-reveal>
+          <div class="focus-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5">
+              <rect x="3" y="4" width="18" height="18" rx="2" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="3" y1="10" x2="21" y2="10" />
+            </svg>
+          </div>
+          <div class="focus-name">Registration</div>
+          <div class="focus-desc">Streamlined course registration, scheduling, and enrollment verification processes.
+          </div>
+        </div>
+        <div class="focus-card" data-reveal="right">
+          <div class="focus-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+            </svg>
+          </div>
+          <div class="focus-name">Help Center</div>
+          <div class="focus-desc">First-line student support, issue resolution, and routing across all service areas.
+          </div>
+        </div>
+        <div class="focus-card" data-reveal="left">
+          <div class="focus-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
+          </div>
+          <div class="focus-name">Training &amp; QA</div>
+          <div class="focus-desc">Quality assurance, staff training programs, and continuous service improvement
+            initiatives.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ TEAM ORG CHART ═══════════════ -->
+  <section class="section" id="team">
+    <div class="section-inner">
+      <div data-reveal>
+        <div class="section-label">Our People</div>
+        <div class="section-title">Department Structure</div>
+        <div class="section-divider"></div>
+      </div>
+      <div class="dept-chart-wrap" data-reveal="scale">
+        <div id="deptChart"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ OTHER DEPARTMENTS ═══════════════ -->
+  <section class="section" id="departments">
+    <div class="section-inner">
+      <div data-reveal>
+        <div class="section-label">Navigate</div>
+        <div class="section-title">Other Departments</div>
+        <div class="section-divider"></div>
+      </div>
+      <div class="dept-nav" data-reveal>
+        <a href="enrollment.html" class="dept-nav-card">
+          <div class="dept-nav-dot" style="background:#B687AC;"></div>
+          <div class="dept-nav-name">Enrollment &amp; Retention</div>
+          <svg class="dept-nav-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18"
+            height="18">
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </a>
+        <a href="dean.html" class="dept-nav-card">
+          <div class="dept-nav-dot" style="background:#A2C23D;"></div>
+          <div class="dept-nav-name">Dean of Students</div>
+          <svg class="dept-nav-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18"
+            height="18">
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </a>
+        <a href="digital.html" class="dept-nav-card">
+          <div class="dept-nav-dot" style="background:#CB4A27;"></div>
+          <div class="dept-nav-name">Digital Operations</div>
+          <svg class="dept-nav-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18"
+            height="18">
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ FOOTER ═══════════════ -->
+  <footer class="site-footer">
+    <div class="footer-brand">Student Services &middot; BYU-Pathway Worldwide</div>
+    <div class="footer-links">
+      <a href="../index.html" class="footer-link">Home</a>
+      <a href="../org-chart/index.html" class="footer-link">Org Chart</a>
+      <a href="enrollment.html" class="footer-link">Enrollment</a>
+      <a href="dean.html" class="footer-link">Dean of Students</a>
+      <a href="digital.html" class="footer-link">Digital Ops</a>
+    </div>
+    <div>&copy; 2026 BYU-Pathway Worldwide. All rights reserved.</div>
+  </footer>
+
+  <!-- ═══════════════ MODAL ═══════════════ -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal" id="modal">
+      <button class="modal-close" id="modalClose">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
+      <div id="modalContent"></div>
+    </div>
   </div>
-</div>
 
-<!-- ═══════════════ JAVASCRIPT ═══════════════ -->
-<script>window.DEPT_NAME = "Student Records, Registration, and Support";</script>
-<script src="../directory/js/employees.js"></script>
-<script src="js/dept-dashboard.js"></script>
-<script src="../org-chart/js/data.js"></script>
-<script src="../org-chart/js/helpers.js"></script>
-<script src="../org-chart/js/renderer.js"></script>
-<script src="../org-chart/js/modal.js"></script>
-<script>
-/* Render department subtree + wire interactions */
-(function() {
-  var director = OC.employees.find(function(e) { return e.dept === 'records' && e.level === 2 && e.role !== 'pm'; });
-  if (!director) return;
-  var html = '<div class="tree single-dept-view">';
-  html += OC.renderTileWithAssistants(director);
-  html += OC.renderSubtree(director.id);
-  html += '</div>';
-  var container = document.getElementById('deptChart');
-  container.innerHTML = html;
+  <!-- ═══════════════ JAVASCRIPT ═══════════════ -->
+  <script>window.DEPT_NAME = "Student Records, Registration, and Support";</script>
+  <script src="../directory/js/employees.js"></script>
+  <script src="js/dept-dashboard.js"></script>
+  <script src="../org-chart/js/data.js"></script>
+  <script src="../org-chart/js/helpers.js"></script>
+  <script src="../org-chart/js/renderer.js"></script>
+  <script src="../org-chart/js/modal.js"></script>
+  <script>
+    /* Render department subtree + wire interactions */
+    (function () {
+      var director = OC.employees.find(function (e) { return e.dept === 'records' && e.level === 2 && e.role !== 'pm'; });
+      if (!director) return;
+      var html = '<div class="tree single-dept-view">';
+      html += OC.renderTileWithAssistants(director);
+      html += OC.renderSubtree(director.id);
+      html += '</div>';
+      var container = document.getElementById('deptChart');
+      container.innerHTML = html;
 
-  container.addEventListener('click', function(e) {
-    if (e.target.closest('[data-view-more]')) {
-      e.stopPropagation();
-      return;
-    }
-    var tile = e.target.closest('.tile:not(.spacer-tile)');
-    if (tile) tile.classList.toggle('expanded');
-  });
-})();
-</script>
-<script src="../js/shared.js"></script>
+      container.addEventListener('click', function (e) {
+        if (e.target.closest('[data-view-more]')) {
+          e.stopPropagation();
+          return;
+        }
+        var tile = e.target.closest('.tile:not(.spacer-tile)');
+        if (tile) tile.classList.toggle('expanded');
+      });
+    })();
+  </script>
+  <script src="../js/shared.js"></script>
 </body>
+
 </html>

@@ -2,7 +2,7 @@
 (function () {
   const session = localStorage.getItem('ss_user_session');
   const lastActivity = localStorage.getItem('ss_last_activity');
-  const TIMEOUT_DURATION = 1 * 60 * 1000; // 30 minutes
+  const TIMEOUT_DURATION = 60 * 60 * 1000; // 60 minutes
 
   // FIX: Remove trailing slashes so matching is highly reliable locally and in production
   const isSubfolder = window.location.pathname.includes('/directory') ||

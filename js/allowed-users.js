@@ -142,4 +142,11 @@ window.ALLOWED_USERS = [
   "dpeck@byupw.edu",
   "PNeiufi@byupw.edu",
   "victorferreira@byupw.edu",
+
+  // ── Added July 2026 ──
+  "matthew.langton@ChurchofJesusChrist.org",
+  "loertscherbt@ChurchofJesusChrist.org",
+  "brad.barson@ChurchofJesusChrist.org",
+  "amanda.thomas@ChurchofJesusChrist.org",
+  "michael.matthews@ChurchofJesusChrist.org",
 ];

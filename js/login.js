@@ -18,7 +18,7 @@ document.getElementById('loginForm').addEventListener('submit', function(e) {
 
     window.location.replace('../index.html');
   } else {
-    errorEl.textContent = 'Access denied. Your email is not provisioned.';
+    errorEl.textContent = 'Access denied. Your email is not provisioned. Contact Ben Packer and Jess Swinburne for Provisioning Access.';
     errorEl.style.display = 'block';
   }
 });

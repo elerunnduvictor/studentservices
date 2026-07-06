@@ -165,7 +165,7 @@
   z-index: 3;
 }
 .dir-inner {
-  max-width: 1280px;
+  max-width: 1720px;
   margin: 0 auto;
 }
 
@@ -431,7 +431,7 @@
   background: linear-gradient(90deg, transparent, var(--bp-gold), transparent);
 }
 .footer-inner {
-  max-width: 1280px; margin: 0 auto;
+  max-width: 1720px; margin: 0 auto;
   display: flex; justify-content: space-between; align-items: center;
   flex-wrap: wrap; gap: 20px;
 }

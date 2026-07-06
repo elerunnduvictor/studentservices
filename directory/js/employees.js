@@ -208,3 +208,31 @@ window.EMPLOYEES = [
   { name: "Nelly Barrera", role: "Enrollment Counsellor", dept: "Enrollment & Retention", type: "Student Employee", stakeholder: "Rachel Kirk", subDept: "Enrollment Couselling", org: "", tier: "" },
   { name: "Morgan Checkettes", role: "Records & Transcripts Shift Lead", dept: "Student Records, Registration, and Support", type: "Student Employee", stakeholder: "Anne E Owen", subDept: "Records & Transcripts", org: "", tier: "" },
 ];
+
+window.DEPT_COLORS = {
+  "Dean of Students":                 { bg: "#A2C23D", light: "#8aaa2e", pale: "#f2f7e6", r: "162,194,61" },
+  "Digital Operations":               { bg: "#CB4A27", light: "#a83d20", pale: "#fbeee9", r: "203,74,39" },
+  "Enrollment & Retention":           { bg: "#B687AC", light: "#9a6f90", pale: "#f5edf3", r: "182,135,172" },
+  "Student Records, Registration, and Support":  { bg: "#3A929D", light: "#2a7a84", pale: "#e8f4f5", r: "58,146,157" },
+  "VP - Student Services":            { bg: "#FFC328", light: "#d4a020", pale: "#fff6d6", r: "255,195,40" },
+};
+
+window.TYPE_COLORS = {
+  "Full-Time Employee":      "#065577",
+  "Full-Time Temporary":     "#28738A",
+  "Part-Time Temporary":     "#FFC328",
+  "Professional Contractor": "#7F898A",
+  "Student Contractor":      "#B687AC",
+  "Student Employee":        "#5E60CE",
+};
+
+/* ═══════════════ STUDENT CONTRACTOR AGGREGATE COUNTS ═══════════════
+   Counts only — student contractors aren't tracked individually here,
+   so they don't appear in the directory table or per-person filters.
+   These feed the dedicated "Student Contractors" card on the page. */
+window.STUDENT_CONTRACTORS = {
+  "Student Records, Registration, and Support": 338,
+  "Enrollment & Retention":                     455,
+  "Digital Operations":                         0,
+  "Dean of Students":                           0,
+};

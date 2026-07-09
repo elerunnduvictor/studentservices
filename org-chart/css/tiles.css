@@ -94,6 +94,16 @@
   text-rendering: optimizeLegibility;
 }
 
+/* Keep collapsed cards a consistent height: long names (e.g. four-part
+   names) wrap to at most two balanced lines instead of growing the card. */
+.tile:not(.expanded) .tile-name {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  text-wrap: balance;
+}
+
 .tile-title {
   font-size: 0.68rem;
   font-weight: 500;

@@ -42,7 +42,7 @@ OC.employees = [
 
   // ── RECORDS, REGISTRATION & SUPPORT ──
   // Level 3
-  { id: 'brad-lester', name: 'Brad Lester', title: 'General Support Manager', dept: 'records', level: 3, status: 'FTE', reportsTo: 'mark-gefrom',
+  { id: 'brad-lester', name: 'Brad Lester', title: 'Senior Manager, Student Support', dept: 'records', level: 3, status: 'FTE', reportsTo: 'mark-gefrom',
     responsibilities: ['Inbound student support lead', 'Academic advising program'],
     kpis: ['Student support budget', 'Autonomy rate for student support cases'], email: 'blester@byupw.edu', photoUrl: '../photos/records/brad-lester.png', roleInventoryUrl: 'https://churchofjesuschrist.sharepoint.com/:w:/s/BYU-PathwayStudentSuccessRoleInventory/IQCKoBX4HbZJRq7HLLXdBrCbAdvXS8PLZF0W8t-imhz4UV4?e=HLCnTw' },
   { id: 'kari-johnson', name: 'Kari Johnson', title: 'Registrar', dept: 'records', level: 3, status: 'FTE', reportsTo: 'mark-gefrom',

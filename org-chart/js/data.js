@@ -91,7 +91,10 @@ OC.employees = [
   { id: 'trevor-shelton', name: 'Trevor Shelton', title: 'Senior Manager of Enrollment Services', dept: 'enrollment', level: 3, status: 'FTE', reportsTo: 'alison-cundiff',
     responsibilities: ['Enrollment services lead', 'Enrollment funnel performance, strategy, and innovation'],
     kpis: ['Reduction of enrollment related support cases', 'Reduction of admissions tier 2 support cases'], email: 'tshelton@byupw.edu', photoUrl: '../photos/enrollment/trevor-shelton.jpeg', roleInventoryUrl: 'https://churchofjesuschrist.sharepoint.com/:w:/s/BYU-PathwayStudentSuccessRoleInventory/IQCVmNuaOp68SKhTnf_tOoajAX5JqDNZE3skdK_YOh1zQOg?e=cIHUdp' },
-  { id: 'kelley-richardson', name: 'Kelley Richardson', title: 'Mentoring Manager', dept: 'enrollment', level: 3, status: 'FTE', reportsTo: 'alison-cundiff',
+  { id: 'katelyn-graf', name: 'Katelyn Graf', title: 'Senior Manager of Retention', dept: 'enrollment', level: 3, status: 'FTE', reportsTo: 'alison-cundiff',
+    responsibilities: ['Retention strategy and oversight'],
+    kpis: [], email: 'kgraf@byupw.edu', photoUrl: '../photos/enrollment/katelyn-graf.jpg' },
+  { id: 'kelley-richardson', name: 'Kelley Richardson', title: 'Mentoring Manager', dept: 'enrollment', level: 4, status: 'FTE', reportsTo: 'katelyn-graf',
     responsibilities: ['Mentoring program lead'],
     kpis: ['Mentor required action completion rate', 'Mentor interaction QA', 'Overall student autonomy (secondary)', 'Mentor CSAT', 'Retention rate contribution by mentors'], email: 'KRichardson@byupw.edu', photoUrl: '../photos/enrollment/kelley-richardson.png', roleInventoryUrl: 'https://churchofjesuschrist.sharepoint.com/:w:/s/BYU-PathwayStudentSuccessRoleInventory/IQDf11sIFIdKRpf47WFm_HrbAbXK5oADRJG7VjwmaQKoGEY?e=LfYtXd' },
   // Level 4

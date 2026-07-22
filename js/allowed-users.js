@@ -181,4 +181,7 @@ window.ALLOWED_USERS = [
   "lukejo@ensign.edu",
   "krawlins@ensign.edu",
   "michael.ray@ensign.edu",
+
+  // ── Added July 22 2026 ──
+  "jacobleewalters@byupw.edu",
 ];

@@ -148,6 +148,7 @@ window.ALLOWED_USERS = [
   "brad.barson@ChurchofJesusChrist.org",
   "amanda.thomas@ChurchofJesusChrist.org",
   "michael.matthews@ChurchofJesusChrist.org",
+  "CCrankson@churchofjesuschrist.org",
 
   // ── Added July 7 2026: Ensign College partners ──
   "kat3lync@byupw.edu",

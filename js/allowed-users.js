@@ -268,4 +268,7 @@ window.ALLOWED_USERS = [
   "jsantos@byupw.edu",
   "kballard@byupw.edu",
   "scunningham@byupw.edu",
+
+  // ── Added July 28 2026 ──
+  "austin@hirespringboard.com",
 ];

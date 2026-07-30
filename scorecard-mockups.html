@@ -139,6 +139,22 @@
   .chip.nd { background: var(--gray-pale); color: var(--gray); }
   .chip.nt { background: var(--slate-pale); color: var(--slate); }
 
+  /* ===== student-outcome area cards ===== */
+  .area-intro { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; flex-wrap: wrap; margin-bottom: 22px; }
+  .area-title { font-family: var(--serif); font-weight: 400; font-size: 26px; margin: 0 0 4px; }
+  .area-sub { font-size: 14px; color: var(--ink-2); margin: 0; max-width: 62ch; }
+  .area-count { font-size: 12.5px; color: var(--ink-3); background: var(--elevated); border-radius: 99px; padding: 6px 15px; white-space: nowrap; }
+  .area-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(310px, 1fr)); gap: 18px; }
+  .area-card { border: 1px solid var(--line); border-radius: 16px; padding: 22px 24px 20px; background: var(--card); position: relative; }
+  .area-card::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 4px; background: linear-gradient(90deg, var(--plum) 0%, var(--plum-light) 100%); border-radius: 16px 16px 0 0; }
+  .area-top { display: flex; align-items: center; gap: 16px; margin-bottom: 14px; }
+  .area-eyebrow { font-size: 10.5px; letter-spacing: .15em; text-transform: uppercase; color: var(--ink-3); font-weight: 700; }
+  .area-name { font-size: 22px; font-weight: 700; line-height: 1.15; }
+  .area-q { font-family: var(--serif); font-style: italic; font-size: 15.5px; color: var(--ink-2); margin: 0 0 16px; line-height: 1.45; }
+  .area-meta { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12.5px; color: var(--ink-3); margin-top: 9px; }
+  .area-meta b { color: var(--ink-2); font-weight: 600; }
+  .area-chips { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 12px; }
+
   .watch { margin-top: 30px; }
   .watch h5 { margin: 0 0 11px; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3); }
   .watch-row { display: flex; align-items: center; gap: 13px; padding: 12px 16px; border-radius: 10px; font-size: 14px; margin-bottom: 7px; background: var(--elevated); }
@@ -179,7 +195,7 @@
 <div class="board-head">
   <div class="kicker">UX Mockups · for VP review</div>
   <h1>Student Services Score Card</h1>
-  <p>Five screens, one drill path. Every number shown is real — computed from the current KPI ScoreCard tab (102 KPIs marked “Tracking” · 42 stakeholders · 4 departments). Measures marked “Not Tracking” are excluded from the scorecard entirely. Click any card on the live page to fall one level deeper; the breadcrumb climbs back up.</p>
+  <p>Five screens, one drill path. Every number shown is real — computed from the current KPI ScoreCard tab (102 KPIs marked “Tracking” · 42 stakeholders · 4 departments). Measures marked “Not Tracking” are excluded from the scorecard entirely. Click any card on the live page to fall one level deeper; the breadcrumb climbs back up. The home page opens two routes down — <b>by department</b>, or <b>by student outcome</b>.</p>
   <div class="flowstrip">
     <span class="fpill">1 · Student Services</span><span class="arr">→</span>
     <span class="fpill">2 · Department</span><span class="arr">→</span>
@@ -252,10 +268,81 @@
           <div class="watch-row"><span class="chip nd">◌ Silent</span> 69 tracked KPIs not yet reporting <span class="who">all departments</span></div>
         </div>
       </div>
+
+      <div class="panel" style="margin-top:22px">
+        <div class="area-intro">
+          <div>
+            <h3 class="area-title">Sort by student outcome</h3>
+            <p class="area-sub">The same KPIs, grouped by the outcome they move for students rather than by who owns them. Click an area to see every measure behind it, across all four departments.</p>
+          </div>
+          <span class="area-count">21 of 102 tracked KPIs are student-outcome measures</span>
+        </div>
+
+        <div class="area-grid">
+
+          <div class="area-card">
+            <span class="k-drill" style="position:absolute;top:18px;right:20px;color:var(--ink-3);font-size:17px">›</span>
+            <div class="area-top">
+              <svg width="66" height="66" viewBox="0 0 66 66" role="img" aria-label="Autonomy health 75 of 100">
+                <circle class="ring-track" cx="33" cy="33" r="26" fill="none" stroke-width="7"/>
+                <circle class="ring-health" cx="33" cy="33" r="26" fill="none" stroke-width="7" stroke-linecap="round" stroke-dasharray="122.5 163.4" transform="rotate(-90 33 33)"/>
+                <text x="33" y="40" text-anchor="middle" font-size="20" fill="currentColor" font-family="Palatino Linotype, Georgia, serif">75</text>
+              </svg>
+              <div>
+                <div class="area-eyebrow">Student outcome</div>
+                <div class="area-name">Autonomy</div>
+              </div>
+            </div>
+            <p class="area-q">“Can students navigate the experience without needing the home office?”</p>
+            <div class="spectrum" style="height:9px;margin:0"><i style="flex:1;background:var(--green)"></i><i style="flex:1;background:var(--amber)"></i><i style="flex:5;background:var(--gray)"></i></div>
+            <div class="area-meta"><span><b>7</b> tracked KPIs</span><span>Coverage <b>29%</b></span><span><b>3</b> departments</span></div>
+            <div class="area-chips"><span class="chip g">✓ 1 Green</span><span class="chip y">▲ 1 Yellow</span><span class="chip nd">◌ 5 Silent</span></div>
+          </div>
+
+          <div class="area-card">
+            <span class="k-drill" style="position:absolute;top:18px;right:20px;color:var(--ink-3);font-size:17px">›</span>
+            <div class="area-top">
+              <svg width="66" height="66" viewBox="0 0 66 66" role="img" aria-label="Completion health 40 of 100">
+                <circle class="ring-track" cx="33" cy="33" r="26" fill="none" stroke-width="7"/>
+                <circle class="ring-health" cx="33" cy="33" r="26" fill="none" stroke-width="7" stroke-linecap="round" stroke-dasharray="65.4 163.4" transform="rotate(-90 33 33)"/>
+                <text x="33" y="40" text-anchor="middle" font-size="20" fill="currentColor" font-family="Palatino Linotype, Georgia, serif">40</text>
+              </svg>
+              <div>
+                <div class="area-eyebrow">Student outcome</div>
+                <div class="area-name">Completion</div>
+              </div>
+            </div>
+            <p class="area-q">“Do students stay with us, and finish their credential?”</p>
+            <div class="spectrum" style="height:9px;margin:0"><i style="flex:4;background:var(--amber)"></i><i style="flex:1;background:var(--red)"></i><i style="flex:2;background:var(--gray)"></i></div>
+            <div class="area-meta"><span><b>7</b> tracked KPIs</span><span>Coverage <b>71%</b></span><span><b>2</b> departments</span></div>
+            <div class="area-chips"><span class="chip y">▲ 4 Yellow</span><span class="chip r">✕ 1 Red</span><span class="chip nd">◌ 2 Silent</span></div>
+          </div>
+
+          <div class="area-card">
+            <span class="k-drill" style="position:absolute;top:18px;right:20px;color:var(--ink-3);font-size:17px">›</span>
+            <div class="area-top">
+              <svg width="66" height="66" viewBox="0 0 66 66" role="img" aria-label="Satisfaction health 75 of 100">
+                <circle class="ring-track" cx="33" cy="33" r="26" fill="none" stroke-width="7"/>
+                <circle class="ring-health" cx="33" cy="33" r="26" fill="none" stroke-width="7" stroke-linecap="round" stroke-dasharray="122.5 163.4" transform="rotate(-90 33 33)"/>
+                <text x="33" y="40" text-anchor="middle" font-size="20" fill="currentColor" font-family="Palatino Linotype, Georgia, serif">75</text>
+              </svg>
+              <div>
+                <div class="area-eyebrow">Student outcome</div>
+                <div class="area-name">Satisfaction</div>
+              </div>
+            </div>
+            <p class="area-q">“Are students delighted with the service experience they receive?”</p>
+            <div class="spectrum" style="height:9px;margin:0"><i style="flex:3;background:var(--green)"></i><i style="flex:3;background:var(--amber)"></i><i style="flex:1;background:var(--gray)"></i></div>
+            <div class="area-meta"><span><b>7</b> tracked KPIs</span><span>Coverage <b>86%</b></span><span><b>4</b> departments</span></div>
+            <div class="area-chips"><span class="chip g">✓ 3 Green</span><span class="chip y">▲ 3 Yellow</span><span class="chip nd">◌ 1 Silent</span></div>
+          </div>
+
+        </div>
+      </div>
     </div>
   </div>
 </div>
-<p class="cap"><b>Two dials, one story.</b> Teal = Health (quality of what we see). Gold = Coverage (how much we can see). The color strip is all 152 KPIs at once. Each department card is a miniature scorecard — click it and it becomes Screen 2.</p>
+<p class="cap"><b>Two dials, two ways in.</b> Plum = Health (quality of what we see). Gold = Coverage (how much we can see). The color strip is all 102 tracked KPIs at once. Then the page offers two routes down: <b>by department</b> — who owns the work — or <b>by student outcome</b> — Autonomy, Completion, Satisfaction, the three things students actually feel. Both land in the same KPI detail, so leadership can enter from whichever question they're asking. Note Completion sitting at 40 while Satisfaction sits at 75: the outcome view surfaces that gap instantly, where the department view spreads it across two teams.</p>
 
 <!-- ═════════ SCREEN 2 ═════════ -->
 <div class="mock-label"><span class="num">2</span><h2>Department view</h2><span class="does">clicked “Records, Registration &amp; Support”</span></div>

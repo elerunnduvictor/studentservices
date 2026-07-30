@@ -47,6 +47,12 @@ function initials(name) {
   if (!name) return "—";
   return name.trim().split(/\s+/).map(w => w[0]).join("").slice(0, 2).toUpperCase();
 }
+/* Secondary stakeholders arrive from Profit.co as one comma-separated string
+   ("Kari Johnson, Tyson Bell, Anne Owen") — split it into individual people. */
+function secondaryList(value) {
+  if (!value) return [];
+  return String(value).split(/[,;]/).map(s => s.trim()).filter(Boolean);
+}
 function okrPalette(name) {
   return OKR_COLORS[name] || { bg: "#065577", light: "#28738A", pale: "rgba(6,85,119,0.12)" };
 }
@@ -158,7 +164,7 @@ function getFiltered() {
     if (state.pm !== "All" && r.projectManager !== state.pm) return false;
     if (state.period !== "All" && r.period !== state.period) return false;
     if (q) {
-      const hay = `${r.okr} ${r.keyResult} ${r.subKeyResult} ${r.stakeholder} ${r.projectManager}`.toLowerCase();
+      const hay = `${r.okr} ${r.keyResult} ${r.subKeyResult} ${r.stakeholder} ${r.secondaryStakeholders || ""} ${r.projectManager}`.toLowerCase();
       if (!hay.includes(q)) return false;
     }
     return true;
@@ -341,7 +347,7 @@ function renderTable(filtered) {
   count.textContent = `Showing ${filtered.length} of ${ROWS.length}`;
 
   if (!filtered.length) {
-    body.innerHTML = `<tr><td colspan="10"><div class="okrp-empty">No sub-key results match your filters.</div></td></tr>`;
+    body.innerHTML = `<tr><td colspan="11"><div class="okrp-empty">No sub-key results match your filters.</div></td></tr>`;
     return;
   }
   const sorted = filtered.slice().sort((a,b) => {
@@ -385,6 +391,11 @@ function renderTable(filtered) {
         </td>
         <td class="cell-skr-child">${childHtml}</td>
         <td class="cell-person">${escapeHtml(r.stakeholder)}</td>
+        <td class="cell-person cell-person-secondary">${
+          secondaryList(r.secondaryStakeholders).length
+            ? secondaryList(r.secondaryStakeholders).map(p => `<span class="person-tag">${escapeHtml(p)}</span>`).join("")
+            : `<span class="cell-dash">—</span>`
+        }</td>
         <td class="cell-person">${escapeHtml(r.projectManager)}</td>
         <td class="cell-period">${escapeHtml(r.period)}</td>
         <td>${progressHtml}</td>
@@ -732,6 +743,7 @@ function renderSkrDetail(r) {
         <span class="mc-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>${escapeHtml(r.period)}</span>
         ${r.type ? `<span class="mc-chip">${typeIcon}${escapeHtml(r.type)}</span>` : ""}
         <span class="mc-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/></svg>${escapeHtml(r.stakeholder)}</span>
+        ${secondaryList(r.secondaryStakeholders).length ? `<span class="mc-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>+${secondaryList(r.secondaryStakeholders).length} Secondary</span>` : ""}
         <span class="mc-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>PM · ${escapeHtml(r.projectManager)}</span>
       </div>
       <div class="mc-skr-stripe" style="background:${skr.bg};"></div>
@@ -828,6 +840,15 @@ function renderSkrDetail(r) {
             <div class="mc-info-name">${escapeHtml(r.stakeholder)}</div>
           </div>
         </div>
+        ${secondaryList(r.secondaryStakeholders).map(p => `
+          <div class="mc-info-row">
+            <div class="mc-avatar mc-avatar-secondary" style="--mc-color:${c.bg}; --mc-color-pale:${c.pale};">${initials(p)}</div>
+            <div class="mc-info-text">
+              <div class="mc-info-role">Secondary Stakeholder</div>
+              <div class="mc-info-name">${escapeHtml(p)}</div>
+            </div>
+          </div>
+        `).join("")}
         <div class="mc-info-row">
           <div class="mc-avatar" style="--mc-color:${c.bg}; --mc-color-pale:${c.pale};">${initials(r.projectManager)}</div>
           <div class="mc-info-text">
@@ -875,6 +896,10 @@ function renderAggregateDetail({ kind, okr, title, rows }) {
   const krCount = unique(rows.map(r => r.keyResult)).length;
   const stakeholders = unique(rows.map(r => r.stakeholder));
   const pms = unique(rows.map(r => r.projectManager));
+  /* Someone listed as a secondary here may already be a primary on another
+     row in this group — show them once, in the more senior role. */
+  const secondaries = unique(rows.flatMap(r => secondaryList(r.secondaryStakeholders)))
+    .filter(p => !stakeholders.includes(p));
 
   const breadcrumbHtml = kind === "Objective"
     ? `<b>Objective</b>`
@@ -961,6 +986,15 @@ function renderAggregateDetail({ kind, okr, title, rows }) {
             <div class="mc-avatar" style="--mc-color:${c.bg}; --mc-color-pale:${c.pale};">${initials(p)}</div>
             <div class="mc-info-text">
               <div class="mc-info-role">Stakeholder</div>
+              <div class="mc-info-name">${escapeHtml(p)}</div>
+            </div>
+          </div>
+        `).join("")}
+        ${secondaries.map(p => `
+          <div class="mc-info-row">
+            <div class="mc-avatar mc-avatar-secondary" style="--mc-color:${c.bg}; --mc-color-pale:${c.pale};">${initials(p)}</div>
+            <div class="mc-info-text">
+              <div class="mc-info-role">Secondary Stakeholder</div>
               <div class="mc-info-name">${escapeHtml(p)}</div>
             </div>
           </div>

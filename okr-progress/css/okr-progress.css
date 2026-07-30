@@ -579,6 +579,20 @@
 .cell-dash { color: var(--text-dim); font-weight: 400; }
 
 .cell-person { white-space: nowrap; font-size: 0.78rem; }
+/* Secondary stakeholders are a list, so this cell wraps where the other
+   person cells don't — each name gets its own tag. */
+.cell-person-secondary { white-space: normal; min-width: 150px; }
+.person-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  margin: 1px 3px 1px 0;
+  border-radius: 99px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
 .cell-period {
   white-space: nowrap; font-size: 0.74rem;
   color: var(--text-dim);
@@ -972,6 +986,13 @@
   font-size: 0.78rem;
   letter-spacing: 0.04em;
   flex-shrink: 0;
+}
+/* Secondary stakeholders read as supporting cast: outlined rather than filled,
+   so the primary stakeholder still leads the People list at a glance. */
+.mc-avatar-secondary {
+  background: transparent;
+  border: 1.5px solid var(--mc-color-pale, rgba(6,85,119,0.14));
+  box-shadow: inset 0 0 0 1px var(--bg-card);
 }
 .mc-info-text { flex: 1; min-width: 0; }
 .mc-info-role {

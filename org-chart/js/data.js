@@ -157,7 +157,7 @@ OC.employees = [
   { id: 'samuel-riveros', name: 'Samuel Riveros', title: 'Companion & Special Projects Dev. Manager', dept: 'digital', level: 4, status: 'Contractor', reportsTo: 'ricky-kailiponi',
     responsibilities: ['Companion Front-End Stability & Usability', 'Companion–Analytics Engine Integration'],
     kpis: ['Stakeholder CSAT - timeliness per project', 'Stakeholder CSAT - communication, quality of work, impact'], email: 'samuel.riveros@churchofjesuschrist.org', photoUrl: '../photos/digital/samuel-riveros.jpeg', roleInventoryUrl: 'https://churchofjesuschrist.sharepoint.com/:w:/s/BYU-PathwayStudentSuccessRoleInventory/IQAGDpuAcq_uRJQfBo6jtQ6VAZzICKfHCBKlonY8DuoA5c0?e=uOPRI1' },
-  { id: 'aitana-toscano', name: 'Aitana Toscano', title: 'Data Manager', dept: 'digital', level: 4, status: 'Contractor', reportsTo: 'ricky-kailiponi',
+  { id: 'aitana-toscano', name: 'Aitana Toscano', title: 'Data Manager', dept: 'digital', level: 4, status: 'Contractor', reportsTo: 'joshua-hadden',
     responsibilities: ['Power BI reporting lead', 'Backend Data stability & cleaning'],
     kpis: ['Stakeholder CSAT - timeliness per project', 'Stakeholder CSAT - communication, quality of work, impact'], email: 'Aitanantc@churchofjesuschrist.org', photoUrl: '../photos/digital/aitana-toscano.jpeg', roleInventoryUrl: 'https://churchofjesuschrist.sharepoint.com/:w:/s/BYU-PathwayStudentSuccessRoleInventory/IQDM61NrXoIgTZn7hTXqXYRFAT-HAogly8tB9cq40Uvl0dk?e=9icL1c' },
   { id: 'isaias-zuniga', name: 'Isaias Zuñiga', title: 'AI Dev. Manager', dept: 'digital', level: 4, status: 'Contractor', reportsTo: 'ricky-kailiponi',
@@ -173,6 +173,9 @@ OC.employees = [
   { id: 'victor-ferreira', name: 'Victor Lamôni Calado Ferreira', title: 'System & Operations Associate Registrar', dept: 'digital', level: 5, status: 'FTE', reportsTo: 'joshua-hadden',
     responsibilities: ['Registrar services for MLP students'],
     kpis: ['Project delivery on time rate', 'Stakeholder CSAT - communication, quality of work, impact'], email: 'victorferreira@byupw.edu', photoUrl: '../photos/digital/victor-ferreira.jpg', roleInventoryUrl: 'https://churchofjesuschrist.sharepoint.com/:w:/s/BYU-PathwayStudentSuccessRoleInventory/IQBd6L0FnQgkQoq21Rr5e_CeAVnmrAepKNqoBsDZpFYsz3A?e=5EPfTL' },
+  { id: 'feyisayo-famakinde', name: 'Feyisayo Famakinde', title: 'Azure DevOps Engineer', dept: 'digital', level: 5, status: 'Contractor', reportsTo: 'ricky-kailiponi',
+    responsibilities: [],
+    kpis: [], photoUrl: '', roleInventoryUrl: 'https://churchofjesuschrist.sharepoint.com/:w:/r/sites/BYU-PathwayStudentSuccessRoleInventory/_layouts/15/Doc.aspx?sourcedoc=%7B0C826DCB-21C5-423A-9C05-D7F3F0B32975%7D&file=Azure%20DevOps%20Engineer%20Role%20Inventory.docx&action=default&mobileredirect=true' },
 
   // ── PROJECT MANAGERS (displayed beside their director/VP) ──
   { id: 'jess-swinburne', name: 'Jess Swinburne', title: 'Project Manager', dept: 'executive', level: 2, status: 'Contractor', reportsTo: 'vp', role: 'pm', pmPosition: 'right',

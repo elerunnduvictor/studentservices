@@ -381,26 +381,26 @@ function renderTable(filtered) {
       : `<span class="cell-dash">—</span>`;
     return `
       <tr data-id="${r.id}">
-        <td class="cell-okr"><span class="okr-badge" style="background:${c.pale}; color:${c.bg};">${escapeHtml(r.okr)}</span></td>
-        <td class="cell-kr">${escapeHtml(r.keyResult)}</td>
-        <td class="cell-skr">
+        <td class="cell-okr" data-label="OKR"><span class="okr-badge" style="background:${c.pale}; color:${c.bg};">${escapeHtml(r.okr)}</span></td>
+        <td class="cell-kr" data-label="Key Result">${escapeHtml(r.keyResult)}</td>
+        <td class="cell-skr" data-label="Sub-Key Result">
           <div class="skr-wrap" style="background:${skr.pale}; border-left-color:${skr.bg};">
             <span class="skr-dot" style="background:${skr.bg};"></span>
             <span class="skr-text">${escapeHtml(r.subKeyResult)}</span>
           </div>
         </td>
-        <td class="cell-skr-child">${childHtml}</td>
-        <td class="cell-person">${escapeHtml(r.stakeholder)}</td>
-        <td class="cell-person cell-person-secondary">${
+        <td class="cell-skr-child" data-label="Quarter">${childHtml}</td>
+        <td class="cell-person" data-label="Stakeholder">${escapeHtml(r.stakeholder)}</td>
+        <td class="cell-person cell-person-secondary" data-label="Secondary">${
           secondaryList(r.secondaryStakeholders).length
             ? secondaryList(r.secondaryStakeholders).map(p => `<span class="person-tag">${escapeHtml(p)}</span>`).join("")
             : `<span class="cell-dash">—</span>`
         }</td>
-        <td class="cell-person">${escapeHtml(r.projectManager)}</td>
-        <td class="cell-period">${escapeHtml(r.period)}</td>
-        <td>${progressHtml}</td>
-        <td class="cell-stretch">${stretchHtml}</td>
-        <td><span class="status-pill" style="background:${sc.pale}; color:${sc.bg};"><span class="status-dot" style="background:${sc.bg};"></span>${escapeHtml(s)}</span></td>
+        <td class="cell-person" data-label="Project Manager">${escapeHtml(r.projectManager)}</td>
+        <td class="cell-period" data-label="Period">${escapeHtml(r.period)}</td>
+        <td data-label="Progress">${progressHtml}</td>
+        <td class="cell-stretch" data-label="Stretch Goal">${stretchHtml}</td>
+        <td data-label="Status"><span class="status-pill" style="background:${sc.pale}; color:${sc.bg};"><span class="status-dot" style="background:${sc.bg};"></span>${escapeHtml(s)}</span></td>
       </tr>
     `;
   }).join("");

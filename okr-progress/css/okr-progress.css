@@ -481,6 +481,13 @@
 
 /* ══════════════ TABLE ══════════════ */
 .okrp-table-card { padding: 0; overflow: hidden; }
+/* The table carries 11 columns, more than the 1720px reading column can hold.
+   Past that width, let it break out to the full section width so it uses the
+   empty page margins instead of scrolling. 908px = half the inner column
+   (860px) + the section's 48px gutter, which is where padding caps out. */
+@media (min-width: 1820px) {
+  .okrp-table-card { margin-inline: calc(908px - 50vw); }
+}
 .okrp-table-header {
   padding: 20px 24px 16px;
   border-bottom: 1px solid var(--border-subtle);
@@ -488,15 +495,63 @@
 }
 .okrp-table-header .okrp-card-title { margin-bottom: 0; }
 .okrp-table-count { font-size: 0.78rem; color: var(--text-dim); }
-.okrp-table-wrap { overflow-x: auto; }
+/* Below ~1600px the 11 columns can't all fit, so the wrap scrolls. The paired
+   gradients are the standard scroll-shadow: the solid halves ride with the
+   content (`local`) and uncover a soft edge shadow (`scroll`) only while there
+   is more table in that direction — so a scrolled table reads as scrollable
+   rather than cut off, and the shadows vanish at either end. */
+.okrp-table-wrap {
+  overflow-x: auto;
+  scrollbar-width: thin;
+  background:
+    linear-gradient(to right, var(--bg-card) 45%, transparent) 0 0 / 40px 100% no-repeat local,
+    linear-gradient(to left,  var(--bg-card) 45%, transparent) 100% 0 / 40px 100% no-repeat local,
+    radial-gradient(farthest-side at 0 50%,   rgba(28,35,37,0.16), transparent) 0 0 / 15px 100% no-repeat scroll,
+    radial-gradient(farthest-side at 100% 50%, rgba(28,35,37,0.16), transparent) 100% 0 / 15px 100% no-repeat scroll;
+}
+[data-theme="dark"] .okrp-table-wrap {
+  background:
+    linear-gradient(to right, var(--bg-card) 45%, transparent) 0 0 / 40px 100% no-repeat local,
+    linear-gradient(to left,  var(--bg-card) 45%, transparent) 100% 0 / 40px 100% no-repeat local,
+    radial-gradient(farthest-side at 0 50%,   rgba(0,0,0,0.55), transparent) 0 0 / 15px 100% no-repeat scroll,
+    radial-gradient(farthest-side at 100% 50%, rgba(0,0,0,0.55), transparent) 100% 0 / 15px 100% no-repeat scroll;
+}
 .okrp-table {
   width: 100%; border-collapse: collapse;
   font-size: 0.82rem;
   table-layout: auto;
 }
+/* ── Responsive table ──────────────────────────────────────────────────────
+   Column order: 1 OKR · 2 Key Result · 3 Sub-Key Result · 4 Quarter ·
+   5 Stakeholder · 6 Secondary · 7 PM · 8 Period · 9 Progress ·
+   10 Stretch Goal · 11 Status
+
+   As width drops, the least decision-critical columns retire in order. Nothing
+   is lost — clicking any row opens the modal with every field — so shedding
+   beats shrinking text to unreadable sizes. Below 820px the rows restack as
+   cards (see further down) and every field returns, labelled.            */
+@media (min-width: 821px) and (max-width: 1670px) {
+  /* Period and Stretch Goal: narrow, and mostly em-dashes */
+  .okrp-table th:nth-child(8),  .okrp-table td:nth-child(8),
+  .okrp-table th:nth-child(10), .okrp-table td:nth-child(10) { display: none; }
+}
+@media (min-width: 821px) and (max-width: 1520px) {
+  /* Quarter — the parent Sub-Key Result already carries the context */
+  .okrp-table th:nth-child(4), .okrp-table td:nth-child(4) { display: none; }
+}
+@media (min-width: 821px) and (max-width: 1340px) {
+  /* Project Manager and Secondary Stakeholders — ownership detail */
+  .okrp-table th:nth-child(6), .okrp-table td:nth-child(6),
+  .okrp-table th:nth-child(7), .okrp-table td:nth-child(7) { display: none; }
+}
+@media (min-width: 821px) and (max-width: 1040px) {
+  /* Key Result — the OKR badge still anchors each row */
+  .okrp-table th:nth-child(2), .okrp-table td:nth-child(2) { display: none; }
+}
+
 .okrp-table thead { background: var(--bg-elevated); }
 .okrp-table th {
-  padding: 12px 14px;
+  padding: 12px 11px;
   text-align: left;
   font-weight: 600;
   font-size: 0.62rem;
@@ -506,9 +561,14 @@
   border-bottom: 1px solid var(--border-subtle);
   white-space: nowrap;
 }
-.okrp-th-progress { min-width: 160px; }
+.okrp-th-progress { min-width: 132px; }
+/* Narrow columns whose two-word labels are wider than their data. Letting the
+   header wrap sizes the column by its contents instead of its title. Must
+   out-specify `.okrp-table th`, which sets white-space: nowrap. */
+.okrp-table th.okrp-th-wrap { white-space: normal; }
+.okrp-table th.okrp-th-secondary { min-width: 130px; }
 .okrp-table td {
-  padding: 12px 14px;
+  padding: 12px 11px;
   border-bottom: 1px solid var(--border-subtle);
   color: var(--text-muted);
   vertical-align: middle;
@@ -520,11 +580,11 @@
 .okrp-table tbody tr:hover { background: var(--bg-elevated); }
 .cell-okr {
   font-weight: 600; color: var(--text);
-  width: 220px; min-width: 200px;
+  width: 165px; min-width: 142px;
 }
-.cell-kr { width: 260px; min-width: 220px; color: var(--text-muted); }
+.cell-kr { width: 200px; min-width: 165px; color: var(--text-muted); }
 .cell-skr {
-  min-width: 320px;
+  min-width: 248px;
   color: var(--text);
   font-weight: 500;
   padding-right: 18px;
@@ -549,8 +609,8 @@
 /* Sub-Key Result (Child) column — quarterly subdivision when present
    (e.g. "Q2 Admissions ITD roadmap"), em-dash otherwise. */
 .cell-skr-child {
-  width: 200px;
-  min-width: 180px;
+  width: 155px;
+  min-width: 132px;
   font-size: 0.78rem;
   color: var(--text-muted);
   vertical-align: middle;
@@ -581,7 +641,9 @@
 .cell-person { white-space: nowrap; font-size: 0.78rem; }
 /* Secondary stakeholders are a list, so this cell wraps where the other
    person cells don't — each name gets its own tag. */
-.cell-person-secondary { white-space: normal; min-width: 150px; }
+/* No fixed width — a declared width becomes the column's preferred size and
+   inflates it well past what the name tags actually need. */
+.cell-person-secondary { white-space: normal; min-width: 130px; }
 .person-tag {
   display: inline-block;
   padding: 2px 8px;
@@ -596,6 +658,50 @@
 .cell-period {
   white-space: nowrap; font-size: 0.74rem;
   color: var(--text-dim);
+}
+
+/* ── Phone: the table stops being a grid and becomes one card per sub-key
+   result. Every column returns, each labelled by its header via data-label,
+   so nothing is hidden on the smallest screens — it just reads vertically. */
+@media (max-width: 820px) {
+  .okrp-table-wrap { overflow-x: visible; background: none; }
+  .okrp-table { display: block; font-size: 0.86rem; }
+  .okrp-table thead { display: none; }
+  .okrp-table tbody { display: block; padding: 12px; }
+  .okrp-table tbody tr {
+    display: block;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 12px 14px;
+    margin-bottom: 10px;
+  }
+  .okrp-table tbody tr:hover { background: var(--bg-elevated); }
+  .okrp-table td {
+    display: grid;
+    grid-template-columns: 104px minmax(0, 1fr);
+    gap: 12px;
+    align-items: start;
+    width: auto !important;
+    min-width: 0 !important;
+    padding: 5px 0;
+    border-bottom: none;
+    white-space: normal;
+  }
+  .okrp-table td::before {
+    content: attr(data-label);
+    font-size: 0.58rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--text-dim);
+    padding-top: 4px;
+  }
+  /* The sub-key result is the card's headline: full width, no label column. */
+  .okrp-table td.cell-skr { grid-template-columns: 1fr; gap: 0; padding-top: 2px; }
+  .okrp-table td.cell-skr::before { display: none; }
+  .okrp-table td.cell-stretch { text-align: left; }
+  .okrp-table .okrp-empty { padding: 24px 8px; }
 }
 .okr-badge {
   display: inline-block;

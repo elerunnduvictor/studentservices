@@ -1433,6 +1433,14 @@ body .okr-modal[hidden],
 .home-kpi-cta-btn--performance:hover {
   box-shadow: 0 12px 32px rgba(22,137,128,0.40);
 }
+/* Matches the plum identity of the KPIs Scorecard page it opens. */
+.home-kpi-cta-btn--scorecard {
+  background: linear-gradient(135deg, #3E2238 0%, #7B476B 55%, #9C5F8E 100%);
+  box-shadow: 0 6px 22px rgba(62,34,56,0.30);
+}
+.home-kpi-cta-btn--scorecard:hover {
+  box-shadow: 0 12px 32px rgba(62,34,56,0.42);
+}
 
 /* ══════════════════════════════════════════════════════════
    HOME OKR SUMMARY (3 OKR overview cards + CTA button)

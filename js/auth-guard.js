@@ -9,7 +9,8 @@
     window.location.pathname.includes('/departments') ||
     window.location.pathname.includes('/okr-progress') ||
     window.location.pathname.includes('/org-chart') ||
-    window.location.pathname.includes('/performance-standards');
+    window.location.pathname.includes('/performance-standards') ||
+    window.location.pathname.includes('/scorecard');
 
   const loginPath = isSubfolder ? '../login/index.html' : 'login/index.html';
 

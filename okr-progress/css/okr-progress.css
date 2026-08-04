@@ -341,6 +341,7 @@
   min-width: 170px;
   transition: var(--transition);
 }
+
 .okrp-select:hover, .okrp-search:hover { border-color: var(--bp-teal-light); }
 .okrp-select:focus, .okrp-search:focus {
   border-color: var(--bp-teal);

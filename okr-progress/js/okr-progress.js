@@ -18,6 +18,7 @@ const state = {
   okr: "All",
   status: "All",
   stakeholder: "All",
+  secondaryStakeholder: "All",
   pm: "All",
   period: "All",
   search: "",
@@ -161,6 +162,7 @@ function getFiltered() {
     if (state.okr !== "All" && r.okr !== state.okr) return false;
     if (state.status !== "All" && effectiveStatus(r) !== state.status) return false;
     if (state.stakeholder !== "All" && r.stakeholder !== state.stakeholder) return false;
+    if (state.secondaryStakeholder !== "All" && !secondaryList(r.secondaryStakeholders).includes(state.secondaryStakeholder)) return false;
     if (state.pm !== "All" && r.projectManager !== state.pm) return false;
     if (state.period !== "All" && r.period !== state.period) return false;
     if (q) {
@@ -176,6 +178,7 @@ function renderFilters() {
   const okrs = ["All", ...unique(ROWS.map(r => r.okr))];
   const statuses = ["All", ...unique(ROWS.map(r => effectiveStatus(r))).sort()];
   const stakeholders = ["All", ...unique(ROWS.map(r => r.stakeholder)).sort()];
+  const secondaryStakeholders = ["All", ...unique(ROWS.flatMap(r => secondaryList(r.secondaryStakeholders))).sort()];
   const pms = ["All", ...unique(ROWS.map(r => r.projectManager)).sort()];
   const periods = ["All", ...unique(ROWS.map(r => r.period)).sort()];
 
@@ -188,10 +191,12 @@ function renderFilters() {
   setOpts("filterOkr", okrs, state.okr, v => v === "All" ? "All OKRs" : v);
   setOpts("filterStatus", statuses, state.status, v => v === "All" ? "All Statuses" : v);
   setOpts("filterStakeholder", stakeholders, state.stakeholder, v => v === "All" ? "All Stakeholders" : v);
+  setOpts("filterSecondaryStakeholder", secondaryStakeholders, state.secondaryStakeholder, v => v === "All" ? "All Leads" : v);
   setOpts("filterPm", pms, state.pm, v => v === "All" ? "All Project Managers" : v);
   setOpts("filterPeriod", periods, state.period, v => v === "All" ? "All Periods" : v);
 
   const dirty = state.okr !== "All" || state.status !== "All" || state.stakeholder !== "All"
+             || state.secondaryStakeholder !== "All"
              || state.pm !== "All" || state.period !== "All" || state.search;
   document.getElementById("filterClear").disabled = !dirty;
 }
@@ -1051,11 +1056,12 @@ function initFilters() {
   document.getElementById("filterOkr").addEventListener("change", e => { state.okr = e.target.value; renderAll(); });
   document.getElementById("filterStatus").addEventListener("change", e => { state.status = e.target.value; renderAll(); });
   document.getElementById("filterStakeholder").addEventListener("change", e => { state.stakeholder = e.target.value; renderAll(); });
+  document.getElementById("filterSecondaryStakeholder").addEventListener("change", e => { state.secondaryStakeholder = e.target.value; renderAll(); });
   document.getElementById("filterPm").addEventListener("change", e => { state.pm = e.target.value; renderAll(); });
   document.getElementById("filterPeriod").addEventListener("change", e => { state.period = e.target.value; renderAll(); });
   document.getElementById("filterSearch").addEventListener("input", e => { state.search = e.target.value; renderAll(); });
   document.getElementById("filterClear").addEventListener("click", () => {
-    Object.assign(state, { okr: "All", status: "All", stakeholder: "All", pm: "All", period: "All", search: "" });
+    Object.assign(state, { okr: "All", status: "All", stakeholder: "All", secondaryStakeholder: "All", pm: "All", period: "All", search: "" });
     document.getElementById("filterSearch").value = "";
     renderAll();
   });

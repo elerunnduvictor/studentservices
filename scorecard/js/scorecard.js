@@ -20,18 +20,24 @@
   var KPIS = window.SCORECARD_KPIS || [];
   var META = window.SCORECARD_META || {};
 
+  /* Colour is computed at build time from each KPI's own green/yellow/red band
+     definitions against its current value — never read from the spreadsheet's
+     "Performance Status" column, whose formula is wrong. "Manual Review" means
+     a value exists but the KPI defines no thresholds to score it against. */
   var SCORE = { Green: 100, Yellow: 50, Red: 0 };
   var STATUS = {
-    Green:     { cls: "green",  glyph: "✓", label: "Green" },
-    Yellow:    { cls: "yellow", glyph: "▲", label: "Yellow" },
-    Red:       { cls: "red",    glyph: "✕", label: "Red" },
-    "No Data": { cls: "nodata", glyph: "◌", label: "No Data" }
+    Green:           { cls: "green",  glyph: "✓", label: "Green" },
+    Yellow:          { cls: "yellow", glyph: "▲", label: "Yellow" },
+    Red:             { cls: "red",    glyph: "✕", label: "Red" },
+    "Manual Review": { cls: "manual", glyph: "◐", label: "Manual Review" },
+    "No Data":       { cls: "nodata", glyph: "◌", label: "No Data" }
   };
-  var SPECTRUM_ORDER = ["Green", "Yellow", "Red", "No Data"];
+  var SPECTRUM_ORDER = ["Green", "Yellow", "Red", "Manual Review", "No Data"];
   var SPECTRUM_COLOR = {
     Green: "var(--status-green)",
     Yellow: "var(--status-yellow)",
     Red: "var(--status-red)",
+    "Manual Review": "var(--status-manual)",
     "No Data": "var(--status-nodata)"
   };
 
@@ -79,20 +85,16 @@
     };
   }
 
-  function isPercent(r) {
-    return /%/.test(String(r.bandGreen) + String(r.bandYellow) + String(r.bandRed));
-  }
-
+  /* `displayValue` is the current value already lifted onto the same scale as
+     the bands (percentages as 0–100), computed at build time. */
   function formatValue(r) {
-    if (r.value === null || r.value === undefined || r.value === "") return null;
-    if (typeof r.value === "number") {
-      if (isPercent(r) && Math.abs(r.value) <= 1) {
-        var pct = r.value * 100;
-        return (Math.round(pct * 10) % 10 === 0 ? Math.round(pct) : pct.toFixed(1)) + "%";
-      }
-      return String(Math.round(r.value * 100) / 100);
+    if (r.displayValue === null || r.displayValue === undefined) {
+      return r.value === null || r.value === undefined || r.value === "" ? null : String(r.value);
     }
-    return String(r.value);
+    var n = r.displayValue;
+    var rounded = Math.round(n * 100) / 100;
+    var text = (Math.round(rounded * 10) % 10 === 0 ? Math.round(rounded) : rounded.toFixed(1));
+    return r.percent ? text + "%" : String(text);
   }
 
   function statusChip(status, text) {
@@ -222,36 +224,42 @@
   function buildRunway(r) {
     var g = r.greenCutoff, red = r.redCutoff;
     if (typeof g !== "number" || typeof red !== "number") return null;
-    var dir = (r.direction || "").toLowerCase();
-    var higher = dir.indexOf("higher") === 0;
-    var lower = dir.indexOf("lower") === 0;
+    var higher = r.direction === "higher";
+    var lower = r.direction === "lower";
     if (!higher && !lower) return null;
 
-    var pct = isPercent(r) && Math.abs(g) <= 1 && Math.abs(red) <= 1;
-    var val = typeof r.value === "number" ? r.value : null;
-    var hi = pct ? 1 : Math.max(g, red, val || 0) * 1.35;
-    if (!pct && hi <= 0) return null;
+    var pct = !!r.percent;
+    var val = typeof r.displayValue === "number" ? r.displayValue : null;
+    var hi = pct ? 100 : Math.max(g, red, val || 0) * 1.35;
+    if (hi <= 0) hi = Math.max(g, red, 1) + 1;
 
     function toPct(n) { return (n / hi) * 100; }
-    function fmt(n) { return pct ? Math.round(n * 100) + "%" : String(Math.round(n * 100) / 100); }
+    function fmt(n) { return (Math.round(n * 100) / 100) + (pct ? "%" : ""); }
 
-    var zones;
+    var zones, greenFlex;
     if (higher) {
       // red below the red cutoff, green at or above the green cutoff
+      greenFlex = 100 - toPct(g);
       zones = [
         { cls: "sc-zone-red", flex: toPct(red), label: "< " + fmt(red) },
         { cls: "sc-zone-yellow", flex: toPct(g) - toPct(red), label: fmt(red) + " – " + fmt(g) },
-        { cls: "sc-zone-green", flex: 100 - toPct(g), label: "≥ " + fmt(g) }
+        { cls: "sc-zone-green", flex: greenFlex, label: "≥ " + fmt(g) }
       ];
     } else {
+      greenFlex = toPct(g);
       zones = [
-        { cls: "sc-zone-green", flex: toPct(g), label: "≤ " + fmt(g) },
+        { cls: "sc-zone-green", flex: greenFlex, label: "≤ " + fmt(g) },
         { cls: "sc-zone-yellow", flex: toPct(red) - toPct(g), label: fmt(g) + " – " + fmt(red) },
         { cls: "sc-zone-red", flex: 100 - toPct(red), label: "> " + fmt(red) }
       ];
     }
+    /* Some KPIs are pass/fail rather than a range — "no audit findings" is green
+       only at exactly 0. A linear runway can't show a single-point target, and
+       drawing it would put a passing value inside the yellow band. Fall back to
+       the green/yellow/red band cards, which state the rule plainly. */
+    if (greenFlex < 2) return null;
     zones = zones.filter(function (z) { return z.flex > 0.5; });
-    if (!zones.length) return null;
+    if (zones.length < 2) return null;
 
     return {
       zones: zones,
@@ -294,17 +302,23 @@
       ? '<a href="' + esc(r.source) + '" target="_blank" rel="noopener">Open report ↗</a>'
       : esc(r.source || "—");
 
+    var chipText = r.status === "No Data" ? "No data reported yet"
+      : r.status === "Manual Review" ? "Manual review — no thresholds set"
+      : r.status;
+
     return head("Key performance indicator", r.measure,
         r.dept + " · " + r.subDept) +
       '<div class="sc-leaf-value">' +
         '<span class="sc-leaf-num' + (v ? "" : " is-empty") + '">' + esc(v || "—") + "</span>" +
-        statusChip(r.status, r.status === "No Data" ? "No data reported yet" : r.status) +
+        statusChip(r.status, chipText) +
       "</div>" +
       runwayHtml + bands +
       '<div class="sc-meta-grid">' +
         '<div class="sc-meta"><b>Owner</b><span>' + esc(r.employee) + (r.role ? " — " + esc(r.role) : "") + "</span></div>" +
         '<div class="sc-meta"><b>Category</b><span>' + esc(r.category || "—") + (r.type ? " · " + esc(r.type) : "") + "</span></div>" +
-        '<div class="sc-meta"><b>Direction</b><span>' + esc(r.direction || "—") + "</span></div>" +
+        '<div class="sc-meta"><b>Direction</b><span>' +
+          (r.direction === "higher" ? "Higher is better ↑"
+            : r.direction === "lower" ? "Lower is better ↓" : "—") + "</span></div>" +
         '<div class="sc-meta"><b>Cadence</b><span>' + esc(r.frequency || "—") + "</span></div>" +
         '<div class="sc-meta"><b>Data source</b><span>' + source + "</span></div>" +
       "</div>";
@@ -314,7 +328,7 @@
 
   function kpiList(rows, showOwner) {
     if (!rows.length) return '<div class="sc-empty">No KPIs match this lens.</div>';
-    var order = { Red: 0, Yellow: 1, "No Data": 2, Green: 3 };
+    var order = { Red: 0, Yellow: 1, "Manual Review": 2, "No Data": 3, Green: 4 };
     var sorted = rows.slice().sort(function (a, b) {
       return (order[a.status] === undefined ? 9 : order[a.status]) -
              (order[b.status] === undefined ? 9 : order[b.status]);

@@ -19,11 +19,13 @@
   --status-green: #2E9E5C;
   --status-yellow: #E08A1E;
   --status-red: #D14545;
+  --status-manual: #4A5568;
   --status-nodata: #7F898A;
 
   --green-pale: rgba(46,158,92,0.13);
   --yellow-pale: rgba(224,138,30,0.15);
   --red-pale: rgba(209,69,69,0.13);
+  --manual-pale: rgba(74,85,104,0.14);
   --nodata-pale: rgba(127,137,138,0.14);
 
   --bg: #FFFFFF;
@@ -51,9 +53,11 @@
   --ring-health: #AE5C9C;
   --ring-cov: #C29433;
 
+  --status-manual: #94A3B8;
   --green-pale: rgba(46,158,92,0.2);
   --yellow-pale: rgba(224,138,30,0.2);
   --red-pale: rgba(209,69,69,0.2);
+  --manual-pale: rgba(148,163,184,0.18);
   --nodata-pale: rgba(127,137,138,0.18);
 
   --bg: #0d0d0f;
@@ -328,6 +332,7 @@
 .sc-status--green  { background: var(--green-pale);  color: var(--status-green); }
 .sc-status--yellow { background: var(--yellow-pale); color: var(--status-yellow); }
 .sc-status--red    { background: var(--red-pale);    color: var(--status-red); }
+.sc-status--manual { background: var(--manual-pale); color: var(--status-manual); }
 .sc-status--nodata { background: var(--nodata-pale); color: var(--status-nodata); }
 
 /* ══════════════ DRILL CARDS ══════════════ */

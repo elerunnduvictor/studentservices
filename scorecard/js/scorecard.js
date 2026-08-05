@@ -289,6 +289,14 @@
         esc(runway.scale[1]) + "</span><span>" + esc(runway.scale[2]) + "</span></div></div>";
     }
 
+    /* When a band definition in the sheet didn't follow the standard pattern it
+       was rebuilt from the yellow range so the colour is right — say so here so
+       the correction is visible and can be fixed at source. */
+    var bandNote = r.bandNote
+      ? '<p class="sc-band-note">Band definition corrected: ' + esc(r.bandNote) +
+        '. Update the spreadsheet to match.</p>'
+      : "";
+
     var bands = "";
     if (r.bandGreen || r.bandYellow || r.bandRed) {
       bands = '<div class="sc-bands">' +
@@ -312,7 +320,7 @@
         '<span class="sc-leaf-num' + (v ? "" : " is-empty") + '">' + esc(v || "—") + "</span>" +
         statusChip(r.status, chipText) +
       "</div>" +
-      runwayHtml + bands +
+      runwayHtml + bands + bandNote +
       '<div class="sc-meta-grid">' +
         '<div class="sc-meta"><b>Owner</b><span>' + esc(r.employee) + (r.role ? " — " + esc(r.role) : "") + "</span></div>" +
         '<div class="sc-meta"><b>Category</b><span>' + esc(r.category || "—") + (r.type ? " · " + esc(r.type) : "") + "</span></div>" +

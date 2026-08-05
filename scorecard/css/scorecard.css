@@ -545,6 +545,15 @@
 .sc-band--yellow b { color: var(--status-yellow); }
 .sc-band--red b { color: var(--status-red); }
 
+.sc-band-note {
+  margin-top: 12px;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  border-left: 3px solid var(--bp-gold-dark);
+  background: var(--bg-elevated);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: 10px 14px;
+}
 .sc-meta-grid {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 12px; margin-top: 26px;

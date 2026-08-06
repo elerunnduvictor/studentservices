@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Directory — Student Services PM Console</title>
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/grid.css">
+</head>
+<body data-book="directory">
+
+<div class="workbench">
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">Student Services</span>
+      <span class="brand-sub">PM Console</span>
+    </div>
+    <nav class="topbar-spacer"></nav>
+    <div class="topbar-user"></div>
+  </header>
+
+  <nav class="tabbar">
+    <a class="tab" data-book="okrs" href="okrs.html"><span class="dot"></span>OKRs</a>
+    <a class="tab" data-book="directory" href="directory.html"><span class="dot"></span>Directory</a>
+    <a class="tab" data-book="kpis" href="kpis.html"><span class="dot"></span>KPIs</a>
+    <div class="tabbar-spacer"></div>
+  </nav>
+
+  <main>
+    <div class="toolbar">
+      <div class="toolbar-title">
+        <h1 id="bookTitle">&nbsp;</h1>
+        <span class="sheet-of" id="bookSubtitle"></span>
+      </div>
+
+      <div class="toolbar-spacer"></div>
+
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input id="search" class="search" type="search" placeholder="Filter rows…" aria-label="Filter rows">
+      </div>
+      <span class="chip-count" id="rowCount">—</span>
+
+      <button class="btn" id="addBtn" title="Add a row (Ctrl+Enter)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add row
+      </button>
+      <button class="btn" id="exportBtn" title="Download this sheet as CSV">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export
+      </button>
+      <button class="btn btn-danger" id="revertBtn" disabled title="Discard unsaved changes">Revert</button>
+      <button class="btn btn-primary" id="saveBtn" disabled title="Save to the database (Ctrl+S)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Save
+      </button>
+    </div>
+
+    <div class="subtabs" id="subtabs" hidden></div>
+
+    <div id="gridHost" style="flex:1;min-height:0;display:flex;flex-direction:column"></div>
+  </main>
+
+  <footer class="statusbar">
+    <span class="save-state" id="saveState"><span class="pip"></span>All changes saved</span>
+    <span id="statusMsg"></span>
+    <div class="sb-right">
+      <span><kbd>Enter</kbd> edit</span>
+      <span><kbd>Tab</kbd> next</span>
+      <span><kbd>Ctrl</kbd>+<kbd>V</kbd> paste from Excel</span>
+      <span><kbd>Ctrl</kbd>+<kbd>Z</kbd> undo</span>
+      <span><kbd>Ctrl</kbd>+<kbd>S</kbd> save</span>
+    </div>
+  </footer>
+
+</div>
+
+<script src="../shared/js/config.js"></script>
+<script src="../shared/js/kpi-status.js"></script>
+<script src="../shared/js/data-service.js"></script>
+<script src="js/pm-editors.js"></script>
+<script src="js/schema.js"></script>
+<script src="js/shell.js"></script>
+<script type="module">
+  import { mountWorkbook } from "./js/workbook.js";
+  mountWorkbook("directory");
+</script>
+
+</body>
+</html>

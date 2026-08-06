@@ -282,8 +282,17 @@ function initFilters() {
 
 /* ═══════════════ BOOT ═══════════════
    Theme, nav hamburger, and scroll-reveal are auto-initialized by shared.js. */
-document.addEventListener("DOMContentLoaded", () => {
+/* Start whether this file was loaded with the page or injected afterwards by
+   shared/js/hub-boot.js once the database had answered — by then
+   DOMContentLoaded has already fired and would never fire again. */
+function startPage() {
   initFilters();
   renderAll();
   window.SS.initReveal();
-});
+}
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", startPage, { once: true });
+} else {
+  startPage();
+}
+

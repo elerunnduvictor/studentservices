@@ -1,4 +1,12 @@
-document.addEventListener('DOMContentLoaded', function() {
+/* Start whether this file was loaded with the page or injected afterwards by
+   shared/js/hub-boot.js once the database had answered — by then
+   DOMContentLoaded has already fired and would never fire again. */
+(function startOrgChart() {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', startOrgChart, { once: true });
+    return;
+  }
+
   // ── Render the chart ──
   OC.renderChart();
 
@@ -140,4 +148,4 @@ document.addEventListener('DOMContentLoaded', function() {
       body.style.maxHeight = body.scrollHeight + 'px';
     });
   });
-});
+})();

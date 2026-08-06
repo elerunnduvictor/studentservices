@@ -123,8 +123,13 @@
   </footer>
 
   <script src="../js/shared.js"></script>
+  <!-- Bundled snapshot, used only if the database is unreachable. -->
   <script src="js/employees.js"></script>
-  <script src="js/directory.js"></script>
+  <script src="../shared/js/config.js"></script>
+  <script src="../shared/js/data-service.js"></script>
+  <script src="../shared/js/hub-boot.js"
+          data-datasets="directory"
+          data-then="directory/js/directory.js"></script>
 </body>
 
 </html>

@@ -1,0 +1,19 @@
+# Source workbooks. These were a one-time bootstrap into Postgres — the database
+# is the source of truth now and PMs edit it through the PM console. Ignored so
+# a stray copy dropped in here to re-run an import never lands in a commit.
+data-sources/
+*.xlsx
+*.xlsx.bak
+
+# OS / editor noise
+Thumbs.db
+desktop.ini
+.DS_Store
+.vscode/
+.idea/
+
+# Python, from the supabase/ import scripts
+__pycache__/
+*.pyc
+.venv/
+venv/

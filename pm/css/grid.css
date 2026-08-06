@@ -1,0 +1,232 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   THE GRID
+
+   A spreadsheet, not a "data table": row numbers down the left, a frozen
+   header, a single active cell with a visible ring, and the whole surface
+   navigable from the keyboard. PMs are coming from Excel — the muscle memory
+   they already have should keep working.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.grid-wrap {
+  flex: 1; min-height: 0;
+  overflow: auto;
+  background: var(--surface);
+  position: relative;
+  /* the scroll container is the positioning context for sticky header + gutter */
+}
+
+.grid {
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed;
+  font-size: .8rem;
+  min-width: 100%;
+}
+
+/* ── header ── */
+.grid thead th {
+  position: sticky; top: 0; z-index: 20;
+  background: var(--surface-2);
+  border-bottom: 1.5px solid var(--line);
+  border-right: 1px solid var(--line-soft);
+  padding: 0 9px;
+  height: 36px;
+  text-align: left;
+  font-size: .67rem; font-weight: 700;
+  letter-spacing: .07em; text-transform: uppercase;
+  color: var(--ink-2);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  user-select: none;
+}
+.grid thead th .th-inner { display: flex; align-items: center; gap: 6px; height: 100%; }
+.grid thead th .req { color: var(--bad); font-size: .8em; }
+
+/* the corner cell sits above the row-number gutter */
+.grid thead th.gutter {
+  z-index: 30; left: 0;
+  width: 46px; min-width: 46px;
+  text-align: center; padding: 0;
+  border-right: 1.5px solid var(--line);
+}
+
+/* column resize handle */
+.col-resize {
+  position: absolute; top: 0; right: -3px; width: 7px; height: 100%;
+  cursor: col-resize; z-index: 25;
+}
+.col-resize:hover::after, .col-resize.dragging::after {
+  content: ''; position: absolute; top: 0; right: 3px;
+  width: 2px; height: 100%; background: var(--accent);
+}
+.grid thead th { position: sticky; }
+.grid thead th > .th-inner { position: relative; }
+
+/* ── row-number gutter ── */
+.grid td.gutter, .grid th.gutter { position: sticky; left: 0; }
+.grid td.gutter {
+  z-index: 10;
+  width: 46px; min-width: 46px;
+  background: var(--surface-2);
+  border-right: 1.5px solid var(--line);
+  border-bottom: 1px solid var(--line-soft);
+  text-align: center;
+  font-size: .68rem; font-variant-numeric: tabular-nums;
+  color: var(--ink-3);
+  user-select: none; cursor: pointer;
+  padding: 0;
+}
+.grid tr.is-current td.gutter { background: var(--accent-soft); color: var(--accent); font-weight: 700; }
+.grid tr.is-selected td.gutter { background: var(--accent-soft); }
+.grid tr.is-new td.gutter::after { content: '+'; color: var(--ok); font-weight: 700; margin-left: 3px; }
+
+/* ── cells ── */
+.grid td {
+  height: 32px;
+  padding: 0;
+  border-right: 1px solid var(--line-soft);
+  border-bottom: 1px solid var(--line-soft);
+  background: var(--surface);
+  vertical-align: middle;
+  position: relative;
+}
+.grid tbody tr:hover td { background: var(--surface-2); }
+.grid tbody tr:hover td.gutter { background: var(--surface-3); }
+.grid tbody tr.is-selected td { background: var(--accent-soft); }
+
+.cell {
+  display: block;
+  padding: 0 9px;
+  line-height: 30px; height: 30px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  cursor: cell;
+}
+.cell.num { text-align: right; font-variant-numeric: tabular-nums; }
+.cell.muted { color: var(--ink-3); }
+
+/* the active cell */
+.grid td.is-active { z-index: 5; }
+.grid td.is-active::after {
+  content: ''; position: absolute; inset: -1px;
+  border: 2px solid var(--accent); border-radius: 2px;
+  pointer-events: none;
+}
+.grid td.is-dirty { background: var(--warn-soft) !important; }
+.grid td.is-dirty::before {
+  content: ''; position: absolute; top: 0; right: 0;
+  border: 5px solid transparent; border-top-color: var(--warn); border-right-color: var(--warn);
+}
+.grid td.is-error { background: var(--bad-soft) !important; }
+
+/* in-place editor */
+.cell-input {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  padding: 0 8px;
+  border: 2px solid var(--accent);
+  background: var(--surface);
+  font: inherit; font-size: .8rem;
+  color: var(--ink);
+  z-index: 15;
+  border-radius: 2px;
+}
+.cell-input:focus { outline: none; }
+textarea.cell-input {
+  height: auto; min-height: 92px;
+  padding: 7px 8px; line-height: 1.45;
+  resize: vertical;
+  box-shadow: var(--shadow-lg);
+}
+select.cell-input { padding: 0 4px; cursor: pointer; }
+
+/* ── value chips ── */
+.pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  height: 20px; padding: 0 9px;
+  border-radius: 99px;
+  font-size: .69rem; font-weight: 600; white-space: nowrap;
+  background: var(--surface-3); color: var(--ink-2);
+}
+.pill .glyph { font-weight: 700; }
+.pill.green  { background: var(--ok-soft);   color: var(--ok); }
+.pill.yellow { background: var(--warn-soft); color: var(--warn); }
+.pill.red    { background: var(--bad-soft);  color: var(--bad); }
+.pill.grey   { background: var(--surface-3); color: var(--ink-3); }
+.pill.accent { background: var(--accent-soft); color: var(--accent); }
+
+/* progress cell */
+.bar { display: flex; align-items: center; gap: 8px; padding: 0 9px; height: 30px; }
+.bar-track {
+  flex: 1; height: 7px; min-width: 34px;
+  border-radius: 4px; background: var(--surface-3); overflow: hidden;
+}
+.bar-fill { height: 100%; border-radius: 4px; background: var(--accent); }
+.bar-val {
+  font-size: .72rem; font-variant-numeric: tabular-nums;
+  color: var(--ink-2); min-width: 34px; text-align: right;
+}
+
+/* link cell */
+.cell a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+
+/* ── empty / loading ── */
+.grid-empty {
+  padding: 44px 20px; text-align: center; color: var(--ink-3); font-size: .86rem;
+}
+
+/* ── row context menu ── */
+.ctx {
+  position: fixed; z-index: 180;
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius); box-shadow: var(--shadow-lg);
+  padding: 5px; min-width: 190px;
+}
+.ctx button {
+  display: flex; align-items: center; gap: 9px;
+  width: 100%; padding: 7px 11px;
+  background: none; border: none; border-radius: 5px;
+  font-size: .8rem; color: var(--ink); text-align: left; cursor: pointer;
+}
+.ctx button:hover { background: var(--surface-3); }
+.ctx button.danger { color: var(--bad); }
+.ctx button.danger:hover { background: var(--bad-soft); }
+.ctx .sep { height: 1px; background: var(--line); margin: 4px 2px; }
+.ctx kbd {
+  margin-left: auto; font-family: var(--mono); font-size: .66rem;
+  color: var(--ink-3); background: var(--surface-3);
+  border-radius: 3px; padding: 1px 4px;
+}
+
+/* ── detail drawer, for long text a cell can't show ── */
+.drawer {
+  position: fixed; top: 0; right: 0; bottom: 0; width: min(460px, 100vw);
+  background: var(--surface); border-left: 1px solid var(--line);
+  box-shadow: var(--shadow-lg); z-index: 160;
+  display: flex; flex-direction: column;
+  animation: drawerIn .2s cubic-bezier(.4, 0, .2, 1);
+}
+@keyframes drawerIn { from { transform: translateX(100%); } }
+@media (prefers-reduced-motion: reduce) { .drawer { animation: none; } }
+.drawer-head {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 18px; border-bottom: 1px solid var(--line);
+}
+.drawer-head h3 { font-family: var(--serif); font-size: 1.15rem; font-weight: 600; flex: 1; }
+.drawer-body { flex: 1; overflow-y: auto; padding: 18px; }
+.drawer-field { margin-bottom: 16px; }
+.drawer-field label {
+  display: block; font-size: .65rem; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--ink-3); font-weight: 600; margin-bottom: 5px;
+}
+.drawer-field input, .drawer-field textarea, .drawer-field select {
+  width: 100%; padding: 8px 10px;
+  border: 1px solid var(--line); border-radius: var(--radius);
+  background: var(--surface-2); font-size: .84rem;
+}
+.drawer-field textarea { min-height: 96px; resize: vertical; line-height: 1.5; }
+.drawer-field input:focus, .drawer-field textarea:focus, .drawer-field select:focus {
+  outline: none; border-color: var(--accent); background: var(--surface);
+}
+.drawer-foot {
+  display: flex; gap: 8px; justify-content: flex-end;
+  padding: 14px 18px; border-top: 1px solid var(--line);
+}

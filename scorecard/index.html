@@ -92,8 +92,14 @@
     </div>
   </main>
 
+  <!-- Bundled snapshot, used only if the database is unreachable. -->
   <script src="js/scorecard-data.js"></script>
-  <script src="js/scorecard.js"></script>
+  <script src="../shared/js/config.js"></script>
+  <script src="../shared/js/kpi-status.js"></script>
+  <script src="../shared/js/data-service.js"></script>
+  <script src="../shared/js/hub-boot.js"
+          data-datasets="kpis"
+          data-then="scorecard/js/scorecard.js"></script>
   <script src="../js/shared.js"></script>
 
 </body>

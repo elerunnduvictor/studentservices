@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign In — Student Services PM Console</title>
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/app.css">
+<!-- Apply saved theme before paint to avoid a flash -->
+<script>
+  (function () {
+    var saved = localStorage.getItem("ss-theme");
+    if (saved === "dark") document.documentElement.setAttribute("data-theme", "dark");
+  })();
+</script>
+</head>
+<body class="signin">
+
+<main class="signin-card">
+  <div class="badge">BYU-Pathway Worldwide</div>
+  <h1>PM <em>Console</em></h1>
+  <p class="lede">Authorized Editors Only</p>
+
+  <form id="signinForm" novalidate>
+    <div class="field">
+      <label class="sr-only" for="emailInput">Email address</label>
+      <input type="email" id="emailInput" autocomplete="email"
+             placeholder="Enter your email address" required>
+    </div>
+    <button class="btn btn-primary" type="submit" id="submitBtn">
+      Sign In
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </button>
+  </form>
+
+  <div class="signin-msg" id="msg" hidden></div>
+
+  <p class="signin-foot">
+    Editing rights are limited to the departmental project managers.<br>
+    Contact Ben Packer and Jess Swinburne for Provisioning Access.
+  </p>
+</main>
+
+<script src="../shared/js/config.js"></script>
+<script src="../shared/js/data-service.js"></script>
+<script src="js/pm-editors.js"></script>
+<script src="js/shell.js"></script>
+<script>
+  (function () {
+    const SS = window.SS;
+    SS.shell.initTheme();
+
+    /* Returning from an emailed link? Straight into the workbooks. */
+    const session = SS.shell.captureSessionFromUrl() || SS.shell.readSession();
+    if (session) {
+      const next = new URLSearchParams(location.search).get("next");
+      location.replace(/^[a-z-]+\.html$/.test(next || "") ? next : "okrs.html");
+      return;
+    }
+
+    const form = document.getElementById("signinForm");
+    const input = document.getElementById("emailInput");
+    const btn = document.getElementById("submitBtn");
+    const msg = document.getElementById("msg");
+
+    function show(text, kind) {
+      msg.hidden = false;
+      msg.className = "signin-msg " + kind;
+      msg.textContent = text;
+    }
+
+    if (!window.SS_CONFIG.isConfigured) {
+      form.hidden = true;
+      show("This console isn't connected to the database yet. See docs/SETUP.md — " +
+           "the Supabase URL and anon key go in shared/js/config.js.", "err");
+      return;
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = input.value.trim().toLowerCase();
+
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return show("Please enter a valid email address.", "err");
+      }
+
+      /* Same check, same wording as the hub's front door — so someone who
+         isn't provisioned is told immediately rather than after a round trip
+         through their inbox. The database enforces the same list again on
+         every write, so this check is a courtesy, not the security boundary. */
+      if (!window.isProvisionedEditor(email)) {
+        return show(
+          "Access denied. Your email is not provisioned to edit. " +
+          "Contact Ben Packer and Jess Swinburne for Provisioning Access.", "err");
+      }
+
+      btn.disabled = true;
+      btn.textContent = "Sending…";
+      try {
+        await SS.shell.sendMagicLink(email);
+        form.hidden = true;
+        show(`Sign-in link sent to ${email}. Open it on this device — it expires in an hour.`, "ok");
+      } catch (err) {
+        show(err.message, "err");
+        btn.disabled = false;
+        btn.innerHTML = 'Sign In <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+          'stroke-width="2.5"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+      }
+    });
+  })();
+</script>
+
+</body>
+</html>

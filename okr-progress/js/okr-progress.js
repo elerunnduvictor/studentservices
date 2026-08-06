@@ -1077,11 +1077,19 @@ function applyUrlFilters() {
   if (okrParam && ROWS.some(r => r.okr === okrParam)) state.okr = okrParam;
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+/* Start whether this file was loaded with the page or injected afterwards by
+   shared/js/hub-boot.js once the database had answered — by then
+   DOMContentLoaded has already fired and would never fire again. */
+function startPage() {
   applyUrlFilters();
   initFilters();
   initSpotlight();
   initModal();
   renderAll();
   window.SS.initReveal();
-});
+}
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", startPage, { once: true });
+} else {
+  startPage();
+}

@@ -166,8 +166,13 @@
 
   <script src="../js/shared.js"></script>
   <script src="../js/okr-cards.js"></script>
+  <!-- Bundled snapshot, used only if the database is unreachable. -->
   <script src="js/okr-progress-data.js"></script>
-  <script src="js/okr-progress.js"></script>
+  <script src="../shared/js/config.js"></script>
+  <script src="../shared/js/data-service.js"></script>
+  <script src="../shared/js/hub-boot.js"
+          data-datasets="okrs"
+          data-then="okr-progress/js/okr-progress.js"></script>
 </body>
 
 </html>

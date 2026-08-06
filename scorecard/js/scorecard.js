@@ -593,10 +593,13 @@
     document.getElementById("scCrumbs").innerHTML = crumbs();
     renderAreas();
 
+    var excluded = typeof META.excludedNotTracking === "number"
+      ? META.excludedNotTracking + " measures marked “Not Tracking” are excluded. "
+      : "Measures marked “Not Tracking” are excluded. ";
     document.getElementById("scNote").textContent =
-      "Showing the " + META.tracked + " KPIs marked “Tracking”. " +
-      META.excludedNotTracking + " measures marked “Not Tracking” are excluded. " +
-      "Last built " + META.generated + " from " + META.source + ".";
+      "Showing the " + META.tracked + " KPIs marked “Tracking”. " + excluded +
+      (META.live ? "Read live from " : "Last built " + META.generated + " from ") +
+      META.source + ".";
 
     window.scrollTo({ top: p.length ? document.querySelector(".sc-section").offsetTop - 80 : 0, behavior: "smooth" });
   }

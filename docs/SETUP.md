@@ -161,8 +161,19 @@ serves everything out of `/pm`. Nothing else changes — the hub keeps answering
 on its own domain from the repo root, and both read the same
 `shared/js/config.js`, so the two values above are deployed once.
 
-A custom domain behaves identically: add `pm.yourdomain.org` and change the two
+The order of the rewrite rules matters. `/shared/:path*` and `/favicon.svg` map
+to themselves and must come *before* the `/:path*` catch-all — otherwise the
+catch-all rewrites them to `/pm/shared/...`, which does not exist, and the PM
+console loads with no config and no styling.
+
+A custom domain behaves identically: add `pm.yourdomain.org` and change the four
 `host` values in `vercel.json`.
+
+> **Do not put comments in `vercel.json`.** Vercel validates it against a strict
+> schema and rejects any unrecognised top-level key — including the `"//"` array
+> convention used for JSON comments. It does not warn: the build fails and the
+> *previous* deployment stays live, so the site looks fine while every new file
+> 404s. If a push seems not to have deployed, check that file first.
 
 ---
 

@@ -3,23 +3,6 @@
   "cleanUrls": false,
   "trailingSlash": false,
 
-  "//": [
-    "One Vercel project serves both apps. Attach two domains to it:",
-    "  studentservice.vercel.app      -> the hub  (files at the repo root)",
-    "  studentservicespm.vercel.app   -> the PM console (files under /pm)",
-    "",
-    "Only the PM host is matched below, so the hub domain needs no rule and can",
-    "be renamed without touching this file.",
-    "",
-    "The rewrites below look at the Host header and, for the PM domain only,",
-    "serve everything out of /pm. Both apps still share /shared and /favicon.svg,",
-    "which is the point of keeping them in one project: the two values in",
-    "shared/js/config.js are deployed once and both apps pick them up.",
-    "",
-    "A custom domain works the same way — swap the host values for",
-    "pm.yourdomain.org and the rewrites need no other change."
-  ],
-
   "rewrites": [
     {
       "source": "/",

@@ -72,7 +72,7 @@
   function signOut() {
     localStorage.removeItem(SESSION_KEY);
     SS.session = null;
-    location.href = "index.html";
+    location.href = "signin.html";
   }
 
   /** Drop the session without navigating — used when refusing a non-editor. */
@@ -196,7 +196,7 @@
       return false;
     }
     if (!SS.session) {
-      location.href = "index.html?next=" + encodeURIComponent(location.pathname.split("/").pop());
+      location.href = "signin.html?next=" + encodeURIComponent(location.pathname.split("/").pop());
       return false;
     }
     renderChrome(book);
@@ -212,7 +212,7 @@
         `is not provisioned to edit. Editing is limited to the departmental project managers.</p>` +
         `<p style="max-width:46ch;margin:0 auto 20px">Contact Ben Packer and Jess Swinburne ` +
         `for Provisioning Access.</p>` +
-        `<a class="btn" href="index.html">Back to sign in</a></div></div>`;
+        `<a class="btn" href="signin.html">Back to sign in</a></div></div>`;
       return false;
     }
     return true;

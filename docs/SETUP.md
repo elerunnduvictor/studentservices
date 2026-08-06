@@ -166,6 +166,19 @@ to themselves and must come *before* the `/:path*` catch-all — otherwise the
 catch-all rewrites them to `/pm/shared/...`, which does not exist, and the PM
 console loads with no config and no styling.
 
+**Why the console's sign-in page is `signin.html`, not `index.html`.** Vercel
+applies `rewrites` only *after* checking the filesystem, so any path that exists
+at the repo root wins over a rewrite. The hub's own `index.html` therefore
+shadowed `/` on the PM domain: the domain served the hub, and worse, the auth
+gate's redirect to `index.html` bounced signed-out PMs onto the hub homepage
+instead of sign-in. Every other PM path is unaffected — nothing else in `pm/`
+shares a name with anything at the root.
+
+The fix is the `redirects` entry for `/`, because Vercel processes redirects
+*before* the filesystem. If you ever add a root-level file whose name matches a
+PM page, the PM domain will silently start serving the hub's copy — check for
+that first if the console behaves strangely.
+
 A custom domain behaves identically: add `pm.yourdomain.org` and change the four
 `host` values in `vercel.json`.
 

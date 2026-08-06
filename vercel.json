@@ -3,12 +3,16 @@
   "cleanUrls": false,
   "trailingSlash": false,
 
-  "rewrites": [
+  "redirects": [
     {
       "source": "/",
       "has": [{ "type": "host", "value": "studentservicespm.vercel.app" }],
-      "destination": "/pm/index.html"
-    },
+      "destination": "/signin.html",
+      "permanent": false
+    }
+  ],
+
+  "rewrites": [
     {
       "source": "/shared/:path*",
       "has": [{ "type": "host", "value": "studentservicespm.vercel.app" }],

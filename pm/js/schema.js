@@ -23,6 +23,7 @@ const OKR_STATUS = [
   { value: "Completed - On time", label: "Completed - On time", tone: "accent" },
   { value: "Completed - Late",    label: "Completed - Late",    tone: "accent" },
   { value: "Not Started",         label: "Not Started",         tone: "grey" },
+  { value: "Archived",            label: "Archived",            tone: "grey" },
   { value: "Canceled",            label: "Canceled",            tone: "grey" },
 ];
 

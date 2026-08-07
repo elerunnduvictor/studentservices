@@ -9,6 +9,12 @@
       "has": [{ "type": "host", "value": "studentservicespm.vercel.app" }],
       "destination": "/signin.html",
       "permanent": false
+    },
+    {
+      "source": "/pm/:path*",
+      "missing": [{ "type": "host", "value": "studentservicespm.vercel.app" }],
+      "destination": "/",
+      "permanent": false
     }
   ],
 

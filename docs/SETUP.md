@@ -204,11 +204,19 @@ that first if the PM Hub behaves strangely.
 A custom domain behaves identically: add `pm.yourdomain.org` and change the four
 `host` values in `vercel.json`.
 
+**`/pm/...` is closed off on the hub domain.** The console's files live under
+`/pm` so one Vercel project can serve both apps, but that path should only ever
+be reached through the PM domain. A redirect sends `/pm/...` back to the hub's
+front page on any other host — written with `missing` rather than `has`, so it
+keeps working if the hub gains another domain. The sign-in gate already refuses
+anyone who is not one of the seven; this stops the door being findable at all.
+
 > **Do not put comments in `vercel.json`.** Vercel validates it against a strict
-> schema and rejects any unrecognised top-level key — including the `"//"` array
-> convention used for JSON comments. It does not warn: the build fails and the
-> *previous* deployment stays live, so the site looks fine while every new file
-> 404s. If a push seems not to have deployed, check that file first.
+> schema and rejects any unrecognised key — the `"//"` convention for JSON
+> comments included, at the top level *and* inside a redirect or rewrite object.
+> It does not warn: the build fails and the *previous* deployment stays live, so
+> the site looks fine while every new file 404s. If a push seems not to have
+> deployed, check that file first.
 
 ---
 

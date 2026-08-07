@@ -1,4 +1,4 @@
-# Setting up the database and the PM console
+# Setting up the database and the PM Hub
 
 Everything is built and tested. What remains is creating the Supabase project —
 which needs your account — and pasting two values into one file.
@@ -11,7 +11,7 @@ which needs your account — and pasting two values into one file.
 |---|-------|---------------|-----|
 | 1 | **Supabase Project URL** | `shared/js/config.js` | Tells both apps which database to talk to |
 | 2 | **Supabase anon / public key** | `shared/js/config.js` | Identifies the project. Safe to commit — it grants nothing on its own; the RLS policies decide what a caller may do |
-| 3 | **A second domain on your existing Vercel project** | Vercel → Settings → Domains | One project serves both apps; the PM console answers on `studentservicespm.vercel.app` |
+| 3 | **A second domain on your existing Vercel project** | Vercel → Settings → Domains | One project serves both apps; the PM Hub answers on `studentservicespm.vercel.app` |
 
 Do **not** put the `service_role` key anywhere in this repository. It bypasses
 row-level security; in a static site it would hand every visitor full write
@@ -54,7 +54,7 @@ The seed truncates and reloads, and it suspends the audit triggers so an import
 is not logged as though a person typed it.
 
 **The source workbooks are no longer in the repository.** They were a one-time
-bootstrap: the data now lives in Postgres and PMs edit it through the console,
+bootstrap: the data now lives in Postgres and PMs edit it through the PM Hub,
 so the spreadsheets stopped being the source of truth the moment the import ran.
 `import_sheets.py` and `update_workbook.py` are kept as a record of how the data
 got here — if you ever need to re-import, drop the workbooks back into
@@ -67,13 +67,35 @@ python supabase/import_sheets.py     # reads data-sources/*.xlsx → supabase/se
 Be aware that re-importing overwrites whatever PMs have since edited.
 
 ### 4. Turn on email sign-in
-Supabase → Authentication → Providers → **Email** → enable, with
-*Confirm email* on. Under **URL Configuration**, add both:
 
-```
-https://studentservicespm.vercel.app
-https://studentservicespm.vercel.app/**
-```
+Supabase → Authentication → **Sign In / Providers → Email**:
+
+| Setting | Value | Why |
+|---|---|---|
+| Enable email provider | **on** | the PM Hub signs in with email and password |
+| **Confirm email** | **off** | this is the one that matters — see below |
+| Allow new users to sign up | **on** | a PM sets their own password on first use |
+
+**Confirm email must be off.** With it on, signing up returns a user but no
+session and queues a confirmation link — and that link will never arrive.
+Supabase's built-in mailer only delivers to members of your Supabase
+organisation, so every `@churchofjesuschrist.org` address is silently dropped;
+even with a custom sender, a managed Church domain is likely to quarantine it.
+An emailed sign-in would strand all seven PMs. With it off, signup returns a
+session straight away and no mail is ever sent.
+
+Nothing needs to go under **URL Configuration** — there are no email links to
+redirect.
+
+A PM's first visit: enter the address, choose *First time here? Set your
+password*, pick a password, and they are in. Afterwards it is an ordinary
+sign-in. There is no password reset — if someone forgets theirs, delete the
+account under **Authentication → Users** and they can set a new one.
+
+> Anyone can call the signup endpoint, not just the seven. That buys nothing on
+> its own: `allowed_editors` is checked by row-level security on every write, so
+> an account outside the list can read exactly what the public hub already shows
+> and change nothing.
 
 ### 4b. Who may edit
 
@@ -149,7 +171,7 @@ SUPABASE_URL: "https://YOUR-PROJECT.supabase.co",
 SUPABASE_ANON_KEY: "eyJhbGciOi…",
 ```
 
-That one file connects **both** the hub and the PM console.
+That one file connects **both** the hub and the PM Hub.
 
 ### 6. Add the PM domain
 Both apps ship from **one Vercel project**. In that project:
@@ -164,9 +186,9 @@ on its own domain from the repo root, and both read the same
 The order of the rewrite rules matters. `/shared/:path*` and `/favicon.svg` map
 to themselves and must come *before* the `/:path*` catch-all — otherwise the
 catch-all rewrites them to `/pm/shared/...`, which does not exist, and the PM
-console loads with no config and no styling.
+PM Hub loads with no config and no styling.
 
-**Why the console's sign-in page is `signin.html`, not `index.html`.** Vercel
+**Why the PM Hub's sign-in page is `signin.html`, not `index.html`.** Vercel
 applies `rewrites` only *after* checking the filesystem, so any path that exists
 at the repo root wins over a rewrite. The hub's own `index.html` therefore
 shadowed `/` on the PM domain: the domain served the hub, and worse, the auth
@@ -177,7 +199,7 @@ shares a name with anything at the root.
 The fix is the `redirects` entry for `/`, because Vercel processes redirects
 *before* the filesystem. If you ever add a root-level file whose name matches a
 PM page, the PM domain will silently start serving the hub's copy — check for
-that first if the console behaves strangely.
+that first if the PM Hub behaves strangely.
 
 A custom domain behaves identically: add `pm.yourdomain.org` and change the four
 `host` values in `vercel.json`.
@@ -193,7 +215,7 @@ A custom domain behaves identically: add `pm.yourdomain.org` and change the four
 ## How the pieces fit
 
 ```
-   PM console                Supabase                    Hub
+   PM Hub                Supabase                    Hub
 studentservicespm      ┌──────────────────┐      the Student Services site
    .vercel.app         │  okrs            │
         │              │  employees       │              │
@@ -221,7 +243,7 @@ spreadsheet's "Performance Status" column is deliberately not imported — its
 formula is wrong, and a stored status goes stale the moment a band or a value
 changes.
 
-The same file powers the Colour column in the PM console, so an editor sees the
+The same file powers the Colour column in the PM Hub, so an editor sees the
 consequence of a value as they type it.
 
 ---
@@ -233,7 +255,7 @@ consequence of a value as they type it.
   index.html, directory/, okr-progress/, org-chart/, scorecard/,
   performance-standards/, departments/, login/, css/, js/, photos/
 
-pm/                     the PM console  → same Vercel project, PM domain
+pm/                     the PM Hub  → same Vercel project, PM domain
 shared/js/              used by both apps
   config.js               ← the two values you paste in
   data-service.js         reads/writes Supabase
@@ -254,6 +276,6 @@ docs/                   this file
   since something outside this repo may depend on it. Trace where it came from
   and drop it if nothing does.
 - **Self-signup** is still open in Supabase Auth. A non-PM can request a sign-in
-  link and end up with an empty auth account; they cannot open the console or
+  link and end up with an empty auth account; they cannot open the PM Hub or
   write anything, because both the client list and `allowed_editors` refuse
   them. Closing it means disabling signups and pre-creating the seven accounts.

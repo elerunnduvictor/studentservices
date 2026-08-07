@@ -1,8 +1,12 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    SHELL — chrome, theme, toasts, and the session guard
 
-   Auth is Supabase magic-link: a PM types their work email, gets a link, and is
-   signed in. Who may *write* is not decided here — the database decides, via the
+   Auth is ordinary Supabase email and password. A PM sets their own password on
+   first use; nothing is ever emailed, because Supabase's built-in mailer only
+   delivers to organisation members and churchofjesuschrist.org filters unknown
+   senders — a flow that depended on delivery would strand all seven of them.
+
+   Who may *write* is not decided here. The database decides, via the
    `allowed_editors` table and the RLS policies. This file only makes the rule
    visible early, so someone who isn't an editor is told on arrival instead of
    after typing into a grid.
@@ -85,23 +89,6 @@
       ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   }
 
-  /** Supabase returns the session in the URL fragment after a magic link. */
-  function captureSessionFromUrl() {
-    if (!location.hash.includes("access_token")) return null;
-    const p = new URLSearchParams(location.hash.slice(1));
-    const token = p.get("access_token");
-    if (!token) return null;
-    const session = {
-      access_token: token,
-      refresh_token: p.get("refresh_token"),
-      expires_at: Number(p.get("expires_at")) || (Date.now() / 1000 + 3600),
-      email: decodeJwt(token)?.email || null,
-    };
-    saveSession(session);
-    history.replaceState(null, "", location.pathname + location.search);
-    return session;
-  }
-
   function decodeJwt(token) {
     try {
       const body = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
@@ -109,24 +96,86 @@
     } catch { return null; }
   }
 
-  async function sendMagicLink(email) {
-    const res = await fetch(
-      cfg.SUPABASE_URL.replace(/\/+$/, "") + "/auth/v1/otp",
-      {
-        method: "POST",
-        headers: { apikey: cfg.SUPABASE_ANON_KEY, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          create_user: true,
-          options: { email_redirect_to: location.origin + location.pathname.replace(/[^/]*$/, "okrs.html") },
-        }),
-      }
-    );
+  /**
+   * Ordinary email-and-password sign-in.
+   *
+   * Why a real account rather than a client-side check of the address: the PM
+   * Hub *writes*, and Postgres will not accept a write carrying only the anon
+   * key — row-level security refuses it outright. The browser has to end up
+   * holding a genuine token whose email claim RLS can read, or every Save would
+   * fail. So the sign-in is real even though the list of who may use it is
+   * fixed.
+   *
+   * Nothing is emailed at any point. That is deliberate: Supabase's built-in
+   * mailer only delivers to organisation members, and churchofjesuschrist.org
+   * filters unknown senders, so anything depending on delivery would strand all
+   * seven PMs.
+   */
+  async function signIn(email, password) {
+    const res = await authFetch("/auth/v1/token?grant_type=password", { email, password });
     if (!res.ok) {
-      let msg = "Could not send the sign-in link.";
-      try { const b = await res.json(); msg = b.msg || b.error_description || b.message || msg; } catch {}
-      throw new Error(msg);
+      const detail = (res.body.error_description || res.body.msg || res.body.message || "");
+      if (/invalid login credentials/i.test(detail)) {
+        throw new Error("That email and password do not match. If you have not set a " +
+                        "password yet, choose \"First time here?\" below.");
+      }
+      throw new Error(detail || "Could not sign you in.");
     }
+    return storeSession(res.body, email);
+  }
+
+  /**
+   * First-time setup: the PM chooses their own password.
+   *
+   * Requires "Confirm email" to be off in Supabase, which is what makes signup
+   * return a session immediately instead of posting a confirmation link that
+   * would never arrive. Anyone may call this endpoint, but that buys nothing on
+   * its own — `allowed_editors` still gates every write.
+   */
+  async function createAccount(email, password) {
+    const res = await authFetch("/auth/v1/signup", { email, password });
+
+    if (!res.ok) {
+      const why = (res.body.msg || res.body.error_description || res.body.message || "");
+      if (/already( been)? registered/i.test(why)) {
+        throw new Error("An account already exists for this address. Sign in with your " +
+                        "password, or ask for it to be removed under Authentication → " +
+                        "Users in Supabase if you need to start over.");
+      }
+      if (/password/i.test(why)) throw new Error(why);
+      throw new Error(why || "Could not create your account.");
+    }
+
+    // Signup succeeded but returned no session: "Confirm email" is still on, so
+    // Supabase has queued a confirmation link that will not be delivered.
+    if (!res.body.access_token) {
+      throw new Error("Your account was created but is waiting on email confirmation. " +
+                      "Turn off Authentication → Sign In / Providers → Email → " +
+                      "\"Confirm email\" in Supabase, then sign in.");
+    }
+    return storeSession(res.body, email);
+  }
+
+  /** POST to a GoTrue endpoint and hand back status and parsed body together. */
+  async function authFetch(path, payload) {
+    const res = await fetch(cfg.SUPABASE_URL.replace(/\/+$/, "") + path, {
+      method: "POST",
+      headers: { apikey: cfg.SUPABASE_ANON_KEY, "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    return { ok: res.ok, status: res.status, body: await res.json().catch(() => ({})) };
+  }
+
+  /** Normalise an auth response into the session shape the PM Hub stores. */
+  function storeSession(d, email) {
+    const session = {
+      access_token: d.access_token,
+      refresh_token: d.refresh_token || null,
+      expires_at: d.expires_at || Math.floor(Date.now() / 1000) + (d.expires_in || 3600),
+      email: decodeJwt(d.access_token)?.email || email,
+    };
+    saveSession(session);
+    return session;
   }
 
   /**
@@ -188,7 +237,6 @@
   /** Guard a workbook page: require config, a session, and editor rights. */
   async function requireEditor(book) {
     initTheme();
-    captureSessionFromUrl();
     SS.session = readSession();
 
     if (!cfg.isConfigured) {
@@ -223,7 +271,7 @@
     main.innerHTML = `
       <div class="setup-notice">
         <h2>Connect the database first</h2>
-        <p>This console has no Supabase project to talk to yet. Two values turn it on:</p>
+        <p>The PM Hub has no Supabase project to talk to yet. Two values turn it on:</p>
         <ol>
           <li>Create a project at <code>supabase.com</code>.</li>
           <li>Run <code>supabase/schema.sql</code>, then <code>supabase/seed.sql</code>
@@ -238,7 +286,7 @@
 
   SS.shell = {
     toast, initTheme, readSession, saveSession, signOut,
-    captureSessionFromUrl, sendMagicLink, checkEditor,
+    signIn, createAccount, checkEditor,
     requireEditor, renderChrome, showSetupNotice, decodeJwt,
   };
 })();

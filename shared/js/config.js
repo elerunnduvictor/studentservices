@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   SUPABASE CONNECTION — shared by the hub and the PM console
+   SUPABASE CONNECTION — shared by the hub and the PM Hub
 
    Fill these two values in once and both apps come alive. Everything else in
    the system reads them from here.
@@ -20,7 +20,7 @@ window.SS_CONFIG = {
     "LCJpYXQiOjE3ODYwMjE4ODYsImV4cCI6MjEwMTU5Nzg4Nn0" +
     ".8rrk2KZgRpL5QfzhtteYgnRGR6zxbIWx9KPVIcm-zm0",
 
-  // The PM console's address is deliberately absent from this file. The hub
+  // The PM Hub's address is deliberately absent from this file. The hub
   // never links to it and should not advertise it — editors go there directly.
 
   // When Supabase is unreachable or not yet configured, the hub falls back to

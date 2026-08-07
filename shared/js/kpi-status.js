@@ -8,7 +8,7 @@
 
    This used to live in the import script, which meant the answer was frozen at
    build time. It lives here now so the scorecard computes it live from the
-   database, and the PM console can show an editor the resulting colour while
+   database, and the PM Hub can show an editor the resulting colour while
    they are still typing the value.
 
    Two rules earn their keep:

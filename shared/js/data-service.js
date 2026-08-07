@@ -8,7 +8,7 @@
    from, which is what makes the switch safe.
 
    Reads go through PostgREST over plain fetch — no SDK, no build step, and it
-   works identically from a file:// page, the hub, and the PM console.
+   works identically from a file:// page, the hub, and the PM Hub.
 
    If the database is unreachable the page keeps its bundled snapshot and says
    so, because a dashboard that renders yesterday's numbers is far better than

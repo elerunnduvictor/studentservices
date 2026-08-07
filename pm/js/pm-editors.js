@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   PM CONSOLE — PROVISIONED EDITORS
+   PM HUB — PROVISIONED EDITORS
 
    The same provisioning model as the hub's js/allowed-users.js: to give someone
    access, add their address here. The difference is who is on it — the hub is

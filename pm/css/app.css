@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   STUDENT SERVICES · PM CONSOLE — SHELL & DESIGN SYSTEM
+   STUDENT SERVICES · PM HUB — SHELL & DESIGN SYSTEM
 
    Same brand vocabulary as the hub (Cormorant Garamond over Jost, BYU-Pathway
    palette) but dressed as a working tool rather than a report: denser spacing,
@@ -364,7 +364,20 @@ body.signin {
 }
 .signin-msg.ok  { background: var(--ok-soft);  color: var(--ok); }
 .signin-msg.err { background: var(--bad-soft); color: var(--bad); }
-.signin-foot { margin-top: 22px; font-size: .74rem; color: var(--ink-3); line-height: 1.6; }
+/* Switch between signing in and setting a password for the first time. */
+.signin-switch { margin-top: 16px; font-size: .78rem; }
+.signin-switch a {
+  color: var(--bp-teal); text-decoration: none;
+  border-bottom: 1px solid transparent; padding-bottom: 1px;
+}
+.signin-switch a:hover { border-bottom-color: currentColor; }
+.signin-switch a:focus-visible { outline: 2px solid var(--bp-teal); outline-offset: 3px; border-radius: 2px; }
+[data-theme="dark"] .signin-switch a { color: #4FA3C4; }
+
+.signin-foot {
+  margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line);
+  font-size: .74rem; color: var(--ink-3); line-height: 1.6;
+}
 
 /* ══════════════ SETUP NOTICE (no credentials yet) ══════════════ */
 .setup-notice {

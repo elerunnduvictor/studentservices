@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sign In — Student Services PM Console</title>
+<title>Sign In — Student Services PM Hub</title>
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/app.css">
@@ -19,22 +19,38 @@
 
 <main class="signin-card">
   <div class="badge">BYU-Pathway Worldwide</div>
-  <h1>PM <em>Console</em></h1>
+  <h1>PM <em>Hub</em></h1>
   <p class="lede">Authorized Editors Only</p>
 
   <form id="signinForm" novalidate>
     <div class="field">
       <label class="sr-only" for="emailInput">Email address</label>
       <input type="email" id="emailInput" autocomplete="email"
-             placeholder="Enter your email address" required>
+             placeholder="Your @churchofjesuschrist.org address" required>
+    </div>
+    <div class="field">
+      <label class="sr-only" for="passwordInput">Password</label>
+      <input type="password" id="passwordInput" autocomplete="current-password"
+             placeholder="Password" required>
+    </div>
+    <!-- Only shown while creating a password, so a typo cannot lock someone out
+         of an account there is no way to recover from the browser. -->
+    <div class="field" id="confirmField" hidden>
+      <label class="sr-only" for="confirmInput">Confirm password</label>
+      <input type="password" id="confirmInput" autocomplete="new-password"
+             placeholder="Confirm password">
     </div>
     <button class="btn btn-primary" type="submit" id="submitBtn">
-      Sign In
+      <span id="btnLabel">Sign In</span>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
     </button>
   </form>
 
   <div class="signin-msg" id="msg" hidden></div>
+
+  <p class="signin-switch">
+    <a href="#" id="modeToggle">First time here? Set your password</a>
+  </p>
 
   <p class="signin-foot">
     Editing rights are limited to the departmental project managers.<br>
@@ -51,18 +67,26 @@
     const SS = window.SS;
     SS.shell.initTheme();
 
-    /* Returning from an emailed link? Straight into the workbooks. */
-    const session = SS.shell.captureSessionFromUrl() || SS.shell.readSession();
+    /* Already signed in? Straight into the workbooks. */
+    const session = SS.shell.readSession();
     if (session) {
       const next = new URLSearchParams(location.search).get("next");
       location.replace(/^[a-z-]+\.html$/.test(next || "") ? next : "okrs.html");
       return;
     }
 
-    const form = document.getElementById("signinForm");
-    const input = document.getElementById("emailInput");
-    const btn = document.getElementById("submitBtn");
-    const msg = document.getElementById("msg");
+    const form     = document.getElementById("signinForm");
+    const input    = document.getElementById("emailInput");
+    const pwInput  = document.getElementById("passwordInput");
+    const confirmField = document.getElementById("confirmField");
+    const confirmInput = document.getElementById("confirmInput");
+    const btn      = document.getElementById("submitBtn");
+    const btnLabel = document.getElementById("btnLabel");
+    const toggle   = document.getElementById("modeToggle");
+    const msg      = document.getElementById("msg");
+
+    const MIN_PASSWORD = 8;
+    let creating = false;   // false = signing in, true = setting a password
 
     function show(text, kind) {
       msg.hidden = false;
@@ -70,9 +94,24 @@
       msg.textContent = text;
     }
 
+    function setMode(create) {
+      creating = create;
+      confirmField.hidden = !create;
+      confirmInput.required = create;
+      pwInput.setAttribute("autocomplete", create ? "new-password" : "current-password");
+      pwInput.placeholder = create ? "Choose a password" : "Password";
+      btnLabel.textContent = create ? "Create Password" : "Sign In";
+      toggle.textContent = create
+        ? "Already set a password? Sign in"
+        : "First time here? Set your password";
+      msg.hidden = true;
+    }
+
+    toggle.addEventListener("click", (e) => { e.preventDefault(); setMode(!creating); });
+
     if (!window.SS_CONFIG.isConfigured) {
       form.hidden = true;
-      show("This console isn't connected to the database yet. See docs/SETUP.md — " +
+      show("The PM Hub isn't connected to the database yet. See docs/SETUP.md — " +
            "the Supabase URL and anon key go in shared/js/config.js.", "err");
       return;
     }
@@ -80,6 +119,7 @@
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       const email = input.value.trim().toLowerCase();
+      const password = pwInput.value;
 
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         return show("Please enter a valid email address.", "err");
@@ -87,25 +127,39 @@
 
       /* Same check, same wording as the hub's front door — so someone who
          isn't provisioned is told immediately rather than after a round trip
-         through their inbox. The database enforces the same list again on
-         every write, so this check is a courtesy, not the security boundary. */
+         to the server. The database enforces the same list again on every
+         write, so this check is a courtesy, not the security boundary. */
       if (!window.isProvisionedEditor(email)) {
         return show(
           "Access denied. Your email is not provisioned to edit. " +
           "Contact Ben Packer and Jess Swinburne for Provisioning Access.", "err");
       }
 
+      if (creating) {
+        if (password.length < MIN_PASSWORD) {
+          return show(`Please choose a password of at least ${MIN_PASSWORD} characters.`, "err");
+        }
+        /* Checked here rather than after the round trip: there is no password
+           reset in the PM Hub, so a mistyped new password would lock the
+           account with nothing the browser could do about it. */
+        if (password !== confirmInput.value) {
+          return show("The two passwords do not match.", "err");
+        }
+      } else if (!password) {
+        return show("Please enter your password.", "err");
+      }
+
       btn.disabled = true;
-      btn.textContent = "Sending…";
+      btnLabel.textContent = creating ? "Creating…" : "Signing in…";
       try {
-        await SS.shell.sendMagicLink(email);
-        form.hidden = true;
-        show(`Sign-in link sent to ${email}. Open it on this device — it expires in an hour.`, "ok");
+        if (creating) await SS.shell.createAccount(email, password);
+        else          await SS.shell.signIn(email, password);
+        const next = new URLSearchParams(location.search).get("next");
+        location.replace(/^[a-z-]+\.html$/.test(next || "") ? next : "okrs.html");
       } catch (err) {
         show(err.message, "err");
         btn.disabled = false;
-        btn.innerHTML = 'Sign In <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
-          'stroke-width="2.5"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+        btnLabel.textContent = creating ? "Create Password" : "Sign In";
       }
     });
   })();

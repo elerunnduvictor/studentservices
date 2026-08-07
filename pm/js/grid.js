@@ -199,6 +199,16 @@ export class Grid {
     this._emitDirty();
   }
 
+  /**
+   * Fold any half-typed cell into the data.
+   *
+   * Called before saving or exporting. Without it, a PM who types a value and
+   * reaches straight for Ctrl+S saves everything *except* the cell they were
+   * looking at — the worst kind of silent loss, because the screen shows the
+   * new value the whole time.
+   */
+  commitOpenEditor() { this._commitEdit(); }
+
   /** What needs to go to the database. */
   pendingChanges() {
     const updates = [];
@@ -249,8 +259,36 @@ export class Grid {
     this.wrap.addEventListener("mousedown", (e) => this._onMouseDown(e));
     this.wrap.addEventListener("dblclick", (e) => this._onDblClick(e));
     this.wrap.addEventListener("contextmenu", (e) => this._onContext(e));
-    this.wrap.addEventListener("paste", (e) => this._onPaste(e));
-    this.wrap.addEventListener("copy", (e) => this._onCopy(e));
+
+    // Keyboard and clipboard listen on the document, not on this.wrap.
+    //
+    // They used to be on the wrapper, which meant they only fired while it held
+    // focus — and committing an edit re-renders the table, destroying the input
+    // that had focus and handing it to <body>. From that moment Ctrl+Z, Ctrl+V
+    // and the arrow keys all went nowhere, with nothing on screen to suggest
+    // why. Listening on the document and deciding for ourselves whether this
+    // grid should act removes that whole class of dead-keyboard bug.
+    document.addEventListener("keydown", (e) => this._onKeyDown(e));
+    document.addEventListener("paste", (e) => { if (this._shouldHandle(e)) this._onPaste(e); });
+    document.addEventListener("copy", (e) => { if (this._shouldHandle(e)) this._onCopy(e); });
+  }
+
+  /**
+   * Should this grid act on a document-level key or clipboard event?
+   *
+   * Three things to get right: a grid whose sheet is not on screen has been
+   * detached and must stay silent; typing into the search box or any other
+   * field is not grid input; and focus sitting on <body> — the usual state
+   * after a re-render — must still count as "the grid is what you are using".
+   */
+  _shouldHandle(e) {
+    if (!this.wrap.isConnected) return false;
+    const t = e.target;
+    if (t === this.wrap || this.wrap.contains(t)) return true;
+    if (t && t.closest && t.closest("input, textarea, select, [contenteditable=''], [contenteditable='true']")) {
+      return false;
+    }
+    return true;
   }
 
   render() {
@@ -264,6 +302,7 @@ export class Grid {
     this.columns.forEach((col, ci) => {
       const th = document.createElement("th");
       th.style.width = (col.width || 150) + "px";
+      if (col.tone) th.classList.add("tone-" + col.tone);
       const inner = document.createElement("div");
       inner.className = "th-inner";
       inner.textContent = col.label;
@@ -316,6 +355,12 @@ export class Grid {
       this.columns.forEach((col, ci) => {
         const td = document.createElement("td");
         td.dataset.c = ci;
+        // A column can carry a standing colour, the way a block of cells is
+        // shaded in the workbook — the green/yellow/red performance bands, the
+        // gold employee block on the KPI matrix tabs. This is the column's own
+        // meaning, not a reaction to the value, so it is painted here rather
+        // than worked out per cell.
+        if (col.tone) td.classList.add("tone-" + col.tone);
         if (dirtyCols.has(col.key)) td.classList.add("is-dirty");
         if (vi === this.active.r && ci === this.active.c) td.classList.add("is-active");
         td.append(this._renderCell(col, row[col.key], row));
@@ -386,13 +431,32 @@ export class Grid {
 
   /* ── selection & navigation ───────────────────────────────────────────── */
 
+  /**
+   * Move the active cell.
+   *
+   * This repaints two classes; it does not re-render. Rebuilding the table here
+   * broke double-click outright: a browser only raises `dblclick` when both
+   * clicks land on the same element, and the first mousedown was replacing every
+   * node under the cursor. It also meant an arrow key rebuilt 150 rows to move
+   * one outline.
+   */
   focus(r, c) {
     if (this.view.length === 0) return;
+    const prev = { r: this.active.r, c: this.active.c };
     this.active.r = Math.max(0, Math.min(this.view.length - 1, r));
     this.active.c = Math.max(0, Math.min(this.columns.length - 1, c));
-    this.render();
+    this._paintActive(prev);
     this._scrollIntoView();
     this.wrap.focus({ preventScroll: true });
+  }
+
+  _paintActive(prev) {
+    if (prev) {
+      this._cellEl(prev.r, prev.c)?.classList.remove("is-active");
+      this.tbody.querySelector(`tr[data-v="${prev.r}"]`)?.classList.remove("is-current");
+    }
+    this._cellEl(this.active.r, this.active.c)?.classList.add("is-active");
+    this.tbody.querySelector(`tr[data-v="${this.active.r}"]`)?.classList.add("is-current");
   }
 
   _cellEl(r, c) {
@@ -442,47 +506,75 @@ export class Grid {
     this.beginEdit();
   }
 
-  _bindKeys() {
-    this.wrap.addEventListener("keydown", (e) => {
-      if (this.editing) return this._editKeys(e);
+  _bindKeys() { /* wiring lives in _build, on the document */ }
 
-      const mod = e.ctrlKey || e.metaKey;
-      if (mod && e.key.toLowerCase() === "z") { e.preventDefault(); e.shiftKey ? this.redo() : this.undo(); return; }
-      if (mod && e.key.toLowerCase() === "y") { e.preventDefault(); this.redo(); return; }
-      if (mod && e.key === "Enter") { e.preventDefault(); this.addRow(this.active.r); return; }
+  _onKeyDown(e) {
+    if (!e.key) return;
 
-      const { r, c } = this.active;
-      switch (e.key) {
-        case "ArrowUp":    e.preventDefault(); this.focus(r - 1, c); return;
-        case "ArrowDown":  e.preventDefault(); this.focus(r + 1, c); return;
-        case "ArrowLeft":  e.preventDefault(); this.focus(r, c - 1); return;
-        case "ArrowRight": e.preventDefault(); this.focus(r, c + 1); return;
-        case "Home":       e.preventDefault(); this.focus(r, 0); return;
-        case "End":        e.preventDefault(); this.focus(r, this.columns.length - 1); return;
-        case "PageDown":   e.preventDefault(); this.focus(r + 12, c); return;
-        case "PageUp":     e.preventDefault(); this.focus(r - 12, c); return;
-        case "Tab":
-          e.preventDefault();
-          if (e.shiftKey) c === 0 ? this.focus(r - 1, this.columns.length - 1) : this.focus(r, c - 1);
-          else c === this.columns.length - 1 ? this.focus(r + 1, 0) : this.focus(r, c + 1);
-          return;
-        case "Enter":      e.preventDefault(); this.beginEdit(); return;
-        case "F2":         e.preventDefault(); this.beginEdit(); return;
-        case "Delete":
-        case "Backspace": {
-          e.preventDefault();
-          const col = this.columns[c];
-          if (col && !col.readOnly) { this.setValue(this.view[r], col.key, null); this.render(); }
-          return;
-        }
-        default: break;
-      }
-      // typing replaces the cell, as in Excel
-      if (!mod && !KEY_NAV.has(e.key) && e.key.length === 1) {
-        this.beginEdit(e.key);
+    // While an editor is open, its own keydown listener handles Enter, Tab and
+    // Escape and stops them here. Everything else — including the browser's
+    // native undo inside the input — is left alone on purpose.
+    if (this.editing) return;
+    if (!this._shouldHandle(e)) return;
+
+    const mod = e.ctrlKey || e.metaKey;
+    if (mod && e.key.toLowerCase() === "z") { e.preventDefault(); e.shiftKey ? this.redo() : this.undo(); return; }
+    if (mod && e.key.toLowerCase() === "y") { e.preventDefault(); this.redo(); return; }
+    if (mod && e.key === "Enter") { e.preventDefault(); this.addRow(this.active.r); return; }
+    // Ctrl+C / Ctrl+V / Ctrl+S / Ctrl+F belong to the copy, paste and page
+    // handlers — swallowing them here would break all four.
+    if (mod) return;
+
+    const { r, c } = this.active;
+    switch (e.key) {
+      case "ArrowUp":    e.preventDefault(); this.focus(r - 1, c); return;
+      case "ArrowDown":  e.preventDefault(); this.focus(r + 1, c); return;
+      case "ArrowLeft":  e.preventDefault(); this.focus(r, c - 1); return;
+      case "ArrowRight": e.preventDefault(); this.focus(r, c + 1); return;
+      case "Home":       e.preventDefault(); this.focus(r, 0); return;
+      case "End":        e.preventDefault(); this.focus(r, this.columns.length - 1); return;
+      case "PageDown":   e.preventDefault(); this.focus(r + 12, c); return;
+      case "PageUp":     e.preventDefault(); this.focus(r - 12, c); return;
+      case "Tab":
         e.preventDefault();
+        if (e.shiftKey) c === 0 ? this.focus(r - 1, this.columns.length - 1) : this.focus(r, c - 1);
+        else c === this.columns.length - 1 ? this.focus(r + 1, 0) : this.focus(r, c + 1);
+        return;
+      case "Enter":      e.preventDefault(); this.beginEdit(); return;
+      case "F2":         e.preventDefault(); this.beginEdit(); return;
+      case "Delete": {
+        // Delete clears the cell outright — this is the "wipe it and start
+        // again" path, now that typing continues the text instead.
+        e.preventDefault();
+        const col = this.columns[c];
+        if (col && !col.readOnly) { this.setValue(this.view[r], col.key, null); this.render(); this._keepFocus(); }
+        return;
       }
-    });
+      case "Backspace":
+        // Opens the editor with the last character removed, which is what
+        // Backspace means everywhere else.
+        e.preventDefault();
+        this.beginEdit();
+        if (this.editing && this.editing.input.value) {
+          const v = this.editing.input.value;
+          this.editing.input.value = v.slice(0, -1);
+          this._autoGrow?.(this.editing.input);
+        }
+        return;
+      default: break;
+    }
+
+    if (!KEY_NAV.has(e.key) && e.key.length === 1) {
+      e.preventDefault();
+      this.beginEdit(e.key);
+    }
+  }
+
+  /** Take keyboard focus back after a re-render, unless the user moved it. */
+  _keepFocus() {
+    if (!document.activeElement || document.activeElement === document.body) {
+      this.wrap.focus({ preventScroll: true });
+    }
   }
 
   beginEdit(seedChar = null) {
@@ -509,29 +601,54 @@ export class Grid {
         input.append(opt);
       });
       input.value = row[col.key] ?? "";
-    } else if (col.type === "longtext") {
-      input = document.createElement("textarea");
-      input.className = "cell-input";
-      input.value = seedChar ?? (row[col.key] ?? "");
-    } else {
-      input = document.createElement("input");
-      input.className = "cell-input";
-      input.type = col.type === "date" ? "date" : "text";
-      if (col.type === "number" || col.type === "percent") input.inputMode = "decimal";
-      input.value = seedChar ?? (row[col.key] ?? "");
+    }
+
+    // What is already in the cell is *always* the starting value, and a typed
+    // character is appended to it rather than replacing it.
+    //
+    // Excel replaces on type and selects-all on F2, and that is what this used
+    // to do — but here it meant a PM opening a cell to fix one word lost the
+    // whole sentence to the next keystroke, with the only way back being undo.
+    // Losing work by default is the wrong trade. To replace a value outright,
+    // select the cell and press Delete first, or select-all inside the editor.
+    const existing = row[col.key] ?? "";
+    if (col.type !== "select") {
+      if (col.type === "longtext") {
+        input = document.createElement("textarea");
+        input.className = "cell-input";
+      } else {
+        input = document.createElement("input");
+        input.className = "cell-input";
+        input.type = col.type === "date" ? "date" : "text";
+        if (col.type === "number" || col.type === "percent") input.inputMode = "decimal";
+      }
+      input.value = seedChar === null ? String(existing) : String(existing) + seedChar;
     }
 
     td.innerHTML = "";
     td.append(input);
     this.editing = { r, c, col, rowIdx, input };
     input.focus();
-    if (input.select && !seedChar) input.select();
-    if (seedChar && input.setSelectionRange) {
+
+    // Caret at the end, nothing selected — so the next keystroke continues the
+    // text instead of wiping it.
+    if (input.setSelectionRange && input.type !== "date") {
       const n = input.value.length;
-      input.setSelectionRange(n, n);
+      try { input.setSelectionRange(n, n); } catch { /* type doesn't support it */ }
     }
+
+    if (col.type === "longtext") this._autoGrow(input);
+    input.addEventListener("input", () => {
+      if (col.type === "longtext") this._autoGrow(input);
+    });
     input.addEventListener("keydown", (e) => this._editKeys(e));
     input.addEventListener("blur", () => this._commitEdit());
+  }
+
+  /** Grow a textarea editor to fit what has been typed into it. */
+  _autoGrow(input) {
+    input.style.height = "auto";
+    input.style.height = Math.min(input.scrollHeight + 2, 320) + "px";
   }
 
   _editKeys(e) {
@@ -555,13 +672,16 @@ export class Grid {
 
   _commitEdit() {
     if (!this.editing) return;
-    const { col, rowIdx, input, r, c } = this.editing;
+    const { col, rowIdx, input } = this.editing;
     const raw = input.value;
     this.editing = null;
     const parsed = this._parse(col, raw);
     this.setValue(rowIdx, col.key, parsed);
     this.render();
-    void r; void c;
+    // The render just destroyed the focused input. Reclaim focus so the next
+    // Ctrl+Z or arrow key still reaches the grid — but not if the blur happened
+    // because the PM clicked the search box or a toolbar button.
+    this._keepFocus();
   }
 
   _cancelEdit() {

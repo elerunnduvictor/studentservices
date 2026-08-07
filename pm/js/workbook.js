@@ -22,6 +22,50 @@ export async function mountWorkbook(bookKey) {
   const ok = await SS.shell.requireEditor(bookKey);
   if (!ok) return;
 
+  /**
+   * Sheets and columns a PM has added since the last deploy.
+   *
+   * The built-in sheets stay defined in schema.js and the database holds only
+   * what has been added on top, so the two can never contradict each other:
+   * there is one definition of "Employee Directory", plus whatever has been
+   * bolted onto it. Extras are merged in here, once, before anything renders.
+   */
+  async function applyCustomisations() {
+    let extraSheets = [], extraColumns = [];
+    try {
+      [extraSheets, extraColumns] = await Promise.all([
+        SS.db.select("pm_sheets", { filter: { workbook: `eq.${bookKey}`, hidden: "eq.false" },
+                                    order: "sort_order.asc" }),
+        SS.db.select("pm_columns", { filter: { hidden: "eq.false" }, order: "sort_order.asc" }),
+      ]);
+    } catch {
+      // patch-11 not applied yet, or the tables are unreachable. The built-in
+      // sheets are complete on their own, so carry on rather than failing.
+      return;
+    }
+
+    extraSheets.forEach((s) => {
+      if (book.sheets.some((x) => x.key === s.sheet_key)) return;
+      book.sheets.push({
+        key: s.sheet_key, label: s.label, table: s.table_name,
+        order: s.order_by || "sort_order.asc,id.asc", custom: true, columns: [],
+      });
+    });
+
+    extraColumns.forEach((c) => {
+      const sheet = book.sheets.find((x) => x.key === c.sheet_key);
+      if (!sheet || sheet.columns.some((x) => x.key === c.col_key)) return;
+      sheet.columns.push({
+        key: c.col_key, label: c.label, type: c.type || "text",
+        width: c.width || 150, help: c.help || undefined,
+        required: !!c.required, readOnly: !!c.read_only,
+        options: Array.isArray(c.options) ? c.options : undefined,
+      });
+    });
+  }
+
+  await applyCustomisations();
+
   const state = { sheet: book.sheets[0], grids: new Map(), loaded: new Map() };
 
   const els = {
@@ -110,7 +154,11 @@ export async function mountWorkbook(bookKey) {
 
     if (!state.loaded.get(sheet.key)) {
       try {
-        const rows = await SS.db.select(sheet.table, { order: sheet.order });
+        // `filter` is what makes a department tab work: the four department
+        // sheets are the same `employees` table narrowed to one department, so
+        // a person edited on Digital Operations is the same row as on the
+        // Employee Directory rather than a second copy of them.
+        const rows = await SS.db.select(sheet.table, { order: sheet.order, filter: sheet.filter });
         grid.setRows(rows);
         state.loaded.set(sheet.key, true);
       } catch (err) {
@@ -122,6 +170,11 @@ export async function mountWorkbook(bookKey) {
     } else {
       grid.render();
     }
+    // Reference sheets (the Dashboard, the KPI Overview) are read from the
+    // workbook and shown as-is; there is nothing to add a row to.
+    els.addBtn.disabled = !!sheet.readOnly;
+    els.addBtn.title = sheet.readOnly ? "This sheet is reference data" : "Add a row";
+
     setDirtyUI(grid.dirtyCount);
     grid.wrap.focus({ preventScroll: true });
   }
@@ -131,6 +184,8 @@ export async function mountWorkbook(bookKey) {
     const sheet = state.sheet;
     const grid = state.grids.get(sheet.key);
     if (!grid) return;
+    // Ctrl+S is usually pressed with a cell still open. Fold it in first.
+    grid.commitOpenEditor();
     const { updates, inserts, deletes } = grid.pendingChanges();
     if (!updates.length && !inserts.length && !deletes.length) return;
 
@@ -158,7 +213,7 @@ export async function mountWorkbook(bookKey) {
 
       // Re-read so server defaults, real ids and any trigger output land in the
       // grid — an optimistic local patch would drift from the database.
-      const rows = await SS.db.select(sheet.table, { order: sheet.order });
+      const rows = await SS.db.select(sheet.table, { order: sheet.order, filter: sheet.filter });
       grid.setRows(rows);
       grid.markSaved();
 
@@ -180,6 +235,7 @@ export async function mountWorkbook(bookKey) {
     const sheet = state.sheet;
     const grid = state.grids.get(sheet.key);
     if (!grid) return;
+    grid.commitOpenEditor();
     const cols = sheet.columns.filter((c) => !c.virtual);
     const esc = (v) => {
       const s = v === null || v === undefined ? "" : String(v);
@@ -197,7 +253,10 @@ export async function mountWorkbook(bookKey) {
 
   /* ── wiring ───────────────────────────────────────────────────────────── */
   els.saveBtn.addEventListener("click", save);
-  els.addBtn.addEventListener("click", () => state.grids.get(state.sheet.key)?.addRow());
+  // A row added on a filtered sheet is seeded with what that sheet filters on,
+  // so it does not vanish the moment it is saved.
+  els.addBtn.addEventListener("click", () =>
+    state.grids.get(state.sheet.key)?.addRow(null, state.sheet.seed || {}));
   els.exportBtn.addEventListener("click", exportCsv);
   els.revertBtn.addEventListener("click", async () => {
     const grid = state.grids.get(state.sheet.key);
@@ -205,6 +264,70 @@ export async function mountWorkbook(bookKey) {
     if (!confirm(`Discard ${grid.dirtyCount} unsaved change(s) and reload from the database?`)) return;
     state.loaded.set(state.sheet.key, false);
     await showSheet(state.sheet);
+  });
+
+  /* ── changing the shape of a sheet ────────────────────────────────────── */
+  function toolbarButton(label, title, onClick) {
+    const b = document.createElement("button");
+    b.className = "btn";
+    b.textContent = label;
+    b.title = title;
+    b.addEventListener("click", onClick);
+    els.addBtn.after(b);
+    return b;
+  }
+
+  const TYPES = ["text", "longtext", "number", "percent", "date", "url", "select", "boolean"];
+
+  toolbarButton("Add column", "Add a new column to this sheet", async () => {
+    const sheet = state.sheet;
+    if (sheet.readOnly) {
+      return SS.shell.toast("Reference sheet", "This sheet is read from the workbook.", "err");
+    }
+    const label = prompt("Column heading, as it should appear:");
+    if (!label) return;
+    // The database requires a plain lower-case identifier; derive one rather
+    // than making a PM think about SQL naming.
+    const suggested = label.trim().toLowerCase().replace(/[^a-z0-9]+/g, "_")
+                           .replace(/^_+|_+$/g, "").slice(0, 40) || "new_column";
+    const type = (prompt(`Type — one of:\n${TYPES.join(", ")}`, "text") || "text").trim().toLowerCase();
+    if (!TYPES.includes(type)) {
+      return SS.shell.toast("Unknown type", `"${type}" is not one of: ${TYPES.join(", ")}`, "err");
+    }
+    try {
+      await SS.db.rpc("pm_add_column", {
+        p_sheet_key: sheet.key, p_table: sheet.table, p_col_key: suggested,
+        p_label: label.trim(), p_type: type, p_width: type === "longtext" ? 200 : 150,
+      });
+      SS.shell.toast("Column added", `"${label.trim()}" is now on ${sheet.label}. Reloading…`, "ok");
+      setTimeout(() => location.reload(), 900);
+    } catch (err) {
+      SS.shell.toast("Could not add the column", err.message, "err");
+    }
+  });
+
+  toolbarButton("New sheet", "Create a new sheet in this workbook", async () => {
+    const label = prompt("Name for the new sheet:");
+    if (!label) return;
+    const key = label.trim().toLowerCase().replace(/[^a-z0-9]+/g, "_")
+                     .replace(/^_+|_+$/g, "").slice(0, 40);
+    if (!key || !/^[a-z]/.test(key)) {
+      return SS.shell.toast("Name it differently", "Start the name with a letter.", "err");
+    }
+    try {
+      await SS.db.rpc("pm_create_sheet", {
+        p_workbook: bookKey, p_sheet_key: key, p_label: label.trim(),
+      });
+      // A sheet with no columns is a blank wall, so give it a first one.
+      await SS.db.rpc("pm_add_column", {
+        p_sheet_key: key, p_table: "sheet_" + key, p_col_key: "name",
+        p_label: "Name", p_type: "text", p_width: 200,
+      });
+      SS.shell.toast("Sheet created", `"${label.trim()}" is ready. Reloading…`, "ok");
+      setTimeout(() => location.reload(), 900);
+    } catch (err) {
+      SS.shell.toast("Could not create the sheet", err.message, "err");
+    }
   });
 
   let searchTimer;
@@ -216,8 +339,10 @@ export async function mountWorkbook(bookKey) {
   });
 
   document.addEventListener("keydown", (e) => {
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") { e.preventDefault(); save(); }
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "f") { e.preventDefault(); els.search.focus(); }
+    if (!e.key || !(e.ctrlKey || e.metaKey)) return;
+    const k = e.key.toLowerCase();
+    if (k === "s") { e.preventDefault(); save(); }
+    else if (k === "f") { e.preventDefault(); els.search.select(); }
   });
 
   if (book.sheets.length > 1) {

@@ -69,6 +69,24 @@
     return res.json();
   }
 
+  /**
+   * Call a Postgres function.
+   *
+   * Used for the two operations that change the shape of a sheet rather than
+   * its contents — adding a column and creating a sheet. Those run DDL, which
+   * is why they are functions with their own checks rather than table writes:
+   * the database decides whether the caller may do it, not the browser.
+   */
+  async function rpc(fn, args = {}) {
+    const res = await fetch(endpoint("rpc/" + fn), {
+      method: "POST",
+      headers: headers({ Prefer: "return=representation" }),
+      body: JSON.stringify(args),
+    });
+    if (!res.ok) throw new Error(await describeError(res, fn));
+    return res.json();
+  }
+
   async function update(resource, id, patch, idKey = "id") {
     const res = await fetch(endpoint(resource) + `?${idKey}=eq.${encodeURIComponent(id)}`, {
       method: "PATCH",
@@ -313,6 +331,6 @@
     return out;
   }
 
-  SS.db = { select, insert, update, remove, endpoint, headers };
+  SS.db = { select, insert, update, remove, rpc, endpoint, headers };
   SS.data = { load: loadDataset, loadAll, DATASETS };
 })();

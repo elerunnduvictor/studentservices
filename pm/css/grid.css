@@ -79,14 +79,22 @@
 .grid tr.is-selected td.gutter { background: var(--accent-soft); }
 .grid tr.is-new td.gutter::after { content: '+'; color: var(--ok); font-weight: 700; margin-left: 3px; }
 
-/* ── cells ── */
+/* ── cells ──
+   A row is as tall as the text inside it needs.
+
+   These used to be locked to 32px with `white-space: nowrap`, so anything
+   longer than the column was cut off with an ellipsis. The only way to read a
+   full role title or KPI measure was to widen the column, which is why several
+   of them were 300px and the sheet ran a long way off to the right. Wrapping
+   instead lets the columns come in and the rows grow only where the content
+   actually needs it. */
 .grid td {
-  height: 32px;
+  min-height: 34px;
   padding: 0;
   border-right: 1px solid var(--line-soft);
   border-bottom: 1px solid var(--line-soft);
   background: var(--surface);
-  vertical-align: middle;
+  vertical-align: top;
   position: relative;
 }
 .grid tbody tr:hover td { background: var(--surface-2); }
@@ -95,13 +103,72 @@
 
 .cell {
   display: block;
-  padding: 0 9px;
-  line-height: 30px; height: 30px;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  padding: 8px 9px;
+  min-height: 34px;
+  line-height: 1.45;
+  white-space: pre-wrap;      /* honour deliberate line breaks in a comment */
+  overflow-wrap: anywhere;    /* a pasted URL cannot force the column wider */
   cursor: cell;
 }
 .cell.num { text-align: right; font-variant-numeric: tabular-nums; }
 .cell.muted { color: var(--ink-3); }
+
+/* The gutter number stays put at the top of a tall row rather than floating
+   in the middle of it. */
+.grid td.gutter { vertical-align: top; padding-top: 9px; }
+
+/* ── column tints ──
+   The workbooks shade whole blocks of cells to say what a column is for: the
+   three performance bands are green / amber / red, and the employee block on
+   the KPI matrix tabs is gold. Those colours carry meaning, so they come across
+   rather than being flattened to white.
+
+   Kept deliberately pale. In the workbook these sit behind a handful of short
+   values; here they run down a whole sheet, and at full strength they would
+   fight the dirty-cell marker and the active-cell ring — the two colours a PM
+   actually needs to notice. Tone is the column's identity; saturation is
+   reserved for state.
+
+   The header carries the same tint at greater strength, so the meaning reads
+   from the top of the column even when the cells below are empty. */
+.grid td.tone-green  { background: color-mix(in srgb, var(--ok)   7%, var(--surface)); }
+.grid td.tone-yellow { background: color-mix(in srgb, var(--warn) 9%, var(--surface)); }
+.grid td.tone-red    { background: color-mix(in srgb, var(--bad)  7%, var(--surface)); }
+.grid td.tone-gold   { background: color-mix(in srgb, var(--bp-gold) 13%, var(--surface)); }
+
+.grid thead th.tone-green  { background: color-mix(in srgb, var(--ok)   16%, var(--surface-2)); }
+.grid thead th.tone-yellow { background: color-mix(in srgb, var(--warn) 20%, var(--surface-2)); }
+.grid thead th.tone-red    { background: color-mix(in srgb, var(--bad)  16%, var(--surface-2)); }
+.grid thead th.tone-gold   { background: color-mix(in srgb, var(--bp-gold) 30%, var(--surface-2)); }
+
+/* Hover still has to read as hover on a tinted column. */
+.grid tbody tr:hover td.tone-green  { background: color-mix(in srgb, var(--ok)   14%, var(--surface)); }
+.grid tbody tr:hover td.tone-yellow { background: color-mix(in srgb, var(--warn) 17%, var(--surface)); }
+.grid tbody tr:hover td.tone-red    { background: color-mix(in srgb, var(--bad)  14%, var(--surface)); }
+.grid tbody tr:hover td.tone-gold   { background: color-mix(in srgb, var(--bp-gold) 22%, var(--surface)); }
+
+/* Dark needs more of the colour to say the same thing. The light values above
+   sit on white, where a 7% wash is plainly green or red; over a near-black
+   surface the same mix collapses towards grey — measured, the dark red came out
+   with as much blue in it as red, which reads purple rather than red. These
+   percentages restore the hue rather than brighten the row. */
+[data-theme="dark"] .grid td.tone-green  { background: color-mix(in srgb, var(--ok)   16%, var(--surface)); }
+[data-theme="dark"] .grid td.tone-yellow { background: color-mix(in srgb, var(--warn) 18%, var(--surface)); }
+[data-theme="dark"] .grid td.tone-red    { background: color-mix(in srgb, var(--bad)  16%, var(--surface)); }
+[data-theme="dark"] .grid td.tone-gold   { background: color-mix(in srgb, var(--bp-gold) 15%, var(--surface)); }
+
+[data-theme="dark"] .grid thead th.tone-green  { background: color-mix(in srgb, var(--ok)   26%, var(--surface-2)); }
+[data-theme="dark"] .grid thead th.tone-yellow { background: color-mix(in srgb, var(--warn) 28%, var(--surface-2)); }
+[data-theme="dark"] .grid thead th.tone-red    { background: color-mix(in srgb, var(--bad)  26%, var(--surface-2)); }
+[data-theme="dark"] .grid thead th.tone-gold   { background: color-mix(in srgb, var(--bp-gold) 26%, var(--surface-2)); }
+
+[data-theme="dark"] .grid tbody tr:hover td.tone-green  { background: color-mix(in srgb, var(--ok)   24%, var(--surface)); }
+[data-theme="dark"] .grid tbody tr:hover td.tone-yellow { background: color-mix(in srgb, var(--warn) 26%, var(--surface)); }
+[data-theme="dark"] .grid tbody tr:hover td.tone-red    { background: color-mix(in srgb, var(--bad)  24%, var(--surface)); }
+[data-theme="dark"] .grid tbody tr:hover td.tone-gold   { background: color-mix(in srgb, var(--bp-gold) 23%, var(--surface)); }
+
+/* An unsaved edit outranks the column's tint — `is-dirty` already carries
+   !important, which is what keeps that true. */
 
 /* the active cell */
 .grid td.is-active { z-index: 5; }
@@ -117,26 +184,30 @@
 }
 .grid td.is-error { background: var(--bad-soft) !important; }
 
-/* in-place editor */
+/* in-place editor — anchored to the top-left of the cell and free to grow
+   downwards past it, so a long value is fully visible while being typed
+   instead of scrolling inside a one-line box */
 .cell-input {
-  position: absolute; inset: 0;
-  width: 100%; height: 100%;
-  padding: 0 8px;
+  position: absolute; top: 0; left: 0;
+  width: 100%; min-height: 100%;
+  padding: 7px 8px;
   border: 2px solid var(--accent);
   background: var(--surface);
   font: inherit; font-size: .8rem;
+  line-height: 1.45;
   color: var(--ink);
   z-index: 15;
   border-radius: 2px;
+  box-shadow: var(--shadow);
 }
 .cell-input:focus { outline: none; }
 textarea.cell-input {
-  height: auto; min-height: 92px;
-  padding: 7px 8px; line-height: 1.45;
+  min-height: 72px;
   resize: vertical;
+  overflow: hidden;           /* _autoGrow sizes it; no inner scrollbar */
   box-shadow: var(--shadow-lg);
 }
-select.cell-input { padding: 0 4px; cursor: pointer; }
+select.cell-input { padding: 2px 4px; cursor: pointer; }
 
 /* ── value chips ── */
 .pill {
@@ -154,7 +225,7 @@ select.cell-input { padding: 0 4px; cursor: pointer; }
 .pill.accent { background: var(--accent-soft); color: var(--accent); }
 
 /* progress cell */
-.bar { display: flex; align-items: center; gap: 8px; padding: 0 9px; height: 30px; }
+.bar { display: flex; align-items: center; gap: 8px; padding: 0 9px; min-height: 34px; }
 .bar-track {
   flex: 1; height: 7px; min-width: 34px;
   border-radius: 4px; background: var(--surface-3); overflow: hidden;

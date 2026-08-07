@@ -142,6 +142,16 @@
                         "password, or ask for it to be removed under Authentication → " +
                         "Users in Supabase if you need to start over.");
       }
+      // The database refuses to create an account for anyone outside
+      // `allowed_editors`. GoTrue does not pass the trigger's own message
+      // through — it reports "Database error saving new user" whatever the
+      // cause — so it is translated here. Without this a PM who is in
+      // pm-editors.js but missing from the table would be told nothing useful.
+      if (/database error saving new user/i.test(why)) {
+        throw new Error("This address is not provisioned in the database yet. Ask for it " +
+                        "to be added to allowed_editors — being listed in the app is not " +
+                        "enough on its own.");
+      }
       if (/password/i.test(why)) throw new Error(why);
       throw new Error(why || "Could not create your account.");
     }

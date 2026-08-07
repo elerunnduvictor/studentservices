@@ -3,6 +3,28 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light dark">
+<!-- Theme is decided before the first paint, not after.
+
+     Without this the browser lays out a white page, then shell.js runs and
+     switches it to dark — a full-brightness flash on every load. Setting
+     color-scheme as well as the attribute matters: it tells the browser what to
+     paint the canvas *before* any stylesheet has arrived, which is the part the
+     class alone cannot cover.
+
+     Must stay ahead of the stylesheet links below, and must match initTheme()
+     in shell.js exactly, including the system-preference fallback. -->
+<script>
+  (function () {
+    try {
+      var saved = localStorage.getItem("ss-theme");
+      var dark = saved === "dark" ||
+                 (!saved && window.matchMedia("(prefers-color-scheme: dark)").matches);
+      if (dark) document.documentElement.setAttribute("data-theme", "dark");
+      document.documentElement.style.colorScheme = dark ? "dark" : "light";
+    } catch (e) { /* private mode: fall through to light */ }
+  })();
+</script>
 <title>OKRs — Student Services PM Hub</title>
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">

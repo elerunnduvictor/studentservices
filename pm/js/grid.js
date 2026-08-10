@@ -485,11 +485,20 @@ export class Grid {
     const tr = td.closest("tr");
     if (!tr || tr.dataset.v === undefined) return;
 
+    // A click inside the open editor belongs to the editor, not to the grid.
+    //
+    // This used to fall through to _commitEdit() below, which was fatal for a
+    // dropdown: pressing the arrow on a <select> destroyed the element on
+    // mousedown, so the list it was about to open no longer existed and nothing
+    // appeared to happen. The same applied to selecting text with the mouse
+    // inside a cell being edited.
+    if (this.editing && e.target.closest(".cell-input")) return;
+
     // A <td> can't hold focus, so the browser's default would hand focus to the
     // body and the grid would stop hearing the keyboard. Suppress it and put
     // focus on the scroll container ourselves — this is what makes a click
     // followed by typing work the way it does in a spreadsheet.
-    if (!this.editing || !e.target.closest(".cell-input")) e.preventDefault();
+    e.preventDefault();
 
     if (td.classList.contains("gutter")) {
       this._commitEdit();
@@ -635,6 +644,14 @@ export class Grid {
     if (input.setSelectionRange && input.type !== "date") {
       const n = input.value.length;
       try { input.setSelectionRange(n, n); } catch { /* type doesn't support it */ }
+    }
+
+    // Opening a dropdown should show the options, not present a closed box that
+    // has to be clicked a second time. showPicker needs the call to descend
+    // from a real user gesture, which a double-click or keypress is; where it
+    // is unavailable the editor still works, it just waits for the click.
+    if (col.type === "select" && typeof input.showPicker === "function") {
+      try { input.showPicker(); } catch { /* not user-activated — harmless */ }
     }
 
     if (col.type === "longtext") this._autoGrow(input);

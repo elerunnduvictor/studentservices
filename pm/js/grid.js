@@ -966,10 +966,26 @@ export class Grid {
     menu.style.top = Math.min(e.clientY, window.innerHeight - 140) + "px";
     document.body.append(menu);
     this._ctx = menu;
-    setTimeout(() => document.addEventListener("mousedown", this._closeCtxBound = () => this._closeContext(), { once: true }), 0);
+
+    // Close on a click *outside* the menu.
+    //
+    // The `menu.contains` check is the whole point. Without it this closed on
+    // any mousedown at all, including one on its own buttons: the menu was
+    // removed between mousedown and mouseup, so the browser never dispatched
+    // the click, and every item — Delete row, Insert row below, Duplicate row —
+    // silently did nothing.
+    this._closeCtxBound = (ev) => {
+      if (menu.contains(ev.target)) return;
+      this._closeContext();
+    };
+    setTimeout(() => document.addEventListener("mousedown", this._closeCtxBound), 0);
   }
 
   _closeContext() {
+    if (this._closeCtxBound) {
+      document.removeEventListener("mousedown", this._closeCtxBound);
+      this._closeCtxBound = null;
+    }
     if (this._ctx) { this._ctx.remove(); this._ctx = null; }
   }
 }

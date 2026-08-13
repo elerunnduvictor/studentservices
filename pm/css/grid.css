@@ -15,11 +15,48 @@
   /* the scroll container is the positioning context for sticky header + gutter */
 }
 
+/* ── scrollbars you can actually grab ──
+   These sheets are deliberately wider than the window — nothing has to fit on
+   one screen — so the horizontal bar is a primary control, not an afterthought.
+   The platform default is a few pixels of low-contrast grey that fades out;
+   this keeps it present and thick enough to aim at. */
+.grid-wrap { scrollbar-width: auto; scrollbar-color: var(--ink-3) var(--surface-3); }
+.grid-wrap::-webkit-scrollbar { width: 15px; height: 15px; }
+.grid-wrap::-webkit-scrollbar-track {
+  background: var(--surface-3);
+  border-top: 1px solid var(--line);
+}
+.grid-wrap::-webkit-scrollbar-thumb {
+  background: var(--ink-3);
+  border-radius: 8px;
+  border: 3px solid var(--surface-3);   /* inset, so the thumb reads as a grip */
+}
+.grid-wrap::-webkit-scrollbar-thumb:hover { background: var(--ink-2); }
+.grid-wrap::-webkit-scrollbar-corner { background: var(--surface-3); }
+
+/* While dragging an edge, the whole page should feel like it is resizing. */
+body.is-resizing, body.is-resizing * { cursor: col-resize !important; user-select: none !important; }
+body.is-resizing-row, body.is-resizing-row * { cursor: row-resize !important; user-select: none !important; }
+
 .grid {
   border-collapse: separate;
   border-spacing: 0;
   table-layout: fixed;
   font-size: .8rem;
+
+  /* `width: max-content` is what makes the declared column widths real.
+     Without it the table takes `width: auto`, which shrink-to-fits the pane;
+     `table-layout: fixed` then scales every column down proportionally to
+     make them fit. A 2,798px sheet was being squeezed into whatever the
+     window happened to be — every column narrower than specified, text
+     wrapping more than it should, rows taller than they need to be, and a
+     drag on a column edge moving it a fraction of the distance asked for.
+     That is the "chunky and packed" look.
+
+     With max-content the sheet takes the width it actually needs and the pane
+     scrolls, which is how a spreadsheet behaves. min-width keeps a narrow
+     sheet filling the pane rather than stranding empty space to the right. */
+  width: max-content;
   min-width: 100%;
 }
 
@@ -49,15 +86,39 @@
   border-right: 1.5px solid var(--line);
 }
 
-/* column resize handle */
+/* column resize handle — widened from 7px to 9px and given a resting hint,
+   because a grip nobody can find is the same as no grip at all */
+/* Sits fully inside the header, not straddling its edge: `th` is
+   `overflow: hidden` for the label ellipsis, which silently clipped a handle
+   hanging off the right and left nothing to grab. */
 .col-resize {
-  position: absolute; top: 0; right: -3px; width: 7px; height: 100%;
+  position: absolute; top: 0; right: 0; width: 9px; height: 100%;
   cursor: col-resize; z-index: 25;
 }
-.col-resize:hover::after, .col-resize.dragging::after {
-  content: ''; position: absolute; top: 0; right: 3px;
-  width: 2px; height: 100%; background: var(--accent);
+.col-resize::before {
+  content: ''; position: absolute; top: 25%; right: 3px;
+  width: 1px; height: 50%; background: var(--line);
 }
+.col-resize:hover::after, .col-resize.dragging::after {
+  content: ''; position: absolute; top: 0; right: 1px;
+  width: 3px; height: 100%; background: var(--accent);
+}
+
+/* row resize handle — the bottom edge of the row number */
+.row-resize {
+  position: absolute; left: 0; right: 0; bottom: -3px; height: 7px;
+  cursor: row-resize; z-index: 15;
+}
+.row-resize:hover::after, .row-resize.dragging::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: 3px;
+  height: 3px; background: var(--accent);
+}
+
+/* A row given an explicit height keeps it: content that no longer fits is
+   clipped rather than pushing the row back open, which is what makes dragging
+   a row *shorter* actually do something. */
+.grid tbody tr.is-sized td { overflow: hidden; }
+.grid tbody tr.is-sized .cell { overflow: hidden; }
 .grid thead th { position: sticky; }
 .grid thead th > .th-inner { position: relative; }
 

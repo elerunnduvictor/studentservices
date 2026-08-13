@@ -50,8 +50,57 @@ export class Grid {
     this.redoStack = [];
     this.seq = -1;               // temp keys for new rows count down
 
+    // Sizing a sheet is work, and work should not be thrown away on refresh.
+    // Column widths and row heights are remembered per sheet against this key.
+    this.storageKey = opts.storageKey ? "ss-grid-size:" + opts.storageKey : null;
+    this.rowHeights = new Map();  // view-independent: keyed by the row's own id
+    // Captured before anything remembered is applied, so "reset" has something
+    // truthful to go back to.
+    this._defaultWidths = this.columns.map((c) => [c.key, c.width || 150]);
+    this._restoreSizes();
+
     this._build();
     this._bindKeys();
+  }
+
+  /* ── remembered sizes ─────────────────────────────────────────────────── */
+
+  _restoreSizes() {
+    if (!this.storageKey) return;
+    try {
+      const saved = JSON.parse(localStorage.getItem(this.storageKey) || "{}");
+      Object.entries(saved.columns || {}).forEach(([key, w]) => {
+        const col = this.columns.find((c) => c.key === key);
+        if (col && Number(w) > 0) col.width = Number(w);
+      });
+      Object.entries(saved.rows || {}).forEach(([id, h]) => {
+        if (Number(h) > 0) this.rowHeights.set(String(id), Number(h));
+      });
+    } catch { /* corrupt or unavailable — fall back to the defaults */ }
+  }
+
+  _persistSizes() {
+    if (!this.storageKey) return;
+    try {
+      const columns = {};
+      this.columns.forEach((c) => { if (c.width) columns[c.key] = c.width; });
+      const rows = {};
+      this.rowHeights.forEach((h, id) => { rows[id] = h; });
+      localStorage.setItem(this.storageKey, JSON.stringify({ columns, rows }));
+    } catch { /* quota or private mode: sizing still works for this session */ }
+  }
+
+  /** Put every column and row back to the size the sheet was designed with. */
+  resetSizes() {
+    this.rowHeights.clear();
+    if (this.storageKey) {
+      try { localStorage.removeItem(this.storageKey); } catch { /* nothing to do */ }
+    }
+    (this._defaultWidths || []).forEach(([key, w]) => {
+      const col = this.columns.find((c) => c.key === key);
+      if (col) col.width = w;
+    });
+    this.render();
   }
 
   /* ── data ─────────────────────────────────────────────────────────────── */
@@ -349,7 +398,19 @@ export class Grid {
       const g = document.createElement("td");
       g.className = "gutter";
       g.textContent = vi + 1;
+      // Drag the bottom edge of the row number to set that row's height, the
+      // way a spreadsheet does. Rows size themselves to their content by
+      // default; this is for when a PM wants one row taller to read a long
+      // comment, or shorter to get more on screen.
+      const rh = document.createElement("div");
+      rh.className = "row-resize";
+      rh.title = "Drag to change this row's height";
+      rh.addEventListener("mousedown", (e) => this._startRowResize(e, key, tr2));
+      g.append(rh);
       tr2.append(g);
+
+      const h = this.rowHeights.get(String(key));
+      if (h) tr2.classList.add("is-sized"), tr2.style.height = h + "px";
 
       const dirtyCols = new Set(this.inserted.has(key) ? [] : this.changedCells(row));
       this.columns.forEach((col, ci) => {
@@ -805,6 +866,7 @@ export class Grid {
     const startW = th.getBoundingClientRect().width;
     const handle = e.currentTarget;
     handle.classList.add("dragging");
+    document.body.classList.add("is-resizing");
     const move = (ev) => {
       const w = Math.max(60, startW + ev.clientX - startX);
       this.columns[ci].width = w;
@@ -812,8 +874,36 @@ export class Grid {
     };
     const up = () => {
       handle.classList.remove("dragging");
+      document.body.classList.remove("is-resizing");
       document.removeEventListener("mousemove", move);
       document.removeEventListener("mouseup", up);
+      // Re-render so the cells follow the header, then remember the new width.
+      this.render();
+      this._persistSizes();
+    };
+    document.addEventListener("mousemove", move);
+    document.addEventListener("mouseup", up);
+  }
+
+  _startRowResize(e, rowKey, tr) {
+    e.preventDefault(); e.stopPropagation();
+    const startY = e.clientY;
+    const startH = tr.getBoundingClientRect().height;
+    const handle = e.currentTarget;
+    handle.classList.add("dragging");
+    document.body.classList.add("is-resizing-row");
+    const move = (ev) => {
+      const h = Math.max(28, startH + ev.clientY - startY);
+      tr.style.height = h + "px";
+      tr.classList.add("is-sized");
+      this.rowHeights.set(String(rowKey), h);
+    };
+    const up = () => {
+      handle.classList.remove("dragging");
+      document.body.classList.remove("is-resizing-row");
+      document.removeEventListener("mousemove", move);
+      document.removeEventListener("mouseup", up);
+      this._persistSizes();
     };
     document.addEventListener("mousemove", move);
     document.addEventListener("mouseup", up);

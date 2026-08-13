@@ -136,6 +136,9 @@ export async function mountWorkbook(bookKey) {
       grid = new Grid({
         mount: host,
         columns: sheet.columns.map((c) => ({ ...c })),
+        // Per sheet, so widening Comment on the OKR sheet does not resize a
+        // column that happens to share its name elsewhere.
+        storageKey: bookKey + ":" + sheet.key,
         onDirty: setDirtyUI,
         onStatus: ({ rows, total, message }) => {
           els.rowCount.textContent =
@@ -304,6 +307,13 @@ export async function mountWorkbook(bookKey) {
     } catch (err) {
       SS.shell.toast("Could not add the column", err.message, "err");
     }
+  });
+
+  toolbarButton("Reset sizes", "Put every column and row back to its original size", () => {
+    const grid = state.grids.get(state.sheet.key);
+    if (!grid) return;
+    grid.resetSizes();
+    SS.shell.toast("Sizes reset", `${state.sheet.label} is back to its original layout.`, "ok");
   });
 
   toolbarButton("New sheet", "Create a new sheet in this workbook", async () => {

@@ -275,6 +275,55 @@ docs/                   this file
 
 ---
 
+## Changing data vs changing the schema
+
+Two different things, and only one of them is a SQL file.
+
+**Data — do it in the PM Hub.** Someone leaves, a KPI gets a band, an OKR moves
+to At Risk, a person joins a department. Open the sheet, edit the cell, press
+Save. It is written straight to Postgres, `change_log` records who did it, and
+the hub picks it up on its next load. This is the entire reason the PM Hub
+exists; routing such a change through a migration file is slower, needs the SQL
+editor, and puts a one-row edit into the permanent rebuild history where it does
+not belong.
+
+A few examples of things that are *just* data:
+
+| Change | Where |
+|---|---|
+| Someone has left | Employee Directory → set **Active** to Inactive → Save |
+| New starter | Their department's tab → **Add row** → Save |
+| KPI bands, current values, tracking on/off | KPI ScoreCard → edit → Save |
+| OKR status, progress, comments | OKRs → edit → Save |
+| A new column or a whole new sheet | **Add column** / **New sheet** buttons |
+
+**patch-14 is the last patch.** The numbered files in `supabase/` are finished.
+They remain as the migration history — a fresh rebuild replays them in order, so
+none may be deleted — but no more are to be added.
+
+That is workable because the PM Hub now covers the cases that used to need one.
+Rows, columns and whole sheets can all be created and removed from the app, and
+the two that change the database's shape do it through checked functions rather
+than loose DDL:
+
+| Used to be a patch | Now |
+|---|---|
+| New column | **Add column** |
+| New sheet or tab | **New sheet** |
+| Remove a column you added | **Remove column** |
+| Hide a column you cannot drop | **Remove column** → hides it |
+| Delete a row | **Delete row**, or right-click |
+
+If something genuinely cannot be done from the app — a new policy, a trigger, a
+column changing type — that is a conversation first, then a single statement
+pasted into the SQL editor. Not a file, and not without asking.
+
+Two of the existing patches (09 and 12) are single-row data edits that should
+have been done in the app. They stay only because they are already applied and
+removing them would change what a rebuild produces.
+
+---
+
 ## Still to do
 
 - **Realtime**: Supabase can push changes over a websocket, so an open hub page

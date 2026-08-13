@@ -309,6 +309,63 @@ export async function mountWorkbook(bookKey) {
     }
   });
 
+  toolbarButton("Delete row", "Delete the selected row (right-click a row for more)", () => {
+    const grid = state.grids.get(state.sheet.key);
+    if (!grid || !grid.view.length) return;
+    if (state.sheet.readOnly) {
+      return SS.shell.toast("Reference sheet", "This sheet is read from the workbook.", "err");
+    }
+    const vi = grid.active.r;
+    const row = grid.rows[grid.view[vi]];
+    const label = row && (row.name || row.employee_name || row.employee ||
+                          row.sub_key_result || row.kpi_measure || `row ${vi + 1}`);
+    if (!confirm(`Delete "${String(label).slice(0, 60)}"?\n\n` +
+                 `It is removed from the database when you press Save, and Ctrl+Z will not bring it back.`)) return;
+    grid.deleteRows([vi]);
+  });
+
+  /**
+   * Removing a column.
+   *
+   * Two different things wear the same word. A column a PM added is theirs and
+   * can genuinely be dropped. A built-in column is read elsewhere — the hub's
+   * views select `employees.name` and `kpis.band_green` by name — so dropping
+   * one would break the public site for everyone, from a button in a browser.
+   * Those are hidden instead: reversible, and only for the person who chose it.
+   */
+  toolbarButton("Remove column", "Hide a column, or delete one you added", async () => {
+    const grid = state.grids.get(state.sheet.key);
+    if (!grid) return;
+    const builtIn = new Set((state.sheet.columns || []).map((c) => c.key));
+    const list = grid.columns
+      .map((c, i) => `${i + 1}. ${c.label}${c.hidden ? "  (hidden)" : ""}` +
+                     `${builtIn.has(c.key) ? "" : "  [added]"}`)
+      .join("\n");
+    const pick = prompt(`Which column?\n\n${list}\n\nEnter its number:`);
+    if (!pick) return;
+    const col = grid.columns[Number(pick) - 1];
+    if (!col) return SS.shell.toast("No such column", `There is no column ${pick}.`, "err");
+
+    if (builtIn.has(col.key)) {
+      if (col.hidden) { grid.setColumnHidden(col.key, false); return SS.shell.toast("Shown again", `"${col.label}" is back.`, "ok"); }
+      grid.setColumnHidden(col.key, true);
+      return SS.shell.toast("Column hidden", `"${col.label}" is off this sheet for you. ` +
+        `Its data is untouched — "Reset sizes" brings it back.`, "ok");
+    }
+
+    if (!confirm(`Delete the column "${col.label}" and everything in it?\n\n` +
+                 `You added this column, so it can be removed for good. This cannot be undone.`)) return;
+    try {
+      await SS.db.rpc("pm_drop_column", {
+        p_sheet_key: state.sheet.key, p_table: state.sheet.table, p_col_key: col.key,
+      });
+      SS.shell.toast("Column deleted", `"${col.label}" is gone. Reloading…`, "ok");
+      setTimeout(() => location.reload(), 900);
+    } catch (err) {
+      SS.shell.toast("Could not delete the column", err.message, "err");
+    }
+  });
+
   toolbarButton("Reset sizes", "Put every column and row back to its original size", () => {
     const grid = state.grids.get(state.sheet.key);
     if (!grid) return;

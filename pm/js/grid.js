@@ -76,7 +76,28 @@ export class Grid {
       Object.entries(saved.rows || {}).forEach(([id, h]) => {
         if (Number(h) > 0) this.rowHeights.set(String(id), Number(h));
       });
+      (saved.hidden || []).forEach((key) => {
+        const col = this.columns.find((c) => c.key === key);
+        if (col) col.hidden = true;
+      });
     } catch { /* corrupt or unavailable — fall back to the defaults */ }
+  }
+
+  /** The columns actually on screen. Hidden ones keep their data untouched. */
+  get visibleColumns() {
+    return this.columns.filter((c) => !c.hidden);
+  }
+
+  setColumnHidden(key, hidden) {
+    const col = this.columns.find((c) => c.key === key);
+    if (!col) return;
+    col.hidden = !!hidden;
+    // Keep the active cell on a column that still exists.
+    if (this.active.c >= this.visibleColumns.length) {
+      this.active.c = Math.max(0, this.visibleColumns.length - 1);
+    }
+    this.render();
+    this._persistSizes();
   }
 
   _persistSizes() {
@@ -86,13 +107,15 @@ export class Grid {
       this.columns.forEach((c) => { if (c.width) columns[c.key] = c.width; });
       const rows = {};
       this.rowHeights.forEach((h, id) => { rows[id] = h; });
-      localStorage.setItem(this.storageKey, JSON.stringify({ columns, rows }));
+      const hidden = this.columns.filter((c) => c.hidden).map((c) => c.key);
+      localStorage.setItem(this.storageKey, JSON.stringify({ columns, rows, hidden }));
     } catch { /* quota or private mode: sizing still works for this session */ }
   }
 
   /** Put every column and row back to the size the sheet was designed with. */
   resetSizes() {
     this.rowHeights.clear();
+    this.columns.forEach((c) => { c.hidden = false; });
     if (this.storageKey) {
       try { localStorage.removeItem(this.storageKey); } catch { /* nothing to do */ }
     }
@@ -230,7 +253,7 @@ export class Grid {
     this.render();
     this._emitDirty();
     const vi = this.view.indexOf(at);
-    if (vi >= 0) this.focus(vi, this.columns.findIndex((c) => !c.readOnly));
+    if (vi >= 0) this.focus(vi, this.visibleColumns.findIndex((c) => !c.readOnly));
     return row;
   }
 
@@ -348,7 +371,7 @@ export class Grid {
     corner.className = "gutter";
     corner.textContent = "#";
     tr.append(corner);
-    this.columns.forEach((col, ci) => {
+    this.visibleColumns.forEach((col, ci) => {
       const th = document.createElement("th");
       th.style.width = (col.width || 150) + "px";
       if (col.tone) th.classList.add("tone-" + col.tone);
@@ -375,7 +398,7 @@ export class Grid {
     if (!this.view.length) {
       const empty = document.createElement("tr");
       const td = document.createElement("td");
-      td.colSpan = this.columns.length + 1;
+      td.colSpan = this.visibleColumns.length + 1;
       td.className = "grid-empty";
       td.textContent = this.filter
         ? `Nothing matches “${this.filter}”.`
@@ -413,7 +436,7 @@ export class Grid {
       if (h) tr2.classList.add("is-sized"), tr2.style.height = h + "px";
 
       const dirtyCols = new Set(this.inserted.has(key) ? [] : this.changedCells(row));
-      this.columns.forEach((col, ci) => {
+      this.visibleColumns.forEach((col, ci) => {
         const td = document.createElement("td");
         td.dataset.c = ci;
         // A column can carry a standing colour, the way a block of cells is
@@ -505,7 +528,7 @@ export class Grid {
     if (this.view.length === 0) return;
     const prev = { r: this.active.r, c: this.active.c };
     this.active.r = Math.max(0, Math.min(this.view.length - 1, r));
-    this.active.c = Math.max(0, Math.min(this.columns.length - 1, c));
+    this.active.c = Math.max(0, Math.min(this.visibleColumns.length - 1, c));
     this._paintActive(prev);
     this._scrollIntoView();
     this.wrap.focus({ preventScroll: true });
@@ -602,13 +625,13 @@ export class Grid {
       case "ArrowLeft":  e.preventDefault(); this.focus(r, c - 1); return;
       case "ArrowRight": e.preventDefault(); this.focus(r, c + 1); return;
       case "Home":       e.preventDefault(); this.focus(r, 0); return;
-      case "End":        e.preventDefault(); this.focus(r, this.columns.length - 1); return;
+      case "End":        e.preventDefault(); this.focus(r, this.visibleColumns.length - 1); return;
       case "PageDown":   e.preventDefault(); this.focus(r + 12, c); return;
       case "PageUp":     e.preventDefault(); this.focus(r - 12, c); return;
       case "Tab":
         e.preventDefault();
-        if (e.shiftKey) c === 0 ? this.focus(r - 1, this.columns.length - 1) : this.focus(r, c - 1);
-        else c === this.columns.length - 1 ? this.focus(r + 1, 0) : this.focus(r, c + 1);
+        if (e.shiftKey) c === 0 ? this.focus(r - 1, this.visibleColumns.length - 1) : this.focus(r, c - 1);
+        else c === this.visibleColumns.length - 1 ? this.focus(r + 1, 0) : this.focus(r, c + 1);
         return;
       case "Enter":      e.preventDefault(); this.beginEdit(); return;
       case "F2":         e.preventDefault(); this.beginEdit(); return;
@@ -616,7 +639,7 @@ export class Grid {
         // Delete clears the cell outright — this is the "wipe it and start
         // again" path, now that typing continues the text instead.
         e.preventDefault();
-        const col = this.columns[c];
+        const col = this.visibleColumns[c];
         if (col && !col.readOnly) { this.setValue(this.view[r], col.key, null); this.render(); this._keepFocus(); }
         return;
       }
@@ -650,7 +673,7 @@ export class Grid {
   beginEdit(seedChar = null) {
     if (this.editing) return;
     const { r, c } = this.active;
-    const col = this.columns[c];
+    const col = this.visibleColumns[c];
     const rowIdx = this.view[r];
     if (!col || col.readOnly || rowIdx == null) return;
     const td = this._cellEl(r, c);
@@ -792,7 +815,7 @@ export class Grid {
   _onCopy(e) {
     if (this.editing) return;
     const rowIdx = this.view[this.active.r];
-    const col = this.columns[this.active.c];
+    const col = this.visibleColumns[this.active.c];
     if (rowIdx == null || !col) return;
     e.clipboardData.setData("text/plain", String(this.rows[rowIdx][col.key] ?? ""));
     e.preventDefault();
@@ -824,7 +847,7 @@ export class Grid {
       const rowIdx = this.view[vi];
       if (rowIdx == null) return;
       line.forEach((raw, dc) => {
-        const col = this.columns[this.active.c + dc];
+        const col = this.visibleColumns[this.active.c + dc];
         if (!col || col.readOnly) return;
         const before = this.rows[rowIdx][col.key] ?? null;
         const after = this._parse(col, raw);
@@ -869,7 +892,7 @@ export class Grid {
     document.body.classList.add("is-resizing");
     const move = (ev) => {
       const w = Math.max(60, startW + ev.clientX - startX);
-      this.columns[ci].width = w;
+      this.visibleColumns[ci].width = w;
       th.style.width = w + "px";
     };
     const up = () => {

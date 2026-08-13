@@ -373,4 +373,103 @@ window.SS.WORKBOOKS = {
       ],
     }],
   },
+
+  /* ═══════════ 4. Admin ═══════════
+     Who may see the hub, and how it is being used. Its own workbook rather than
+     a tab inside KPIs: this is about the application, not about the work the
+     organisation is measuring, and burying it under KPIs made it look like
+     another scorecard. */
+  admin: {
+    label: "Access",
+    subtitle: "Who may see the hub, and how much of it",
+    accent: "admin",
+    sheets: [
+    {
+      // Who may see what on the hub. Editing a row here changes what that
+      // person is served the next time they load a page — the database reads
+      // this table on every query, so there is nothing to redeploy.
+      key: "hub_access",
+      label: "Hub Access",
+      table: "hub_access",
+      order: "role.asc,full_name.asc",
+      idKey: "email",
+      columns: [
+        { key: "full_name", label: "Name",  type: "text", width: 170 },
+        { key: "email",     label: "Email", type: "text", width: 220, required: true,
+          help: "Must match the address they sign in with." },
+        { key: "role",      label: "Role",  type: "select", width: 120,
+          options: [
+            { value: "partner",  label: "Partner",  tone: "grey" },
+            { value: "staff",    label: "Staff",    tone: "accent" },
+            { value: "director", label: "Director", tone: "yellow" },
+            { value: "admin",    label: "Admin",    tone: "green" },
+          ],
+          help: "partner: org and departments only · staff: their own reporting line · " +
+                "director: their whole department · admin: everything" },
+        { key: "scope_department", label: "Scope — Department", type: "select", width: 175,
+          options: DEPARTMENTS,
+          help: "Directors only: the department they run." },
+        { key: "scope_person", label: "Scope — Person", type: "text", width: 165,
+          help: "Staff only: their exact name in the Employee Directory. " +
+                "Everyone reporting up to them is included automatically. " +
+                "Leave blank and they see no individual KPIs." },
+        { key: "category", label: "Category (from the sheet)", type: "text", width: 190,
+          help: "What the access spreadsheet called them. Reference only." },
+        { key: "active", label: "Active", type: "select", width: 90,
+          options: [{ value: true, label: "Active", tone: "green" },
+                    { value: false, label: "Revoked", tone: "grey" }],
+          help: "Revoking removes their access on their next page load." },
+      ],
+    }
+    ],
+  },
+
+  /* ═══════════ 5. Student Services Hub Analytics ═══════════
+     How the hub is actually being used: which pages, by how many distinct
+     people, and the daily shape of visits and sign-ins. Read-only throughout —
+     an audit trail that can be edited is worth less than one that cannot. */
+  analytics: {
+    label: "Student Services Hub Analytics",
+    subtitle: "Page views and sign-ins",
+    accent: "analytics",
+    // Usage data is a record of individuals' behaviour. Being able to edit the
+    // sheets is not the same as being entitled to read who went where, so this
+    // one is limited to admins — the VP and the project managers — even though
+    // every PM editor can open the rest of the Hub.
+    adminOnly: true,
+    sheets: [
+      {
+        key: "usage_pages",
+        label: "Pages",
+        table: "v_hub_usage_pages",
+        order: "hits.desc",
+        readOnly: true,
+        columns: [
+          { key: "page",      label: "Page",            type: "text",   width: 280, readOnly: true },
+          { key: "hits",      label: "Views",           type: "number", width: 110, readOnly: true },
+          { key: "people",    label: "Distinct people", type: "number", width: 145, readOnly: true,
+            help: "How many different people, not how many visits." },
+          { key: "last_seen", label: "Last viewed",     type: "text",   width: 215, readOnly: true },
+        ],
+      },
+      {
+        key: "usage_daily",
+        label: "By day",
+        table: "v_hub_usage_daily",
+        order: "day.desc",
+        readOnly: true,
+        columns: [
+          { key: "day",   label: "Day",   type: "text",   width: 145, readOnly: true },
+          { key: "event", label: "Event", type: "select", width: 150, readOnly: true,
+            options: [
+              { value: "page",         label: "Page view", tone: "accent" },
+              { value: "login",        label: "Sign-in",   tone: "green" },
+              { value: "login_denied", label: "Refused",   tone: "red" },
+            ] },
+          { key: "hits",   label: "Count",           type: "number", width: 110, readOnly: true },
+          { key: "people", label: "Distinct people", type: "number", width: 145, readOnly: true },
+        ],
+      },
+    ],
+  },
 };

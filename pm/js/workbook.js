@@ -64,6 +64,42 @@ export async function mountWorkbook(bookKey) {
     });
   }
 
+  /**
+   * The reader's role on the hub, which is not the same question as "may they
+   * edit". Every PM editor can open the workbooks; only an admin may read who
+   * has been looking at what.
+   */
+  let hubRole = "none";
+  try {
+    const me = await SS.db.rpc("hub_me");
+    const row = Array.isArray(me) ? me[0] : me;
+    hubRole = (row && row.role) || "none";
+  } catch { /* access control not applied yet — treat as unrestricted */ hubRole = "admin"; }
+
+  // A workbook they may not read should not be offered at all. Hiding the tab
+  // after the fact would still leave the page reachable by URL, so the guard
+  // below refuses the mount as well.
+  Object.entries(SS.WORKBOOKS).forEach(([key, wb]) => {
+    if (wb.adminOnly && hubRole !== "admin") {
+      document.querySelectorAll('.tab[data-book="' + key + '"]').forEach((t) => t.remove());
+    }
+  });
+
+  if (book.adminOnly && hubRole !== "admin") {
+    document.getElementById("gridHost").innerHTML =
+      '<div class="empty-state"><div><strong>Not available to you</strong>' +
+      '<p style="margin-top:8px;max-width:46ch">Usage data records what individual ' +
+      'people looked at, so it is limited to the VP and the project managers. ' +
+      'Everything else in the PM Hub is open to you as usual.</p></div></div>';
+    // Queried directly rather than through `els`, which is not built yet at
+    // this point in the sequence.
+    const t = document.getElementById("bookTitle");
+    const st = document.getElementById("bookSubtitle");
+    if (t) t.textContent = book.label;
+    if (st) st.textContent = "Restricted";
+    return;
+  }
+
   await applyCustomisations();
 
   const state = { sheet: book.sheets[0], grids: new Map(), loaded: new Map() };
@@ -136,6 +172,10 @@ export async function mountWorkbook(bookKey) {
       grid = new Grid({
         mount: host,
         columns: sheet.columns.map((c) => ({ ...c })),
+        // Not every sheet is keyed by `id` — hub_access is keyed by email — and
+        // without this the grid would stage updates against a column that does
+        // not exist and every save would quietly target nothing.
+        idKey: sheet.idKey || "id",
         // Per sheet, so widening Comment on the OKR sheet does not resize a
         // column that happens to share its name elsewhere.
         storageKey: bookKey + ":" + sheet.key,
@@ -207,11 +247,12 @@ export async function mountWorkbook(bookKey) {
     };
 
     try {
-      if (deletes.length) await SS.db.remove(sheet.table, deletes);
+      if (deletes.length) await SS.db.remove(sheet.table, deletes, sheet.idKey || "id");
       for (const rec of inserts) await SS.db.insert(sheet.table, [real(rec)]);
       for (const patch of updates) {
         const body = real(patch);
-        if (Object.keys(body).length) await SS.db.update(sheet.table, patch.id, body);
+        const key = sheet.idKey || "id";
+        if (Object.keys(body).length) await SS.db.update(sheet.table, patch[key], body, key);
       }
 
       // Re-read so server defaults, real ids and any trigger output land in the

@@ -81,8 +81,12 @@ def classify(category):
         return "admin", DEPARTMENTS.get(tail[:-3].strip())
     if tail.endswith(" director"):
         return "director", DEPARTMENTS.get(tail[:-9].strip())
+    # Springboard is the contracting firm, not Student Services. Its people sit
+    # outside the organisation and have no row in the directory to scope from,
+    # so they are partners: the org and each department at a glance, no
+    # individual detail.
     if tail == "springboard":
-        return "staff", None
+        return "partner", None
     return "staff", DEPARTMENTS.get(tail)
 
 
@@ -99,8 +103,30 @@ def load_employees():
     req = urllib.request.Request(
         url.rstrip("/") + "/rest/v1/employees?select=name,email,department,primary_stakeholder",
         headers={"apikey": key, "Authorization": "Bearer " + key})
-    with urllib.request.urlopen(req, timeout=30) as r:
-        return json.load(r)
+    try:
+        with urllib.request.urlopen(req, timeout=30) as r:
+            return json.load(r)
+    except Exception as err:
+        # Expected once access control is live: the anon key can no longer read
+        # the directory, which is the entire point of it. The bundled snapshot
+        # the hub falls back on carries the same three fields this needs, and
+        # names and reporting lines are exactly the part that moves slowly.
+        print(f"  (live directory unavailable — {err}; using the bundled snapshot)")
+        snap = REPO / "directory" / "js" / "employees.js"
+        if not snap.exists():
+            sys.exit("No directory available: neither the API nor " + str(snap))
+        import subprocess
+        out = subprocess.run(
+            ["node", "-e",
+             "global.window={};const fs=require('fs');"
+             f"eval(fs.readFileSync({json.dumps(str(snap))},'utf8'));"
+             "process.stdout.write(JSON.stringify((window.EMPLOYEES||[]).map(e=>({"
+             "name:e.name,email:e.email||null,department:e.dept||e.department||null,"
+             "primary_stakeholder:e.primaryStakeholder||e.primary_stakeholder||null}))));"],
+            capture_output=True, text=True, encoding="utf-8")
+        if out.returncode != 0 or not out.stdout.strip():
+            sys.exit("Could not read the bundled directory:\n" + (out.stderr or ""))
+        return json.loads(out.stdout)
 
 
 def main():
@@ -119,7 +145,36 @@ def main():
         if not t:
             return None
         hits = [e for ts, e in by_tokens if t <= ts or ts <= t]
-        return hits[0]["name"] if len(hits) == 1 else None
+        if len(hits) == 1:
+            return hits[0]["name"]
+        if hits:
+            return None                      # ambiguous: better to leave unscoped
+        # Last resort: same surname, same first initial. Catches the spelling
+        # drift between a sign-up sheet and the directory — "Johanna Relkin"
+        # against "Joanna Relken" — without matching two different people, since
+        # both halves of the name still have to agree.
+        want = sorted(t)
+        if len(want) < 2:
+            return None
+        surname, initial = want[-1], want[0][0]
+
+        def close(a, b):
+            """Same word bar one letter — Relkin/Relken, Johanna/Joanna."""
+            if a == b:
+                return True
+            if abs(len(a) - len(b)) > 1 or not a or not b:
+                return False
+            if len(a) == len(b):
+                return sum(1 for x, y in zip(a, b) if x != y) <= 1
+            long, short = (a, b) if len(a) > len(b) else (b, a)
+            for i in range(len(long)):          # one insertion
+                if long[:i] + long[i + 1:] == short:
+                    return True
+            return False
+
+        near = [e for ts, e in by_tokens
+                if ts and close(sorted(ts)[-1], surname) and sorted(ts)[0][0] == initial]
+        return near[0]["name"] if len(near) == 1 else None
 
     wb = openpyxl.load_workbook(SHEET, data_only=True, read_only=True)
     rows = [[("" if c is None else str(c).strip()) for c in r]

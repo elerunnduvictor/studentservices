@@ -412,3 +412,20 @@ body.signin {
   .search { width: 140px; }
   .tab { padding: 0 12px; font-size: .78rem; }
 }
+
+/* Admin workbook — gold, the one brand colour not already spoken for by a
+   workbook, and appropriate for the sheets that govern the others. */
+body[data-book="admin"] {
+  --accent: var(--bp-gold-dark);
+  --accent-soft: rgba(212, 160, 32, .12);
+  --accent-line: rgba(212, 160, 32, .38);
+}
+[data-theme="dark"] body[data-book="admin"] { --accent: #E0B84A; --accent-soft: rgba(224,184,74,.16); }
+.tab[data-book="admin"] .dot { background: var(--bp-gold-dark); }
+body[data-book="analytics"] {
+  --accent: var(--bp-teal-mid);
+  --accent-soft: rgba(58, 146, 157, .12);
+  --accent-line: rgba(58, 146, 157, .38);
+}
+[data-theme="dark"] body[data-book="analytics"] { --accent: #5FB6C4; --accent-soft: rgba(95,182,196,.16); }
+.tab[data-book="analytics"] .dot { background: var(--bp-teal-mid); }

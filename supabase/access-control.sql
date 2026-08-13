@@ -567,10 +567,19 @@ insert into public.hub_access (email, full_name, category, role, scope_departmen
   ('brad.barson@churchofjesuschrist.org', 'Brad Barson', 'Partner - S&I', 'partner', null, null),
   ('matthew.langton@churchofjesuschrist.org', 'Matthew Brenton Langton', 'Partner - S&I', 'partner', null, null),
   ('loertscherbt@churchofjesuschrist.org', 'Benjamin T. Loertscher', 'Partner - S&I', 'partner', null, null)
+-- Deliberately does NOT overwrite role or scope on an existing row.
+--
+-- The spreadsheet seeds this table; the Access sheet in the PM Hub owns it
+-- afterwards. A category in the spreadsheet is a job title, not an access
+-- level, and reading one off the other gets it wrong: Mariela Pezzali is
+-- filed as "DOS Director" but is a project manager, so she needs admin.
+-- That was corrected by hand, and re-running this file must not undo it.
+--
+-- Only the reference fields refresh. To reset somebody deliberately, change
+-- them in the Access sheet.
 on conflict (email) do update set
-  full_name = excluded.full_name, category = excluded.category,
-  role = excluded.role, scope_department = excluded.scope_department,
-  scope_person = excluded.scope_person, active = true;
+  full_name = excluded.full_name,
+  category  = excluded.category;
 
 commit;
 

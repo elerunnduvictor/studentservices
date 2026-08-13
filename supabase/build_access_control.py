@@ -105,7 +105,14 @@ def load_employees():
         headers={"apikey": key, "Authorization": "Bearer " + key})
     try:
         with urllib.request.urlopen(req, timeout=30) as r:
-            return json.load(r)
+            rows = json.load(r)
+        if not rows:
+            # Not a failure any more, which is the trap: once row-level security
+            # is applied the anon key gets a clean, empty 200 rather than an
+            # error. Treating that as "no employees" silently unscoped all 41
+            # staff on the first regeneration after the policies went live.
+            raise RuntimeError("no rows — the anon key can no longer read the directory")
+        return rows
     except Exception as err:
         # Expected once access control is live: the anon key can no longer read
         # the directory, which is the entire point of it. The bundled snapshot
@@ -517,10 +524,19 @@ grant insert, update, delete on public.hub_access to authenticated;
     cols = ["email", "full_name", "category", "role", "scope_department", "scope_person"]
     L.append("insert into public.hub_access (" + ", ".join(cols) + ") values\n" +
              ",\n".join("  (" + ", ".join(sql(p[c]) for c in cols) + ")" for p in people) +
-             "\non conflict (email) do update set\n" +
-             "  full_name = excluded.full_name, category = excluded.category,\n" +
-             "  role = excluded.role, scope_department = excluded.scope_department,\n" +
-             "  scope_person = excluded.scope_person, active = true;\n\ncommit;\n")
+             "\n-- Deliberately does NOT overwrite role or scope on an existing row.\n"
+             "--\n"
+             "-- The spreadsheet seeds this table; the Access sheet in the PM Hub owns it\n"
+             "-- afterwards. A category in the spreadsheet is a job title, not an access\n"
+             "-- level, and reading one off the other gets it wrong: Mariela Pezzali is\n"
+             "-- filed as \"DOS Director\" but is a project manager, so she needs admin.\n"
+             "-- That was corrected by hand, and re-running this file must not undo it.\n"
+             "--\n"
+             "-- Only the reference fields refresh. To reset somebody deliberately, change\n"
+             "-- them in the Access sheet.\n"
+             "on conflict (email) do update set\n" +
+             "  full_name = excluded.full_name,\n" +
+             "  category  = excluded.category;\n\ncommit;\n")
 
     L.append("""
 -- ═══════════ USAGE ANALYTICS ═══════════

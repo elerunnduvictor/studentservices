@@ -5,6 +5,27 @@
   <meta charset="UTF-8">
   <script src="../js/auth-guard.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light dark">
+<!-- Theme decided before the first paint.
+
+     Without this the browser lays out a light page, then js/shared.js runs and
+     switches it — a white flash on every load, worst on the org chart where
+     there is a large canvas to repaint. Setting color-scheme as well as the
+     attribute is the part that matters: it tells the browser what to paint the
+     canvas *before* any stylesheet has arrived, which the attribute alone
+     cannot do.
+
+     Matches js/shared.js exactly, including its default of light when nothing
+     has been chosen -- the hub does not follow the system preference. -->
+<script>
+  (function () {
+    try {
+      var saved = localStorage.getItem("ss-theme") || "light";
+      document.documentElement.setAttribute("data-theme", saved);
+      document.documentElement.style.colorScheme = saved === "dark" ? "dark" : "light";
+    } catch (e) { /* private mode: fall through to light */ }
+  })();
+</script>
   <title>Digital Operations — Student Services</title>
   <link rel="icon" type="image/svg+xml" href="../favicon.svg">
   <link
@@ -252,6 +273,8 @@
   <!-- Bundled snapshot, used only if the database is unreachable. -->
   <script src="../directory/js/employees.js"></script>
   <script src="../shared/js/config.js"></script>
+<script src="../shared/js/hub-access.js"></script>
+<script src="../shared/js/hub-scope.js"></script>
   <script src="../shared/js/data-service.js"></script>
   <script src="../shared/js/hub-boot.js"
           data-datasets="directory,orgchart"

@@ -28,9 +28,18 @@
   }
 
   function headers(extra) {
+    // Two different sessions can be in play: the PM Hub's editor session
+    // (SS.session) and the hub's reader session (SS.access.session). Whichever
+    // exists is what the database should judge this request by — falling back
+    // to the anon key would silently downgrade a signed-in reader to no role at
+    // all, and their pages would come back empty.
+    const token =
+      SS.session?.access_token ||
+      SS.access?.session?.access_token ||
+      cfg.SUPABASE_ANON_KEY;
     return Object.assign({
       apikey: cfg.SUPABASE_ANON_KEY,
-      Authorization: "Bearer " + (SS.session?.access_token || cfg.SUPABASE_ANON_KEY),
+      Authorization: "Bearer " + token,
       "Content-Type": "application/json",
     }, extra || {});
   }
@@ -254,6 +263,43 @@
       // The scorecard prints how many measures are excluded; that count lives
       // outside the view (which only returns tracked rows), so ask for it.
       after: async (rows) => {
+        // Branches this reader may not open still have to show an honest
+        // colour, or a partner's scorecard would be empty and a manager's would
+        // silently lose every team but their own. `hub_scorecard_rollup()`
+        // returns the bands and the current value with no employee and no
+        // measure attached — enough to compute a status, nothing to identify
+        // anyone. Anything already present by name is left alone.
+        try {
+          const access = window.SS && window.SS.access;
+          if (access && access.session && access.role !== "admin") {
+            const res = await fetch(endpoint("rpc/hub_scorecard_rollup"), {
+              method: "POST", headers: headers(), body: "{}",
+            });
+            if (res.ok) {
+              const seen = new Set(rows.map((r) => (r.dept || "") + "|" + (r.subDept || "")));
+              (await res.json()).forEach((r, i) => {
+                const key = (r.department || "") + "|" + (r.sub_department || "");
+                if (seen.has(key)) return;      // already visible in full
+                rows.push(window.SS.kpiStatus.decorate({
+                  id: "rollup-" + i,
+                  employee: null,
+                  role: null,
+                  department: r.department,
+                  sub_department: r.sub_department,
+                  kpi_measure: null,
+                  category_type: r.category_type,
+                  band_green: r.band_green,
+                  band_yellow: r.band_yellow,
+                  band_red: r.band_red,
+                  current_value: r.current_value,
+                  tracking_status: "Tracking",
+                  restricted: true,
+                }));
+              });
+            }
+          }
+        } catch { /* the named rows are still worth rendering on their own */ }
+
         let excluded = null;
         try {
           const res = await fetch(

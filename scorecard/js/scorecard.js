@@ -18,6 +18,22 @@
   "use strict";
 
   var KPIS = window.SCORECARD_KPIS || [];
+
+  /* ── what this reader is allowed to open ───────────────────────────────────
+     The database already decided what they may *read* — a partner receives no
+     named rows at all, a manager only their own reporting line. This decides
+     what may be *opened*, so the page does not offer doors that lead nowhere.
+
+     `restricted` rows are the anonymised roll-up: real bands and values, no
+     employee and no measure. They exist so a branch someone cannot enter still
+     shows an honest colour instead of vanishing. */
+  var ACCESS = window.SS && window.SS.access;
+  function role() { return (ACCESS && ACCESS.role) || "admin"; }
+  function canOpenBelowDept() { return role() !== "partner"; }
+  function canOpenPeople() { return ACCESS ? ACCESS.canSeePeople : true; }
+  function isRestricted(rows) {
+    return rows.length > 0 && rows.every(function (r) { return r.restricted; });
+  }
   var META = window.SCORECARD_META || {};
 
   /* Colour is computed at build time from each KPI's own green/yellow/red band
@@ -178,6 +194,17 @@
 
   /* ── drill cards ─────────────────────────────────────────────────────── */
 
+  /**
+   * A child tile.
+   *
+   * With `locked`, it still shows the branch and its health but cannot be
+   * opened — a partner seeing a department, or a manager seeing a team that is
+   * not theirs. The tile is deliberately still *there*: knowing the Registrar's
+   * Office is amber is the point; knowing who inside it is amber is not.
+   *
+   * Rendered as a <div> rather than a disabled <button> so it is not announced
+   * as a broken control to a screen reader.
+   */
   function kidCard(opts) {
     var roll = opts.roll;
     var score = roll.health === null
@@ -186,12 +213,17 @@
     var cov = roll.health === null
       ? '<div class="sc-kid-cov">' + statusChip("No Data", "Awaiting data") + "</div>"
       : '<div class="sc-kid-cov">Coverage ' + roll.coverage + "%</div>";
-    return '<button type="button" class="sc-kid" data-goto="' + esc(opts.href) + '">' +
-      '<span class="sc-kid-arrow" aria-hidden="true">›</span>' +
+    var body =
       '<div class="sc-kid-name">' + esc(opts.name) + "</div>" +
       '<div class="sc-kid-role">' + esc(opts.sub) + "</div>" +
-      score + cov + spectrum(roll.counts, true) +
-      "</button>";
+      score + cov + spectrum(roll.counts, true);
+
+    if (opts.locked) {
+      return '<div class="sc-kid is-locked" title="Summary only — you do not have access to the detail inside">' +
+        '<span class="sc-kid-arrow" aria-hidden="true">·</span>' + body + "</div>";
+    }
+    return '<button type="button" class="sc-kid" data-goto="' + esc(opts.href) + '">' +
+      '<span class="sc-kid-arrow" aria-hidden="true">›</span>' + body + "</button>";
   }
 
   /* Worst first: every Red, then Yellows, then one line for the silent ones. */
@@ -375,7 +407,9 @@
         name: d,
         sub: dr.length + " tracked KPI" + (dr.length === 1 ? "" : "s") + " · " + sub + " sub-dept" + (sub === 1 ? "" : "s"),
         roll: rollup(dr),
-        href: "#/" + dr[0].deptSlug
+        href: "#/" + dr[0].deptSlug,
+        // a partner sees each department's health and stops there
+        locked: !canOpenBelowDept()
       });
     }).join("");
 
@@ -401,7 +435,9 @@
         name: s,
         sub: sr.length + " tracked KPI" + (sr.length === 1 ? "" : "s") + " · " + people + " stakeholder" + (people === 1 ? "" : "s"),
         roll: rollup(sr),
-        href: "#/" + deptSlug + "/" + sr[0].subDeptSlug
+        href: "#/" + deptSlug + "/" + sr[0].subDeptSlug,
+        // a team outside this reader's line: health yes, detail no
+        locked: !canOpenPeople() || isRestricted(sr)
       });
     }).join("");
 
@@ -425,7 +461,8 @@
         name: p,
         sub: (pr[0].role || "—") + " · " + pr.length + " KPI" + (pr.length === 1 ? "" : "s"),
         roll: rollup(pr),
-        href: "#/" + deptSlug + "/" + subSlug + "/" + pr[0].personSlug
+        href: "#/" + deptSlug + "/" + subSlug + "/" + pr[0].personSlug,
+        locked: !canOpenPeople() || isRestricted(pr)
       });
     }).join("");
 

@@ -2176,3 +2176,24 @@ body.home-single .tool-desc {
   }
   [data-reveal] { opacity: 1; transform: none; filter: none; }
 }
+
+/* ── partner view notice ──
+   Shown where a section has been reduced rather than left mysteriously empty.
+   A page that renders blank looks broken; one that says what you are seeing,
+   and why, does not. */
+.scope-notice {
+  display: flex; flex-direction: column; gap: 4px;
+  margin: 18px 0; padding: 14px 18px;
+  border: 1px solid var(--border-subtle, #DFE4EA);
+  border-left: 3px solid var(--bp-teal, #065577);
+  border-radius: 10px;
+  background: var(--surface-2, #F7F8FA);
+  font-size: .86rem; line-height: 1.55;
+}
+.scope-notice strong {
+  font-size: .68rem; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--bp-teal, #065577);
+}
+.scope-notice span { color: var(--ink-2, #55636F); }
+[data-theme="dark"] .scope-notice { background: #1B2128; border-color: #2A323C; }
+[data-theme="dark"] .scope-notice strong { color: #4FA3C4; }

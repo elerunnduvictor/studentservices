@@ -594,3 +594,22 @@
   .sc-kid:hover, .sc-area:hover { transform: none; }
   .hero-pattern { animation: none; }
 }
+
+/* ── a branch you can see but not enter ──
+   Partners get this on every department; a manager gets it on teams outside
+   their own reporting line. The tile keeps its health reading — that is the
+   part they are meant to have — and loses only the affordance to go deeper. */
+.sc-kid.is-locked {
+  cursor: default;
+  opacity: .82;
+}
+.sc-kid.is-locked:hover { transform: none; box-shadow: none; }
+.sc-kid.is-locked .sc-kid-arrow { opacity: .3; }
+.sc-kid.is-locked::after {
+  content: 'Summary only';
+  position: absolute; top: 10px; right: 12px;
+  font-size: .62rem; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--ink-3, #8A97A3);
+  border: 1px solid var(--border-subtle, #DFE4EA);
+  border-radius: 99px; padding: 2px 7px;
+}

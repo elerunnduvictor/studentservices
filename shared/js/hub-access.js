@@ -94,13 +94,16 @@
    * — as the PM Hub work established — would never be delivered to a
    * churchofjesuschrist.org address anyway.
    */
-  async function signIn(email) {
-    const creds = { email: email, password: email };
+  async function signIn(email, password) {
+    // `password` is only supplied by the login form when the first attempt has
+    // already told us this person has one of their own.
+    const creds = { email: email, password: password || email };
     let r = await post("/auth/v1/token?grant_type=password", creds);
     if (r.ok) return store(r.body, email);
 
     const why = (r.body.error_description || r.body.msg || r.body.message || "");
     if (!/invalid login credentials/i.test(why)) throw new Error(why || "Could not sign in.");
+    if (password) throw new Error("wrong-password");
 
     const su = await post("/auth/v1/signup", creds);
     if (su.ok && su.body.access_token) return store(su.body, email);
@@ -112,9 +115,11 @@
       throw new Error("not-provisioned");
     }
     if (/already registered/i.test(suWhy)) {
-      // The account exists with a different password — a leftover from an
-      // earlier sign-in scheme. It has to be cleared in Supabase.
-      throw new Error("stale-account");
+      // They already have an account with a password of their own — every PM
+      // editor does, because the PM Hub asks them to choose one. The hub cannot
+      // guess it, so the login form asks. This is the only reason anyone on the
+      // hub is ever shown a password field.
+      throw new Error("needs-password");
     }
     throw new Error(suWhy || "Could not sign in.");
   }
@@ -159,9 +164,18 @@
     if (!state.session || state.session.email !== email) {
       try { await signIn(email); }
       catch (err) {
-        // Leave the page working on whatever the anon key can still read rather
-        // than throwing a signed-in user out over a transient auth failure.
         console.warn("[hub-access]", err.message);
+        // Someone with a password of their own cannot be signed in silently,
+        // and without a session every page reads as empty — which looks like
+        // the site is broken rather than like they need to sign in again. Send
+        // them back to the login screen, which knows how to ask.
+        if (err.message === "needs-password" && !/\/login\//.test(location.pathname)) {
+          const back = location.pathname.replace(/^\//, "");
+          const up = back.split("/").length > 1 ? "../" : "";
+          localStorage.removeItem(EMAIL_KEY);
+          location.replace(up + "login/index.html?again=1");
+          return state;
+        }
         return state;
       }
     }

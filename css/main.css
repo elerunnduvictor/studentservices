@@ -2197,3 +2197,43 @@ body.home-single .tool-desc {
 .scope-notice span { color: var(--ink-2, #55636F); }
 [data-theme="dark"] .scope-notice { background: #1B2128; border-color: #2A323C; }
 [data-theme="dark"] .scope-notice strong { color: #4FA3C4; }
+
+/* ── account chip ──
+   Who is signed in, and the way out. It shows the role as well as the address
+   because what a person sees now depends on which of the two they are. */
+.hub-account { position: relative; display: flex; align-items: center; margin-left: 14px; }
+.hub-account.is-floating { position: fixed; top: 12px; right: 16px; z-index: 900; }
+.hub-account-btn {
+  display: flex; align-items: center; gap: 9px;
+  padding: 5px 10px 5px 5px;
+  background: transparent; border: 1px solid var(--border-subtle, #DFE4EA);
+  border-radius: 99px; cursor: pointer; color: inherit;
+  transition: background .15s, border-color .15s;
+}
+.hub-account-btn:hover { background: rgba(6, 85, 119, .07); border-color: var(--bp-teal, #065577); }
+.hub-account-avatar {
+  width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+  display: grid; place-items: center;
+  background: var(--bp-teal, #065577); color: #fff;
+  font-size: .66rem; font-weight: 700; letter-spacing: .02em;
+}
+.hub-account-text { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.15; }
+.hub-account-email { font-size: .74rem; font-weight: 500; max-width: 20ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hub-account-role  { font-size: .58rem; letter-spacing: .09em; text-transform: uppercase; opacity: .62; }
+.hub-account-menu {
+  position: absolute; top: calc(100% + 8px); right: 0; min-width: 220px; z-index: 950;
+  background: var(--surface, #fff); border: 1px solid var(--border-subtle, #DFE4EA);
+  border-radius: 10px; box-shadow: 0 12px 34px rgba(0,0,0,.16); padding: 6px;
+}
+.hub-account-menu-email {
+  padding: 9px 11px 10px; font-size: .74rem; opacity: .7;
+  border-bottom: 1px solid var(--border-subtle, #DFE4EA); margin-bottom: 5px;
+  word-break: break-all;
+}
+.hub-account-signout {
+  width: 100%; text-align: left; padding: 9px 11px;
+  background: none; border: none; border-radius: 7px; cursor: pointer;
+  font-size: .82rem; color: var(--bp-red, #CB4A27);
+}
+.hub-account-signout:hover { background: rgba(203, 74, 39, .1); }
+@media (max-width: 700px) { .hub-account-text { display: none; } }

@@ -32,6 +32,23 @@
       window.ALLOWED_USERS.some((u) => String(u).toLowerCase() === email));
   }
 
+  /* Shown only on demand — see the catch below. */
+  let passwordField = null;
+  function revealPassword(message) {
+    if (!passwordField) {
+      const wrap = document.createElement("div");
+      wrap.className = "field";
+      wrap.innerHTML =
+        '<label class="sr-only" for="hubPassword">Password</label>' +
+        '<input type="password" id="hubPassword" autocomplete="current-password" ' +
+        'placeholder="Your PM Hub password">';
+      input.parentNode.after(wrap);
+      passwordField = wrap.querySelector("input");
+    }
+    passwordField.focus();
+    fail(message);
+  }
+
   form.addEventListener("submit", async function (e) {
     e.preventDefault();
     errorEl.style.display = "none";
@@ -52,10 +69,20 @@
 
     try {
       if (window.SS && window.SS.access && window.SS_CONFIG && window.SS_CONFIG.isConfigured) {
-        await window.SS.access.signIn(email);
+        await window.SS.access.signIn(email, passwordField ? passwordField.value : null);
         await window.SS.access.track("login", "/login");
       }
     } catch (err) {
+      if (err.message === "needs-password" || err.message === "wrong-password") {
+        // Only people who set a password in the PM Hub ever reach this. The
+        // field appears rather than being on the form from the start, so the
+        // 250-odd people who do not have one are never asked for one.
+        localStorage.removeItem("ss_user_session");
+        revealPassword(err.message === "wrong-password"
+          ? "That password was not right. Try again."
+          : "You have set a password for the PM Hub — please enter it.");
+        return;
+      }
       // Deliberately fail open.
       //
       // The allow-list above has already said this person may be here. If the

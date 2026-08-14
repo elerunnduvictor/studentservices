@@ -112,7 +112,12 @@
    * seven PMs.
    */
   async function signIn(email, password) {
-    const res = await authFetch("/auth/v1/token?grant_type=password", { email, password });
+    // A blank password means "use my email", which is what the hub does and
+    // what everyone signing in here now gets by default. Choosing a password
+    // remains possible; it is simply no longer required, so that one person is
+    // never asked for one on one site and not the other.
+    const res = await authFetch("/auth/v1/token?grant_type=password",
+                                { email, password: password || email });
     if (!res.ok) {
       const detail = (res.body.error_description || res.body.msg || res.body.message || "");
       if (/invalid login credentials/i.test(detail)) {

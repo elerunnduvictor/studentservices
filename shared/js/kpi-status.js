@@ -202,13 +202,13 @@
 
     return {
       id: r.id,
-      employee: r.employee || "Unassigned",
+      employee: r.employee || "",   // blank, never a placeholder name
       role: r.role || "",
       dept,
       deptSlug: slug(dept),
       subDept,
       subDeptSlug: slug(subDept),
-      personSlug: slug(r.employee || "unassigned"),
+      personSlug: slug(r.employee || ""),
       measure: r.measure || r.kpi_measure || "",
       category: r.category || r.kpi_category || "",
       type,

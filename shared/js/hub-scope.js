@@ -6,10 +6,9 @@
 
    This is presentation, not protection. A partner's request for the employee
    table already comes back empty from Postgres — nothing here is what keeps
-   them out. What it does is stop the hub showing a search box that finds
-   nothing, a table with no rows, and a headcount chart drawn from an empty
-   array. A page that silently renders blank looks broken; a page that says
-   "this is the view you have" does not.
+   them out. It only removes the parts of a page that would draw from rows that
+   never arrive, and it does so silently: a page that captions its own omissions
+   reads as a refusal, which is not the experience a partner should have.
 
    Loaded on the directory and department pages, after hub-access.
    ═══════════════════════════════════════════════════════════════════════════ */
@@ -21,49 +20,36 @@
 
   function hide(el) { if (el) el.style.display = "none"; }
 
-  function notice(text) {
-    const d = document.createElement("div");
-    d.className = "scope-notice";
-    d.setAttribute("role", "status");
-    d.innerHTML =
-      '<strong>Partner view</strong><span>' + text + "</span>";
-    return d;
-  }
-
   /**
    * The directory, for someone outside Student Services.
    *
-   * Departments and totals stay — they are the shape of the organisation, and
-   * that is public knowledge. The roster, the filters and the search go, along
-   * with everything that would only ever draw an empty result.
+   * Everything that describes the shape of the organisation stays: the
+   * department bars, the employment-type chart, the headcount cards. Only the
+   * list of individual people goes, because that is the sensitive part — and
+   * with it the filters, which exist for no other purpose.
+   *
+   * Nothing is announced. A page that quietly shows what you are entitled to
+   * reads as the page; one that captions its own omissions reads as a refusal.
    */
   async function scopeDirectory() {
     const table = document.getElementById("dirTableBody");
-    const host = table ? table.closest("section, .section, main") : null;
-
+    if (table) {
+      const t = table.closest("table") || table;
+      hide(t.closest(".table-wrap, .dir-table-wrap, section, .section") || t);
+    }
     ["filterSearch", "filterDept", "filterSubDept", "filterType", "filterClear"]
       .forEach((id) => {
         const el = document.getElementById(id);
-        hide(el && (el.closest(".filter-field, .dir-filter, label") || el));
+        hide(el && (el.closest(".filter-field, .dir-filter, .filters, label") || el));
       });
 
-    if (table) {
-      const wrap = table.closest("table") || table;
-      hide(wrap.closest(".table-wrap, .dir-table-wrap") || wrap);
-    }
-    if (host) {
-      host.prepend(notice(
-        "You can see Student Services and each department at a glance. " +
-        "The list of individual people is limited to Student Services staff."));
-    }
-
-    // The department bars and the headcount totals are aggregates, so they stay
-    // — but they have to come from the summary function, because the employee
-    // rows they were computed from will not arrive.
+    // The bars and totals are aggregates, so they stay — but they have to be
+    // rebuilt from the summary function, because the employee rows they were
+    // computed from never arrive.
     try {
       const rows = await SS.access.rpcSummary();
       if (rows && rows.length) renderPartnerTotals(rows);
-    } catch { /* the notice above still explains the page */ }
+    } catch { /* leave whatever the page managed to draw */ }
   }
 
   function renderPartnerTotals(rows) {
@@ -93,13 +79,7 @@
   function scopeDepartmentPage() {
     hide(document.getElementById("deptDashboard"));   // headcount / type cards
     hide(document.getElementById("deptChart"));       // workforce chart
-    const team = document.getElementById("team");     // the people section
-    if (team) {
-      team.innerHTML = "";
-      team.append(notice(
-        "Team composition is visible to Student Services staff. " +
-        "The department's purpose and services are shown above."));
-    }
+    hide(document.getElementById("team"));            // the people section
   }
 
   function escapeHtml(s) {
@@ -107,9 +87,12 @@
       ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   }
 
+  let applied = false;
+
   SS.scope = {
     async apply() {
-      if (!SS.access) return;
+      if (applied || !SS.access) return;
+      applied = true;
       await SS.access.ready;
       if (!SS.access.isPartner) return;      // everyone inside sees it all
 

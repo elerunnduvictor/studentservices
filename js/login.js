@@ -27,6 +27,7 @@
     "Contact Ben Packer and Jess Swinburne for Provisioning Access.";
 
   function fail(message) {
+    errorEl.classList.remove("is-info");
     errorEl.textContent = message;
     errorEl.style.display = "block";
     if (button) { button.disabled = false; button.textContent = "Sign In"; }
@@ -35,6 +36,53 @@
   function onAllowList(email) {
     return !!(window.ALLOWED_USERS &&
       window.ALLOWED_USERS.some((u) => String(u).toLowerCase() === email));
+  }
+
+  /**
+   * Shown to seven people, once.
+   *
+   * The PM editors chose their own password in the PM Hub, and that password is
+   * theirs — it is not being reset or copied. The two sites are separate
+   * domains, so a session cannot be carried between them, and the hub has no
+   * way to derive a password somebody invented. Asking once is the only honest
+   * option left; the refresh token then keeps them signed in, so this should
+   * not appear a second time.
+   *
+   * The other 250-odd people never see this field at all.
+   */
+  let passwordField = null;
+  function revealPassword(message) {
+    if (!passwordField) {
+      // Built to match the email field exactly — a bare input after its own
+      // screen-reader label, which is how this form is written. Wrapping it in
+      // a div the stylesheet has never heard of is what made it look bolted on.
+      const label = document.createElement("label");
+      label.className = "sr-only";
+      label.setAttribute("for", "hubPassword");
+      label.textContent = "PM Hub password";
+
+      passwordField = document.createElement("input");
+      passwordField.type = "password";
+      passwordField.id = "hubPassword";
+      passwordField.autocomplete = "current-password";
+      passwordField.placeholder = "Your PM Hub password";
+      passwordField.required = true;
+
+      input.after(label, passwordField);
+      input.setAttribute("readonly", "readonly");   // the address is settled
+    }
+    passwordField.value = "";
+    passwordField.focus();
+    if (button) button.textContent = "Sign In";
+    show(message);
+  }
+
+  /* A step in the flow, not a failure — so it does not arrive in red. */
+  function show(message) {
+    errorEl.textContent = message;
+    errorEl.style.display = "block";
+    errorEl.classList.add("is-info");
+    if (button) { button.disabled = false; }
   }
 
   form.addEventListener("submit", async function (e) {
@@ -55,18 +103,16 @@
 
     try {
       if (window.SS && window.SS.access && window.SS_CONFIG && window.SS_CONFIG.isConfigured) {
-        await window.SS.access.signIn(email);
+        await window.SS.access.signIn(email, passwordField ? passwordField.value : null);
         await window.SS.access.track("login", "/login");
       }
     } catch (err) {
-      if (err.message === "needs-password") {
-        // An account left over from when the PM Hub asked people to invent a
-        // password. Nobody should be asked for one here, so this is an admin
-        // job, not the reader's problem — and it affects at most seven people.
+      if (err.message === "needs-password" || err.message === "wrong-password") {
         localStorage.removeItem("ss_user_session");
-        return fail("Your sign-in needs resetting. Ask Jess Swinburne or Victor " +
-                    "Elerunndu to remove your account under Authentication → Users; " +
-                    "your next sign-in will then just work.");
+        return revealPassword(err.message === "wrong-password"
+          ? "That password was not right — it is the one you set for the PM Hub."
+          : "One-off: enter the password you set for the PM Hub. " +
+            "You will not be asked again on this device.");
       }
       if (err.message === "not-provisioned") {
         // The database is the authority on who may be here, and it has said no.

@@ -2177,63 +2177,68 @@ body.home-single .tool-desc {
   [data-reveal] { opacity: 1; transform: none; filter: none; }
 }
 
-/* ── partner view notice ──
-   Shown where a section has been reduced rather than left mysteriously empty.
-   A page that renders blank looks broken; one that says what you are seeing,
-   and why, does not. */
-.scope-notice {
-  display: flex; flex-direction: column; gap: 4px;
-  margin: 18px 0; padding: 14px 18px;
-  border: 1px solid var(--border-subtle, #DFE4EA);
-  border-left: 3px solid var(--bp-teal, #065577);
-  border-radius: 10px;
-  background: var(--surface-2, #F7F8FA);
-  font-size: .86rem; line-height: 1.55;
-}
-.scope-notice strong {
-  font-size: .68rem; letter-spacing: .12em; text-transform: uppercase;
-  color: var(--bp-teal, #065577);
-}
-.scope-notice span { color: var(--ink-2, #55636F); }
-[data-theme="dark"] .scope-notice { background: #1B2128; border-color: #2A323C; }
-[data-theme="dark"] .scope-notice strong { color: #4FA3C4; }
+
 
 /* ── account chip ──
-   Who is signed in, and the way out. It shows the role as well as the address
-   because what a person sees now depends on which of the two they are. */
-.hub-account { position: relative; display: flex; align-items: center; margin-left: 14px; }
-.hub-account.is-floating { position: fixed; top: 12px; right: 16px; z-index: 900; }
+   Sits beside the theme toggle, in the same visual language as it: translucent
+   on the dark hero, not a white card stuck on top of one. It shows the role as
+   well as the address because what a person sees now depends on which they are. */
+.hub-account { display: flex; align-items: center; z-index: 3; }
+.hub-account.is-floating { position: fixed; top: 14px; right: 16px; z-index: 900; }
+
 .hub-account-btn {
-  display: flex; align-items: center; gap: 9px;
-  padding: 5px 10px 5px 5px;
-  background: transparent; border: 1px solid var(--border-subtle, #DFE4EA);
-  border-radius: 99px; cursor: pointer; color: inherit;
-  transition: background .15s, border-color .15s;
+  display: flex; align-items: center; gap: 8px; height: 100%;
+  padding: 0 12px 0 6px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 10px;
+  color: rgba(255,255,255,0.85);
+  cursor: pointer;
+  transition: background .18s, border-color .18s, color .18s;
 }
-.hub-account-btn:hover { background: rgba(6, 85, 119, .07); border-color: var(--bp-teal, #065577); }
+.hub-account-btn:hover { background: rgba(255,255,255,0.16); border-color: rgba(255,255,255,0.32); color: #fff; }
+.hub-account.is-floating .hub-account-btn {
+  background: var(--surface, #fff); color: var(--text, #16202B);
+  border-color: var(--border-subtle, #DFE4EA);
+  height: 38px;
+}
+
 .hub-account-avatar {
-  width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+  width: 26px; height: 26px; border-radius: 8px; flex-shrink: 0;
   display: grid; place-items: center;
-  background: var(--bp-teal, #065577); color: #fff;
-  font-size: .66rem; font-weight: 700; letter-spacing: .02em;
+  background: rgba(255,255,255,0.16); color: #fff;
+  font-size: .64rem; font-weight: 700; letter-spacing: .03em;
 }
-.hub-account-text { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.15; }
-.hub-account-email { font-size: .74rem; font-weight: 500; max-width: 20ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.hub-account-role  { font-size: .58rem; letter-spacing: .09em; text-transform: uppercase; opacity: .62; }
+.hub-account.is-floating .hub-account-avatar { background: var(--bp-teal, #065577); }
+
+.hub-account-text { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.18; }
+.hub-account-email {
+  font-size: .74rem; font-weight: 500; max-width: 19ch;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.hub-account-role { font-size: .56rem; letter-spacing: .1em; text-transform: uppercase; opacity: .6; }
+
 .hub-account-menu {
-  position: absolute; top: calc(100% + 8px); right: 0; min-width: 220px; z-index: 950;
-  background: var(--surface, #fff); border: 1px solid var(--border-subtle, #DFE4EA);
-  border-radius: 10px; box-shadow: 0 12px 34px rgba(0,0,0,.16); padding: 6px;
+  position: absolute; top: calc(100% + 8px); right: 0; min-width: 236px; z-index: 950;
+  background: var(--surface, #fff);
+  border: 1px solid var(--border-subtle, #DFE4EA);
+  border-radius: 12px;
+  box-shadow: 0 16px 40px rgba(0,0,0,.2);
+  padding: 6px;
+  color: var(--text, #16202B);
 }
 .hub-account-menu-email {
-  padding: 9px 11px 10px; font-size: .74rem; opacity: .7;
-  border-bottom: 1px solid var(--border-subtle, #DFE4EA); margin-bottom: 5px;
-  word-break: break-all;
+  padding: 11px 12px 12px; font-size: .76rem; line-height: 1.45;
+  border-bottom: 1px solid var(--border-subtle, #DFE4EA);
+  margin-bottom: 5px; word-break: break-all; opacity: .8;
 }
 .hub-account-signout {
-  width: 100%; text-align: left; padding: 9px 11px;
-  background: none; border: none; border-radius: 7px; cursor: pointer;
-  font-size: .82rem; color: var(--bp-red, #CB4A27);
+  display: block; width: 100%; text-align: left;
+  padding: 10px 12px; background: none; border: none; border-radius: 8px;
+  cursor: pointer; font: inherit; font-size: .84rem; font-weight: 500;
+  color: var(--bp-red, #CB4A27);
 }
 .hub-account-signout:hover { background: rgba(203, 74, 39, .1); }
-@media (max-width: 700px) { .hub-account-text { display: none; } }
+[data-theme="dark"] .hub-account-menu { background: #161B21; border-color: #2A323C; color: #E6EAEF; }
+[data-theme="dark"] .hub-account-menu-email { border-color: #2A323C; }
+@media (max-width: 760px) { .hub-account-text { display: none; } .hub-account-btn { padding: 0 6px; } }

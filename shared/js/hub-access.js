@@ -58,11 +58,30 @@
     try {
       const raw = localStorage.getItem(SESSION_KEY);
       if (!raw) return null;
-      const s = JSON.parse(raw);
-      // A minute of margin, so a request does not set off mid-flight.
-      if (!s.expires_at || Date.now() / 1000 > s.expires_at - 60) return null;
-      return s;
+      return JSON.parse(raw);
     } catch { return null; }
+  }
+
+  function isFresh(s) {
+    // A minute of margin, so a request does not expire mid-flight.
+    return !!(s && s.expires_at && Date.now() / 1000 < s.expires_at - 60);
+  }
+
+  /**
+   * Renew a session without asking for anything.
+   *
+   * This is what keeps the password prompt to once *ever* rather than once an
+   * hour. Supabase tokens are short-lived, and the seven PM editors are the
+   * only people who cannot simply be signed in again silently — their password
+   * is their own and the hub has no way to know it. So the refresh token is the
+   * whole mechanism that makes their experience acceptable.
+   */
+  async function refresh(s) {
+    if (!s || !s.refresh_token) return null;
+    const r = await post("/auth/v1/token?grant_type=refresh_token",
+                         { refresh_token: s.refresh_token });
+    if (!r.ok || !r.body.access_token) return null;
+    return store(r.body, s.email);
   }
 
   function store(s, email) {
@@ -160,8 +179,12 @@
     if (!email || !cfg.isConfigured) return state;
     state.email = email;
 
-    state.session = readStored();
-    if (!state.session || state.session.email !== email) {
+    const stored = readStored();
+    if (stored && stored.email === email && isFresh(stored)) {
+      state.session = stored;
+    } else if (stored && stored.email === email && await refresh(stored)) {
+      // Renewed silently — nobody is asked for anything.
+    } else {
       try { await signIn(email); }
       catch (err) {
         console.warn("[hub-access]", err.message);

@@ -82,13 +82,32 @@
     let role = "none";
     try { await SS.access.ready; role = SS.access.role; } catch { /* show it anyway */ }
 
-    // Prefer the navbar so it lines up with the existing chrome; otherwise
-    // float it, which keeps pages that predate the navbar working.
-    const nav = document.querySelector("#navLinks") || document.querySelector("#navbar");
+    // Placed relative to the theme toggle rather than pinned to the viewport.
+    //
+    // That button is absolutely positioned inside the hero, so anything fixed
+    // at top-right lands on top of it — and then drifts away from it on scroll,
+    // because one moves with the page and the other does not. Measuring from
+    // the button puts the chip beside it and keeps it there.
     const chip = build(email, role);
-    if (nav && nav.id === "navLinks") nav.append(chip);
-    else if (nav) nav.append(chip);
-    else { chip.classList.add("is-floating"); document.body.append(chip); }
+    const toggle = document.getElementById("themeToggle");
+
+    if (toggle && toggle.offsetParent) {
+      toggle.offsetParent.append(chip);
+      const place = () => {
+        const gap = 10;
+        chip.style.position = "absolute";
+        chip.style.top = toggle.offsetTop + "px";
+        chip.style.height = toggle.offsetHeight + "px";
+        chip.style.right =
+          (toggle.offsetParent.clientWidth - toggle.offsetLeft + gap) + "px";
+      };
+      place();
+      addEventListener("resize", place);
+      chip.classList.add("on-hero");
+    } else {
+      chip.classList.add("is-floating");
+      document.body.append(chip);
+    }
   }
 
   SS.account = { signOut };

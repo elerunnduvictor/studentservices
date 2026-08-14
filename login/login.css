@@ -186,7 +186,11 @@ body {
 
 form { display: flex; flex-direction: column; gap: 14px; }
 
-input[type="email"] {
+/* The password field only appears for the few people who set one on the
+   PM Hub, so it has to inherit the same treatment rather than arrive
+   looking like a different form. */
+input[type="email"],
+input[type="password"] {
   width: 100%;
   padding: 14px 18px;
   font-family: 'Jost', sans-serif;
@@ -198,12 +202,16 @@ input[type="email"] {
   outline: none;
   transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
 }
-input[type="email"]::placeholder { color: rgba(255,255,255,0.45); }
-input[type="email"]:focus {
+input[type="email"]::placeholder,
+input[type="password"]::placeholder { color: rgba(255,255,255,0.45); }
+input[type="email"]:focus,
+input[type="password"]:focus {
   border-color: var(--gold);
   background: rgba(255,255,255,0.10);
   box-shadow: 0 0 0 3px rgba(var(--gold-r), 0.18);
 }
+
+#loginForm input + input { margin-top: 10px; }
 
 button[type="submit"] {
   display: inline-flex;
@@ -247,4 +255,12 @@ button[type="submit"] svg { width: 16px; height: 16px; }
 
 @media (max-width: 480px) {
   .login-card { padding: 40px 26px 34px; }
+}
+
+/* Being asked for a PM Hub password is a step, not a refusal. Same box as the
+   error, without the alarm. */
+.error-msg.is-info {
+  color: rgba(255,255,255,0.88);
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.20);
 }

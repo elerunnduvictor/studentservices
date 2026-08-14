@@ -135,6 +135,7 @@
   const DATASETS = {
     directory: {
       global: "EMPLOYEES",
+      fallbackSrc: "js/employees.js",
       view: "v_hub_directory",
       order: "dept.asc,subDept.asc,name.asc",
       map: (r) => ({
@@ -162,6 +163,7 @@
     },
     okrs: {
       global: "OKR_PROGRESS_ROWS",
+      fallbackSrc: "js/okr-progress-data.js",
       view: "v_hub_okrs",
       order: "id.asc",
       map: (r) => ({
@@ -253,6 +255,7 @@
 
     kpis: {
       global: "SCORECARD_KPIS",
+      fallbackSrc: "js/scorecard-data.js",
       view: "v_hub_kpis",
       order: "id.asc",
       // The scorecard needs derived fields (slugs, computed colour, outcome
@@ -339,6 +342,22 @@
    * Load a dataset into the global the hub expects.
    * Resolves to { source: "database" | "bundled", rows, error? }.
    */
+  /** Pull in a snapshot file on demand. Resolves to null if there isn't one. */
+  const fallbackLoaded = {};
+  function loadFallback(def) {
+    if (!def.fallbackSrc) return Promise.resolve(def.bundled ? def.bundled() : window[def.global]);
+    if (fallbackLoaded[def.fallbackSrc]) return fallbackLoaded[def.fallbackSrc];
+    fallbackLoaded[def.fallbackSrc] = new Promise((resolve) => {
+      const s = document.createElement("script");
+      // Relative to the page, which is where the snapshots live.
+      s.src = def.fallbackSrc;
+      s.onload = () => resolve(def.bundled ? def.bundled() : window[def.global]);
+      s.onerror = () => resolve(null);
+      document.head.append(s);
+    });
+    return fallbackLoaded[def.fallbackSrc];
+  }
+
   async function loadDataset(name) {
     const def = DATASETS[name];
     if (!def) throw new Error(`Unknown dataset "${name}"`);
@@ -356,9 +375,22 @@
       if (def.after) await def.after(rows);
       return finish("database", rows);
     } catch (err) {
-      if (cfg.ALLOW_STATIC_FALLBACK && Array.isArray(bundled) && bundled.length) {
+      if (!cfg.ALLOW_STATIC_FALLBACK) throw err;
+
+      // Fetch the snapshot only now, once the database has actually failed.
+      //
+      // These files used to load on every page as ordinary <script> tags, and
+      // that quietly defeated the access control: the directory snapshot is 190
+      // people with roles and reporting lines, the scorecard one 76 KPIs with
+      // owners and values. A partner is refused all of it by row-level security
+      // and was then handed it in the page payload, readable from the network
+      // tab. Loading on demand means it reaches only the people who were about
+      // to be served it anyway — and saves everyone else 155KB.
+      const late = (await loadFallback(def)) || bundled;
+      if (Array.isArray(late) && late.length) {
+        window[def.global] = late;
         console.warn(`[data] ${name}: falling back to bundled snapshot —`, err.message);
-        return finish("bundled", bundled, err.message);
+        return finish("bundled", late, err.message);
       }
       throw err;
     }

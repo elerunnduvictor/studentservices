@@ -59,8 +59,16 @@
     const contractors = rows.reduce((a, r) => a + Number(r.contractor_count || 0), 0);
 
     if (count) {
-      count.textContent = total + " people across " + rows.length + " departments" +
+      // "Showing 0 of 0" is what the page writes when the roster it counts came
+      // back empty — true, and meaningless to somebody who was never going to
+      // see a roster. Replaced with the figure that does mean something, and
+      // held against the page's own renderer, which writes this element after
+      // us and would otherwise put the zeroes straight back.
+      const text = total + " people across " + rows.length + " departments" +
         (contractors ? " · " + contractors + " student contractors" : "");
+      const apply = () => { if (count.textContent !== text) count.textContent = text; };
+      apply();
+      new MutationObserver(apply).observe(count, { childList: true, characterData: true, subtree: true });
     }
     if (!bars) return;
     const max = Math.max.apply(null, rows.map((r) => Number(r.staff_count || 0)).concat([1]));

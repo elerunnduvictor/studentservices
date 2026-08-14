@@ -280,7 +280,11 @@
               (await res.json()).forEach((r, i) => {
                 const key = (r.department || "") + "|" + (r.sub_department || "");
                 if (seen.has(key)) return;      // already visible in full
-                rows.push(window.SS.kpiStatus.decorate({
+                // `decorate` builds a fixed shape and keeps only the fields it
+                // knows, so the flag has to be re-attached afterwards — set on
+                // the way in it is silently dropped, and every branch renders as
+                // openable.
+                rows.push(Object.assign(window.SS.kpiStatus.decorate({
                   id: "rollup-" + i,
                   employee: null,
                   role: null,
@@ -293,8 +297,7 @@
                   band_red: r.band_red,
                   current_value: r.current_value,
                   tracking_status: "Tracking",
-                  restricted: true,
-                }));
+                }), { restricted: true }));
               });
             }
           }

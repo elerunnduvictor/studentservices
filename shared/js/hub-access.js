@@ -41,6 +41,9 @@
   const state = {
     email: null,
     role: "none",
+    title: null,          // the job title shown on the account chip
+    fullName: null,
+    category: null,
     scope: { department: null, person: null },
     session: null,
   };
@@ -158,9 +161,76 @@
       state.role = row.role;
       state.scope.department = row.scope_department || null;
       state.scope.person = row.scope_person || null;
+      state.fullName = row.full_name || null;
+      state.category = row.category || null;
     } else {
       state.role = "none";
     }
+  }
+
+  /**
+   * The person's actual job title, for the account chip.
+   *
+   * "Full access" and "Partner view" described the permission rather than the
+   * person; what belongs beside someone's name is their job — Senior Manager,
+   * Director of Student Records, Project Manager. That lives in the directory,
+   * not in `hub_access`, so it is read from there.
+   *
+   * Deliberately off the critical path: this is a label, and nothing waits for
+   * it. It is cached because a job title changes about once a year, so the
+   * usual visit paints the right text with no request at all.
+   */
+  const TITLE_KEY = "ss_hub_title";
+
+  function cachedTitle(email) {
+    try {
+      const c = JSON.parse(localStorage.getItem(TITLE_KEY) || "null");
+      return c && c.email === email ? c.title : null;
+    } catch { return null; }
+  }
+
+  /** Last resort when the directory has no row: read the title off the category. */
+  function titleFromCategory(cat) {
+    const low = String(cat || "").toLowerCase();
+    if (!low || !low.includes("student services")) return null;
+    const tail = low.split("student services")[1].replace(/^[\s-]+/, "").trim();
+    if (tail === "vp" || tail === "executive pm") return tail === "vp" ? "VP" : "Executive Project Manager";
+    if (/\bpm$/.test(tail)) return "Project Manager";
+    if (/\bdirector$/.test(tail)) return "Director";
+    return null;
+  }
+
+  async function loadTitle() {
+    // A partner is outside Student Services: no directory row to read, and no
+    // permission to read one. The word itself is the whole answer.
+    if (state.role === "partner") { state.title = "Partner"; return; }
+    if (state.role === "none") return;
+
+    const cached = cachedTitle(state.email);
+    if (cached) state.title = cached;
+
+    // `scope_person` was resolved against the directory when access was
+    // provisioned, so it matches a real row; `full_name` came from the
+    // spreadsheet and can drift. Prefer the resolved one, fall back to the other.
+    const names = [state.scope.person, state.fullName]
+      .filter(Boolean).filter((n, i, a) => a.indexOf(n) === i);
+
+    for (const name of names) {
+      try {
+        const res = await fetch(
+          base() + "/rest/v1/v_hub_directory?select=role&limit=1&name=eq." + encodeURIComponent(name),
+          { headers: headers() });
+        if (!res.ok) continue;
+        const row = (await res.json())[0];
+        if (row && row.role) {
+          state.title = row.role;
+          try { localStorage.setItem(TITLE_KEY, JSON.stringify({ email: state.email, title: row.role })); }
+          catch { /* private mode */ }
+          return;
+        }
+      } catch { /* offline — the cached title, if any, still stands */ }
+    }
+    if (!state.title) state.title = titleFromCategory(state.category);
   }
 
   /** Record a page hit. Never allowed to break the page it is measuring. */
@@ -183,10 +253,18 @@
   let sessionResolve;
   const sessionReady = new Promise((r) => { sessionResolve = r; });
 
+  // Separate from `ready` on purpose: the scorecard and the scoping layer wait
+  // on `ready`, and a cosmetic label must not hold them up.
+  let profileResolve;
+  const profileReady = new Promise((r) => { profileResolve = r; });
+
   const ready = (async function start() {
     const email = (localStorage.getItem(EMAIL_KEY) || "").trim().toLowerCase();
-    if (!email || !cfg.isConfigured) { sessionResolve(state); return state; }
+    if (!email || !cfg.isConfigured) { sessionResolve(state); profileResolve(state); return state; }
     state.email = email;
+    // Painted before any request goes out, so a returning visitor never sees
+    // the line fill in. Refreshed below in case the title has since changed.
+    state.title = cachedTitle(email);
 
     const stored = readStored();
     if (stored && stored.email === email && isFresh(stored)) {
@@ -206,6 +284,7 @@
           const up = back.split("/").length > 1 ? "../" : "";
           localStorage.removeItem(EMAIL_KEY);
           location.replace(up + "login/index.html?again=1");
+          profileResolve(state);
           return state;
         }
         return state;
@@ -213,6 +292,7 @@
     }
     sessionResolve(state);        // data fetching may begin now
     await loadRole();
+    loadTitle().catch(() => {}).then(() => profileResolve(state));
     track("page");
     return state;
   })();
@@ -220,6 +300,7 @@
   SS.access = {
     ready,
     sessionReady,
+    profileReady,
     signIn,
     track,
     /** Department names, blurbs and headcounts — counts only, never a name. */
@@ -228,6 +309,8 @@
     rpcRollup: () => rpc("hub_scorecard_rollup"),
     get email() { return state.email; },
     get role() { return state.role; },
+    /** Job title for display — "Partner" for anyone outside Student Services. */
+    get title() { return state.title; },
     get scope() { return state.scope; },
     get session() { return state.session; },
     get isPartner() { return state.role === "partner"; },

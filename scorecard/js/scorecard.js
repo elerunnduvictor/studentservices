@@ -226,8 +226,17 @@
       '<span class="sc-kid-arrow" aria-hidden="true">›</span>' + body + "</button>";
   }
 
-  /* Worst first: every Red, then Yellows, then one line for the silent ones. */
+  /* Worst first: every Red, then Yellows, then one line for the silent ones.
+   *
+   * Roll-up rows are left out entirely. Every line here is a link to
+   * `#/kpi/<id>`, and a roll-up has no id to lead to — it is an anonymised
+   * summary standing in for measures the reader may not see, so following one
+   * lands on "this KPI is no longer in the scorecard". For a partner every row
+   * is a roll-up, which empties the list and drops the section: correct, since
+   * a partner is not meant to reach a single KPI at all. For a manager it
+   * leaves their own reporting line and quietly omits other branches. */
   function watchlist(rows, showOwner) {
+    rows = rows.filter(function (r) { return !r.restricted; });
     var flagged = rows.filter(function (r) { return r.status === "Red" || r.status === "Yellow"; })
       .sort(function (a, b) { return (a.status === "Red" ? 0 : 1) - (b.status === "Red" ? 0 : 1); });
     var silent = rows.filter(function (r) { return r.status === "No Data"; }).length;

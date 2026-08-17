@@ -37,7 +37,14 @@
   font-size: .74rem; font-weight: 500; max-width: 19ch;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.hub-account-role { font-size: .56rem; letter-spacing: .1em; text-transform: uppercase; opacity: .68; }
+.hub-account-role {
+  font-size: .56rem; letter-spacing: .1em; text-transform: uppercase; opacity: .68;
+  /* Job titles run long — "Director of Student Records, Registration & Support".
+     The chip is a fixed slot beside the theme toggle, so the line is trimmed
+     here and carries the full text in its tooltip. */
+  display: block; max-width: 20ch;
+  overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+}
 
 /* On the home page's dark hero, beside a translucent toggle. */
 .hub-account.on-hero .hub-account-btn {

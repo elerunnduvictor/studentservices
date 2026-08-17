@@ -20,13 +20,14 @@
   // Captured now: document.currentScript is only meaningful while this file is
   // first executing, and is null by the time mount() runs.
   const HERE = (document.currentScript && document.currentScript.src) || "";
-  const LABEL = {
-    admin: "Full access",
-    director: "Department",
-    staff: "Your team",
-    partner: "Partner view",
-    none: "Limited",
-  };
+  // What shows under the address is the person's job — Senior Manager, Director
+  // of Student Records, Project Manager — read from the directory. Describing
+  // the permission instead ("Full access", "Partner view") told them something
+  // they already knew and nothing about themselves.
+  //
+  // Anyone outside Student Services is simply "Partner": they have no directory
+  // row, and no permission to read one.
+  const PARTNER = "Partner";
 
   function signOut() {
     // Both the hub's own marker and the database session, or the next visit
@@ -56,7 +57,7 @@
       "</div>";
 
     wrap.querySelector(".hub-account-email").textContent = email;
-    wrap.querySelector(".hub-account-role").textContent = LABEL[role] || LABEL.none;
+    wrap.querySelector(".hub-account-role").textContent = role || "";
     wrap.querySelector(".hub-account-menu-email").textContent = email;
 
     const btn = wrap.querySelector(".hub-account-btn");
@@ -79,18 +80,39 @@
   }
 
   /** The component brings its own stylesheet — see the note in that file. */
+  /**
+   * Load the chip's stylesheet, and say when it has actually applied.
+   *
+   * The sheet is fetched at runtime rather than sitting in each page's <head>,
+   * which means there is a window where the markup exists and its rules do not.
+   * The chip was being inserted inside that window, so a refresh showed a bare
+   * button and two stacked lines of text that then snapped into place. Callers
+   * wait on this before revealing anything.
+   */
   function ensureStyles() {
-    if (document.getElementById("hub-account-css")) return;
+    const settled = (link) => new Promise((done) => {
+      // `sheet` is populated once the rules are parsed and live; on a warm cache
+      // that is already true here and neither event would fire again.
+      if (link.sheet) return done();
+      link.addEventListener("load", done, { once: true });
+      link.addEventListener("error", done, { once: true });   // show it anyway
+      setTimeout(done, 2000);                                 // never hang
+    });
+
+    const existing = document.getElementById("hub-account-css");
+    if (existing) return settled(existing);
+
     const base = HERE ? HERE.replace(/js\/hub-account\.js.*$/, "") : "../shared/";
     const link = document.createElement("link");
     link.id = "hub-account-css";
     link.rel = "stylesheet";
     link.href = base + "css/hub-account.css";
     document.head.append(link);
+    return settled(link);
   }
 
   async function mount() {
-    ensureStyles();
+    const stylesReady = ensureStyles();
     const email = (localStorage.getItem("ss_user_session") || "").trim();
     if (!email) return;                       // the login page has nobody to show
 
@@ -101,9 +123,14 @@
     // chart ended up with no sign-in bar while every other page had one. Who
     // you are is worth showing straight away; which role you hold can catch up
     // a moment later.
-    const setRole = (r) => {
+    const setTitle = (text) => {
       const el = document.querySelector(".hub-account-role");
-      if (el) el.textContent = LABEL[r] || LABEL.none;
+      if (!el) return;
+      el.textContent = text || "";
+      // Titles run long ("Director of Student Records, Registration & Support")
+      // and the line is a single narrow row, so the full text lives in the
+      // tooltip and CSS trims what is drawn.
+      if (text) el.title = text; else el.removeAttribute("title");
     };
 
     // Placed relative to the theme toggle rather than pinned to the viewport.
@@ -112,11 +139,18 @@
     // at top-right lands on top of it — and then drifts away from it on scroll,
     // because one moves with the page and the other does not. Measuring from
     // the button puts the chip beside it and keeps it there.
-    const chip = build(email, "none");
-    if (SS.access && SS.access.ready) {
-      Promise.resolve(SS.access.ready)
-        .then(() => setRole(SS.access.role))
-        .catch(() => { /* leave it reading "Limited" */ });
+    // Starts blank rather than guessing: a placeholder that changes a moment
+    // later reads as the page correcting itself.
+    const chip = build(email, "");
+    // Set inline, so it holds even though the sheet that styles everything else
+    // has not arrived. `visibility` rather than `display` keeps the element in
+    // the layout, which the placement below measures.
+    chip.style.visibility = "hidden";
+    stylesReady.then(() => { chip.style.visibility = ""; });
+    if (SS.access && SS.access.profileReady) {
+      Promise.resolve(SS.access.profileReady)
+        .then(() => setTitle(SS.access.isPartner ? PARTNER : SS.access.title))
+        .catch(() => { /* no title is better than a wrong one */ });
     }
     const toggle = document.getElementById("themeToggle");
 

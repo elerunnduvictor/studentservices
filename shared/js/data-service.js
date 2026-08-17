@@ -21,6 +21,15 @@
   const cfg = window.SS_CONFIG || {};
   const SS = (window.SS = window.SS || {});
 
+  // Defined at load, before any renderer can reach it.
+  //
+  // This used to come from directory/js/employees.js, which every page pulled in
+  // as a script tag. Once that stopped loading eagerly the global disappeared,
+  // and the directory threw on its first lookup — 193 employees arrived and none
+  // were drawn. Setting it inside the dataset's `after` hook was too late: the
+  // department pages read it too, and they do not load that dataset.
+  window.STUDENT_CONTRACTORS = window.STUDENT_CONTRACTORS || {};
+
   /* ── low-level ─────────────────────────────────────────────────────────── */
 
   function endpoint(path) {
@@ -147,6 +156,15 @@
       // they arrive as an aggregate the directory and department pages read
       // from the same global they always have.
       after: async () => {
+        // Guaranteed to exist before anything renders.
+        //
+        // This used to be defined by directory/js/employees.js, which every page
+        // loaded as a script tag. Once that stopped being loaded eagerly, the
+        // global vanished and the directory renderer threw on its first lookup —
+        // so 193 employees arrived from the database and none of them were
+        // drawn. An empty object gives the same answer as a missing department
+        // (undefined) without taking the page down.
+        window.STUDENT_CONTRACTORS = window.STUDENT_CONTRACTORS || {};
         try {
           const rows = await select("student_contractor_counts", {
             select: "department,headcount",

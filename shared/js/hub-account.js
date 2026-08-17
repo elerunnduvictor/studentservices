@@ -94,8 +94,17 @@
     const email = (localStorage.getItem("ss_user_session") || "").trim();
     if (!email) return;                       // the login page has nobody to show
 
-    let role = "none";
-    try { await SS.access.ready; role = SS.access.role; } catch { /* show it anyway */ }
+    // Drawn immediately, then corrected.
+    //
+    // Waiting on the session first meant that if sign-in was slow — or never
+    // settled at all — the chip simply never appeared, which is how the org
+    // chart ended up with no sign-in bar while every other page had one. Who
+    // you are is worth showing straight away; which role you hold can catch up
+    // a moment later.
+    const setRole = (r) => {
+      const el = document.querySelector(".hub-account-role");
+      if (el) el.textContent = LABEL[r] || LABEL.none;
+    };
 
     // Placed relative to the theme toggle rather than pinned to the viewport.
     //
@@ -103,10 +112,27 @@
     // at top-right lands on top of it — and then drifts away from it on scroll,
     // because one moves with the page and the other does not. Measuring from
     // the button puts the chip beside it and keeps it there.
-    const chip = build(email, role);
+    const chip = build(email, "none");
+    if (SS.access && SS.access.ready) {
+      Promise.resolve(SS.access.ready)
+        .then(() => setRole(SS.access.role))
+        .catch(() => { /* leave it reading "Limited" */ });
+    }
     const toggle = document.getElementById("themeToggle");
 
-    if (toggle && toggle.offsetParent) {
+    // If the toggle sits in a laid-out row — the org chart's toolbar, a flex
+    // navbar — join that row instead of floating over it. Absolute positioning
+    // there lands the chip on top of whatever else the row is holding, which is
+    // exactly what went wrong on the org chart.
+    const parent = toggle && toggle.parentElement;
+    const inFlow = parent && ["flex", "inline-flex", "grid"].includes(
+      getComputedStyle(parent).display) && getComputedStyle(toggle).position === "static";
+
+    if (inFlow) {
+      toggle.before(chip);
+      chip.classList.add(toggle.classList.contains("hero-theme-btn") ? "on-hero" : "on-nav");
+      chip.style.height = toggle.offsetHeight + "px";
+    } else if (toggle && toggle.offsetParent) {
       toggle.offsetParent.append(chip);
       const place = () => {
         const gap = 10;

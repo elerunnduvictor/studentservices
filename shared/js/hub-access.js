@@ -73,11 +73,11 @@
   /**
    * Renew a session without asking for anything.
    *
-   * This is what keeps the password prompt to once *ever* rather than once an
-   * hour. Supabase tokens are short-lived, and the seven PM editors are the
-   * only people who cannot simply be signed in again silently — their password
-   * is their own and the hub has no way to know it. So the refresh token is the
-   * whole mechanism that makes their experience acceptable.
+   * Supabase tokens are short-lived, and the seven PM editors are the only
+   * people who cannot simply be signed in again silently — their password is
+   * their own and the hub has no way to know it. The refresh token is what
+   * spares them a prompt on every visit. It is not forever: signing out drops
+   * it, and it eventually expires, so the password is asked for again in time.
    */
   async function refresh(s) {
     if (!s || !s.refresh_token) return null;
@@ -144,6 +144,30 @@
       throw new Error("needs-password");
     }
     throw new Error(suWhy || "Could not sign in.");
+  }
+
+  /**
+   * Pick up a session this device already holds, without asking for anything.
+   *
+   * The idle timeout in auth-guard.js clears the email marker after an hour and
+   * sends the person back to the login screen, but the database session itself
+   * survives — and while its refresh token lives, they can be let straight back
+   * in. That is invisible for almost everyone, because their email doubles as
+   * their password and signing in again costs them nothing. The seven PM
+   * editors are the exception: their password is their own, so being unable to
+   * reuse the session meant a prompt every single time they came back, however
+   * recently they had entered it.
+   *
+   * Returns the session, or null if there is nothing usable — in which case the
+   * caller falls back to a real sign-in. An explicit sign-out removes the stored
+   * session, so it correctly asks again.
+   */
+  async function resume(email) {
+    const want = String(email || "").trim().toLowerCase();
+    const stored = readStored();
+    if (!stored || String(stored.email || "").toLowerCase() !== want) return null;
+    if (isFresh(stored)) { state.session = stored; return stored; }
+    return await refresh(stored);
   }
 
   async function rpc(fn, args) {
@@ -302,6 +326,7 @@
     sessionReady,
     profileReady,
     signIn,
+    resume,
     track,
     /** Department names, blurbs and headcounts — counts only, never a name. */
     rpcSummary: () => rpc("hub_department_summary"),

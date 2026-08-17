@@ -103,7 +103,15 @@
 
     try {
       if (window.SS && window.SS.access && window.SS_CONFIG && window.SS_CONFIG.isConfigured) {
-        await window.SS.access.signIn(email, passwordField ? passwordField.value : null);
+        const typed = passwordField ? passwordField.value : null;
+        // A session this device still holds is enough. Without this the hour-long
+        // idle timeout sent everyone back here, and a PM editor — whose password
+        // is their own rather than their email — was asked for it on every
+        // return, however recently they had entered it.
+        const resumed = typed ? null : await window.SS.access.resume(email);
+        if (!resumed) {
+          await window.SS.access.signIn(email, typed);
+        }
         await window.SS.access.track("login", "/login");
       }
     } catch (err) {
@@ -111,8 +119,10 @@
         localStorage.removeItem("ss_user_session");
         return revealPassword(err.message === "wrong-password"
           ? "That password was not right — it is the one you set for the PM Hub."
-          : "One-off: enter the password you set for the PM Hub. " +
-            "You will not be asked again on this device.");
+          // No promise about how often this appears. Signing out, a new device
+          // or browser, and an expired session all bring it back, so claiming
+          // otherwise just made the message look wrong the second time.
+          : "Enter the password you set for the PM Hub.");
       }
       if (err.message === "not-provisioned") {
         // The database is the authority on who may be here, and it has said no.

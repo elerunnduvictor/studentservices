@@ -17,6 +17,9 @@
   "use strict";
 
   const SS = (window.SS = window.SS || {});
+  // Captured now: document.currentScript is only meaningful while this file is
+  // first executing, and is null by the time mount() runs.
+  const HERE = (document.currentScript && document.currentScript.src) || "";
   const LABEL = {
     admin: "Full access",
     director: "Department",
@@ -75,7 +78,19 @@
     return wrap;
   }
 
+  /** The component brings its own stylesheet — see the note in that file. */
+  function ensureStyles() {
+    if (document.getElementById("hub-account-css")) return;
+    const base = HERE ? HERE.replace(/js\/hub-account\.js.*$/, "") : "../shared/";
+    const link = document.createElement("link");
+    link.id = "hub-account-css";
+    link.rel = "stylesheet";
+    link.href = base + "css/hub-account.css";
+    document.head.append(link);
+  }
+
   async function mount() {
+    ensureStyles();
     const email = (localStorage.getItem("ss_user_session") || "").trim();
     if (!email) return;                       // the login page has nobody to show
 
@@ -103,7 +118,11 @@
       };
       place();
       addEventListener("resize", place);
-      chip.classList.add("on-hero");
+      // Match whichever chrome it has landed in. The home page puts the toggle
+      // on a dark hero, every other page puts it in a light navbar, and a chip
+      // styled for one is unreadable on the other — which is exactly how it
+      // ended up looking fine at home and wrong everywhere else.
+      chip.classList.add(toggle.classList.contains("hero-theme-btn") ? "on-hero" : "on-nav");
     } else {
       chip.classList.add("is-floating");
       document.body.append(chip);

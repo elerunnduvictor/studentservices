@@ -660,24 +660,72 @@ grant select on public.hub_events to authenticated;
 revoke insert, update, delete on public.hub_events from anon, authenticated;
 
 -- ── what the reports read ─────────────────────────────────────────────────
-create or replace view public.v_hub_usage_daily as
-  select date_trunc('day', occurred_at)::date as day,
-         event,
-         count(*)                             as hits,
-         count(distinct email)                as people
-    from public.hub_events
-   group by 1, 2
-   order by 1 desc, 2;
+--
+-- Two things are done here rather than at the point of recording, so that rows
+-- already written are corrected too.
+--
+--   Time. `occurred_at` is stored in UTC, which is right — but nobody reads
+--   "2026-08-17T15:16:53.724362+00:00". It is converted to Mountain time and
+--   written out plainly. America/Denver rather than a fixed -7, so the hour is
+--   still correct either side of the daylight-saving change.
+--
+--   Page. The raw path is what the browser knows, and "/" means nothing to
+--   most people. Each one is given the name it has in the navigation.
+create or replace function public.hub_page_label(p_page text)
+returns text
+language sql
+immutable
+as $$
+  select case
+    when p_page is null or p_page = '' then 'Unknown'
+    when p_page in ('/', '/index.html')            then 'Home'
+    when p_page like '/login%'                     then 'Sign in'
+    when p_page like '/directory%'                 then 'Directory'
+    when p_page like '/scorecard%'                 then 'KPI Scorecard'
+    when p_page like '/okr-progress%'              then 'OKR Progress'
+    when p_page like '/org-chart/hierarchy%'       then 'Org Chart — Hierarchy'
+    when p_page like '/org-chart%'                 then 'Org Chart'
+    when p_page like '/performance-standards%'     then 'Performance Report'
+    when p_page like '/departments/records%'       then 'Records, Registration & Support'
+    when p_page like '/departments/enrollment%'    then 'Enrollment & Retention'
+    when p_page like '/departments/digital%'       then 'Digital Operations'
+    when p_page like '/departments/dean%'          then 'Dean of Students'
+    when p_page like '/departments%'               then 'Departments'
+    else p_page
+  end;
+$$;
 
-create or replace view public.v_hub_usage_pages as
-  select coalesce(nullif(page, ''), '(unknown)') as page,
-         count(*)                                as hits,
-         count(distinct email)                   as people,
-         max(occurred_at)                        as last_seen
+grant execute on function public.hub_page_label(text) to authenticated;
+
+-- Dropped first: `create or replace view` cannot rename a column or change its
+-- type, and both happen here (last_seen -> last_viewed, day gains day_sort).
+-- Without these the whole file stops at this point.
+drop view if exists public.v_hub_usage_pages;
+drop view if exists public.v_hub_usage_daily;
+
+create view public.v_hub_usage_pages as
+  select public.hub_page_label(page)                     as page,
+         count(*)                                        as hits,
+         count(distinct email)                           as people,
+         to_char(max(occurred_at) at time zone 'America/Denver',
+                 'Mon FMDD, YYYY " at " FMHH12:MI AM')   as last_viewed
     from public.hub_events
    where event = 'page'
    group by 1
    order by 2 desc;
+
+create view public.v_hub_usage_daily as
+  select to_char(occurred_at at time zone 'America/Denver', 'Mon FMDD, YYYY') as day,
+         (occurred_at at time zone 'America/Denver')::date                    as day_sort,
+         case event when 'page' then 'Page view'
+                    when 'login' then 'Sign in'
+                    when 'login_denied' then 'Refused'
+                    else event end                                            as event,
+         count(*)              as hits,
+         count(distinct email) as people
+    from public.hub_events
+   group by 1, 2, 3
+   order by 2 desc, 3;
 
 alter view public.v_hub_usage_daily set (security_invoker = on);
 alter view public.v_hub_usage_pages set (security_invoker = on);

@@ -449,14 +449,15 @@ window.SS.WORKBOOKS = {
           { key: "hits",      label: "Views",           type: "number", width: 110, readOnly: true },
           { key: "people",    label: "Distinct people", type: "number", width: 145, readOnly: true,
             help: "How many different people, not how many visits." },
-          { key: "last_seen", label: "Last viewed",     type: "text",   width: 215, readOnly: true },
+          { key: "last_viewed", label: "Last viewed",   type: "text",   width: 215, readOnly: true,
+            help: "Mountain time." },
         ],
       },
       {
         key: "usage_daily",
         label: "By day",
         table: "v_hub_usage_daily",
-        order: "day.desc",
+        order: "day_sort.desc",
         readOnly: true,
         columns: [
           { key: "day",   label: "Day",   type: "text",   width: 145, readOnly: true },

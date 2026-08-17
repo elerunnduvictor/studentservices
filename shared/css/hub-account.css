@@ -1,0 +1,94 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   ACCOUNT CHIP — styles
+
+   Its own file, injected by hub-account.js alongside the component.
+
+   These lived in css/main.css, which only the home page loads: every other page
+   pulls css/shared.css plus its own, and the org chart pulls neither. So the
+   chip was styled at home and completely unstyled everywhere else — which is
+   what made it look broken on six of the seven pages. A component that injects
+   itself has to bring its own stylesheet, or it inherits whatever the page
+   happens to have.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.hub-account { display: flex; align-items: center; z-index: 3; }
+.hub-account.is-floating { position: fixed; top: 14px; right: 16px; z-index: 900; }
+
+.hub-account-btn {
+  display: flex; align-items: center; gap: 8px; height: 100%;
+  padding: 0 12px 0 5px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background .18s, border-color .18s, color .18s;
+  /* Defaults, overridden by the variant classes below. */
+  background: rgba(127,127,127,0.10);
+  border: 1px solid rgba(127,127,127,0.28);
+  color: inherit;
+}
+.hub-account-avatar {
+  width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+  display: grid; place-items: center;
+  background: #065577; color: #fff;
+  font-size: .64rem; font-weight: 700; letter-spacing: .03em;
+}
+.hub-account-text { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.18; }
+.hub-account-email {
+  font-size: .74rem; font-weight: 500; max-width: 19ch;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.hub-account-role { font-size: .56rem; letter-spacing: .1em; text-transform: uppercase; opacity: .68; }
+
+/* On the home page's dark hero, beside a translucent toggle. */
+.hub-account.on-hero .hub-account-btn {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.18);
+  color: rgba(255,255,255,0.88);
+}
+.hub-account.on-hero .hub-account-btn:hover {
+  background: rgba(255,255,255,0.16); border-color: rgba(255,255,255,0.32); color: #fff;
+}
+.hub-account.on-hero .hub-account-avatar { background: rgba(255,255,255,0.18); }
+
+/* In a navbar on every other page. Tokens where the page defines them, with
+   literal fallbacks for the org chart, which uses a different variable set. */
+.hub-account.on-nav .hub-account-btn,
+.hub-account.is-floating .hub-account-btn {
+  background: var(--ice-gray, var(--bg-subtle, #F2F4F6));
+  border-color: var(--border, rgba(0,0,0,.12));
+  color: var(--text, #16202B);
+}
+.hub-account.on-nav .hub-account-btn:hover,
+.hub-account.is-floating .hub-account-btn:hover {
+  background: var(--bg-elevated, #fff);
+}
+[data-theme="dark"] .hub-account.on-nav .hub-account-btn,
+[data-theme="dark"] .hub-account.is-floating .hub-account-btn {
+  background: rgba(255,255,255,0.07);
+  border-color: rgba(255,255,255,0.16);
+  color: #E6EAEF;
+}
+
+.hub-account-menu {
+  position: absolute; top: calc(100% + 8px); right: 0; min-width: 238px; z-index: 950;
+  background: #fff; color: #16202B;
+  border: 1px solid rgba(0,0,0,.12);
+  border-radius: 12px; box-shadow: 0 16px 40px rgba(0,0,0,.2); padding: 6px;
+}
+[data-theme="dark"] .hub-account-menu {
+  background: #161B21; color: #E6EAEF; border-color: #2A323C;
+}
+.hub-account-menu-email {
+  padding: 11px 12px 12px; font-size: .76rem; line-height: 1.45;
+  border-bottom: 1px solid rgba(0,0,0,.10); margin-bottom: 5px;
+  word-break: break-all; opacity: .82;
+}
+[data-theme="dark"] .hub-account-menu-email { border-bottom-color: #2A323C; }
+.hub-account-signout {
+  display: block; width: 100%; text-align: left;
+  padding: 10px 12px; background: none; border: none; border-radius: 8px;
+  cursor: pointer; font: inherit; font-size: .84rem; font-weight: 500;
+  color: #CB4A27;
+}
+.hub-account-signout:hover { background: rgba(203,74,39,.12); }
+@media (max-width: 760px) { .hub-account-text { display: none; } .hub-account-btn { padding: 0 5px; } }

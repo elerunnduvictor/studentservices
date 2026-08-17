@@ -78,7 +78,9 @@
     let results = {};
     // The session has to be established before the first query goes out, or the
     // database judges the request as anon and a signed-in reader gets nothing.
-    try { await (window.SS.access && window.SS.access.ready); }
+    // The session, not the role: waiting for both made two round trips run in
+    // series before a single row was requested.
+    try { await (window.SS.access && (window.SS.access.sessionReady || window.SS.access.ready)); }
     catch (err) { console.warn("[hub-boot] access", err); }
     try {
       results = await window.SS.data.loadAll(datasets);

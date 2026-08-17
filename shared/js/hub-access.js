@@ -174,9 +174,18 @@
     }).catch(() => null);
   }
 
+  // Resolves as soon as a token exists — before the role is known.
+  //
+  // Fetching data needs the session; it does not need the role. Waiting for
+  // both put `hub_me` on the critical path ahead of every query, so the
+  // directory sat empty for about 1.7 seconds while two round trips completed
+  // one after the other. They now overlap.
+  let sessionResolve;
+  const sessionReady = new Promise((r) => { sessionResolve = r; });
+
   const ready = (async function start() {
     const email = (localStorage.getItem(EMAIL_KEY) || "").trim().toLowerCase();
-    if (!email || !cfg.isConfigured) return state;
+    if (!email || !cfg.isConfigured) { sessionResolve(state); return state; }
     state.email = email;
 
     const stored = readStored();
@@ -202,6 +211,7 @@
         return state;
       }
     }
+    sessionResolve(state);        // data fetching may begin now
     await loadRole();
     track("page");
     return state;
@@ -209,6 +219,7 @@
 
   SS.access = {
     ready,
+    sessionReady,
     signIn,
     track,
     /** Department names, blurbs and headcounts — counts only, never a name. */

@@ -292,6 +292,11 @@
         // anyone. Anything already present by name is left alone.
         try {
           const access = window.SS && window.SS.access;
+          // The rows above are fetched as soon as there is a session, without
+          // waiting to learn who this is — but the choice below is about the
+          // role, so it has to wait for it. Reading `role` early returns "none",
+          // which would send an admin down the restricted branch.
+          if (access) { try { await access.ready; } catch { /* stays "none" */ } }
           if (access && access.session && access.role !== "admin") {
             const res = await fetch(endpoint("rpc/hub_scorecard_rollup"), {
               method: "POST", headers: headers(), body: "{}",

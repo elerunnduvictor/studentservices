@@ -13,7 +13,131 @@
      options   for select — { value, label, tone, glyph }
      readOnly  computed or system-managed
      help      tooltip
+     check     (value, row) => message | null — flags a value that will not do
+               what the person entering it expects; does not block saving
    ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── the reporting line ────────────────────────────────────────────────────
+   Who someone reports to is stored as their manager's name, typed by hand, and
+   nothing ever checked that the name belonged to anybody. It usually did. When
+   it did not the consequence was invisible: `hub_subtree()` joins on
+   lower(primary_stakeholder) = lower(name), so a near miss simply matched no
+   one and that person disappeared from their manager's view — no error, no
+   empty state, nothing to notice. "Anne E Owen" for "Anne E. Owen" cost four
+   people; "Aitana Toscano" for "Aitana Nathaly Toscano Cedeño" cost six.
+
+   The roster below is the set of names that actually exist, so a name that
+   matches nobody can be marked at the moment it is typed. The comparison is
+   deliberately the same one the database makes — trim and lowercase, nothing
+   cleverer — because a check that is more forgiving than the query it stands
+   in for would call the broken value fine. Punctuation-insensitive matching is
+   used only to suggest what was probably meant. */
+const ROSTER = { names: new Map(), loaded: false, promise: null };
+
+/** Exactly what the database compares. */
+const rosterKey = (s) => String(s == null ? "" : s).trim().toLowerCase();
+/** Looser, for "did you mean…" only — never for deciding correctness.
+ *  Accents are folded so "Cedeno" can still find "Cedeño". */
+const rosterLoose = (s) => rosterKey(s)
+  .normalize("NFD").replace(/[̀-ͯ]/g, "")
+  .replace(/[^a-z0-9]+/g, "");
+/** The words of a name, folded the same way. */
+const rosterWords = (s) => rosterKey(s)
+  .normalize("NFD").replace(/[̀-ͯ]/g, "")
+  .split(/[^a-z0-9]+/).filter(Boolean);
+
+/**
+ * Levenshtein distance, abandoned once it passes `cap`.
+ *
+ * The cap is the point: a name twelve edits away is not a typo, and stopping
+ * early keeps this from scanning the whole roster properly for values that were
+ * never close to anything.
+ */
+function editDistance(a, b, cap) {
+  if (a === b) return 0;
+  if (Math.abs(a.length - b.length) > cap) return cap + 1;
+  let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    const row = [i];
+    let rowMin = i;
+    for (let j = 1; j <= b.length; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      row[j] = Math.min(prev[j] + 1, row[j - 1] + 1, prev[j - 1] + cost);
+      if (row[j] < rowMin) rowMin = row[j];
+    }
+    if (rowMin > cap) return cap + 1;          // no better result is possible
+    prev = row;
+  }
+  return prev[b.length];
+}
+
+function loadRoster() {
+  if (ROSTER.promise) return ROSTER.promise;
+  ROSTER.promise = (async () => {
+    // Only the names, and only the people the hub still shows.
+    const rows = await SS.db.select("employees", { select: "name,active" });
+    rows.forEach((r) => {
+      if (r && r.name && r.active !== false) ROSTER.names.set(rosterKey(r.name), r.name);
+    });
+    ROSTER.loaded = true;
+  })().catch(() => { ROSTER.loaded = false; });   // offline: flag nothing
+  return ROSTER.promise;
+}
+
+/**
+ * Flag a manager's name that matches nobody on the roster.
+ *
+ * Silent until the roster has actually loaded, so a slow or failed request
+ * shows an unmarked sheet rather than every cell marked wrong.
+ */
+function checkReportsTo(value) {
+  if (!ROSTER.loaded) return null;
+  const raw = String(value == null ? "" : value).trim();
+  if (!raw) return null;                       // blank is legitimate — the top of a tree
+  if (ROSTER.names.has(rosterKey(raw))) return null;
+
+  const loose = rosterLoose(raw);
+  let suggestion = null;
+  for (const real of ROSTER.names.values()) {
+    if (rosterLoose(real) === loose) { suggestion = real; break; }
+  }
+  if (!suggestion) {
+    // Every word typed is part of the real name — which is how the two costly
+    // ones read: "Aitana Toscano" for "Aitana Nathaly Toscano Cedeño", and
+    // "Shaunasee James" for "Shaunasee Janette James". Only offered when it
+    // points at exactly one person, so a common surname suggests nothing.
+    const typed = rosterWords(raw);
+    if (typed.length) {
+      const hits = [...ROSTER.names.values()].filter((real) => {
+        const words = rosterWords(real);
+        return typed.every((t) => words.includes(t));
+      });
+      if (hits.length === 1) suggestion = hits[0];
+    }
+  }
+  if (!suggestion) {                            // a fragment of a single name
+    const hits = [...ROSTER.names.values()].filter((real) => rosterLoose(real).includes(loose));
+    if (hits.length === 1) suggestion = hits[0];
+  }
+  if (!suggestion) {
+    // A slip of the fingers — "Brad Lestre" for "Brad Lester". Only a very near
+    // miss counts, and only when one name is nearer than every other, so this
+    // never guesses between two colleagues with similar names. Reached only
+    // once a value has already failed, so the cost falls on the rare cell.
+    let best = null, bestD = Infinity, tie = false;
+    for (const real of ROSTER.names.values()) {
+      const d = editDistance(loose, rosterLoose(real), 2);
+      if (d < bestD) { bestD = d; best = real; tie = false; }
+      else if (d === bestD) tie = true;
+    }
+    if (best && bestD <= 2 && !tie) suggestion = best;
+  }
+  return suggestion
+    ? `No one in the directory is called "${raw}". Did you mean "${suggestion}"? ` +
+      "Until this matches a real name exactly, this person will not appear in their manager's view."
+    : `No one in the directory is called "${raw}", so this person will not appear ` +
+      "in their manager's view. Check the spelling against the Employee Directory tab.";
+}
 
 const OKR_STATUS = [
   { value: "On Track",            label: "On Track",            tone: "green" },
@@ -74,7 +198,10 @@ const departmentSheet = (key, label, department) => ({
     { key: "sub_department",      label: "Sub Dept",            type: "text", width: 140,
       help: "Also groups this person's KPIs on the scorecard." },
     { key: "primary_stakeholder", label: "Primary Stakeholder", type: "text", width: 145,
-      help: "Who this person reports to. Drives the org chart." },
+      help: "Who this person reports to. Drives the org chart, and who their " +
+            "manager can see on the hub. Must match a name in the Employee " +
+            "Directory exactly.",
+      check: checkReportsTo },
     { key: "employment_type",     label: "Employment Type",     type: "select", width: 140,
       options: EMPLOYMENT_TYPES },
   ],
@@ -240,7 +367,10 @@ window.SS.WORKBOOKS = {
           { key: "department",            label: "Department",        type: "select", width: 143, options: DEPARTMENTS },
           { key: "employment_type",       label: "Employment Type",   type: "select", width: 117, options: EMPLOYMENT_TYPES },
           { key: "primary_stakeholder",   label: "Primary Stakeholder", type: "text", width: 115,
-            help: "Who this person reports to. Drives the org chart." },
+            help: "Who this person reports to. Drives the org chart, and who " +
+                  "their manager can see on the hub. Must match a name in the " +
+                  "Employee Directory exactly.",
+            check: checkReportsTo },
           { key: "sub_department",        label: "Sub Dept",          type: "text",   width: 117,
             help: "Also groups this person's KPIs on the scorecard." },
           { key: "contract_organization", label: "Contract Org",      type: "text",   width: 150 },
@@ -267,7 +397,9 @@ window.SS.WORKBOOKS = {
           { key: "job_name",       label: "Job Name",      type: "text", width: 115 },
           { key: "role_title",     label: "Role Title",    type: "text", width: 143 },
           { key: "sub_department", label: "Sub-Dept",      type: "text", width: 130 },
-          { key: "supervisor",     label: "Supervisor",    type: "text", width: 117 },
+          { key: "supervisor",     label: "Supervisor",    type: "text", width: 117,
+            help: "Must match a name in the Employee Directory exactly.",
+            check: checkReportsTo },
           { key: "department",     label: "Dept",          type: "select", width: 143, options: DEPARTMENTS },
         ],
       },

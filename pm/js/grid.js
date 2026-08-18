@@ -448,6 +448,21 @@ export class Grid {
         if (dirtyCols.has(col.key)) td.classList.add("is-dirty");
         if (vi === this.active.r && ci === this.active.c) td.classList.add("is-active");
         td.append(this._renderCell(col, row[col.key], row));
+        // A column may vet its own values. This is not validation in the sense
+        // of refusing the edit — the cell still saves — it only marks a value
+        // that will not do what the person entering it expects. The reporting
+        // line is the case it was built for: "Anne E Owen" for "Anne E. Owen"
+        // matched nobody, so four people silently vanished from their manager's
+        // view with nothing on screen to suggest anything was wrong.
+        if (col.check) {
+          let problem = null;
+          try { problem = col.check(row[col.key], row); }
+          catch { /* a broken check must never break the sheet */ }
+          if (problem) {
+            td.classList.add("is-flagged");
+            td.title = problem;
+          }
+        }
         tr2.append(td);
       });
       frag.append(tr2);

@@ -195,6 +195,11 @@ export async function mountWorkbook(bookKey) {
     els.gridHost.innerHTML = "";
     els.gridHost.append(grid.__host);
 
+    // The roster backs the reporting-line check on this sheet and the Student
+    // Employees one. Awaited before the first paint so cells are not drawn
+    // unmarked and then marked a moment later.
+    if (sheet.columns.some((c) => c.check)) { try { await loadRoster(); } catch { /* flag nothing */ } }
+
     if (!state.loaded.get(sheet.key)) {
       try {
         // `filter` is what makes a department tab work: the four department

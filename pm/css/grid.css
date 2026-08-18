@@ -362,3 +362,15 @@ select.cell-input { padding: 2px 4px; cursor: pointer; }
   display: flex; gap: 8px; justify-content: flex-end;
   padding: 14px 18px; border-top: 1px solid var(--line);
 }
+
+/* A value the sheet will happily save but that will not do what was intended —
+   today only the reporting line, where a manager's name matches nobody.
+   Drawn as a spell-check squiggle rather than a fill, so it cannot be mistaken
+   for an unsaved edit (amber) or a failed save (red), and so it stays legible
+   underneath both. The explanation is in the cell's tooltip. */
+.grid td.is-flagged { cursor: help; }
+.grid td.is-flagged .cell {
+  text-decoration: underline wavy var(--bad);
+  text-decoration-skip-ink: none;
+  text-underline-offset: 3px;
+}

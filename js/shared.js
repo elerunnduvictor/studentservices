@@ -56,7 +56,49 @@
     hamburger.addEventListener("click", function () {
       links.classList.toggle("open");
     });
+    addProcessesNavLink(links);
   };
+
+  /**
+   * "Processes" is only worth showing to someone who can do something on that
+   * page: a process steward (a row in process_stewards — a separate allow-
+   * list, deliberately not derived from hub_access.role), or a reviewer
+   * (hub_access.role = 'admin' — directors are not reviewers of process
+   * documentation). Everyone else's nav is unchanged — this is a UX courtesy,
+   * not the access boundary. Row-level security on the `processes` table is
+   * still what actually keeps the page empty for anyone who opens the URL
+   * directly.
+   *
+   * Silent on every failure path (no session, no hub-access.js on this page)
+   * — a missing nav link should never announce itself as broken.
+   */
+  function addProcessesNavLink(links) {
+    if (links.dataset.ssProcNavChecked) return;
+    links.dataset.ssProcNavChecked = "1";
+    if (!window.SS || !window.SS.access || !window.SS.db) return;
+
+    Promise.resolve(window.SS.access.ready).then(async function () {
+      var isSteward = false;
+      try {
+        // process_stewards is world-readable; there is no process_me() RPC.
+        var rows = await window.SS.db.select("process_stewards", {
+          select: "email",
+          filter: { email: "ilike." + SS.access.email, active: "eq.true" },
+          limit: 1,
+        });
+        isSteward = rows.length > 0;
+      } catch (e) { /* not a steward, or the table isn't reachable yet */ }
+
+      var isReviewer = SS.access.role === "admin";
+      if (!isSteward && !isReviewer) return;
+
+      var a = document.createElement("a");
+      a.href = "../processes/index.html";
+      a.className = "nav-link";
+      a.textContent = "Processes";
+      links.appendChild(a);
+    }).catch(function () { /* nav stays as it was */ });
+  }
 
   /* ───── Scroll reveal ───── */
   SS.initReveal = function () {

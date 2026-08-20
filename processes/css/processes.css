@@ -1,0 +1,610 @@
+/* ══════════════ BYU-PATHWAY DESIGN TOKENS ══════════════
+   Redeclared here rather than shared with directory.css / okr-progress.css —
+   matches how those two already relate to each other. */
+:root {
+  --bp-teal: #065577;
+  --bp-teal-light: #28738A;
+  --bp-teal-dark: #054762;
+  --bp-gold: #FFC328;
+  --bp-gold-dark: #d4a020;
+
+  --bg: #FFFFFF;
+  --bg-card: #FFFFFF;
+  --bg-elevated: #F5F6F8;
+  --bg-subtle: #F0F3F5;
+  --text: #1C2325;
+  --text-muted: #58595B;
+  --text-dim: #7F898A;
+  --border: rgba(188,190,192,0.5);
+  --border-subtle: rgba(188,190,192,0.25);
+  --radius: 8px;
+  --radius-lg: 12px;
+  --shadow: 0 2px 12px rgba(28,35,37,0.08);
+  --shadow-hover: 0 8px 30px rgba(28,35,37,0.12);
+  --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --nav-height: 60px;
+
+  --proc-grey: #7F898A;
+  --proc-grey-pale: #F0F3F5;
+  --proc-yellow: #C9962E;
+  --proc-yellow-pale: #FDF3DE;
+  --proc-accent: #065577;
+  --proc-accent-pale: #E8F1F5;
+  --proc-red: #C9432E;
+  --proc-red-pale: #FBEAE7;
+}
+[data-theme="dark"] {
+  --bg: #0d0d0f;
+  --bg-card: #151518;
+  --bg-elevated: #1a1a1e;
+  --bg-subtle: #101014;
+  --text: #e8e4dc;
+  --text-muted: #a09c94;
+  --text-dim: #6a6660;
+  --border: rgba(255,255,255,0.08);
+  --border-subtle: rgba(255,255,255,0.04);
+  --shadow: 0 2px 12px rgba(0,0,0,0.3);
+  --shadow-hover: 0 8px 30px rgba(0,0,0,0.4);
+
+  --proc-grey-pale: rgba(127,137,138,0.16);
+  --proc-yellow-pale: rgba(201,150,46,0.16);
+  --proc-accent-pale: rgba(6,85,119,0.22);
+  --proc-red-pale: rgba(201,67,46,0.18);
+}
+
+/* Reset, body base, and .hero-pattern + patternDrift live in /css/shared.css. */
+
+/* ══════════════ NAVBAR ══════════════ (same shape as directory/okr) */
+.navbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  height: var(--nav-height);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 clamp(16px, 4vw, 48px);
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  transition: var(--transition);
+}
+[data-theme="dark"] .navbar { background: rgba(13,13,15,0.92); }
+.nav-brand {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 600; font-size: 1.1rem;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  text-decoration: none; color: var(--text);
+}
+.nav-links { display: flex; gap: 8px; align-items: center; }
+.nav-link {
+  padding: 6px 14px; border-radius: 6px;
+  font-size: 0.82rem; font-weight: 400;
+  letter-spacing: 0.03em; text-decoration: none;
+  color: var(--text-muted); transition: var(--transition);
+}
+.nav-link:hover { color: var(--bp-teal); background: rgba(6,85,119,0.08); }
+.nav-theme-btn {
+  background: none; border: 1px solid var(--border);
+  border-radius: 50%; width: 36px; height: 36px;
+  display: grid; place-items: center; cursor: pointer;
+  color: var(--text-muted); transition: var(--transition);
+}
+.nav-theme-btn:hover { color: var(--bp-teal); border-color: var(--bp-teal); }
+.nav-hamburger {
+  display: none; background: none; border: none;
+  color: var(--text); cursor: pointer; padding: 4px;
+}
+@media (max-width: 768px) {
+  .nav-hamburger { display: block; }
+  .nav-links {
+    display: none; position: absolute; top: var(--nav-height);
+    left: 0; right: 0; flex-direction: column;
+    background: var(--bg-card); border-bottom: 1px solid var(--border);
+    padding: 12px; gap: 4px;
+  }
+  .nav-links.open { display: flex; }
+}
+
+/* ══════════════ HERO — scaled down; this is a workflow page, not a dashboard ══════════════ */
+.proc-hero {
+  position: relative;
+  min-height: 220px;
+  display: flex; align-items: center; justify-content: center;
+  padding: calc(var(--nav-height) + 30px) 24px 40px;
+  background: linear-gradient(135deg, var(--bp-teal-dark) 0%, var(--bp-teal) 50%, var(--bp-teal-light) 100%);
+  overflow: hidden;
+}
+.proc-hero::after {
+  content: '';
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: 80px;
+  background: linear-gradient(to top, var(--bg) 0%, transparent 100%);
+}
+.proc-hero-content {
+  position: relative; z-index: 2;
+  text-align: center; max-width: 680px;
+}
+.hero-badge {
+  display: inline-block;
+  padding: 6px 18px;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 20px;
+  font-size: 0.72rem; font-weight: 500;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--bp-gold);
+  margin-bottom: 20px;
+  backdrop-filter: blur(10px);
+}
+.proc-hero h1 {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 300; font-size: clamp(1.8rem, 4.5vw, 2.6rem);
+  letter-spacing: 0.06em; color: #fff;
+  margin-bottom: 10px; line-height: 1.15;
+}
+.proc-hero h1 span { font-weight: 600; color: var(--bp-gold); }
+.proc-hero-sub {
+  font-size: clamp(0.85rem, 1.8vw, 0.98rem);
+  color: rgba(255,255,255,0.8);
+  font-weight: 300; letter-spacing: 0.03em;
+  max-width: 480px; margin: 0 auto;
+}
+
+/* ══════════════ LAYOUT ══════════════ */
+.proc-section {
+  padding: 0 clamp(16px, 4vw, 48px) 64px;
+  margin-top: -40px;
+  position: relative;
+  z-index: 3;
+}
+.proc-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ══════════════ STATE BANNERS ══════════════ */
+.proc-empty {
+  padding: 40px 24px;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 0.9rem;
+}
+.proc-banner {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  padding: 22px 24px;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  text-align: center;
+}
+.proc-banner-error {
+  border-color: rgba(201,67,46,0.4);
+  color: var(--proc-red);
+  background: var(--proc-red-pale);
+}
+
+/* ══════════════ CARDS ══════════════ */
+.proc-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  padding: 24px;
+}
+.proc-card-header {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 12px;
+  margin-bottom: 16px;
+}
+.proc-card-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.3rem; font-weight: 600;
+  letter-spacing: 0.03em;
+  color: var(--text);
+}
+.proc-card-count {
+  font-size: 0.78rem; color: var(--text-dim);
+  margin-top: 2px;
+}
+.proc-review-scope {
+  margin-bottom: 12px;
+}
+
+/* ══════════════ REVIEW SUMMARY KPIs ══════════════ */
+.proc-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+.proc-kpi-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--proc-kpi-color, var(--bp-teal));
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  padding: 16px 18px;
+  transition: var(--transition);
+}
+.proc-kpi-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-hover); }
+.proc-kpi-label {
+  font-size: 0.64rem; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--text-dim); margin-bottom: 6px;
+}
+.proc-kpi-value {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.9rem; font-weight: 700;
+  color: var(--text); line-height: 1;
+}
+
+/* ══════════════ FILTERS ══════════════ */
+.proc-filters {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+.proc-filters-label {
+  font-size: 0.7rem; font-weight: 600;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--text-dim); margin-right: 4px;
+}
+/* .proc-select is otherwise width:100% for the modal form's grid cells;
+   inside the filters bar's flex row that would force each select onto its
+   own line, so it's sized like .proc-search's siblings instead. */
+.proc-filters .proc-select {
+  width: auto;
+  min-width: 170px;
+}
+.proc-search {
+  padding: 9px 14px;
+  border-radius: 8px;
+  border: 1.5px solid var(--border);
+  font-size: 0.82rem;
+  font-family: inherit;
+  background: var(--bg);
+  color: var(--text);
+  outline: none;
+  flex: 1;
+  min-width: 200px;
+  transition: var(--transition);
+}
+.proc-search:hover { border-color: var(--bp-teal-light); }
+.proc-search:focus {
+  border-color: var(--bp-teal);
+  box-shadow: 0 0 0 3px rgba(6,85,119,0.12);
+}
+.proc-clear {
+  padding: 9px 18px;
+  border-radius: 8px;
+  border: none;
+  background: var(--bp-teal);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.proc-clear:hover { background: var(--bp-teal-dark); }
+.proc-clear:disabled { background: var(--border); color: var(--text-dim); cursor: not-allowed; }
+
+.proc-waiting {
+  font-weight: 600;
+  color: var(--text-muted);
+}
+.proc-waiting-danger {
+  color: var(--proc-red);
+}
+
+/* ══════════════ TABLE ══════════════ */
+.proc-table-wrap { overflow-x: auto; }
+.proc-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+.proc-table thead { background: var(--bg-elevated); }
+.proc-table th {
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.65rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  border-bottom: 1px solid var(--border-subtle);
+  white-space: nowrap;
+}
+.proc-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  vertical-align: middle;
+}
+.proc-table tbody tr:hover { background: var(--bg-elevated); }
+.proc-cell-name { font-weight: 600; color: var(--text); }
+.proc-cell-dim { font-size: 0.78rem; color: var(--text-dim); }
+
+/* ══════════════ STATUS PILLS ══════════════ */
+.proc-pill {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 14px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.proc-pill-grey    { background: var(--proc-grey-pale);    color: var(--proc-grey); }
+.proc-pill-yellow  { background: var(--proc-yellow-pale);  color: var(--proc-yellow); }
+.proc-pill-accent  { background: var(--proc-accent-pale);  color: var(--proc-accent); }
+.proc-pill-red     { background: var(--proc-red-pale);     color: var(--proc-red); }
+
+/* ══════════════ BUTTONS ══════════════ */
+.proc-btn {
+  padding: 9px 18px;
+  border-radius: 8px;
+  border: 1.5px solid transparent;
+  font-size: 0.8rem;
+  font-weight: 500;
+  font-family: inherit;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.proc-btn-primary { background: var(--bp-teal); color: #fff; }
+.proc-btn-primary:hover { background: var(--bp-teal-dark); }
+.proc-btn-secondary { background: var(--bg); color: var(--text-muted); border-color: var(--border); }
+.proc-btn-secondary:hover { border-color: var(--bp-teal-light); color: var(--bp-teal); }
+.proc-btn-small { padding: 6px 14px; font-size: 0.74rem; }
+
+.proc-icon-btn {
+  width: 30px; height: 30px; flex-shrink: 0;
+  border-radius: 6px; border: 1.5px solid var(--border);
+  background: var(--bg); color: var(--text-muted);
+  cursor: pointer; font-size: 0.9rem; line-height: 1;
+  display: grid; place-items: center;
+  transition: var(--transition);
+}
+.proc-icon-btn:hover { border-color: var(--bp-teal-light); color: var(--bp-teal); }
+.proc-icon-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.proc-icon-remove:hover { border-color: var(--proc-red); color: var(--proc-red); }
+
+/* ══════════════ MODAL ══════════════ */
+.proc-modal-backdrop {
+  position: fixed; inset: 0; z-index: 500;
+  background: rgba(10,14,16,0.55);
+  display: flex; align-items: flex-start; justify-content: center;
+  padding: 40px 16px;
+  overflow-y: auto;
+}
+/* Same specificity as the rule above, so source order alone would decide it —
+   this beats it outright instead. Without this, `root.hidden = true` (set by
+   close() in process-form.js) has no visual effect: the class rule's
+   `display: flex` overrides the browser's own `[hidden] { display: none }`,
+   so the modal keeps rendering even though the attribute is set correctly. */
+.proc-modal-backdrop[hidden] {
+  display: none;
+}
+.proc-modal-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-hover);
+  width: 100%; max-width: 840px;
+  display: flex; flex-direction: column;
+}
+.proc-modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.proc-modal-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.3rem; font-weight: 600; color: var(--text);
+}
+.proc-modal-close {
+  background: none; border: none; cursor: pointer;
+  font-size: 1.4rem; line-height: 1; color: var(--text-dim);
+}
+.proc-modal-close:hover { color: var(--text); }
+.proc-modal-body {
+  padding: 20px 24px;
+  max-height: 65vh;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 20px;
+  align-items: start;
+}
+@media (max-width: 640px) {
+  .proc-modal-body { grid-template-columns: 1fr; }
+}
+.proc-modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--border-subtle);
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap;
+}
+.proc-modal-error {
+  color: var(--proc-red);
+  font-size: 0.8rem;
+}
+.proc-modal-actions { display: flex; gap: 10px; margin-left: auto; flex-wrap: wrap; }
+.proc-lock-note {
+  grid-column: 1 / -1;
+  background: var(--bg-elevated);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+/* ══════════════ FORM PRIMITIVES ══════════════ */
+.proc-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.proc-field-full { grid-column: 1 / -1; }
+.proc-label {
+  font-size: 0.7rem; font-weight: 600;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--text-dim);
+}
+.proc-input, .proc-select, .proc-textarea {
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: 1.5px solid var(--border);
+  font-size: 0.85rem;
+  font-family: inherit;
+  background: var(--bg);
+  color: var(--text);
+  outline: none;
+  width: 100%;
+  transition: var(--transition);
+}
+.proc-textarea { resize: vertical; min-height: 64px; }
+.proc-input:focus, .proc-select:focus, .proc-textarea:focus {
+  border-color: var(--bp-teal);
+  box-shadow: 0 0 0 3px rgba(6,85,119,0.12);
+}
+.proc-hint { font-size: 0.74rem; color: var(--text-dim); }
+.proc-readonly-value {
+  font-size: 0.85rem; color: var(--text);
+  padding: 9px 0;
+}
+.proc-readonly-list {
+  margin: 0; padding-left: 20px;
+  font-size: 0.85rem; color: var(--text);
+  display: flex; flex-direction: column; gap: 4px;
+}
+/* css/shared.css resets every <a> to `color: inherit; text-decoration: none`
+   site-wide, so a real link here would otherwise look identical to plain
+   text — matching the underlined-link convention used elsewhere in the hub
+   (scorecard's .sc-meta a, the PM Hub's .cell a). Storage Location URL and
+   each Supporting Document title render as real <a target="_blank"> tags;
+   this is what makes that visually true rather than just structurally true. */
+.proc-readonly-value a,
+.proc-readonly-list a {
+  color: var(--bp-teal);
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  word-break: break-word;
+}
+.proc-readonly-value a:hover,
+.proc-readonly-list a:hover {
+  color: var(--bp-teal-dark);
+}
+
+.proc-checkbox-row { display: flex; flex-wrap: wrap; gap: 14px; }
+.proc-checkbox {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 0.82rem; color: var(--text-muted);
+  cursor: pointer;
+}
+
+.proc-chip-input { display: flex; flex-direction: column; gap: 8px; }
+.proc-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.proc-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  padding: 4px 6px 4px 12px;
+  font-size: 0.78rem; color: var(--text);
+}
+.proc-chip-remove {
+  background: none; border: none; cursor: pointer;
+  color: var(--text-dim); font-size: 0.95rem; line-height: 1;
+  padding: 2px 4px;
+}
+.proc-chip-remove:hover { color: var(--proc-red); }
+.proc-chip-add { display: flex; gap: 8px; }
+.proc-chip-add .proc-input { flex: 1; }
+
+.proc-toggle { display: flex; gap: 8px; }
+.proc-toggle-btn {
+  padding: 8px 20px;
+  border-radius: 8px;
+  border: 1.5px solid var(--border);
+  background: var(--bg);
+  color: var(--text-muted);
+  font-size: 0.82rem; font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.proc-toggle-btn.is-active {
+  background: var(--bp-teal); color: #fff; border-color: var(--bp-teal);
+}
+
+.proc-steps, .proc-docs { display: flex; flex-direction: column; gap: 8px; }
+.proc-step-row, .proc-doc-row {
+  display: flex; align-items: center; gap: 8px;
+}
+.proc-step-num {
+  width: 22px; flex-shrink: 0;
+  font-size: 0.78rem; font-weight: 600; color: var(--text-dim);
+  text-align: center;
+}
+.proc-doc-row .proc-input:first-child { flex: 1; }
+.proc-doc-row .proc-input:nth-child(2) { flex: 2; }
+
+/* ══════════════ FOOTER ══════════════ */
+.site-footer {
+  background: var(--bp-teal);
+  color: rgba(255,255,255,0.7);
+  padding: 40px clamp(16px, 4vw, 48px) 28px;
+  position: relative;
+}
+[data-theme="dark"] .site-footer { background: #08141a; }
+.site-footer::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--bp-gold), transparent);
+}
+.footer-inner {
+  max-width: 1200px; margin: 0 auto;
+  display: flex; justify-content: space-between; align-items: center;
+  flex-wrap: wrap; gap: 20px;
+}
+.footer-brand {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 600; font-size: 1rem;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--bp-gold);
+}
+.footer-links { display: flex; gap: 20px; flex-wrap: wrap; }
+.footer-link {
+  font-size: 0.72rem; letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.6);
+  text-decoration: none;
+  transition: var(--transition);
+}
+.footer-link:hover { color: var(--bp-gold); }
+.footer-copy {
+  width: 100%;
+  text-align: center;
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  color: rgba(255,255,255,0.4);
+  margin-top: 24px;
+}
+@media (max-width: 768px) {
+  .footer-inner { justify-content: center; text-align: center; }
+  .footer-links { justify-content: center; }
+}
+
+/* ══════════════ ANIMATIONS ══════════════ */
+[data-reveal] {
+  opacity: 0; transform: translateY(20px);
+  transition: opacity 0.6s var(--smooth), transform 0.6s var(--smooth);
+}
+[data-reveal].revealed { opacity: 1; transform: none; }

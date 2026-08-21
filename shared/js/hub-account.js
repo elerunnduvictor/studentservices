@@ -53,6 +53,12 @@
       "</button>" +
       '<div class="hub-account-menu" hidden>' +
         '<div class="hub-account-menu-email"></div>' +
+        // Where an accessibility preference belongs: one place, reachable from
+        // every page, rather than a control repeated beside each chart.
+        '<button type="button" class="hub-account-tex" aria-pressed="false">' +
+          '<span class="hub-account-tex-label">Chart patterns</span>' +
+          '<span class="hub-account-tex-state">Off</span>' +
+        "</button>" +
         '<button type="button" class="hub-account-signout">Sign out</button>' +
       "</div>";
 
@@ -76,6 +82,26 @@
       btn.setAttribute("aria-expanded", "false");
     });
     wrap.querySelector(".hub-account-signout").addEventListener("click", signOut);
+
+    /* Hatching as a second channel for the charts. Lives here because it is a
+       reader's preference, not a property of any one page, and because the
+       charts that need it are spread across six of them. */
+    const tex = window.SS && window.SS.texture;
+    const texBtn = wrap.querySelector(".hub-account-tex");
+    if (tex && texBtn) {
+      const paint = () => {
+        const on = tex.enabled();
+        texBtn.setAttribute("aria-pressed", String(on));
+        texBtn.querySelector(".hub-account-tex-state").textContent = on ? "On" : "Off";
+      };
+      texBtn.title = "Adds a hatch pattern to each colour in the charts, so " +
+                     "categories can be told apart without relying on colour.";
+      texBtn.addEventListener("click", (e) => { e.stopPropagation(); tex.set(!tex.enabled()); });
+      tex.onChange(paint);
+      paint();
+    } else if (texBtn) {
+      texBtn.remove();               // texture layer not on this page
+    }
     return wrap;
   }
 

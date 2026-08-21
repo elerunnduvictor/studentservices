@@ -99,3 +99,15 @@
 }
 .hub-account-signout:hover { background: rgba(203,74,39,.12); }
 @media (max-width: 760px) { .hub-account-text { display: none; } .hub-account-btn { padding: 0 5px; } }
+
+/* Chart-patterns toggle — a preference, styled as a row rather than a button
+   so it does not compete with Sign out. */
+.hub-account-tex {
+  display: flex; align-items: center; justify-content: space-between; gap: 14px;
+  width: 100%; padding: 8px 12px; margin-bottom: 4px;
+  border: none; border-radius: 7px; background: none; cursor: pointer;
+  font: inherit; font-size: .78rem; color: var(--ink, #1a1a1a); text-align: left;
+}
+.hub-account-tex:hover { background: rgba(127,137,138,.12); }
+.hub-account-tex-state { font-size: .7rem; letter-spacing: .1em; text-transform: uppercase; opacity: .6; }
+.hub-account-tex[aria-pressed="true"] .hub-account-tex-state { opacity: 1; color: #3A929D; font-weight: 600; }

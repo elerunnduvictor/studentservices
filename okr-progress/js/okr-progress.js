@@ -277,6 +277,20 @@ function renderOkrCards(filtered) {
 }
 
 /* ═══════════════ RENDER: DONUT (status) ═══════════════ */
+/* A second channel for the donut — see shared/js/hub-texture.js. The slot comes
+   from the status's fixed place in STATUS_COLORS, not from its position in the
+   sorted chart, so filtering never re-patterns the statuses that remain. */
+function tex() {
+  return (window.SS && window.SS.texture) ||
+         { enabled: () => false, className: () => "", svgDefs: () => "",
+           svgFill: (i, c) => c, onChange: () => {} };
+}
+function statusSlot(label) {
+  const keys = Object.keys(window.STATUS_COLORS || {});
+  const i = keys.indexOf(label);
+  return i < 0 ? keys.length : i;
+}
+
 function renderStatusDonut(filtered) {
   const counts = {};
   filtered.forEach(r => { const s = effectiveStatus(r); counts[s] = (counts[s] || 0) + 1; });
@@ -298,12 +312,13 @@ function renderStatusDonut(filtered) {
     const large = d.value/total > 0.5 ? 1 : 0;
     const x1 = cx + r*Math.cos(sa), y1 = cy + r*Math.sin(sa);
     const x2 = cx + r*Math.cos(ea), y2 = cy + r*Math.sin(ea);
-    return `<path d="M ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2}" fill="none" stroke="${d.color}" stroke-width="${sw}"/>`;
+    return `<path d="M ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2}" fill="none" stroke="${tex().svgFill(statusSlot(d.label), d.color, "okrtex")}" stroke-width="${sw}"/>`;
   }).join("");
 
   target.innerHTML = `
     <div class="donut-wrap">
       <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+        ${tex().svgDefs(data.map(d => d.color), "okrtex", data.map(d => statusSlot(d.label)))}
         ${segs}
         <text x="${cx}" y="${cy-6}" text-anchor="middle" class="donut-center-val">${total}</text>
         <text x="${cx}" y="${cy+22}" text-anchor="middle" class="donut-center-label">Sub-KRs</text>
@@ -311,7 +326,7 @@ function renderStatusDonut(filtered) {
       <div class="donut-legend">
         ${data.map(d => `
           <div class="donut-legend-item">
-            <span class="donut-dot" style="background:${d.color};"></span>
+            <span class="donut-dot ${tex().className(statusSlot(d.label))}" style="background-color:${d.color};"></span>
             <span>${escapeHtml(d.label)}: <b>${d.value}</b></span>
           </div>
         `).join("")}
@@ -1092,4 +1107,11 @@ if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", startPage, { once: true });
 } else {
   startPage();
+}
+
+/* Redraw when the patterns preference is toggled from the account menu.
+   Registered once at load; the charts are cheap to rebuild from data
+   already in memory. */
+if (window.SS && window.SS.texture) {
+  window.SS.texture.onChange(function () { try { renderAll(); } catch (e) { /* not yet drawn */ } });
 }

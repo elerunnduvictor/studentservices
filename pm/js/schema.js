@@ -173,48 +173,96 @@ const DEPARTMENTS = [
 ].map((d) => ({ value: d, label: d }));
 
 /**
- * A department tab from the Org Directory workbook.
+ * The four sub-tabs a department page is divided into.
  *
- * The workbook has one tab per department listing that department's people.
- * Those tabs hold nobody the Employee Directory does not already have — all 105
- * were checked — so rather than four more tables that could drift apart from
- * each other, each is the same `employees` table narrowed to one department.
- * Edit someone here and you have edited them everywhere.
+ * A department is no longer one list of everybody. It is the same `employees`
+ * table narrowed twice — to the department, then to a kind of employment — plus
+ * its student employees, which live in their own table entirely. Splitting the
+ * sheet rather than the data means a person edited here is the same row as
+ * everywhere else; there is still exactly one record per person.
  *
- * `seed` matters: without it a person added on a department tab would be saved
- * with no department and disappear from the tab they were just typed into.
+ * "Temporary" deliberately covers both Full-Time and Part-Time Temporary. Given
+ * as four categories, the part-timers had nowhere to go, and three people would
+ * have quietly stopped appearing anywhere in the hub. The Employment Type
+ * column stays visible inside every tab, so which kind of temporary someone is
+ * remains legible — and so anyone can be moved between tabs by editing it.
+ *
+ * `seed` matters: without it a person added on a sub-tab would save with no
+ * department or type and vanish from the tab they were just typed into.
  */
-const departmentSheet = (key, label, department) => ({
-  key,
-  label,
-  table: "employees",
-  order: "sort_order.asc,id.asc",
-  filter: { department: `eq.${department}` },
-  seed: { department },
-  // The same five columns the workbook tab shows, in the workbook's order.
-  columns: [
-    { key: "name",                label: "Name",                type: "text", width: 135, required: true },
-    { key: "role",                label: "Role",                type: "text", width: 175 },
-    { key: "sub_department",      label: "Sub Dept",            type: "text", width: 140,
-      help: "Also groups this person's KPIs on the scorecard." },
-    { key: "primary_stakeholder", label: "Primary Stakeholder", type: "text", width: 145,
-      help: "Who this person reports to. Drives the org chart, and who their " +
-            "manager can see on the hub. Must match a name in the Employee " +
-            "Directory exactly.",
-      check: checkReportsTo },
-    { key: "employment_type",     label: "Employment Type",     type: "select", width: 140,
-      options: EMPLOYMENT_TYPES },
-  ],
-});
+const PEOPLE_COLUMNS = [
+  { key: "name",                label: "Name",                type: "text", width: 135, required: true },
+  { key: "role",                label: "Role",                type: "text", width: 175 },
+  { key: "sub_department",      label: "Sub Dept",            type: "text", width: 140,
+    help: "Also groups this person's KPIs on the scorecard." },
+  { key: "primary_stakeholder", label: "Primary Stakeholder", type: "text", width: 145,
+    help: "Who this person reports to. Drives the org chart, and who their " +
+          "manager can see on the hub. Must match a name in the Employee " +
+          "Directory exactly.",
+    check: checkReportsTo },
+  { key: "employment_type",     label: "Employment Type",     type: "select", width: 140,
+    options: EMPLOYMENT_TYPES,
+    help: "Changing this moves the person to the matching tab." },
+];
 
-/**
- * A department tab from the KPIs workbook.
- *
- * These are the opposite case to the directory tabs: a matrix of employee
- * against outcome category, holding KPI wording that never reached the
- * ScoreCard. Real content, so it has its own table and is kept as written —
- * multi-line cells and all.
- */
+/* Student employees sit in their own table and carry their own status. Setting
+   someone Inactive is how they leave the Active tab and appear under Archived —
+   the row is never deleted, so a returning student keeps their history. */
+const STUDENT_STATUS = [
+  { value: true,  label: "Active",   tone: "green" },
+  { value: false, label: "Inactive", tone: "grey" },
+];
+
+const STUDENT_COLUMNS = [
+  { key: "name",           label: "Employee Name", type: "text", width: 130, required: true },
+  { key: "job_name",       label: "Job Name",      type: "text", width: 115 },
+  { key: "role_title",     label: "Role Title",    type: "text", width: 143 },
+  { key: "sub_department", label: "Sub-Dept",      type: "text", width: 130 },
+  { key: "supervisor",     label: "Supervisor",    type: "text", width: 117,
+    help: "Must match a name in a department's staff tabs exactly.",
+    check: checkReportsTo },
+  { key: "active",         label: "Status",        type: "select", width: 105,
+    options: STUDENT_STATUS,
+    help: "Set to Inactive to move this student to the Archived tab." },
+];
+
+const TEMPORARY_TYPES = ["Full-Time Temporary", "Part-Time Temporary"];
+
+const departmentSheets = (key, label, department) => [
+  {
+    key: key + "_fte", group: key, groupLabel: label, label: "FTE",
+    table: "employees", order: "sort_order.asc,id.asc",
+    filter: { department: `eq.${department}`, employment_type: "eq.Full-Time Employee" },
+    seed: { department, employment_type: "Full-Time Employee" },
+    columns: PEOPLE_COLUMNS,
+  },
+  {
+    key: key + "_temp", group: key, groupLabel: label, label: "Temporary",
+    table: "employees", order: "sort_order.asc,id.asc",
+    // Both temporary kinds. Quoted because PostgREST treats a bare comma inside
+    // in.() as a value separator.
+    filter: { department: `eq.${department}`,
+              employment_type: `in.(${TEMPORARY_TYPES.map((t) => `"${t}"`).join(",")})` },
+    seed: { department, employment_type: "Full-Time Temporary" },
+    columns: PEOPLE_COLUMNS,
+  },
+  {
+    key: key + "_contract", group: key, groupLabel: label, label: "Professional Contractors",
+    table: "employees", order: "sort_order.asc,id.asc",
+    filter: { department: `eq.${department}`, employment_type: "eq.Professional Contractor" },
+    seed: { department, employment_type: "Professional Contractor" },
+    columns: PEOPLE_COLUMNS,
+  },
+  {
+    key: key + "_students", group: key, groupLabel: label, label: "Student Employees",
+    // A different table, not a different filter on the same one.
+    table: "student_employees", order: "sort_order.asc,id.asc",
+    filter: { department: `eq.${department}`, active: "eq.true" },
+    seed: { department, active: true },
+    columns: STUDENT_COLUMNS,
+  },
+];
+
 const kpiMatrixSheet = (key, label, department) => ({
   key,
   label,
@@ -341,67 +389,49 @@ window.SS.WORKBOOKS = {
     accent: "directory",
     sheets: [
       {
-        // The workbook's Dashboard is a pivot driven by two dropdowns. Here it
-        // is the same summary read straight from the data, so it cannot fall
-        // out of step with the tabs beside it.
+        // Rows and columns told you nothing you could see at a glance. The hub's
+        // own directory page already answers "how big is each department, and
+        // of what" in charts, from this same data — so it is drawn here rather
+        // than invented twice.
         key: "dashboard",
         label: "Dashboard",
-        table: "v_hub_departments",
-        order: "sort_order.asc",
+        // Looked up when the sheet is opened, not when this file loads: the
+        // other PM pages share this schema without loading dashboard.js, and a
+        // bare identifier there would be a ReferenceError that took the whole
+        // console down rather than one sheet.
+        render: (host) => window.renderWorkforceDashboard(host),
         readOnly: true,
-        columns: [
-          { key: "name",             label: "Department",           type: "text",     width: 210, readOnly: true },
-          { key: "staff_count",      label: "Employees",            type: "number",   width: 100, readOnly: true },
-          { key: "contractor_count", label: "Student Contractors",  type: "number",   width: 130, readOnly: true },
-          { key: "description",      label: "What the department does", type: "longtext", width: 420, readOnly: true },
-        ],
+      },
+      // One page per department, each split by kind of employment. The
+      // Employee Directory tab is gone: it listed all 108 staff in one sheet,
+      // which is the thing these four tabs exist to break up. Nobody was
+      // removed — every person still appears, on their department's page.
+      ...departmentSheets("dept_digital",    "Digital Operations",     "Digital Operations"),
+      ...departmentSheets("dept_dean",       "Dean of Students",       "Dean of Students"),
+      ...departmentSheets("dept_enrollment", "Enrollment & Retention", "Enrollment & Retention"),
+      ...departmentSheets("dept_records",    "Records, Registration & Support",
+                          "Student Records, Registration, and Support"),
+      // Every student employee, across all departments, split by status. The
+      // same rows also appear on their own department's Student Employees tab.
+      {
+        key: "students_active", group: "students", groupLabel: "Student Employees",
+        label: "Active",
+        table: "student_employees", order: "sort_order.asc,id.asc",
+        filter: { active: "eq.true" },
+        seed: { active: true },
+        columns: STUDENT_COLUMNS.concat(
+          [{ key: "department", label: "Dept", type: "select", width: 143, options: DEPARTMENTS }]),
       },
       {
-        key: "employees",
-        label: "Employee Directory",
-        table: "employees",
-        order: "sort_order.asc,id.asc",
-        columns: [
-          { key: "name",                  label: "Name",              type: "text",   width: 124, required: true },
-          { key: "role",                  label: "Role",              type: "text",   width: 162 },
-          { key: "department",            label: "Department",        type: "select", width: 143, options: DEPARTMENTS },
-          { key: "employment_type",       label: "Employment Type",   type: "select", width: 117, options: EMPLOYMENT_TYPES },
-          { key: "primary_stakeholder",   label: "Primary Stakeholder", type: "text", width: 115,
-            help: "Who this person reports to. Drives the org chart, and who " +
-                  "their manager can see on the hub. Must match a name in the " +
-                  "Employee Directory exactly.",
-            check: checkReportsTo },
-          { key: "sub_department",        label: "Sub Dept",          type: "text",   width: 117,
-            help: "Also groups this person's KPIs on the scorecard." },
-          { key: "contract_organization", label: "Contract Org",      type: "text",   width: 150 },
-          { key: "tier",                  label: "Tier",              type: "text",   width: 70 },
-          { key: "email",                 label: "Email",             type: "text",   width: 130 },
-          { key: "active",                label: "Active",            type: "select", width: 90,
-            options: [{ value: true, label: "Active", tone: "green" }, { value: false, label: "Inactive", tone: "grey" }],
-            help: "Inactive people drop off the hub but stay on record." },
-        ],
-      },
-      // The four department tabs, in the workbook's order.
-      departmentSheet("dept_digital",    "Digital Operations",             "Digital Operations"),
-      departmentSheet("dept_dean",       "Dean of Students",               "Dean of Students"),
-      departmentSheet("dept_enrollment", "Enrollment & Retention",         "Enrollment & Retention"),
-      departmentSheet("dept_records",    "Records, Registration & Support",
-                      "Student Records, Registration, and Support"),
-      {
-        key: "student_employees",
-        label: "Student Employees",
-        table: "student_employees",
-        order: "sort_order.asc,id.asc",
-        columns: [
-          { key: "name",           label: "Employee Name", type: "text", width: 130, required: true },
-          { key: "job_name",       label: "Job Name",      type: "text", width: 115 },
-          { key: "role_title",     label: "Role Title",    type: "text", width: 143 },
-          { key: "sub_department", label: "Sub-Dept",      type: "text", width: 130 },
-          { key: "supervisor",     label: "Supervisor",    type: "text", width: 117,
-            help: "Must match a name in the Employee Directory exactly.",
-            check: checkReportsTo },
-          { key: "department",     label: "Dept",          type: "select", width: 143, options: DEPARTMENTS },
-        ],
+        key: "students_archived", group: "students", groupLabel: "Student Employees",
+        label: "Archived",
+        table: "student_employees", order: "sort_order.asc,id.asc",
+        filter: { active: "eq.false" },
+        // Kept editable rather than read-only: setting someone back to Active
+        // is how a returning student comes off this tab.
+        seed: { active: false },
+        columns: STUDENT_COLUMNS.concat(
+          [{ key: "department", label: "Dept", type: "select", width: 143, options: DEPARTMENTS }]),
       },
       {
         key: "org_chart_nodes",

@@ -7,7 +7,7 @@ window.OC = window.OC || {};
 OC.DEPARTMENTS = {
   executive:  { name: 'Executive', color: '#FFC328', colorR: '255,195,40' },
   records:    { name: 'Student Records, Registration, and Support', color: '#3A929D', colorR: '58,146,157' },
-  enrollment: { name: 'Enrollment & Retention', color: '#B687AC', colorR: '182,135,172' },
+  enrollment: { name: 'Enrollment & Retention', color: '#7E3F8F', colorR: '126,63,143' },
   dean:       { name: 'Dean of Students', color: '#A2C23D', colorR: '162,194,61' },
   digital:    { name: 'Digital Operations', color: '#CB4A27', colorR: '203,74,39' }
 };

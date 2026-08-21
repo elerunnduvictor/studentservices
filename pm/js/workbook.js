@@ -122,16 +122,64 @@ export async function mountWorkbook(bookKey) {
   els.title.textContent = book.label;
   els.subtitle.textContent = book.subtitle;
 
-  /* ── sub-tabs (a workbook can hold several sheets) ────────────────────── */
-  if (book.sheets.length > 1) {
+  /* ── tabs, in up to two levels ─────────────────────────────────────────
+     A sheet may declare a `group`. Sheets sharing one are collapsed into a
+     single top-level tab, and a second row appears beneath it listing them.
+     That is what lets a department be one tab holding four, instead of the
+     sixteen top-level tabs the same sheets would otherwise produce. Sheets
+     without a group are unaffected and render exactly as before. */
+  const groups = [];                       // [{ key, label, sheets: [] }]
+  book.sheets.forEach((sheet) => {
+    const key = sheet.group || sheet.key;
+    let g = groups.find((x) => x.key === key);
+    if (!g) {
+      g = { key, label: sheet.group ? (sheet.groupLabel || sheet.group) : sheet.label, sheets: [] };
+      groups.push(g);
+    }
+    g.sheets.push(sheet);
+  });
+
+  // The second row only exists when something needs it, and is created here
+  // rather than added to five HTML files that would then drift apart.
+  const subsubtabs = document.createElement("div");
+  subsubtabs.className = "subtabs subtabs-nested";
+  subsubtabs.id = "subsubtabs";
+  subsubtabs.hidden = true;
+  els.subtabs.after(subsubtabs);
+  els.subsubtabs = subsubtabs;
+
+  if (groups.length > 1) {
     els.subtabs.hidden = false;
-    book.sheets.forEach((sheet) => {
+    groups.forEach((g) => {
       const b = document.createElement("button");
       b.className = "subtab";
-      b.dataset.sheet = sheet.key;
-      b.innerHTML = `${sheet.label}<span class="n" data-n="${sheet.key}"></span>`;
-      b.addEventListener("click", () => selectSheet(sheet));
+      b.dataset.group = g.key;
+      // A grouped tab counts its children together; a lone sheet counts itself.
+      b.innerHTML = g.sheets.length > 1
+        ? g.label
+        : `${g.label}<span class="n" data-n="${g.sheets[0].key}"></span>`;
+      b.addEventListener("click", () => selectSheet(g.sheets[0]));
       els.subtabs.append(b);
+    });
+  }
+
+  /** Draw the second row for whichever group the open sheet belongs to. */
+  function paintNestedTabs(sheet) {
+    const g = groups.find((x) => x.sheets.includes(sheet));
+    if (!g || g.sheets.length < 2) {
+      els.subsubtabs.hidden = true;
+      els.subsubtabs.innerHTML = "";
+      return;
+    }
+    els.subsubtabs.hidden = false;
+    els.subsubtabs.innerHTML = "";
+    g.sheets.forEach((sh) => {
+      const b = document.createElement("button");
+      b.className = "subtab" + (sh.key === sheet.key ? " is-active" : "");
+      b.dataset.sheet = sh.key;
+      b.innerHTML = `${sh.label}<span class="n" data-n="${sh.key}"></span>`;
+      b.addEventListener("click", () => selectSheet(sh));
+      els.subsubtabs.append(b);
     });
   }
 
@@ -155,8 +203,10 @@ export async function mountWorkbook(bookKey) {
       if (!go) return;
     }
     state.sheet = sheet;
-    document.querySelectorAll(".subtab").forEach((t) =>
-      t.classList.toggle("is-active", t.dataset.sheet === sheet.key));
+    const owning = groups.find((x) => x.sheets.includes(sheet));
+    els.subtabs.querySelectorAll(".subtab").forEach((t) =>
+      t.classList.toggle("is-active", !!owning && t.dataset.group === owning.key));
+    paintNestedTabs(sheet);
     els.search.value = "";
     await showSheet(sheet);
   }
@@ -164,6 +214,33 @@ export async function mountWorkbook(bookKey) {
   async function showSheet(sheet) {
     els.gridHost.innerHTML =
       `<div class="empty-state"><div><div class="spinner"></div>Loading ${sheet.label}…</div></div>`;
+
+    // A sheet can draw itself instead of being a grid. The Dashboard is the
+    // only one today: a summary is something you read at a glance, and a table
+    // of four rows was the least useful way to show it.
+    if (typeof sheet.render === "function") {
+      state.sheet = sheet;
+      const host = document.createElement("div");
+      host.className = "sheet-canvas";
+      els.gridHost.innerHTML = "";
+      els.gridHost.append(host);
+      // Nothing to save, add, export or search on a drawn sheet.
+      els.addBtn.disabled = true;
+      els.exportBtn.disabled = true;
+      els.search.disabled = true;
+      setDirtyUI(0);
+      try {
+        await sheet.render(host);
+        els.rowCount.textContent = "";
+      } catch (err) {
+        host.innerHTML =
+          `<div class="empty-state"><div><strong>Could not draw ${sheet.label}</strong>` +
+          `<p style="margin-top:8px;max-width:48ch">${err.message}</p></div></div>`;
+      }
+      return;
+    }
+    els.search.disabled = false;
+    els.exportBtn.disabled = false;
 
     let grid = state.grids.get(sheet.key);
     if (!grid) {

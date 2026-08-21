@@ -122,6 +122,29 @@ function renderKpis(filtered) {
 }
 
 /* ═══════════════ RENDER: BAR CHART ═══════════════ */
+/* ═══════════════ TEXTURE ═══════════════
+   A second channel for the charts, so a category can be told apart without
+   relying on hue. Degrades to plain colour when the layer is absent.
+
+   The slot is taken from the category's place in the palette, never from its
+   position in the sorted chart — the same rule colour follows. A filter that
+   reorders the bars must not re-pattern the survivors. */
+function tex() {
+  return (window.SS && window.SS.texture) ||
+         { enabled: () => false, className: () => "", svgDefs: () => "",
+           svgFill: (i, c) => c, onChange: () => {} };
+}
+function deptSlot(label) {
+  const keys = Object.keys(window.DEPT_COLORS || {});
+  const i = keys.indexOf(label);
+  return i < 0 ? keys.length : i;
+}
+function typeSlot(label) {
+  const keys = Object.keys(window.TYPE_COLORS || {});
+  const i = keys.indexOf(label);
+  return i < 0 ? keys.length : i;
+}
+
 function renderBarChart(filtered) {
   const counts = {};
   filtered.forEach(e => { counts[e.dept] = (counts[e.dept] || 0) + 1; });
@@ -144,7 +167,7 @@ function renderBarChart(filtered) {
       <div class="bar-row">
         <div class="bar-label" title="${escapeHtml(r.label)}">${escapeHtml(r.label)}</div>
         <div class="bar-track">
-          <div class="bar-fill" style="width: ${pct}%; --bar-color: ${c.bg}; --bar-color-light: ${c.light};">
+          <div class="bar-fill ${tex().className(deptSlot(r.label))}" style="width: ${pct}%; --bar-color: ${c.bg}; --bar-color-light: ${c.light};">
             <span class="bar-value">${r.value}</span>
           </div>
         </div>
@@ -185,12 +208,13 @@ function renderDonut(filtered) {
     const y1 = cy + r * Math.sin(startAngle);
     const x2 = cx + r * Math.cos(endAngle);
     const y2 = cy + r * Math.sin(endAngle);
-    return `<path d="M ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2}" fill="none" stroke="${d.color}" stroke-width="${strokeW}" stroke-linecap="butt"/>`;
+    return `<path d="M ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2}" fill="none" stroke="${tex().svgFill(typeSlot(d.label), d.color, "dirtex")}" stroke-width="${strokeW}" stroke-linecap="butt"/>`;
   }).join("");
 
   target.innerHTML = `
     <div class="donut-wrap">
       <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+        ${tex().svgDefs(data.map(d => d.color), "dirtex", data.map(d => typeSlot(d.label)))}
         ${segments}
         <text x="${cx}" y="${cy - 4}" text-anchor="middle" class="donut-center-val">${total}</text>
         <text x="${cx}" y="${cy + 16}" text-anchor="middle" class="donut-center-label">Total</text>
@@ -198,7 +222,7 @@ function renderDonut(filtered) {
       <div class="donut-legend">
         ${data.map(d => `
           <div class="donut-legend-item">
-            <span class="donut-dot" style="background: ${d.color};"></span>
+            <span class="donut-dot ${tex().className(typeSlot(d.label))}" style="background-color: ${d.color};"></span>
             <span>${escapeHtml(d.label)}: <b>${d.value}</b></span>
           </div>
         `).join("")}
@@ -296,3 +320,9 @@ if (document.readyState === "loading") {
   startPage();
 }
 
+/* Redraw when the patterns preference is toggled from the account menu.
+   Registered once at load; the charts are cheap to rebuild from data
+   already in memory. */
+if (window.SS && window.SS.texture) {
+  window.SS.texture.onChange(function () { try { renderAll(); } catch (e) { /* not yet drawn */ } });
+}

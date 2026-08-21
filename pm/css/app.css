@@ -429,3 +429,27 @@ body[data-book="analytics"] {
 }
 [data-theme="dark"] body[data-book="analytics"] { --accent: #5FB6C4; --accent-soft: rgba(95,182,196,.16); }
 .tab[data-book="analytics"] .dot { background: var(--bp-teal-mid); }
+
+/* ══════════════ NESTED SHEET TABS ══════════════
+   The second row, shown when a top-level tab stands for several sheets — a
+   department split into FTE / Temporary / Contractors / Students. Deliberately
+   quieter than the row above it: same shape, smaller and inset, so the two
+   levels read as a hierarchy rather than as two competing tab bars. */
+.subtabs-nested {
+  padding: 5px 16px 5px 30px;
+  background: var(--surface-2, var(--surface));
+  gap: 2px;
+}
+.subtabs-nested .subtab {
+  padding: 4px 11px 5px;
+  font-size: .74rem;
+  border-bottom-width: 2px;
+  border-radius: 5px 5px 0 0;
+}
+.subtabs-nested .subtab.is-active {
+  background: var(--surface);
+}
+.subtabs-nested .subtab .n { font-size: .68rem; }
+
+/* A drawn sheet fills the same space a grid would. */
+.sheet-canvas { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: auto; }

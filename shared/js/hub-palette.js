@@ -22,7 +22,12 @@
 window.DEPT_COLORS = {
   "Dean of Students":                 { bg: "#A2C23D", light: "#8aaa2e", pale: "#f2f7e6", r: "162,194,61" },
   "Digital Operations":               { bg: "#CB4A27", light: "#a83d20", pale: "#fbeee9", r: "203,74,39" },
-  "Enrollment & Retention":           { bg: "#B687AC", light: "#9a6f90", pale: "#f5edf3", r: "182,135,172" },
+  // Deepened from #B687AC. Against the Records teal it measured ΔE 2.4 for
+  // red-blind readers — indistinguishable — and 5.2 against the contractor
+  // grey. At this depth those become 13.8 and 16.6, and all four
+  // departments clear every readability check together. Same hue family,
+  // so it still reads as the Enrollment purple.
+  "Enrollment & Retention":           { bg: "#7E3F8F", light: "#6a3579", pale: "#f2ebf5", r: "126,63,143" },
   "Student Records, Registration, and Support":  { bg: "#3A929D", light: "#2a7a84", pale: "#e8f4f5", r: "58,146,157" },
   "VP - Student Services":            { bg: "#FFC328", light: "#d4a020", pale: "#fff6d6", r: "255,195,40" },
 };

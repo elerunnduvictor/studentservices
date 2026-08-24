@@ -33,7 +33,28 @@
      Critical" rather than "this issue is red", and so the level survives being
      read by someone who cannot tell the two hues apart. */
   const SEVERITY = ["Critical", "Moderate", "Low"];
-  const STATUS = ["Open", "Investigating", "Monitoring", "Escalated", "Resolved"];
+  /* Three, not five. "Open / Investigating / Monitoring / Escalated" asked for
+     a distinction nobody was drawing: what anyone wanted to know was whether
+     this has been worked out yet, whether something is being done, or whether
+     it is finished. See supabase/emerging-issues-v2.sql for the remapping of
+     what was already raised under the old five. */
+  const STATUS = ["Exploring", "Resolution in process", "Resolved"];
+
+  /* ── the three windows ──────────────────────────────────────────────────
+     Buckets by age in days, not by calendar week. A calendar week would move
+     an issue raised on Sunday evening into "Last Week" on Monday morning,
+     roughly twelve hours old — which is not what anybody means by last week.
+     Rolling sevens give every issue the same seven days of being new.
+
+     `max` is exclusive: 0-6 days is this week, 7-13 last week, 14+ backlog. */
+  const BUCKETS = [
+    { id: "current", label: "Current Week", max: 7,
+      blurb: "Raised in the last seven days." },
+    { id: "last",    label: "Last Week",    max: 14,
+      blurb: "Raised seven to fourteen days ago." },
+    { id: "backlog", label: "Backlog",      max: Infinity,
+      blurb: "Raised more than a fortnight ago and still open." },
+  ];
   const DEPARTMENTS = [
     "Student Records, Registration, and Support",
     "Enrollment & Retention",
@@ -55,6 +76,7 @@
   let SUBS = {};
   let OPEN_ID = null;                       // which issue is expanded
   const filters = { dept: "", severity: "", status: "", resolved: false };
+  let TAB = "current";                      // which of the three is showing
 
   /* ── why an issue is where it is ────────────────────────────────────────
      Returns a score and the reasons behind it. The reasons are what get shown;
@@ -65,16 +87,16 @@
 
     if (i.severity === "Critical") { score += 100; why.push("Critical"); }
     if (i.severity === "Moderate") { score += 40; }
-    if (i.status === "Escalated") { score += 60; why.push("escalated"); }
 
-    if (typeof i.days_to_target === "number") {
-      if (i.days_to_target < 0) {
-        score += 50 + Math.min(-i.days_to_target, 30);
-        why.push(`${-i.days_to_target} ${-i.days_to_target === 1 ? "day" : "days"} overdue`);
-      } else if (i.days_to_target <= 7) {
-        score += 25;
-        why.push(i.days_to_target === 0 ? "due today" : `due in ${i.days_to_target} days`);
-      }
+    /* Nobody has picked this up yet.
+       This replaces the old "escalated" rule, and replaces the target-date
+       arithmetic that came after it. Both are gone for the same reason: they
+       measured a promise somebody had to remember to make. An issue still
+       sitting in Exploring after a week made no promise and needs no date to
+       be obviously stuck - the register already knows how old it is. */
+    if (i.status === "Exploring" && i.age_days >= 7) {
+      score += 45;
+      why.push(`still exploring after ${i.age_days} days`);
     }
     // Silence. An issue nobody has written on is the one that quietly rots, and
     // it is the cheapest thing on this page to detect.
@@ -105,6 +127,34 @@
       });
   }
 
+  /**
+   * Who raised this, for the byline.
+   *
+   * The name is resolved when the issue is raised and stored on the row — the
+   * page cannot look one up, because hub_access is readable only by PM editors
+   * and admins, and a staff member reading the register is neither. So this
+   * prefers what the database stamped, and only falls back to tidying up the
+   * email when a row predates that (or the address was never in hub_access).
+   */
+  function who(i) {
+    const name = (i.raised_by_name || "").trim();
+    if (name && name.indexOf("@") === -1) return name;
+    const e = (name || i.raised_by || "").trim();
+    if (!e) return "someone no longer recorded";
+    return e.split("@")[0].replace(/[._]+/g, " ") || e;
+  }
+
+  /** Day and time, because "when was this raised" is answered in both. */
+  function fmtWhen(d) {
+    if (!d) return "—";
+    const dt = new Date(d);
+    if (isNaN(dt)) return "—";
+    return dt.toLocaleString("en-US", {
+      month: "short", day: "numeric", year: "numeric",
+      hour: "numeric", minute: "2-digit",
+    });
+  }
+
   function fmtDate(d) {
     if (!d) return "—";
     const dt = new Date(d);
@@ -112,35 +162,64 @@
     return dt.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
   }
 
-  /* ── the band at the top ───────────────────────────────────────────────── */
-  function renderBrief(b) {
-    const host = el("eiBrief");
-    if (!b) { host.innerHTML = ""; return; }
-    const tile = (n, label, tone) =>
-      `<div class="ei-stat${tone ? " is-" + tone : ""}${n ? "" : " is-quiet"}">
-         <div class="ei-stat-n">${n}</div><div class="ei-stat-l">${esc(label)}</div>
-       </div>`;
-    host.innerHTML =
-      tile(b.open_total || 0, "Open", null) +
-      // The view still calls the column red_open — it counts the top level,
-      // whatever that level is named. What the reader sees is the word.
-      tile(b.red_open || 0, "Critical", "red") +
-      tile(b.escalated || 0, "Escalated", "red") +
-      tile(b.overdue || 0, "Overdue", "amber") +
-      tile(b.due_this_week || 0, "Due this week", "amber") +
-      tile(b.going_stale || 0, `No update in ${STALE_DAYS}d`, "amber") +
-      tile(b.raised_7d || 0, "Raised this week", null) +
-      tile(b.resolved_30d || 0, "Resolved (30d)", "green");
+  /* ── when it was raised ─────────────────────────────────────────────────
+     How old an issue is, in whole days. Read from `age_days` when the view
+     supplies it, and otherwise worked out from when the row was created, so a
+     row that has just been inserted and not yet re-read still lands in the
+     right tab. */
+  function ageDays(i) {
+    if (typeof i.age_days === "number") return i.age_days;
+    const t = Date.parse(i.created_at || i.first_observed);
+    if (isNaN(t)) return 0;
+    return Math.max(0, Math.floor((Date.now() - t) / 86400000));
+  }
+
+  function bucketOf(i) {
+    const age = ageDays(i);
+    return (BUCKETS.find((b) => age < b.max) || BUCKETS[BUCKETS.length - 1]).id;
+  }
+
+  /* Everything the filters allow, before the tab is applied. The tab counts
+     have to be drawn from this rather than from the visible rows, or each tab
+     would report the number showing on the tab you are already looking at. */
+  function afterFilters() {
+    return ISSUES.filter((i) => {
+      if (!filters.resolved && i.status === "Resolved") return false;
+      if (filters.dept && i.department !== filters.dept) return false;
+      if (filters.severity && i.severity !== filters.severity) return false;
+      if (filters.status && i.status !== filters.status) return false;
+      return true;
+    });
+  }
+
+  function renderTabs() {
+    const host = el("eiTabs");
+    if (!host) return;
+    const pool = afterFilters();
+    host.innerHTML = BUCKETS.map((b) => {
+      const n = pool.filter((i) => bucketOf(i) === b.id).length;
+      const on = TAB === b.id;
+      return `<button type="button" class="ei-tab${on ? " is-on" : ""}"
+                role="tab" aria-selected="${on}" data-tab="${b.id}" title="${esc(b.blurb)}">
+                <span class="ei-tab-l">${esc(b.label)}</span>
+                <span class="ei-tab-n${n ? "" : " is-quiet"}">${n}</span>
+              </button>`;
+    }).join("");
   }
 
   /* ── one issue ─────────────────────────────────────────────────────────── */
   function issueCard(i) {
     const t = triage(i);
     const open = OPEN_ID === i.id;
+    /* Who raised it and exactly when, from the row the database stamped - not
+       from anything typed into the form. `owner` and `target_date` are no
+       longer collected; issues raised before that change still carry them, so
+       they are still shown when they are there rather than being hidden to
+       make the new rows look tidy. */
     const meta = [
       i.department ? esc(i.department) + (i.sub_department ? " / " + esc(i.sub_department) : "") : null,
+      `Raised by ${esc(who(i))} · ${fmtWhen(i.created_at || i.first_observed)}`,
       i.owner ? "Owner: " + esc(i.owner) : null,
-      `Raised ${fmtDate(i.first_observed)}`,
       i.target_date ? `Target ${fmtDate(i.target_date)}` : null,
     ].filter(Boolean).join(" &nbsp;·&nbsp; ");
 
@@ -170,7 +249,7 @@
         </button>
 
         <div class="ei-card-body" ${open ? "" : "hidden"}>
-          ${i.summary ? `<p class="ei-para"><strong>What is happening.</strong> ${esc(i.summary)}</p>` : ""}
+          ${i.summary ? `<p class="ei-para">${esc(i.summary)}</p>` : ""}
           ${i.impact ? `<p class="ei-para"><strong>Who it affects.</strong> ${esc(i.impact)}</p>` : ""}
           <div class="ei-log" data-log="${i.id}">
             <p class="ei-log-loading">Loading updates…</p>
@@ -194,13 +273,7 @@
   }
 
   function visible() {
-    return ISSUES.filter((i) => {
-      if (!filters.resolved && i.status === "Resolved") return false;
-      if (filters.dept && i.department !== filters.dept) return false;
-      if (filters.severity && i.severity !== filters.severity) return false;
-      if (filters.status && i.status !== filters.status) return false;
-      return true;
-    }).sort((a, b) => {
+    return afterFilters().filter((i) => bucketOf(i) === TAB).sort((a, b) => {
       const d = triage(b).score - triage(a).score;
       if (d) return d;
       return (b.days_since_update || 0) - (a.days_since_update || 0);
@@ -209,14 +282,22 @@
 
   function renderList() {
     const host = el("eiList");
+    // Tabs first: their counts come from the filters, so they have to be
+    // redrawn whenever the filters move, not only when the tab changes.
+    renderTabs();
     const rows = visible();
     el("eiCount").textContent =
       rows.length + (rows.length === 1 ? " issue" : " issues");
     if (!rows.length) {
+      const tab = BUCKETS.find((b) => b.id === TAB) || BUCKETS[0];
+      const elsewhere = afterFilters().length;
       host.innerHTML =
-        `<div class="ei-empty"><strong>Nothing here.</strong>
-           <p>${ISSUES.length ? "No issue matches these filters."
-                              : "No issues have been raised yet. Use “Raise an issue” above."}</p>
+        `<div class="ei-empty"><strong>Nothing in ${esc(tab.label)}.</strong>
+           <p>${!ISSUES.length
+                 ? "No issues have been raised yet. Use “Raise an issue” above."
+                 : elsewhere
+                   ? `${esc(tab.blurb)} ${elsewhere} ${elsewhere === 1 ? "issue matches" : "issues match"} these filters in the other tabs.`
+                   : "No issue matches these filters."}</p>
          </div>`;
       return;
     }
@@ -253,12 +334,36 @@
   }
 
   /* ── writing ───────────────────────────────────────────────────────────── */
+  /**
+   * A short heading for one issue, taken from the first thing it says.
+   *
+   * The form asks one question now, so there is no separate title to store —
+   * but the register still needs something short to put at the head of each
+   * card, and a digest still needs a way to name an issue in a sentence. Both
+   * are better served by the writer's own opening words than by a truncation
+   * at whatever character happens to fall on the limit, so this cuts at the
+   * first sentence end or line break and only falls back to a hard trim when
+   * the opening runs long.
+   */
+  const TITLE_MAX = 140;
+  function headline(text) {
+    const flat = String(text || "").replace(/\s+/g, " ").trim();
+    if (!flat) return "Untitled issue";
+    const stop = flat.search(/[.!?](\s|$)/);
+    let head = (stop > 0 && stop <= TITLE_MAX) ? flat.slice(0, stop + 1) : flat;
+    if (head.length > TITLE_MAX) head = head.slice(0, TITLE_MAX - 1).replace(/\s+\S*$/, "") + "…";
+    return head;
+  }
+
   async function raiseIssue(form) {
     const f = new FormData(form);
+    const summary = (f.get("summary") || "").toString().trim();
+    if (!summary) throw new Error("Say what is happening before raising it.");
+
     const body = {
-      title: (f.get("title") || "").toString().trim(),
-      summary: (f.get("summary") || "").toString().trim() || null,
-      impact: (f.get("impact") || "").toString().trim() || null,
+      // Derived, not asked for. See headline() above.
+      title: headline(summary),
+      summary: summary,
       department: f.get("department") || null,
       sub_department: (function () {
         const chosen = (f.get("sub_department") || "").toString().trim();
@@ -266,12 +371,13 @@
         // "Other" is a prompt, not an answer — store what they named instead.
         return (f.get("sub_department_other") || "").toString().trim() || null;
       })(),
-      owner: (f.get("owner") || "").toString().trim() || null,
       severity: f.get("severity") || "Moderate",
-      status: f.get("status") || "Open",
-      target_date: f.get("target_date") || null,
+      status: f.get("status") || "Exploring",
+      // owner and target_date are deliberately absent: nobody is asked for
+      // either any more. raised_by and created_at are stamped by the database
+      // from the signed-in session, which is the only account of who and when
+      // that cannot be typed wrong.
     };
-    if (!body.title) throw new Error("A title is required.");
     await SS.db.insert("emerging_issues", [body]);
   }
 
@@ -343,12 +449,10 @@
 
   /* ── load ──────────────────────────────────────────────────────────────── */
   async function load() {
-    const [rows, brief] = await Promise.all([
-      SS.db.select("v_emerging_issues", { order: "id.desc" }),
-      SS.db.select("v_emerging_issues_brief", { limit: 1 }),
-    ]);
-    ISSUES = rows || [];
-    renderBrief((brief || [])[0]);
+    // One request, not two. The brief view fed the row of stat tiles that used
+    // to sit above the list; the tabs count their own rows from what is already
+    // in hand, so a second round trip would buy nothing.
+    ISSUES = await SS.db.select("v_emerging_issues", { order: "id.desc" }) || [];
     renderList();
   }
 
@@ -361,7 +465,7 @@
     el("nSeverity").innerHTML = opts(SEVERITY);
     el("nStatus").innerHTML = opts(STATUS);
     el("nSeverity").value = "Moderate";
-    el("nStatus").value = "Open";
+    el("nStatus").value = "Exploring";
     // The dialog's selects exist from page load, so they are wired once here;
     // the ones inside issue cards are wired each time the list is drawn.
     watchSeverity(document);
@@ -397,6 +501,16 @@
              <p>${esc(err.message)}</p></div>`;
       el("eiRaise").disabled = notBuiltYet;
     }
+
+    // Tabs. Delegated, because renderTabs() replaces the buttons each time the
+    // counts change and a listener bound to one of them would go with it.
+    el("eiTabs").addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-tab]");
+      if (!btn || btn.dataset.tab === TAB) return;
+      TAB = btn.dataset.tab;
+      OPEN_ID = null;              // an expanded card in one tab is not open in the next
+      renderList();
+    });
 
     // Filters
     ["fDept", "fSeverity", "fStatus"].forEach((id) => {
@@ -445,7 +559,7 @@
     el("eiRaise").addEventListener("click", () => {
       if (typeof dlg.showModal === "function") dlg.showModal();
       else dlg.setAttribute("open", "");
-      el("nTitle").focus();
+      el("nSummary").focus();
     });
     el("nDepartment").addEventListener("change", (e) => fillSubDepartments(e.target.value));
     el("nSubDept").addEventListener("change", (e) => {
@@ -461,7 +575,7 @@
     if (location.hash === "#raise") {
       history.replaceState(null, "", location.pathname);   // don't re-open on refresh
       if (typeof dlg.showModal === "function") dlg.showModal(); else dlg.setAttribute("open", "");
-      el("nTitle").focus();
+      el("nSummary").focus();
     }
     el("eiForm").addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -472,16 +586,30 @@
         dlg.close();
         e.target.reset();
         el("nSeverity").value = "Moderate";
-        el("nStatus").value = "Open";
+        el("nStatus").value = "Exploring";
         fillSubDepartments("");
         watchSeverity(document);
+        // A new issue is by definition in Current Week; showing the reader a
+        // different tab would look like it had not saved.
+        TAB = BUCKETS[0].id;
         await load();
         say("Issue raised.");
       } catch (err) {
-        const oldLevels = /severity_check|check constraint/i.test(err.message || "");
-        say(oldLevels
-          ? "The database still expects the old Red / Amber / Green levels — run supabase/emerging-issues-severity.sql."
-          : (err.message || "Could not raise that issue."), true);
+        /* Two different patches can be missing, and each needs its own name.
+           A single "check constraint" catch-all used to answer both, which
+           meant a status the database had not heard of sent whoever hit it to
+           the severity file. */
+        const m = err.message || "";
+        const oldStatus = /status_check/i.test(m);
+        const oldLevels = /severity_check/i.test(m);
+        say(
+          oldStatus
+            ? "The database still expects the old five statuses — run supabase/emerging-issues-v2.sql."
+          : oldLevels
+            ? "The database still expects the old Red / Amber / Green levels — run supabase/emerging-issues-severity.sql."
+          : /check constraint/i.test(m)
+            ? "The database refused that value — supabase/emerging-issues-v2.sql may not have been run yet."
+            : (m || "Could not raise that issue."), true);
       } finally { btn.disabled = false; }
     });
   }

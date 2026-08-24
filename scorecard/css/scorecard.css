@@ -462,7 +462,13 @@
 .sc-kpi-list {
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  overflow: hidden; margin-top: 24px;
+  /* `clip` rather than `hidden`: both round off the corners, but `hidden`
+     makes this a scroll container, and a scroll container that cannot scroll
+     is where the sticky stakeholder headings inside would silently stop
+     sticking. Older browsers keep `hidden` and simply get static headings. */
+  overflow: hidden;
+  overflow: clip;
+  margin-top: 24px;
 }
 .sc-kpi-row {
   display: grid;
@@ -613,3 +619,42 @@
   border: 1px solid var(--border-subtle, #DFE4EA);
   border-radius: 99px; padding: 2px 7px;
 }
+
+/* ══════════════ SORT BAR & STAKEHOLDER GROUPS ══════════════
+   The sort bar reuses the lens chips, because it is the same kind of control
+   and a second visual language for "narrow this list" would only be one more
+   thing to learn. It sits closer to the list it governs than the lens does. */
+.sc-sort { margin-bottom: 0; margin-top: 24px; }
+.sc-sort + .sc-kpi-list { margin-top: 10px; }
+
+/* A person's name above their block of KPIs. Sticky, so on a department with
+   forty rows the name of whoever you are reading stays on screen — the point
+   of grouping is lost if you scroll past the heading and no longer know whose
+   numbers these are. */
+.sc-kpi-group {
+  position: sticky; top: 0; z-index: 2;
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 12px;
+  padding: 11px 22px;
+  background: var(--bg-subtle, var(--bg-card));
+  border-bottom: 1px solid var(--border);
+  box-shadow: inset 3px 0 0 var(--bp-plum);
+}
+.sc-kpi-group-name {
+  font-family: 'Jost', sans-serif;
+  font-size: 0.82rem; font-weight: 600; letter-spacing: 0.01em;
+  color: var(--text);
+}
+.sc-kpi-group-count {
+  font-size: 0.66rem; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--text-dim); font-weight: 600; white-space: nowrap;
+}
+/* The row above a heading already draws a rule; two together read as a gap. */
+.sc-kpi-group + .sc-kpi-row { border-top: none; }
+
+/* An anonymised roll-up row: real colour and value, nothing to open. It keeps
+   the row's shape so the list still reads as one list, and drops only the
+   affordances that would promise a page that does not exist. */
+.sc-kpi-row.is-locked { cursor: default; }
+.sc-kpi-row.is-locked:hover { background: var(--bg-card); }
+.sc-kpi-row.is-locked .sc-kpi-measure { color: var(--text-muted); }

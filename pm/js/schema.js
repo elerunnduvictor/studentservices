@@ -231,14 +231,18 @@ const TEMPORARY_TYPES = ["Full-Time Temporary", "Part-Time Temporary"];
 const departmentSheets = (key, label, department) => [
   {
     key: key + "_fte", group: key, groupLabel: label, label: "FTE",
-    table: "employees", order: "sort_order.asc,id.asc",
+    // Alphabetical by name — a department roster is read by looking someone up.
+    table: "employees",
+    order: "name.asc.nullslast",
     filter: { department: `eq.${department}`, employment_type: "eq.Full-Time Employee" },
     seed: { department, employment_type: "Full-Time Employee" },
     columns: PEOPLE_COLUMNS,
   },
   {
     key: key + "_temp", group: key, groupLabel: label, label: "Temporary",
-    table: "employees", order: "sort_order.asc,id.asc",
+    // Alphabetical by name.
+    table: "employees",
+    order: "name.asc.nullslast",
     // Both temporary kinds. Quoted because PostgREST treats a bare comma inside
     // in.() as a value separator.
     filter: { department: `eq.${department}`,
@@ -248,7 +252,9 @@ const departmentSheets = (key, label, department) => [
   },
   {
     key: key + "_contract", group: key, groupLabel: label, label: "Professional Contractors",
-    table: "employees", order: "sort_order.asc,id.asc",
+    // Alphabetical by name.
+    table: "employees",
+    order: "name.asc.nullslast",
     filter: { department: `eq.${department}`, employment_type: "eq.Professional Contractor" },
     seed: { department, employment_type: "Professional Contractor" },
     columns: PEOPLE_COLUMNS,
@@ -256,7 +262,9 @@ const departmentSheets = (key, label, department) => [
   {
     key: key + "_students", group: key, groupLabel: label, label: "Student Employees",
     // A different table, not a different filter on the same one.
-    table: "student_employees", order: "sort_order.asc,id.asc",
+    // Alphabetical by name.
+    table: "student_employees",
+    order: "name.asc.nullslast",
     filter: { department: `eq.${department}`, active: "eq.true" },
     seed: { department, active: true },
     columns: STUDENT_COLUMNS,
@@ -267,7 +275,8 @@ const kpiMatrixSheet = (key, label, department) => ({
   key,
   label,
   table: "department_kpi_matrix",
-  order: "sort_order.asc,id.asc",
+  // Alphabetical by name: this is a roster, and a roster is looked up by name.
+  order: "employee_name.asc.nullslast",
   filter: { department: `eq.${department}` },
   seed: { department },
   columns: [
@@ -416,7 +425,7 @@ window.SS.WORKBOOKS = {
       {
         key: "students_active", group: "students", groupLabel: "Student Employees",
         label: "Active",
-        table: "student_employees", order: "sort_order.asc,id.asc",
+        table: "student_employees", order: "name.asc.nullslast",
         filter: { active: "eq.true" },
         seed: { active: true },
         columns: STUDENT_COLUMNS.concat(
@@ -425,7 +434,7 @@ window.SS.WORKBOOKS = {
       {
         key: "students_archived", group: "students", groupLabel: "Student Employees",
         label: "Archived",
-        table: "student_employees", order: "sort_order.asc,id.asc",
+        table: "student_employees", order: "name.asc.nullslast",
         filter: { active: "eq.false" },
         // Kept editable rather than read-only: setting someone back to Active
         // is how a returning student comes off this tab.
@@ -487,7 +496,8 @@ window.SS.WORKBOOKS = {
       key: "kpi_baselines",
       label: "2025 Baselines",
       table: "kpi_baselines",
-      order: "sort_order.asc,id.asc",
+      // By owner, so a person's baselines read as one block.
+      order: "employee_name.asc.nullslast",
       columns: [
         { key: "employee_name",          label: "Employee Name",          type: "text",     width: 140, required: true },
         { key: "role",                   label: "Role",                   type: "text",     width: 160 },
@@ -507,7 +517,11 @@ window.SS.WORKBOOKS = {
       key: "kpis",
       label: "KPI ScoreCard",
       table: "kpis",
-      order: "sort_order.asc,id.asc",
+      // Grouped by the person the KPI belongs to, alphabetically, then by
+      // measure. Loading in sort_order scattered one owner's KPIs the length
+      // of the sheet, because the matrix-derived rows were appended after the
+      // originals rather than interleaved with them.
+      order: "employee.asc.nullslast,kpi_measure.asc",
       columns: [
         { key: "employee",          label: "Employee",       type: "text",   width: 115 },
         { key: "role",              label: "Role",           type: "text",   width: 136 },

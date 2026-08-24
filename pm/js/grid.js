@@ -48,6 +48,9 @@ export class Grid {
     this.deleted = [];           // full row objects removed
     this.undoStack = [];
     this.redoStack = [];
+    // { key, dir } — null means the order the sheet was loaded in, which is
+    // the workbook's own order and worth being able to get back to.
+    this.sort = null;
     this.seq = -1;               // temp keys for new rows count down
 
     // Sizing a sheet is work, and work should not be thrown away on refresh.
@@ -163,14 +166,83 @@ export class Grid {
   _applyFilter() {
     if (!this.filter) {
       this.view = this.rows.map((_, i) => i);
-      return;
+    } else {
+      const cols = this.columns;
+      this.view = this.rows.reduce((acc, row, i) => {
+        const hay = cols.map((c) => row[c.key] ?? "").join(" ").toLowerCase();
+        if (hay.includes(this.filter)) acc.push(i);
+        return acc;
+      }, []);
     }
-    const cols = this.columns;
-    this.view = this.rows.reduce((acc, row, i) => {
-      const hay = cols.map((c) => row[c.key] ?? "").join(" ").toLowerCase();
-      if (hay.includes(this.filter)) acc.push(i);
-      return acc;
-    }, []);
+    this._applySort();
+  }
+
+  /**
+   * Compare two cell values.
+   *
+   * Values in a sheet are text as far as the database is concerned, so "10"
+   * would sort before "9" on a plain string compare. Numbers and dates are
+   * therefore recognised and compared as themselves; everything else is
+   * compared with `localeCompare`, which puts "Ángela" next to "Angela"
+   * instead of after "Zoe" and is the reason this is not a `<` comparison.
+   *
+   * Blanks always sink to the bottom, whichever direction is chosen — an empty
+   * cell is the absence of an answer, not the smallest one, and a column sorted
+   * to find the largest value should not open on a screen of empties.
+   */
+  _compare(a, b) {
+    const ea = a === null || a === undefined || String(a).trim() === "";
+    const eb = b === null || b === undefined || String(b).trim() === "";
+    if (ea && eb) return 0;
+    if (ea) return 1;
+    if (eb) return -1;
+
+    if (typeof a === "boolean" || typeof b === "boolean") {
+      return (a === b) ? 0 : (a ? -1 : 1);
+    }
+    const na = Number(String(a).replace(/[,%$\s]/g, ""));
+    const nb = Number(String(b).replace(/[,%$\s]/g, ""));
+    if (!Number.isNaN(na) && !Number.isNaN(nb) && String(a).trim() !== "" && String(b).trim() !== "") {
+      if (na !== nb) return na - nb;
+    }
+    const da = Date.parse(a), db = Date.parse(b);
+    if (!Number.isNaN(da) && !Number.isNaN(db) && /\d{4}-\d{2}-\d{2}/.test(String(a))) {
+      if (da !== db) return da - db;
+    }
+    return String(a).localeCompare(String(b), undefined, { sensitivity: "base", numeric: true });
+  }
+
+  _applySort() {
+    if (!this.sort) return;                       // the sheet's own order
+    const { key, dir } = this.sort;
+    const sign = dir === "desc" ? -1 : 1;
+    const rows = this.rows;
+    // Sorting the *view* rather than the rows themselves: `this.rows` is what
+    // edits, undo and the save patch are addressed against, so reordering it
+    // would move the ground under them.
+    this.view = this.view.slice().sort((ia, ib) => {
+      if (key === "__added") {
+        // Insertion order. New rows carry negative temporary keys, so they are
+        // compared by position instead and stay at the end where they were
+        // typed.
+        const ka = Number(rows[ia][this.idKey]), kb = Number(rows[ib][this.idKey]);
+        const va = Number.isFinite(ka) && ka > 0 ? ka : Infinity;
+        const vb = Number.isFinite(kb) && kb > 0 ? kb : Infinity;
+        return (va - vb) * sign || (ia - ib);
+      }
+      const c = this._compare(rows[ia][key], rows[ib][key]);
+      return c * sign || (ia - ib);              // stable: original order breaks ties
+    });
+  }
+
+  /** Cycle a column: ascending, descending, then back to the sheet's order. */
+  sortBy(key) {
+    if (!this.sort || this.sort.key !== key) this.sort = { key, dir: "asc" };
+    else if (this.sort.dir === "asc") this.sort = { key, dir: "desc" };
+    else this.sort = null;
+    this._applyFilter();
+    this.active = { r: 0, c: this.active.c };
+    this.render();
   }
 
   rowKey(row) { return row[this.idKey]; }
@@ -368,8 +440,16 @@ export class Grid {
     this.thead.innerHTML = "";
     const tr = document.createElement("tr");
     const corner = document.createElement("th");
-    corner.className = "gutter";
+    corner.className = "gutter sortable";
     corner.textContent = "#";
+    // The row number is insertion order, so this column is "recently added":
+    // descending puts the newest rows on top.
+    corner.title = "Sort by when the row was added";
+    if (this.sort && this.sort.key === "__added") {
+      corner.classList.add("is-sorted");
+      corner.textContent = this.sort.dir === "asc" ? "# ↑" : "# ↓";
+    }
+    corner.addEventListener("click", () => this.sortBy("__added"));
     tr.append(corner);
     this.visibleColumns.forEach((col, ci) => {
       const th = document.createElement("th");
@@ -378,6 +458,21 @@ export class Grid {
       const inner = document.createElement("div");
       inner.className = "th-inner";
       inner.textContent = col.label;
+      // Click the label to sort; the resize handle beside it stops the event,
+      // so dragging a column wider never reorders the sheet underneath.
+      th.classList.add("sortable");
+      const sorted = this.sort && this.sort.key === col.key;
+      if (sorted) {
+        th.classList.add("is-sorted");
+        const arrow = document.createElement("span");
+        arrow.className = "th-arrow";
+        arrow.textContent = this.sort.dir === "asc" ? "↑" : "↓";
+        inner.append(arrow);
+      }
+      th.addEventListener("click", (e) => {
+        if (e.target.classList.contains("col-resize")) return;
+        this.sortBy(col.key);
+      });
       if (col.required) {
         const s = document.createElement("span");
         s.className = "req"; s.textContent = "*"; s.title = "Required";
@@ -386,9 +481,11 @@ export class Grid {
       const handle = document.createElement("div");
       handle.className = "col-resize";
       handle.addEventListener("mousedown", (e) => this._startResize(e, ci, th));
+      handle.addEventListener("click", (e) => e.stopPropagation());
       inner.append(handle);
       th.append(inner);
-      th.title = col.help || col.label;
+      th.title = (col.help || col.label) + "\n\n" +
+        "Click to sort - again to reverse, a third time for the sheet's own order.";
       tr.append(th);
     });
     this.thead.append(tr);
@@ -468,6 +565,9 @@ export class Grid {
       frag.append(tr2);
     });
     this.tbody.append(frag);
+    // The handle lives on a cell, so it has to be re-attached each time the
+    // rows are rebuilt — the element it was sitting on no longer exists.
+    this._placeFillHandle();
     this.onStatus({ rows: this.view.length, total: this.rows.length });
   }
 
@@ -556,6 +656,146 @@ export class Grid {
     }
     this._cellEl(this.active.r, this.active.c)?.classList.add("is-active");
     this.tbody.querySelector(`tr[data-v="${this.active.r}"]`)?.classList.add("is-current");
+    this._placeFillHandle();
+  }
+
+  /* ── fill handle ──────────────────────────────────────────────────────────
+     The small square at the bottom-right of the active cell. Drag it down (or
+     up) to copy that value into the cells it passes over, the way Excel does —
+     which is how one answer gets applied to a run of rows without typing it
+     fifteen times.
+
+     One element, moved, rather than one per cell: the table is re-rendered on
+     every edit, and a handle per row would be thousands of nodes that exist to
+     let you grab one.
+     ──────────────────────────────────────────────────────────────────────── */
+
+  _placeFillHandle() {
+    const cell = this._cellEl(this.active.r, this.active.c);
+    const col = this.visibleColumns[this.active.c];
+    if (this._fill) this._fill.remove();
+    // Nothing to drag from a column that cannot be written to.
+    if (!cell || !col || col.readOnly || this.editing) { this._fill = null; return; }
+
+    const h = document.createElement("div");
+    h.className = "fill-handle";
+    h.title = [
+      "Drag down to fill the cells below with this value.",
+      "Double-click to fill to the last row.",
+      "Hold Ctrl while dragging to count up instead of copying.",
+    ].join("\n");
+    h.addEventListener("mousedown", (e) => this._startFill(e));
+    h.addEventListener("dblclick", (e) => {
+      e.preventDefault(); e.stopPropagation();
+      this._doFill(this.active.r, this.view.length - 1, false);
+    });
+    cell.append(h);
+    this._fill = h;
+  }
+
+  _startFill(e) {
+    e.preventDefault();
+    e.stopPropagation();               // not a click on the cell underneath
+    this._commitEdit();
+
+    const from = this.active.r;
+    let to = from;
+    const paint = () => {
+      this.tbody.querySelectorAll("td.is-fill-preview")
+        .forEach((td) => td.classList.remove("is-fill-preview"));
+      const lo = Math.min(from, to), hi = Math.max(from, to);
+      for (let r = lo; r <= hi; r++) {
+        if (r !== from) this._cellEl(r, this.active.c)?.classList.add("is-fill-preview");
+      }
+    };
+
+    const move = (ev) => {
+      const tr = document.elementFromPoint(ev.clientX, ev.clientY)?.closest("tr[data-v]");
+      // Outside the rows — keep the last row it was over rather than snapping
+      // back, so dragging past the bottom edge still fills to the bottom.
+      if (!tr || !this.tbody.contains(tr)) return;
+      const v = Number(tr.dataset.v);
+      if (v !== to) { to = v; paint(); }
+    };
+    const up = (ev) => {
+      document.removeEventListener("mousemove", move);
+      document.removeEventListener("mouseup", up);
+      document.body.classList.remove("is-filling");
+      this.tbody.querySelectorAll("td.is-fill-preview")
+        .forEach((td) => td.classList.remove("is-fill-preview"));
+      if (to !== from) this._doFill(from, to, ev.ctrlKey || ev.metaKey);
+    };
+    document.body.classList.add("is-filling");
+    document.addEventListener("mousemove", move);
+    document.addEventListener("mouseup", up);
+  }
+
+  /**
+   * Write the value at view row `from` into every row through `to`.
+   *
+   * `series` counts up instead of copying: 3, 4, 5 — and for text ending in a
+   * number, "Week 1" becomes "Week 2". Copying is the default because that is
+   * what a single dragged cell does in Excel, and because filling a column of
+   * fifteen rows with fifteen different numbers is almost never what was meant.
+   */
+  _doFill(from, to, series) {
+    const col = this.visibleColumns[this.active.c];
+    const srcIdx = this.view[from];
+    if (!col || col.readOnly || srcIdx == null) return;
+
+    const source = this.rows[srcIdx][col.key];
+    const step = to >= from ? 1 : -1;
+    const cells = [];
+
+    // Split a trailing number off the end once, not inside the loop.
+    const m = series && source != null ? String(source).match(/^(.*?)(-?\d+(?:\.\d+)?)$/) : null;
+
+    let n = 0;
+    for (let r = from + step; step > 0 ? r <= to : r >= to; r += step) {
+      n++;
+      const rowIdx = this.view[r];
+      if (rowIdx == null) continue;
+      let value = source;
+      if (m) {
+        const next = Number(m[2]) + n * step;
+        value = m[1] + (m[2].includes(".") ? next.toFixed(m[2].split(".")[1].length) : String(next));
+        if (typeof source === "number") value = Number(value);
+      }
+      const before = this.rows[rowIdx][col.key] ?? null;
+      const after = value === "" ? null : value;
+      if (String(before ?? "") === String(after ?? "")) continue;
+      this.setValue(rowIdx, col.key, after, { silent: true });
+      cells.push({ rowIdx, colKey: col.key, before, after });
+    }
+
+    // One undo step for the whole drag: it was one gesture, so Ctrl+Z should
+    // put all of it back, not peel it off a row at a time.
+    if (cells.length) {
+      this.undoStack.push({ type: "bulk", cells });
+      this.redoStack = [];
+      this.render();
+      this._emitDirty();
+      this.onStatus({ filled: cells.length });
+    }
+  }
+
+  /** Ctrl+D / Ctrl+R: copy from the cell above, or the one to the left. */
+  fillFrom(direction) {
+    const col = this.visibleColumns[this.active.c];
+    if (!col || col.readOnly) return;
+    if (direction === "down") {
+      if (this.active.r < 1) return;
+      const src = this.view[this.active.r - 1], dst = this.view[this.active.r];
+      if (src == null || dst == null) return;
+      this.setValue(dst, col.key, this.rows[src][col.key]);
+    } else {
+      if (this.active.c < 1) return;
+      const prev = this.visibleColumns[this.active.c - 1];
+      const rowIdx = this.view[this.active.r];
+      if (!prev || rowIdx == null) return;
+      this.setValue(rowIdx, col.key, this.rows[rowIdx][prev.key]);
+    }
+    this.render();
   }
 
   _cellEl(r, c) {
@@ -629,6 +869,11 @@ export class Grid {
     if (mod && e.key.toLowerCase() === "z") { e.preventDefault(); e.shiftKey ? this.redo() : this.undo(); return; }
     if (mod && e.key.toLowerCase() === "y") { e.preventDefault(); this.redo(); return; }
     if (mod && e.key === "Enter") { e.preventDefault(); this.addRow(this.active.r); return; }
+    // The two fill shortcuts every spreadsheet has. Ctrl+D takes the value from
+    // the cell above, Ctrl+R from the cell to the left — the keyboard version
+    // of dragging the handle one step.
+    if (mod && e.key.toLowerCase() === "d") { e.preventDefault(); this.fillFrom("down"); return; }
+    if (mod && e.key.toLowerCase() === "r") { e.preventDefault(); this.fillFrom("right"); return; }
     // Ctrl+C / Ctrl+V / Ctrl+S / Ctrl+F belong to the copy, paste and page
     // handlers — swallowing them here would break all four.
     if (mod) return;

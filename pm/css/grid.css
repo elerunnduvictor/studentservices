@@ -374,3 +374,51 @@ select.cell-input { padding: 2px 4px; cursor: pointer; }
   text-decoration-skip-ink: none;
   text-underline-offset: 3px;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SORTING
+   Any header is a sort control. The arrow is the only thing that moves, so a
+   sorted column reads at a glance without the header changing size and
+   nudging every column beside it.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.grid thead th.sortable { cursor: pointer; }
+.grid thead th.sortable:hover { background: var(--accent-soft); color: var(--accent); }
+.grid thead th.is-sorted { color: var(--accent); }
+.grid thead th .th-arrow {
+  margin-left: auto; padding-left: 4px;
+  font-size: .95em; line-height: 1;
+  flex: 0 0 auto;                 /* never squeezed out by a long label */
+}
+/* The resize grip keeps its own cursor, so the two controls in one header
+   never look like the same thing. */
+.grid thead th.sortable .col-resize { cursor: col-resize; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   FILL HANDLE
+   The square at the bottom-right of the active cell. Drag it down to copy the
+   value into the rows below.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.fill-handle {
+  position: absolute; right: -3px; bottom: -3px;
+  width: 7px; height: 7px;
+  background: var(--accent);
+  border: 1px solid var(--surface);
+  border-radius: 1px;
+  cursor: crosshair;
+  /* Above the active cell's outline, which is drawn as ::after and declares
+     pointer-events: none — without this the outline would sit on top and the
+     handle would be visible but not grabbable. */
+  z-index: 6;
+}
+.fill-handle:hover { transform: scale(1.35); }
+
+/* The rows a drag is about to write to. Deliberately a wash rather than the
+   dirty-cell colour: nothing has been changed yet, and letting go over the
+   wrong row should not look like it already went wrong. */
+.grid td.is-fill-preview {
+  background: var(--accent-soft) !important;
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+body.is-filling, body.is-filling * { cursor: crosshair !important; user-select: none !important; }

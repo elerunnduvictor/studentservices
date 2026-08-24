@@ -5,9 +5,9 @@
                                                               — Ben Packer
 
    A link that always says the same thing is furniture; people stop seeing it.
-   This one reads the register and says what is actually true today — "2 red ·
-   1 overdue" — so the home page changes when the situation does, which is the
-   whole argument for people coming back to it.
+   This one reads the register and says what is actually true today — "2 critical
+   issues · 3 with no recent update" — so the home page changes when the
+   situation does, which is the whole argument for people coming back to it.
 
    It stays hidden until there is something to say. Three reasons, in order of
    importance:
@@ -25,14 +25,18 @@
 
   function plural(n, one, many) { return n + " " + (n === 1 ? one : many); }
 
-  /** The one line worth reading, chosen by what is most urgent. */
+  /** The one line worth reading, chosen by what is most urgent.
+      "Escalated", "overdue" and "due this week" used to lead this sentence.
+      All three are gone: the status they counted no longer exists, and target
+      dates are no longer collected, so each could only ever have reported zero.
+      A banner that says "0 overdue" every day is a fact about the form, not
+      about the work. */
   function headline(b) {
     const bits = [];
-    if (b.red_open)     bits.push(plural(b.red_open, "critical issue", "critical issues"));
-    if (b.escalated)    bits.push(plural(b.escalated, "escalated", "escalated"));
-    if (b.overdue)      bits.push(plural(b.overdue, "overdue", "overdue"));
-    if (!bits.length && b.due_this_week) bits.push(b.due_this_week + " due this week");
-    if (!bits.length && b.going_stale)   bits.push(b.going_stale + " with no recent update");
+    if (b.red_open)   bits.push(plural(b.red_open, "critical issue", "critical issues"));
+    if (b.going_stale) bits.push(b.going_stale + " with no recent update");
+    if (!bits.length && b.exploring) bits.push(b.exploring + " still being explored");
+    if (!bits.length && b.raised_7d) bits.push(plural(b.raised_7d, "raised this week", "raised this week"));
     if (!bits.length) return "Nothing needs attention right now.";
     return bits.join(" · ") + ".";
   }
@@ -77,7 +81,8 @@
     document.getElementById("issueBandStats").innerHTML =
       stat(brief.open_total || 0, "open", null) +
       stat(brief.red_open || 0, "critical", "red") +
-      stat(brief.overdue || 0, "overdue", "amber");
+      // Silence, now the only time-based signal the register keeps.
+      stat(brief.going_stale || 0, "no update", "amber");
 
     band.hidden = false;
     // Arriving is softened rather than popped — it lands after the rest of the

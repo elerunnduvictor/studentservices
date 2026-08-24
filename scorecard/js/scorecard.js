@@ -64,7 +64,33 @@
     Satisfaction: "Are students delighted with the service experience they receive?"
   };
 
-  var state = { path: [], lens: "All" };
+  /* ── how the KPI list can be ordered ──────────────────────────────────────
+     "Stakeholder" is the default and the reason this control exists. The list
+     used to be ordered by status alone, which scattered one person's KPIs the
+     length of the page — their red near the top, their green forty rows below,
+     with no way to see what any single person was accountable for. Grouping by
+     owner puts that back together; status still orders the block within each
+     person, so the worst thing on someone's plate still leads their section.
+     ──────────────────────────────────────────────────────────────────────── */
+  var SORTS = [
+    { id: "owner",  label: "Stakeholder A–Z" },
+    { id: "status", label: "Needs attention" },
+    { id: "name",   label: "KPI name A–Z" },
+    { id: "recent", label: "Recently added" }
+  ];
+
+  /* `sort` is how the KPI list below is ordered. It is remembered rather than
+     reset on every navigation: someone who has chosen to read by stakeholder is
+     still reading by stakeholder after they drill into the next department. */
+  var SORT_KEY = "ss_sc_sort";
+  var state = { path: [], lens: "All", sort: readSort() };
+
+  function readSort() {
+    try {
+      var v = localStorage.getItem(SORT_KEY);
+      return SORTS.some(function (s) { return s.id === v; }) ? v : "owner";
+    } catch (e) { return "owner"; }
+  }
 
   /* ── helpers ─────────────────────────────────────────────────────────── */
 
@@ -375,25 +401,114 @@
 
   /* ── KPI list (stakeholder + area levels) ─────────────────────────────── */
 
+  var SEVERITY = { Red: 0, Yellow: 1, "Manual Review": 2, "No Data": 3, Green: 4 };
+
+  function bySeverity(a, b) {
+    return (SEVERITY[a.status] === undefined ? 9 : SEVERITY[a.status]) -
+           (SEVERITY[b.status] === undefined ? 9 : SEVERITY[b.status]);
+  }
+
+  /** Order a set of KPI rows by the reader's chosen sort. */
+  function sortKpis(rows, how) {
+    var out = rows.slice();
+    if (how === "status") return out.sort(bySeverity);
+    if (how === "name") {
+      return out.sort(function (a, b) {
+        return String(a.measure).localeCompare(String(b.measure));
+      });
+    }
+    if (how === "recent") {
+      // Rows are keyed by a serial, so a higher id is a later addition. No
+      // "date added" column has to exist for this to be true.
+      return out.sort(function (a, b) { return Number(b.id) - Number(a.id); });
+    }
+    // owner: alphabetical by person, worst-first inside each person's block.
+    // Anonymised roll-up rows carry no name; they sink rather than forming a
+    // nameless group at the top.
+    return out.sort(function (a, b) {
+      var an = String(a.employee || ""), bn = String(b.employee || "");
+      if (!an !== !bn) return an ? -1 : 1;
+      var c = an.localeCompare(bn);
+      if (c) return c;
+      return bySeverity(a, b) ||
+             String(a.measure).localeCompare(String(b.measure));
+    });
+  }
+
+  function sortBar(showOwner) {
+    // Grouping by stakeholder means nothing on one person's own page, nor on a
+    // list where every row is anonymised — a partner would be offered a way to
+    // group by a name they are never shown. Not offered rather than inert.
+    var opts = SORTS.filter(function (o) { return showOwner || o.id !== "owner"; });
+    if (opts.length < 2) return "";
+    var chips = opts.map(function (o) {
+      var on = effectiveSort(showOwner) === o.id;
+      return '<button type="button" class="sc-chip-btn' + (on ? " is-on" : "") +
+        '" data-sort="' + esc(o.id) + '"' + (on ? ' aria-current="true"' : "") +
+        ">" + esc(o.label) + "</button>";
+    }).join("");
+    return '<div class="sc-lens sc-sort"><span class="sc-lens-label">Sort</span>' +
+      chips + "</div>";
+  }
+
+  /** The sort actually in force here — "owner" collapses to status on a page
+      that only ever shows one person. */
+  function effectiveSort(showOwner) {
+    return (!showOwner && state.sort === "owner") ? "status" : state.sort;
+  }
+
   function kpiList(rows, showOwner) {
     if (!rows.length) return '<div class="sc-empty">No KPIs match this lens.</div>';
-    var order = { Red: 0, Yellow: 1, "Manual Review": 2, "No Data": 3, Green: 4 };
-    var sorted = rows.slice().sort(function (a, b) {
-      return (order[a.status] === undefined ? 9 : order[a.status]) -
-             (order[b.status] === undefined ? 9 : order[b.status]);
-    });
-    return '<div class="sc-kpi-list">' + sorted.map(function (r) {
+    // A list of rows with no names is not a list "showing owners", whatever the
+    // caller believed. Deciding that here keeps the grouping, the chip and the
+    // per-row byline from disagreeing with each other.
+    showOwner = showOwner && rows.some(function (r) { return r.employee; });
+    var how = effectiveSort(showOwner);
+    var sorted = sortKpis(rows, how);
+    // Grouped under a heading per person, not merely adjacent. Sorting alone
+    // would put someone's KPIs next to each other; a heading is what makes it
+    // readable as "here is what this person is accountable for".
+    // With everything under a single heading, the heading says nothing that the
+    // page title has not already said.
+    var distinct = unique(rows.map(function (r) { return r.employee || ""; })).length;
+    var grouped = showOwner && how === "owner" && distinct > 1;
+    var seen = null;
+
+    return sortBar(showOwner) + '<div class="sc-kpi-list">' + sorted.map(function (r) {
       var v = formatValue(r);
       var goal = r.bandGreen ? "<small>goal " + esc(r.bandGreen) + "</small>" : "";
       var meta = [r.category, r.type, r.frequency].filter(Boolean).join(" · ");
-      return '<button type="button" class="sc-kpi-row" data-goto="#/kpi/' + r.id + '">' +
+      var header = "";
+      if (grouped) {
+        var who = r.employee || "Not attributed";
+        if (who !== seen) {
+          seen = who;
+          var n = sorted.filter(function (x) {
+            return (x.employee || "Not attributed") === who;
+          }).length;
+          header = '<div class="sc-kpi-group">' +
+            '<span class="sc-kpi-group-name">' + esc(who) + "</span>" +
+            '<span class="sc-kpi-group-count">' + n + " KPI" + (n === 1 ? "" : "s") +
+            "</span></div>";
+        }
+      }
+      // A roll-up row has no KPI behind it to open. Rendering it as a button
+      // produced "#/kpi/rollup-40" and a page saying that KPI is no longer in
+      // the scorecard — a door drawn on a wall. It stays, because the colour
+      // and value are real, but it is not something you can press.
+      var open = !r.restricted;
+      return header +
+        (open
+          ? '<button type="button" class="sc-kpi-row" data-goto="#/kpi/' + r.id + '">'
+          : '<div class="sc-kpi-row is-locked" aria-disabled="true">') +
         "<span>" +
           '<span class="sc-kpi-measure">' + esc(r.measure) + "</span>" +
-          '<span class="sc-kpi-cat">' + esc(showOwner ? r.employee + " · " + meta : meta) + "</span>" +
+          '<span class="sc-kpi-cat">' +
+            esc(showOwner && !grouped ? r.employee + " · " + meta : meta) + "</span>" +
         "</span>" +
         statusChip(r.status) +
         '<span class="sc-kpi-val">' + esc(v || "—") + goal + "</span>" +
-        "</button>";
+        (open ? "</button>" : "</div>");
     }).join("") + "</div>";
   }
 
@@ -615,6 +730,7 @@
     }
     state.path = raw.split("/").filter(Boolean).map(decodeURIComponent);
     state.lens = lens;
+    // state.sort is deliberately untouched here — it survives navigation.
   }
 
   function hashFor(path, lens) {
@@ -667,6 +783,16 @@
     if (lens) {
       var value = lens.getAttribute("data-lens");
       location.hash = hashFor(state.path, value);
+      return;
+    }
+    // Sort is a reading preference, not a place. It stays out of the URL so it
+    // does not travel in a shared link, and re-renders in place rather than
+    // pushing a history entry someone has to press Back through.
+    var sort = e.target.closest("[data-sort]");
+    if (sort) {
+      state.sort = sort.getAttribute("data-sort");
+      try { localStorage.setItem(SORT_KEY, state.sort); } catch (err) { /* private mode */ }
+      render();
     }
   });
 

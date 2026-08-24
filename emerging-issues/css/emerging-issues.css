@@ -86,31 +86,59 @@
   color: var(--text-muted);
 }
 
-/* ── the summary band ───────────────────────────────────────────────────── */
-.ei-brief {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(126px, 1fr));
-  gap: 10px;
-  margin-bottom: clamp(20px, 2.6vw, 28px);
+/* ── the three windows ──────────────────────────────────────────────────
+   Tabs, not stat tiles. The band that used to sit here reported "3 open, 1
+   escalated, 0 overdue" and left the reader to work out which rows those were;
+   these carry the same kind of number, but each one is also the way to go and
+   look at what it counts. */
+.ei-tabs {
+  display: flex; gap: 6px; flex-wrap: wrap;
+  margin-bottom: clamp(18px, 2.2vw, 24px);
+  border-bottom: 1px solid var(--border);
 }
-.ei-stat {
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 14px 16px;
-  background: var(--bg-card);
+.ei-tab {
+  display: inline-flex; align-items: center; gap: 9px;
+  font-family: 'Jost', sans-serif;
+  font-size: .84rem; font-weight: 500;
+  color: var(--text-muted);
+  background: none; border: 0; cursor: pointer;
+  padding: 11px 16px 12px;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;                   /* sit the rule and the tab on one line */
+  transition: color .15s, border-color .15s;
 }
-.ei-stat-n { font-size: 1.6rem; font-weight: 600; line-height: 1.05; color: var(--text); }
-.ei-stat-l {
-  font-size: .62rem; letter-spacing: .12em; text-transform: uppercase;
-  color: var(--text-dim); margin-top: 6px;
+.ei-tab:hover { color: var(--bp-teal); }
+.ei-tab.is-on {
+  color: var(--bp-teal);
+  border-bottom-color: var(--bp-teal);
+  font-weight: 600;
 }
-/* A count of zero is good news and should recede rather than shout. */
-.ei-stat.is-quiet .ei-stat-n { color: var(--text-dim); font-weight: 400; }
-.ei-stat.is-red:not(.is-quiet)   { border-color: rgba(209,69,69,.5); }
-.ei-stat.is-red:not(.is-quiet) .ei-stat-n   { color: #D14545; }
-.ei-stat.is-amber:not(.is-quiet) { border-color: rgba(224,138,30,.5); }
-.ei-stat.is-amber:not(.is-quiet) .ei-stat-n { color: #C97C14; }
-.ei-stat.is-green:not(.is-quiet) .ei-stat-n { color: #2E9E5C; }
+/* The count is a badge rather than plain text, so a tab reads as one thing
+   with a number on it instead of two words that happen to be adjacent. */
+.ei-tab-n {
+  font-size: .7rem; font-weight: 600; line-height: 1;
+  min-width: 20px; padding: 4px 6px;
+  border-radius: 999px; text-align: center;
+  background: rgba(6,85,119,.10); color: var(--bp-teal);
+}
+.ei-tab.is-on .ei-tab-n { background: var(--bp-teal); color: #fff; }
+/* An empty tab is not a problem to be highlighted — it recedes. */
+.ei-tab-n.is-quiet { background: none; color: var(--text-dim); font-weight: 400; }
+.ei-tab.is-on .ei-tab-n.is-quiet { background: rgba(6,85,119,.14); color: var(--bp-teal); }
+
+/* Dark mode needs its own teal. --bp-teal is #065577, a deep navy that reads
+   at 8.2:1 on white and 2.4:1 on this page's dark background — legible in one
+   theme and very nearly invisible in the other. This one clears 8:1 on dark,
+   and the badge takes dark ink rather than white, which #5FB3C9 would only
+   carry at 2.4:1. */
+[data-theme="dark"] .ei-tab:hover,
+[data-theme="dark"] .ei-tab.is-on            { color: #5FB3C9; }
+[data-theme="dark"] .ei-tab.is-on            { border-bottom-color: #5FB3C9; }
+[data-theme="dark"] .ei-tab-n                { background: rgba(95,179,201,.16); color: #5FB3C9; }
+[data-theme="dark"] .ei-tab.is-on .ei-tab-n  { background: #5FB3C9; color: #06222c; }
+[data-theme="dark"] .ei-tab-n.is-quiet       { background: none; color: var(--text-dim); }
+[data-theme="dark"] .ei-tab.is-on .ei-tab-n.is-quiet { background: rgba(95,179,201,.20); color: #5FB3C9; }
+
 
 /* ── controls ───────────────────────────────────────────────────────────── */
 .ei-controls {
@@ -150,12 +178,22 @@
 
 .ei-card-head {
   width: 100%; display: grid;
-  grid-template-columns: auto 1fr auto;
+  /* A fixed first column, not `auto`.
+     The status chips are words of very different lengths — "Exploring" against
+     "Resolution in process" — and an auto column sized itself to whichever
+     chip that card happened to hold, so every title in the list started at a
+     different place. The width fits the longest status at this font size. */
+  grid-template-columns: 168px 1fr auto;
   gap: 16px; align-items: start;
   padding: 16px 18px; text-align: left;
   background: none; border: none; cursor: pointer; font: inherit; color: inherit;
 }
-.ei-card-marks { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+.ei-card-marks {
+  display: flex; flex-direction: column; gap: 6px; align-items: flex-start;
+  min-width: 0;
+}
+/* A chip may wrap inside its column rather than widen it. */
+.ei-card-marks .ei-chip { max-width: 100%; white-space: normal; text-align: center; }
 .ei-card-title {
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-size: clamp(1.06rem, 1.5vw, 1.24rem);
@@ -291,7 +329,7 @@
 }
 
 @media (max-width: 620px) {
-  .ei-card-head { grid-template-columns: 1fr auto; }
+  .ei-card-head { grid-template-columns: 1fr auto; }   /* chips move to their own row */
   .ei-card-marks { flex-direction: row; grid-column: 1 / -1; }
 }
 
@@ -418,30 +456,6 @@
   box-shadow: 0 8px 22px -10px rgba(0,0,0,.5);
 }
 .ei-hero .ei-btn-primary:hover { background: linear-gradient(135deg, #FFD253, #F5AF22); }
-
-/* ── the summary tiles ───────────────────────────────────────────────────── */
-/* A teal hairline along the top ties them to the band above; the severity
-   tones still override it where a count is actually bad. */
-.ei-stat {
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 4px 16px -12px rgba(6,85,119,.5);
-}
-.ei-stat::before {
-  content: '';
-  position: absolute; top: 0; left: 0; right: 0; height: 2px;
-  background: linear-gradient(90deg, var(--bp-teal, #065577), rgba(58,146,157,0));
-}
-.ei-stat.is-red:not(.is-quiet)::before {
-  background: linear-gradient(90deg, #D14545, rgba(209,69,69,0));
-}
-.ei-stat.is-amber:not(.is-quiet)::before {
-  background: linear-gradient(90deg, #E08A1E, rgba(224,138,30,0));
-}
-.ei-stat.is-green:not(.is-quiet)::before {
-  background: linear-gradient(90deg, #2E9E5C, rgba(46,158,92,0));
-}
-.ei-stat.is-quiet::before { opacity: .34; }
 
 /* ── cards ───────────────────────────────────────────────────────────────── */
 /* Teal on hover rather than plain grey — the same colour the whole site uses

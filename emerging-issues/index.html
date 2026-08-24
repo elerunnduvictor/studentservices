@@ -89,8 +89,15 @@
 
     <main class="ei">
 
-    <!-- The band Ben described: what is going on today, as figures. -->
-    <section class="ei-brief" id="eiBrief" aria-label="Summary"></section>
+    <!-- Three windows onto the same register, by when the issue was raised.
+         An issue is new for seven days, recent for seven more, and after that
+         it is backlog: still there, still readable, but no longer competing
+         for attention with what came in this morning. The counts are on the
+         tabs themselves, which is the only place a figure was ever needed -
+         the row of stat tiles that used to sit above this said "3 open, 1
+         escalated, 0 overdue" and left the reader to work out which rows those
+         were. -->
+    <nav class="ei-tabs" id="eiTabs" role="tablist" aria-label="When it was raised"></nav>
 
     <section class="ei-controls">
       <div class="ei-filters">
@@ -120,20 +127,16 @@
         Short and specific beats complete. You can add detail later as updates.
       </p>
 
-      <!-- Hints say what belongs in the box, not a worked example. A specific
+      <!-- One box, not three.
+           "What is the issue", "What is happening" and "Who or what it affects"
+           asked for the same paragraph three times, and the answer people gave
+           the first box was usually a compressed version of the other two. The
+           hint says what belongs here rather than showing a worked example — a
            sample sentence gets copied, or read as the kind of issue that is
-           wanted here, which narrows what people bother to raise. -->
-      <label class="ei-label" for="nTitle">What is the issue</label>
-      <input id="nTitle" name="title" type="text" required maxlength="140"
-             placeholder="One line naming the problem">
-
-      <label class="ei-label" for="nSummary">What is happening</label>
-      <textarea id="nSummary" name="summary" rows="3"
-                placeholder="The detail: what changed, when it started, what has been tried"></textarea>
-
-      <label class="ei-label" for="nImpact">Who or what it affects</label>
-      <textarea id="nImpact" name="impact" rows="2"
-                placeholder="Who feels this — students, a team, a process — and how"></textarea>
+           wanted, which narrows what anyone bothers to raise. -->
+      <label class="ei-label" for="nSummary">What is Happening and What does it affect</label>
+      <textarea id="nSummary" name="summary" rows="6" required
+                placeholder="What is going on, when it started, what has been tried — and who feels it: students, a team, a process."></textarea>
 
       <div class="ei-dialog-row">
         <div>
@@ -153,11 +156,6 @@
         </div>
       </div>
 
-      <!-- On its own line: a name needs the room, and pairing it with a
-           dropdown made the field look like half of a smaller choice. -->
-      <label class="ei-label" for="nOwner">Owner</label>
-      <input id="nOwner" name="owner" type="text" placeholder="Who is carrying this">
-
       <div class="ei-dialog-row">
         <div>
           <label class="ei-label" for="nSeverity">Severity</label>
@@ -167,11 +165,8 @@
           <label class="ei-label" for="nStatus">Status</label>
           <select id="nStatus" name="status"></select>
         </div>
-        <div>
-          <label class="ei-label" for="nTarget">Settle by</label>
-          <input id="nTarget" name="target_date" type="date">
-        </div>
       </div>
+
 
       <div class="ei-dialog-actions">
         <button type="button" class="ei-btn" id="eiCancel">Cancel</button>

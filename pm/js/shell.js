@@ -73,6 +73,99 @@
     SS.session = s;
   }
 
+  /* ── staying signed in, and knowing when not to ───────────────────────────
+     The PM Hub used to notice an expired session only at page load. A tab left
+     open overnight still showed the console, and the only way to find out was
+     to refresh — the Student Services hub catches it because js/auth-guard.js
+     re-checks on a timer and whenever the tab is looked at again. The same two
+     checks are added here.
+
+     While fixing that, a second problem: the session carried a refresh token
+     and never used one, so it died on a wall clock roughly an hour after
+     sign-in whether or not anyone was working. A PM typing into a grid would be
+     thrown out mid-edit. So the rule is now the hub's rule — sixty minutes of
+     *inactivity* — and an active session renews itself quietly instead. */
+  const ACTIVITY_KEY = "ss_pm_last_activity";
+  const IDLE_MS = 60 * 60 * 1000;
+  const RENEW_MARGIN = 5 * 60;            // seconds before expiry to renew
+
+  function touch() {
+    if (document.hidden) return;
+    try { localStorage.setItem(ACTIVITY_KEY, String(Date.now())); } catch { /* private mode */ }
+  }
+
+  function idleFor() {
+    const last = Number(localStorage.getItem(ACTIVITY_KEY) || 0);
+    return last ? Date.now() - last : 0;
+  }
+
+  /** Renew silently with the stored refresh token. Null if it cannot be done. */
+  async function renewSession(s) {
+    if (!s || !s.refresh_token || !cfg.isConfigured) return null;
+    try {
+      const res = await fetch(
+        cfg.SUPABASE_URL.replace(/\/+$/, "") + "/auth/v1/token?grant_type=refresh_token",
+        { method: "POST",
+          headers: { apikey: cfg.SUPABASE_ANON_KEY, "Content-Type": "application/json" },
+          body: JSON.stringify({ refresh_token: s.refresh_token }) });
+      if (!res.ok) return null;
+      const d = await res.json();
+      if (!d.access_token) return null;
+      return storeSession(d, s.email);
+    } catch { return null; }
+  }
+
+  let guarding = false;
+  async function guardSession() {
+    if (guarding) return;                 // the timer and the tab can fire together
+    guarding = true;
+    try {
+      const raw = localStorage.getItem(SESSION_KEY);
+      if (!raw) return signOut();
+
+      if (idleFor() > IDLE_MS) {
+        // Away too long. Staged edits cannot be saved with a dead session, so
+        // the unload prompt is cleared rather than left to ambush whoever
+        // comes back to the tab.
+        window.onbeforeunload = null;
+        localStorage.removeItem(SESSION_KEY);
+        SS.session = null;
+        location.replace("signin.html?expired=1");
+        return;
+      }
+
+      let s;
+      try { s = JSON.parse(raw); } catch { return signOut(); }
+      const secondsLeft = (s.expires_at || 0) - Date.now() / 1000;
+      if (secondsLeft > RENEW_MARGIN) { SS.session = s; return; }
+
+      // Still here and still working: renew rather than interrupt.
+      const fresh = await renewSession(s);
+      if (!fresh) {
+        window.onbeforeunload = null;
+        localStorage.removeItem(SESSION_KEY);
+        SS.session = null;
+        location.replace("signin.html?expired=1");
+      }
+    } finally { guarding = false; }
+  }
+
+  function watchSession() {
+    if (watchSession.on) return;
+    watchSession.on = true;
+    touch();
+    ["mousemove", "keydown", "click", "scroll"].forEach((e) =>
+      window.addEventListener(e, touch, { passive: true }));
+    // The timer covers a tab left in the foreground; the visibility check
+    // covers one that was in the background, where timers are throttled or
+    // stopped altogether.
+    setInterval(() => { if (!document.hidden) guardSession(); }, 5000);
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) guardSession();
+    });
+    window.addEventListener("focus", guardSession);
+  }
+
   function signOut() {
     localStorage.removeItem(SESSION_KEY);
     SS.session = null;
@@ -263,6 +356,7 @@
       return false;
     }
     renderChrome(book);
+    watchSession();
     const ok = await checkEditor();
     if (!ok) {
       // Same refusal the hub gives, and the session is dropped so a refresh

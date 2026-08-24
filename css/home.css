@@ -1,0 +1,731 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   HOME — the front door
+
+   Loaded after main.css and only by index.html, so it can take over the
+   sections it redesigns without disturbing the rest of the hub.
+
+   The brief was "really, really better", and the thing that makes a page feel
+   considered is rarely more decoration — it is depth, rhythm and restraint.
+   Three ideas do the work here:
+
+   1. LIGHT, NOT BOXES. The hero is lit rather than filled: two wide radial
+      glows and a single luminous arc. The arc is not ornament — the portal is
+      called The Bridge, so the page draws one, once, quietly, behind the title.
+
+   2. ONE RHYTHM. Everything sits on a 4px scale and shares three type sizes.
+      Section headings all use the same eyebrow / title / hairline construction,
+      so the eye learns the pattern once and can then skim.
+
+   3. CARDS THAT ANSWER. A flat gradient rectangle is a poster. These lift,
+      brighten along their top edge, and move their arrow — enough to feel
+      alive under the cursor, never enough to distract. All of it is suppressed
+      under prefers-reduced-motion.
+
+   Both themes are designed, not flipped: the dark hero keeps its own palette
+   and the light theme gets its own ink and surfaces rather than an inversion.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* One gutter for the whole page. Every section reads from this, so the hero,
+   the strategy, the gateways, the OKRs and the departments all begin and end on
+   the same two vertical lines — and widening the page is one number, not five. */
+:root {
+  /* Two numbers govern the whole page. The gutter is the breathing room at the
+     edge; the cap stops the content sprawling the full width of a large
+     monitor. Every section reads from both, so they begin and end on the same
+     two vertical lines and widening the page is one edit, not five. */
+  --home-gutter: clamp(18px, 2.6vw, 44px);
+  --home-max: 1860px;
+}
+
+/* ── the hero ─────────────────────────────────────────────────────────────
+   Layered on top of --hero-bg rather than replacing it, so the theme's own
+   ground still shows through and nothing flashes on load. */
+body.home-single .hero-compact {
+  position: relative;
+  isolation: isolate;
+  padding-bottom: 34px;
+  /* The glow and the arc are both drawn wider than the hero on purpose — a
+     light that stops at the edge reads as a box. The compact hero does not
+     inherit the clipping the full hero has, so without this they pushed the
+     whole page into a horizontal scroll on anything narrower than ~1180px. */
+  overflow: hidden;
+}
+
+/* Two soft lights, off-centre so the field never reads as a flat wash. */
+body.home-single .hero-compact::before {
+  content: "";
+  position: absolute;
+  inset: -20% -10% auto -10%;
+  height: 150%;
+  z-index: -2;
+  background:
+    radial-gradient(58% 62% at 22% 12%, rgba(58,146,157,.34), transparent 68%),
+    radial-gradient(52% 58% at 82% 4%, rgba(255,195,40,.13), transparent 62%);
+  pointer-events: none;
+}
+
+/* The bridge: one hairline arc, brightest at its centre and fading at both
+   ends, so it reads as a span rather than as a border. */
+body.home-single .hero-compact::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -78px;
+  /* Never wider than the hero itself, so it cannot extend the page. */
+  width: min(1180px, 100%);
+  aspect-ratio: 5 / 1;
+  transform: translateX(-50%);
+  z-index: -1;
+  border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+  border-top: 1px solid rgba(255,255,255,.16);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 22%, #000 78%, transparent);
+          mask-image: linear-gradient(90deg, transparent, #000 22%, #000 78%, transparent);
+  pointer-events: none;
+}
+
+:root[data-theme="light"] body.home-single .hero-compact::before,
+body.home-single .hero-compact::before {
+  /* the glow is tuned for the dark ground the hero always uses */
+}
+
+/* The tagline. Hairlines either side rather than a box — it is a subtitle, and
+   it should feel like a caption in a well-set book. */
+.hero-tagline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  margin: 14px auto 0;
+  font-size: clamp(.62rem, 1.1vw, .74rem);
+  font-weight: 500;
+  letter-spacing: .42em;
+  text-indent: .42em;                 /* optical: tracking pushes the word right */
+  text-transform: uppercase;
+  color: rgba(255,255,255,.62);
+}
+.hero-tagline::before,
+.hero-tagline::after {
+  content: "";
+  width: clamp(28px, 7vw, 76px);
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.4));
+}
+.hero-tagline::after { background: linear-gradient(270deg, transparent, rgba(255,255,255,.4)); }
+
+/* ── strategy ─────────────────────────────────────────────────────────────
+   Two voices: the statement itself, set large in the serif, and the paragraph
+   that explains it, set small in the sans. Keeping them visibly different is
+   what stops the block reading as one long wall. */
+.home-strategy {
+  position: relative;
+  padding: clamp(30px, 4.4vw, 50px) 32px clamp(26px, 3.6vw, 42px);
+  text-align: center;
+}
+.home-strategy-inner { max-width: 1000px; margin: 0 auto; }
+
+.home-strategy-label {
+  font-size: .62rem;
+  font-weight: 600;
+  letter-spacing: .34em;
+  text-indent: .34em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 18px;
+}
+.home-strategy-lead {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: clamp(1.12rem, 2.3vw, 1.62rem);
+  font-style: italic;
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: .006em;
+  /* Tuned to land on exactly two lines at desktop width — measured, not
+     guessed. Narrower and the sentence fell into three stub lines. */
+  max-width: 880px;
+  margin: 0 auto;
+  text-wrap: balance;
+}
+.home-strategy-body {
+  margin: 22px auto 0;
+  /* Three lines at desktop width. Long for prose, but it is one short
+     paragraph read once, not a body of text. */
+  max-width: 920px;
+  font-size: clamp(.84rem, 1.3vw, .95rem);
+  line-height: 1.78;
+  text-wrap: pretty;
+}
+
+/* ── section headings ─────────────────────────────────────────────────────
+   One construction, used everywhere: eyebrow, title, hairline. */
+.home-head { margin-bottom: clamp(20px, 3vw, 30px); }
+.home-head-eyebrow {
+  font-size: .6rem;
+  font-weight: 600;
+  letter-spacing: .3em;
+  text-indent: .3em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 8px;
+}
+.home-head-title {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: clamp(1.3rem, 2.6vw, 1.9rem);
+  font-weight: 400;
+  letter-spacing: .012em;
+  margin: 0 0 10px;
+}
+.home-head-rule {
+  width: 46px;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--gold), rgba(255,195,40,0));
+}
+.home-head-centered { text-align: center; }
+.home-head-centered .home-head-rule { margin-inline: auto; }
+
+/* ── the four gateways ────────────────────────────────────────────────────
+   Four cards, no headings above them. There were two — "Student Services
+   Leadership" and "Key Performance Indicators" — and both named things this
+   page no longer contains: the leadership tree and the metric row were removed
+   in the same pass. A heading that labels absent content is worse than no
+   heading, so the cards speak for themselves; each carries its own eyebrow.
+
+   One row across the full width, not a 2×2 boxed in the middle. Capped at
+   1180px they sat in a column with dead margins either side, and at full width
+   a 2×2 would make each card 700px wide and 170px tall — a letterbox. Four
+   upright cards fill the same space and keep a proportion worth looking at. */
+.home-gateways {
+  position: relative;
+  max-width: calc(var(--home-max) + 2 * var(--home-gutter));
+  margin-inline: auto;
+  padding: clamp(6px, 1.4vw, 14px) var(--home-gutter) clamp(34px, 4vw, 52px);
+}
+.home-gateways-grid {
+  max-width: none;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(14px, 1.4vw, 20px);
+}
+/* Two-up before the descriptions start breaking badly, one-up on a phone. */
+@media (max-width: 1180px) { .home-gateways-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 620px)  { .home-gateways-grid { grid-template-columns: minmax(0, 1fr); } }
+
+/* Upright now: icon, then the naming, then the sentence, with the arrow parked
+   in the corner. A vertical stack reads better in a narrow column than the
+   icon-beside-text row a wide card wanted. */
+.gateway {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  min-height: 202px;
+  padding: 22px 22px 20px;
+  border-radius: 18px;
+  overflow: hidden;
+  text-decoration: none;
+  color: #fff;
+  background: linear-gradient(150deg, var(--gw-from) 0%, var(--gw-mid) 52%, var(--gw-to) 100%);
+  background-size: 170% 170%;
+  background-position: 0% 0%;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.16),
+    0 1px 2px rgba(0,0,0,.18),
+    0 14px 34px -16px rgba(0,0,0,.55);
+  transition:
+    transform .5s cubic-bezier(.2,.7,.3,1),
+    box-shadow .5s cubic-bezier(.2,.7,.3,1),
+    background-position .9s cubic-bezier(.2,.7,.3,1);
+}
+
+/* A wide diagonal highlight that travels across on hover. Slow and
+   low-contrast on purpose — you notice the card woke up, not the sweep. */
+.gateway::before {
+  content: "";
+  position: absolute;
+  inset: -40% -70%;
+  z-index: -1;
+  background: linear-gradient(105deg,
+    transparent 42%, rgba(255,255,255,.16) 50%, transparent 58%);
+  transform: translateX(-40%);
+  transition: transform 1.05s cubic-bezier(.22,.7,.28,1);
+  pointer-events: none;
+}
+.gateway:hover::before,
+.gateway:focus-visible::before { transform: translateX(40%); }
+
+/* Depth in the corners, so the fill has a form rather than being even ink. */
+.gateway::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background:
+    radial-gradient(80% 58% at 8% 0%, rgba(255,255,255,.22), transparent 62%),
+    radial-gradient(86% 76% at 100% 100%, rgba(0,0,0,.30), transparent 64%);
+  pointer-events: none;
+}
+
+.gateway:hover, .gateway:focus-visible {
+  transform: translateY(-6px);
+  background-position: 100% 100%;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.24),
+    0 2px 6px rgba(0,0,0,.2),
+    0 30px 58px -20px rgba(0,0,0,.66);
+}
+.gateway:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+
+.gateway-icon {
+  width: 46px; height: 46px;
+  display: grid; place-items: center;
+  border-radius: 13px;
+  margin-bottom: 14px;
+  background: linear-gradient(160deg, rgba(255,255,255,.26), rgba(255,255,255,.09));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.45),
+    inset 0 -1px 0 rgba(0,0,0,.12);
+  transition: transform .5s cubic-bezier(.2,.7,.3,1);
+}
+.gateway:hover .gateway-icon { transform: scale(1.06) rotate(-2deg); }
+.gateway-icon svg { width: 21px; height: 21px; stroke: #fff; }
+
+.gateway-body { display: contents; }
+.gateway-eyebrow {
+  font-size: .575rem;
+  font-weight: 600;
+  letter-spacing: .24em;
+  text-indent: .24em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.72);
+  margin-bottom: 8px;
+}
+.gateway-title {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: clamp(1.24rem, 1.5vw, 1.5rem);
+  font-weight: 600;
+  line-height: 1.16;
+  letter-spacing: .01em;
+  text-wrap: balance;
+}
+/* Pushed to the bottom so every card's sentence sits on the same line,
+   whatever the title above it does. */
+.gateway-desc {
+  margin: auto 0 0;
+  padding-top: 13px;
+  border-top: 1px solid rgba(255,255,255,.18);
+  font-size: .81rem;
+  line-height: 1.6;
+  color: rgba(255,255,255,.86);
+  padding-right: 30px;
+}
+.gateway-arrow {
+  position: absolute;
+  right: 22px; bottom: 22px;
+  width: 19px; height: 19px;
+  stroke: rgba(255,255,255,.9);
+  transition: transform .5s cubic-bezier(.2,.7,.3,1);
+}
+.gateway:hover .gateway-arrow,
+.gateway:focus-visible .gateway-arrow { transform: translateX(6px); }
+
+/* One hue family each, drawn from the brand: teal, purple, navy, green. */
+.gateway[data-gw="chart"]     { --gw-from: #0B6E78; --gw-mid: #16818B; --gw-to: #2E9483; }
+.gateway[data-gw="directory"] { --gw-from: #6B3080; --gw-mid: #94408A; --gw-to: #C05C90; }
+.gateway[data-gw="scorecard"] { --gw-from: #07344F; --gw-mid: #0E5878; --gw-to: #1F7A9B; }
+.gateway[data-gw="standards"] { --gw-from: #2A5F35; --gw-mid: #4C8038; --gw-to: #7BA33A; }
+
+/* ── motion, only for those who want it ───────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .gateway, .gateway::after, .gateway-arrow { transition: none; }
+  .gateway:hover, .gateway:focus-visible { transform: none; }
+  .gateway:hover .gateway-arrow { transform: none; }
+}
+
+/* ── ink on this page is always light ─────────────────────────────────────
+   The home page keeps its deep teal field in *both* themes — only the rest of
+   the hub lightens. Inheriting `--text` therefore painted the strategy
+   paragraph near-black on dark teal in light mode: present in the DOM,
+   invisible on screen. These are set against the field this page actually has,
+   not against the theme's idea of a background. */
+.home-strategy-lead { color: rgba(255,255,255,.94); }
+.home-strategy-body { color: rgba(255,255,255,.74); }
+.home-head-title    { color: rgba(255,255,255,.96); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   THE REST OF THE PAGE
+
+   The gateways set a language — full width, upright cards, light moving over a
+   surface, one hue per thing. The two sections below were still on the old one:
+   boxed into a narrow column, flat panels, a 2×2 leaving the same dead margins
+   the gateways had. These bring them into line.
+
+   Scoped to `body.home-single`, so the department and OKR components keep their
+   existing appearance everywhere else in the hub.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── section headings ─────────────────────────────────────────────────────
+   Same construction as the rest, aligned to the same left edge as the cards
+   beneath them rather than to a narrower container. */
+body.home-single .home-row {
+  /* `body.home-single` is a flex container, so a section that does not claim a
+     width sizes to its content. That is why Departments sat 84px inside the
+     OKRs above it while both reported the same padding — one had stretched and
+     the other had shrunk. Claiming the width makes every section align. */
+  width: 100%;
+  max-width: calc(var(--home-max) + 2 * var(--home-gutter));
+  margin-inline: auto;
+  padding-inline: var(--home-gutter);
+}
+body.home-single .home-row-head { margin-bottom: clamp(18px, 2.4vw, 26px); }
+body.home-single .home-row-eyebrow {
+  font-size: .6rem;
+  font-weight: 600;
+  letter-spacing: .3em;
+  text-indent: .3em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 8px;
+}
+body.home-single .home-row-title {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: clamp(1.4rem, 2.6vw, 2rem);
+  font-weight: 400;
+  letter-spacing: .012em;
+  color: rgba(255,255,255,.96);
+  margin: 0 0 10px;
+}
+body.home-single .home-row-divider {
+  width: 46px; height: 2px; border-radius: 2px;
+  background: linear-gradient(90deg, var(--gold), rgba(255,195,40,0));
+}
+
+/* ── OKR summary ──────────────────────────────────────────────────────────
+   Three objectives across the full width. The cards were flat black panels;
+   they now sit on the same lit surface as everything else, with the objective
+   colour running along the top edge instead of down the side. */
+body.home-single .home-okr-grid {
+  max-width: none;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(14px, 1.4vw, 20px);
+}
+@media (max-width: 1080px) { body.home-single .home-okr-grid { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+@media (max-width: 700px)  { body.home-single .home-okr-grid { grid-template-columns: minmax(0,1fr); } }
+
+body.home-single .okr-card {
+  position: relative;
+  isolation: isolate;
+  border: 1px solid rgba(255,255,255,.10);
+  border-left: none;
+  border-radius: 16px;
+  padding: 26px 24px 22px;
+  overflow: hidden;
+  background:
+    linear-gradient(165deg, rgba(255,255,255,.075), rgba(255,255,255,.022) 46%, rgba(0,0,0,.14));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.10), 0 14px 34px -20px rgba(0,0,0,.6);
+  transition: transform .5s cubic-bezier(.2,.7,.3,1),
+              box-shadow .5s cubic-bezier(.2,.7,.3,1),
+              border-color .5s;
+}
+/* The objective colour, along the top. `--okr-color` is already set inline on
+   each card by js/okr-cards.js, so nothing new has to be passed in. */
+body.home-single .okr-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--okr-color, #3A929D) 0%,
+              var(--okr-color, #3A929D) 42%, rgba(255,255,255,.10));
+  opacity: 1;
+  transition: opacity .4s;
+}
+body.home-single .okr-card:hover {
+  transform: translateY(-5px);
+  border-color: rgba(255,255,255,.18);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 28px 54px -22px rgba(0,0,0,.7);
+}
+body.home-single .okr-card:hover::before { opacity: 1; }
+
+body.home-single .okr-card-title {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: clamp(1.12rem, 1.5vw, 1.32rem);
+  line-height: 1.24;
+  text-wrap: balance;
+}
+
+/* ── departments ──────────────────────────────────────────────────────────
+   Four across, not a 2×2 stranded in the middle. Each carries its colour as
+   light rather than as a 3px rule: a tinted icon, an edge that brightens, and
+   a wash lifted out of the department hue itself. */
+body.home-single .dept-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(14px, 1.4vw, 20px);
+}
+@media (max-width: 1180px) { body.home-single .dept-grid { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+@media (max-width: 620px)  { body.home-single .dept-grid { grid-template-columns: minmax(0,1fr); } }
+
+body.home-single .dept-card {
+  position: relative;
+  isolation: isolate;
+  min-height: 158px;
+  background:
+    linear-gradient(160deg, rgba(var(--dc-r), .38), rgba(var(--dc-r), .13) 58%, rgba(0,0,0,.16));
+  border: 1px solid rgba(var(--dc-r), .42);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.10), 0 14px 32px -20px rgba(0,0,0,.55);
+  transition: transform .5s cubic-bezier(.2,.7,.3,1),
+              box-shadow .5s cubic-bezier(.2,.7,.3,1),
+              border-color .5s;
+}
+body.home-single .dept-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(var(--dc-r), .58);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.16),
+    0 28px 56px -22px rgba(0,0,0,.7);
+}
+/* The old accent bar becomes an edge that lights along its length. */
+body.home-single .dept-card-accent {
+  height: 2px;
+  background: linear-gradient(90deg, var(--dc), rgba(var(--dc-r), 0)) !important;
+  opacity: .85;
+  animation: none !important;
+  transition: opacity .4s;
+}
+body.home-single .dept-card:hover .dept-card-accent { opacity: 1; }
+
+body.home-single .dept-card-inner {
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px 22px 22px;
+}
+body.home-single .dept-icon {
+  width: 44px; height: 44px;
+  display: grid; place-items: center;
+  border-radius: 12px;
+  background: linear-gradient(160deg, rgba(var(--dc-r), .78), rgba(var(--dc-r), .34));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.34);
+  transition: transform .5s cubic-bezier(.2,.7,.3,1);
+}
+body.home-single .dept-card:hover .dept-icon { transform: scale(1.06) rotate(-2deg); }
+body.home-single .dept-icon svg { width: 20px; height: 20px; stroke: #fff; }
+
+body.home-single .dept-name {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: clamp(1.04rem, 1.3vw, 1.22rem);
+  font-weight: 600;
+  line-height: 1.22;
+  color: rgba(255,255,255,.97);
+  text-wrap: balance;
+  margin-bottom: 8px;
+}
+body.home-single .dept-desc {
+  font-size: .79rem;
+  line-height: 1.58;
+  color: rgba(255,255,255,.74);
+}
+
+/* ── the button under the OKRs ────────────────────────────────────────────── */
+body.home-single .home-okr-cta { margin-top: clamp(22px, 3vw, 34px); }
+body.home-single .home-okr-cta-btn {
+  border-radius: 999px;
+  padding: 12px 26px;
+  background: linear-gradient(135deg, rgba(255,255,255,.14), rgba(255,255,255,.06));
+  border: 1px solid rgba(255,255,255,.2);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.18);
+  transition: transform .4s cubic-bezier(.2,.7,.3,1), border-color .4s, background .4s;
+}
+body.home-single .home-okr-cta-btn:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255,195,40,.6);
+  background: linear-gradient(135deg, rgba(255,195,40,.20), rgba(255,255,255,.07));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.home-single .okr-card,
+  body.home-single .dept-card,
+  body.home-single .dept-icon,
+  body.home-single .home-okr-cta-btn { transition: none; }
+  body.home-single .okr-card:hover,
+  body.home-single .dept-card:hover,
+  body.home-single .home-okr-cta-btn:hover { transform: none; }
+  body.home-single .dept-card:hover .dept-icon { transform: none; }
+}
+
+/* ── legibility on this page, in both themes ──────────────────────────────
+   The home page keeps a teal field whatever the theme; only the rest of the hub
+   lightens. The OKR cards are shared components, so they inherit `--text`,
+   `--text-muted` and `--text-dim` — greys chosen to sit on a white page. On
+   teal, in light mode, that put "Key Results", "Sub-KRs" and the whole status
+   legend at almost no contrast: the numbers were readable and their labels were
+   not.
+
+   Rather than patch each one per theme, the cards are given a genuinely dark
+   surface here and all their ink is set light. One treatment, both themes, no
+   dependence on which way the rest of the hub is running. */
+body.home-single .okr-card {
+  background:
+    linear-gradient(165deg, rgba(4,26,34,.62), rgba(4,20,28,.78)) !important;
+  border-color: rgba(255,255,255,.14) !important;
+}
+body.home-single .okr-card,
+body.home-single .okr-card * { color: rgba(255,255,255,.88); }
+body.home-single .okr-card-eyebrow { color: rgba(255,255,255,.58) !important; }
+body.home-single .okr-card-title    { color: rgba(255,255,255,.97) !important; }
+body.home-single .okr-metric-row    { color: rgba(255,255,255,.76) !important; }
+body.home-single .okr-metric-row b,
+body.home-single .okr-metric-row strong,
+body.home-single .okr-metric-row span:last-child { color: rgba(255,255,255,.97) !important; }
+body.home-single .okr-legend-item   { color: rgba(255,255,255,.8) !important; }
+body.home-single .okr-ring-val      { fill: rgba(255,255,255,.97); color: rgba(255,255,255,.97) !important; }
+
+/* Departments: the colour wash sits over a dark base for the same reason. */
+body.home-single .dept-card {
+  background:
+    linear-gradient(160deg, rgba(var(--dc-r), .40), rgba(var(--dc-r), .14) 58%, rgba(0,0,0,.30)),
+    linear-gradient(0deg, rgba(4,22,30,.58), rgba(4,22,30,.58)) !important;
+}
+body.home-single .dept-name { color: rgba(255,255,255,.97) !important; }
+body.home-single .dept-desc { color: rgba(255,255,255,.78) !important; }
+
+/* The button, and the loading line before the cards arrive. */
+body.home-single .home-okr-cta-btn { color: rgba(255,255,255,.94) !important; }
+body.home-single .home-okr-loading { color: rgba(255,255,255,.6); }
+
+/* ── the emerging-issues band ─────────────────────────────────────────────
+   Deliberately unlike the four gateways below it. They are doors to places
+   that do not change; this reports a situation that does, so it is a wide
+   single strip rather than a card in the set, and it carries live figures. */
+.home-issues {
+  width: 100%;
+  max-width: calc(var(--home-max) + 2 * var(--home-gutter));
+  margin-inline: auto;
+  padding: 0 var(--home-gutter) clamp(16px, 2vw, 22px);
+}
+.issue-band {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  gap: clamp(14px, 1.8vw, 24px);
+  padding: 18px 22px;
+  border-radius: 16px;
+  text-decoration: none;
+  color: rgba(255,255,255,.96);
+  background:
+    linear-gradient(115deg, rgba(203,74,39,.30), rgba(255,195,40,.16) 46%, rgba(4,26,34,.42));
+  border: 1px solid rgba(255,195,40,.34);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.14), 0 14px 34px -22px rgba(0,0,0,.6);
+  transition: transform .45s cubic-bezier(.2,.7,.3,1),
+              border-color .45s, box-shadow .45s;
+}
+.issue-band:hover {
+  transform: translateY(-3px);
+  border-color: rgba(255,195,40,.6);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.2), 0 24px 48px -22px rgba(0,0,0,.7);
+}
+.issue-band-mark {
+  width: 42px; height: 42px; display: grid; place-items: center;
+  border-radius: 12px; flex: none;
+  background: linear-gradient(160deg, rgba(255,195,40,.38), rgba(203,74,39,.28));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.4);
+}
+.issue-band-mark svg { width: 20px; height: 20px; stroke: #fff; }
+.issue-band-eyebrow {
+  font-size: .56rem; font-weight: 600; letter-spacing: .26em; text-indent: .26em;
+  text-transform: uppercase; color: rgba(255,255,255,.72); margin-bottom: 5px;
+}
+.issue-band-title {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: clamp(1.16rem, 1.5vw, 1.36rem); font-weight: 600; line-height: 1.15;
+}
+.issue-band-desc {
+  margin: 5px 0 0; font-size: .8rem; line-height: 1.5; color: rgba(255,255,255,.84);
+}
+.issue-band-stats { display: flex; gap: 8px; flex-wrap: wrap; }
+.issue-stat {
+  display: inline-flex; align-items: baseline; gap: 6px;
+  padding: 7px 13px; border-radius: 999px;
+  font-size: .68rem; letter-spacing: .1em; text-transform: uppercase;
+  background: rgba(0,0,0,.24); border: 1px solid rgba(255,255,255,.16);
+  color: rgba(255,255,255,.82);
+}
+.issue-stat b { font-size: 1rem; font-weight: 600; letter-spacing: 0; color: #fff; }
+/* Zero is good news: it should not shout. */
+.issue-stat.is-quiet { opacity: .5; }
+.issue-stat.is-red:not(.is-quiet)   { border-color: rgba(255,140,130,.6); }
+.issue-stat.is-red:not(.is-quiet) b { color: #FFB3A8; }
+.issue-stat.is-amber:not(.is-quiet) { border-color: rgba(255,195,40,.55); }
+.issue-stat.is-amber:not(.is-quiet) b { color: #FFD470; }
+.issue-band-arrow { width: 20px; height: 20px; stroke: rgba(255,255,255,.9);
+                    transition: transform .45s cubic-bezier(.2,.7,.3,1); }
+.issue-band:hover .issue-band-arrow { transform: translateX(5px); }
+
+@media (max-width: 1080px) {
+  .issue-band { grid-template-columns: auto 1fr; }
+  .issue-band-stats,
+  .issue-band-actions { grid-column: 1 / -1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .issue-band, .issue-band-arrow { transition: none; }
+  .issue-band:hover { transform: none; }
+  .issue-band:hover .issue-band-arrow { transform: none; }
+}
+
+/* ── the title, on one line ───────────────────────────────────────────────
+   "If you could put maybe Student Services Administrative Portal as kind of
+    the big font, yeah, maybe in one line."                  — Ben Packer
+
+   It was set across two lines because the full name would not hold one at a
+   hero size. Holding the line instead means the type has to come down and the
+   tracking has to tighten — so both are driven off the viewport rather than
+   fixed, and the whole name stays on one line from a phone to a large monitor
+   without ever being cut. "Administrative Portal" keeps the gold, which is what
+   still separates the two halves now that the line break is gone. */
+body.home-single .hero-compact h1 {
+  /* The floor is set by the narrowest phone: at .94rem the name was 365px
+     against a 360px screen and the last letters were clipped. */
+  font-size: clamp(.86rem, 2.42vw, 2.5rem);
+  letter-spacing: .07em;
+  white-space: nowrap;
+  line-height: 1.12;
+}
+body.home-single .hero-compact h1 span {
+  display: inline;
+  margin-left: .34em;
+  font-size: 1em;                 /* the same size — it is one title, not a subtitle */
+  letter-spacing: .07em;
+  margin-top: 0;
+}
+
+/* The band's two actions. */
+.issue-band-actions { display: flex; gap: 9px; flex-wrap: wrap; align-items: center; }
+.issue-band-btn {
+  display: inline-flex; align-items: center; gap: 7px; white-space: nowrap;
+  font-size: .78rem; font-weight: 500; padding: 9px 16px; border-radius: 9px;
+  text-decoration: none; color: rgba(255,255,255,.92);
+  border: 1px solid rgba(255,255,255,.24); background: rgba(0,0,0,.2);
+  transition: transform .3s cubic-bezier(.2,.7,.3,1), border-color .3s, background .3s;
+}
+.issue-band-btn:hover { transform: translateY(-1px); border-color: rgba(255,255,255,.5); }
+.issue-band-btn.is-primary {
+  background: linear-gradient(135deg, rgba(255,195,40,.94), rgba(240,160,26,.94));
+  border-color: rgba(255,195,40,.9); color: #2a1c00; font-weight: 600;
+}
+.issue-band-btn.is-primary:hover { background: linear-gradient(135deg, #FFCE4B, #F5A81C); }
+@media (prefers-reduced-motion: reduce) {
+  .issue-band-btn { transition: none; }
+  .issue-band-btn:hover { transform: none; }
+}
+
+/* The band lands a moment after the rest of the page — it waits on a query the
+   static content does not. Fading rather than snapping keeps that from reading
+   as a glitch; reduced-motion gets it immediately. */
+.home-issues .issue-band { opacity: 0; transform: translateY(6px);
+  transition: opacity .45s ease, transform .45s cubic-bezier(.2,.7,.3,1); }
+.home-issues.is-in .issue-band { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .home-issues .issue-band { opacity: 1; transform: none; transition: none; }
+}

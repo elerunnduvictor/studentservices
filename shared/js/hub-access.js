@@ -22,6 +22,7 @@
      SS.access.ready        resolves once the session and role are known
      SS.access.role         'partner' | 'staff' | 'director' | 'admin' | 'none'
      SS.access.isPartner    shorthand — the common branch in the renderers
+     SS.access.isStudentServices  inside the organisation: staff, director, admin
      SS.access.canSeePeople whether individuals may be drilled into at all
      SS.access.scope        { department, person } for staff and directors
      SS.access.track(page)  records a page hit
@@ -344,6 +345,16 @@
     get canSeePeople() { return ["staff", "director", "admin"].indexOf(state.role) !== -1; },
     /** May this person read the directory listing? */
     get canSeeDirectory() { return ["staff", "director", "admin"].indexOf(state.role) !== -1; },
+    /**
+     * Is this person inside Student Services?
+     *
+     * The same three roles, named for what they mean rather than for what they
+     * may do, because some things — the emerging issues register — are gated on
+     * belonging rather than on a permission. Deliberately an allowlist: asking
+     * "is this a partner?" answers no for a role of "none" as well, and would
+     * let an unprovisioned session through a check meant to keep it out.
+     */
+    get isStudentServices() { return ["staff", "director", "admin"].indexOf(state.role) !== -1; },
     headers,
   };
 })();

@@ -56,7 +56,11 @@
         // Where an accessibility preference belongs: one place, reachable from
         // every page, rather than a control repeated beside each chart.
         '<button type="button" class="hub-account-tex" aria-pressed="false">' +
-          '<span class="hub-account-tex-label">Chart patterns</span>' +
+          '<span class="hub-account-tex-text">' +
+            '<span class="hub-account-tex-label">Colour-blind friendly charts</span>' +
+            '<span class="hub-account-tex-hint">Adds patterns so chart colours ' +
+              'can be told apart</span>' +
+          "</span>" +
           '<span class="hub-account-tex-state">Off</span>' +
         "</button>" +
         '<button type="button" class="hub-account-signout">Sign out</button>' +
@@ -94,8 +98,9 @@
         texBtn.setAttribute("aria-pressed", String(on));
         texBtn.querySelector(".hub-account-tex-state").textContent = on ? "On" : "Off";
       };
-      texBtn.title = "Adds a hatch pattern to each colour in the charts, so " +
-                     "categories can be told apart without relying on colour.";
+      texBtn.title = "Draws a hatch pattern over each colour in the charts, so " +
+                     "categories can be told apart without relying on colour alone. " +
+                     "Remembered on this device.";
       texBtn.addEventListener("click", (e) => { e.stopPropagation(); tex.set(!tex.enabled()); });
       tex.onChange(paint);
       paint();

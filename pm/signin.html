@@ -82,6 +82,19 @@
     const SS = window.SS;
     SS.shell.initTheme();
 
+    /* Sent back by the idle guard rather than by choosing to sign out. Saying
+       so matters: landing on a login screen with no explanation reads as the
+       app having lost your session for no reason. */
+    if (new URLSearchParams(location.search).get("expired")) {
+      const note = document.getElementById("msg");
+      if (note) {
+        note.textContent =
+          "You were signed out after an hour without activity. Sign in to continue.";
+        note.className = "signin-msg";
+        note.hidden = false;
+      }
+    }
+
     /* Already signed in? Straight into the workbooks. */
     const session = SS.shell.readSession();
     if (session) {

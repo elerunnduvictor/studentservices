@@ -1,0 +1,548 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   EMERGING ISSUES
+
+   The page has one job: make the thing that needs attention the thing your eye
+   lands on. Everything here serves that ordering.
+
+   Severity is the only place strong colour is used. The rest of the page is
+   deliberately quiet — chips, rules, muted meta — so that a Red card is the
+   loudest thing on screen without needing to be large. If every card were
+   coloured, none of them would be.
+
+   Severity is never colour alone: each chip carries its word, so "Red" is
+   legible in greyscale, in print, and to a reader who cannot distinguish it
+   from Amber.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── design tokens ────────────────────────────────────────────────────────
+   css/shared.css carries no variables — every page defines its own set, which
+   is why this page first rendered with flat, borderless tiles: every var() in
+   here resolved to nothing. Copied from performance-standards.css so the two
+   are identical. Another copy to delete if these are ever centralised. */
+:root {
+  --bp-teal: #065577;
+  --bp-teal-light: #28738A;
+  --bp-teal-dark: #054762;
+  --bp-gold: #FFC328;
+
+  --deep-teal: #065577;
+  --gold: #FFC328;
+
+  --bg: #FFFFFF;
+  --bg-card: #FFFFFF;
+  --bg-elevated: #F5F6F8;
+  --bg-subtle: #F0F3F5;
+  --text: #1C2325;
+  --text-muted: #58595B;
+  --text-dim: #7F898A;
+  --border: rgba(188,190,192,0.5);
+  --border-subtle: rgba(188,190,192,0.25);
+  --radius: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 18px;
+  --shadow: 0 2px 12px rgba(28,35,37,0.08);
+  --shadow-hover: 0 8px 30px rgba(28,35,37,0.12);
+  --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --nav-height: 60px;
+}
+
+[data-theme="dark"] {
+  --bg: #0d0d0f;
+  --bg-card: #151518;
+  --bg-elevated: #1a1a1e;
+  --bg-subtle: #101014;
+  --text: #e8e4dc;
+  --text-muted: #a09c94;
+  --text-dim: #6a6660;
+  --border: rgba(255,255,255,0.08);
+  --border-subtle: rgba(255,255,255,0.04);
+  --shadow: 0 2px 12px rgba(0,0,0,0.3);
+  --shadow-hover: 0 8px 30px rgba(0,0,0,0.4);
+}
+
+
+.ei {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 clamp(18px, 3vw, 40px) 80px;
+}
+
+/* ── header ─────────────────────────────────────────────────────────────── */
+.ei-head-text { min-width: 0; }
+.ei-eyebrow {
+  font-size: .6rem; font-weight: 600; letter-spacing: .3em; text-indent: .3em;
+  text-transform: uppercase; color: var(--gold, #FFC328); margin-bottom: 8px;
+}
+.ei-title {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: clamp(1.7rem, 3.4vw, 2.5rem);
+  font-weight: 400; letter-spacing: .012em; margin: 0 0 10px;
+  color: var(--text);
+}
+.ei-lead {
+  margin: 0; max-width: 62ch; font-size: .9rem; line-height: 1.65;
+  color: var(--text-muted);
+}
+
+/* ── the summary band ───────────────────────────────────────────────────── */
+.ei-brief {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(126px, 1fr));
+  gap: 10px;
+  margin-bottom: clamp(20px, 2.6vw, 28px);
+}
+.ei-stat {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  background: var(--bg-card);
+}
+.ei-stat-n { font-size: 1.6rem; font-weight: 600; line-height: 1.05; color: var(--text); }
+.ei-stat-l {
+  font-size: .62rem; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--text-dim); margin-top: 6px;
+}
+/* A count of zero is good news and should recede rather than shout. */
+.ei-stat.is-quiet .ei-stat-n { color: var(--text-dim); font-weight: 400; }
+.ei-stat.is-red:not(.is-quiet)   { border-color: rgba(209,69,69,.5); }
+.ei-stat.is-red:not(.is-quiet) .ei-stat-n   { color: #D14545; }
+.ei-stat.is-amber:not(.is-quiet) { border-color: rgba(224,138,30,.5); }
+.ei-stat.is-amber:not(.is-quiet) .ei-stat-n { color: #C97C14; }
+.ei-stat.is-green:not(.is-quiet) .ei-stat-n { color: #2E9E5C; }
+
+/* ── controls ───────────────────────────────────────────────────────────── */
+.ei-controls {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap; margin-bottom: 16px;
+}
+.ei-filters { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.ei-filters select {
+  font: inherit; font-size: .8rem; padding: 7px 11px;
+  border: 1px solid var(--border); border-radius: 8px;
+  background: var(--bg-card); color: var(--text);
+}
+.ei-check {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: .8rem; color: var(--text-muted); cursor: pointer;
+}
+.ei-count { font-size: .8rem; color: var(--text-dim); }
+
+/* ── cards ──────────────────────────────────────────────────────────────── */
+.ei-list { display: flex; flex-direction: column; gap: 10px; }
+
+.ei-card {
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  background: var(--bg-card);
+  overflow: hidden;
+  transition: border-color .3s, box-shadow .3s;
+}
+/* The severity edge. Three pixels down the left is enough to scan a column of
+   twenty cards without reading a word of them. */
+.ei-card { border-left: 3px solid var(--text-dim); }
+.ei-card[data-sev="Critical"] { border-left-color: #D14545; }
+.ei-card[data-sev="Moderate"] { border-left-color: #E08A1E; }
+.ei-card[data-sev="Low"]      { border-left-color: #2E9E5C; }
+.ei-card:hover { border-color: var(--light-gray); box-shadow: 0 6px 20px -12px rgba(0,0,0,.4); }
+.ei-card.is-open { box-shadow: 0 10px 30px -16px rgba(0,0,0,.45); }
+
+.ei-card-head {
+  width: 100%; display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 16px; align-items: start;
+  padding: 16px 18px; text-align: left;
+  background: none; border: none; cursor: pointer; font: inherit; color: inherit;
+}
+.ei-card-marks { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+.ei-card-title {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: clamp(1.06rem, 1.5vw, 1.24rem);
+  font-weight: 600; line-height: 1.25; margin: 0 0 6px; color: var(--text);
+}
+/* The sentence that explains the ordering. Given weight on purpose: it is the
+   most useful line on the card. */
+.ei-why {
+  margin: 0 0 6px; font-size: .78rem; font-weight: 500; color: #C05621;
+  letter-spacing: .01em;
+}
+.ei-meta { margin: 0; font-size: .75rem; color: var(--text-dim); line-height: 1.55; }
+.ei-links { margin: 8px 0 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.ei-link-tag {
+  font-size: .68rem; padding: 3px 9px; border-radius: 999px;
+  border: 1px solid var(--border); color: var(--text-muted);
+}
+.ei-caret { width: 18px; height: 18px; color: var(--text-dim); transition: transform .3s; }
+.ei-card.is-open .ei-caret { transform: rotate(180deg); }
+
+.ei-card-body { padding: 0 18px 18px 18px; border-top: 1px solid var(--border); }
+.ei-para { margin: 14px 0 0; font-size: .84rem; line-height: 1.65; color: var(--text-muted); }
+.ei-para strong { color: var(--text); font-weight: 600; }
+
+/* ── chips ──────────────────────────────────────────────────────────────── */
+.ei-chip {
+  display: inline-block; font-size: .64rem; font-weight: 600;
+  letter-spacing: .1em; text-transform: uppercase;
+  padding: 3px 9px; border-radius: 999px; white-space: nowrap;
+}
+/* The word carries the level; the colour only reinforces it. Read in
+   greyscale, "Critical" still says everything the chip needs to say. */
+.ei-chip-sev-critical { background: rgba(209,69,69,.16);  color: #D14545; }
+.ei-chip-sev-moderate { background: rgba(224,138,30,.18); color: #B4700F; }
+.ei-chip-sev-low      { background: rgba(46,158,92,.16);  color: #2E9E5C; }
+.ei-chip-status    { background: rgba(127,137,138,.16); color: var(--text-muted); font-weight: 500; }
+
+/* ── the log ────────────────────────────────────────────────────────────── */
+.ei-log { margin-top: 18px; display: flex; flex-direction: column; gap: 12px; }
+.ei-log-loading, .ei-log-empty { font-size: .8rem; color: var(--text-dim); margin: 0; }
+.ei-log-item { border-left: 2px solid var(--border); padding-left: 14px; }
+.ei-log-meta {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 9px;
+  font-size: .7rem; color: var(--text-dim); margin-bottom: 5px;
+}
+.ei-log-who { font-weight: 500; color: var(--text-muted); }
+.ei-log-note { margin: 0; font-size: .84rem; line-height: 1.6; color: var(--text); }
+
+/* ── adding an update ───────────────────────────────────────────────────── */
+.ei-add-update { margin-top: 18px; padding-top: 16px; border-top: 1px dashed var(--border); }
+.ei-label {
+  display: block; font-size: .68rem; font-weight: 600; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--text-dim); margin-bottom: 7px;
+}
+.ei-add-update textarea, .ei-dialog textarea, .ei-dialog input[type="text"],
+.ei-dialog input[type="date"], .ei-dialog select, .ei-add-update select {
+  font: inherit; font-size: .84rem; width: 100%;
+  padding: 9px 11px; border: 1px solid var(--border); border-radius: 8px;
+  background: var(--bg); color: var(--text); resize: vertical;
+}
+.ei-add-row { display: flex; gap: 9px; margin-top: 9px; flex-wrap: wrap; }
+.ei-add-row select { width: auto; min-width: 130px; }
+
+/* ── buttons ────────────────────────────────────────────────────────────── */
+.ei-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  font: inherit; font-size: .82rem; font-weight: 500;
+  padding: 10px 18px; border-radius: 9px; cursor: pointer;
+  border: 1px solid var(--border); background: var(--bg-card); color: var(--text);
+  text-decoration: none; transition: border-color .25s, background .25s, transform .25s;
+}
+.ei-btn:hover { border-color: var(--light-gray); transform: translateY(-1px); }
+.ei-btn-primary {
+  background: var(--deep-teal, #065577); border-color: var(--deep-teal, #065577); color: #fff;
+}
+.ei-btn-primary:hover { background: #08688f; border-color: #08688f; }
+.ei-btn-small { padding: 8px 14px; font-size: .78rem; }
+.ei-btn:disabled { opacity: .55; cursor: default; transform: none; }
+
+/* ── states ─────────────────────────────────────────────────────────────── */
+.ei-empty {
+  border: 1px dashed var(--border); border-radius: 12px;
+  padding: 34px 24px; text-align: center; color: var(--text-muted);
+}
+.ei-empty strong { display: block; color: var(--text); margin-bottom: 6px; }
+.ei-empty p { margin: 0; font-size: .84rem; }
+
+.ei-say {
+  margin-bottom: 14px; padding: 10px 14px; border-radius: 9px; font-size: .82rem;
+  border: 1px solid transparent;
+}
+.ei-say.is-good { background: rgba(46,158,92,.12); border-color: rgba(46,158,92,.35); color: #22794a; }
+.ei-say.is-bad  { background: rgba(209,69,69,.12); border-color: rgba(209,69,69,.35); color: #b13636; }
+
+/* ── the partner wall ───────────────────────────────────────────────────── */
+/* `display` on an element that also carries the `hidden` attribute beats the
+   browser's `[hidden] { display: none }`, so this wall rendered for everyone —
+   including the people who are supposed to see the register — and pushed the
+   real page below the fold. Any rule that sets display has to say so. */
+.ei-gate[hidden], .ei[hidden] { display: none; }
+.ei-gate { min-height: 70vh; display: grid; place-items: center; padding: 120px 24px 60px; }
+.ei-gate-inner { max-width: 46ch; text-align: center; }
+.ei-gate-inner h1 {
+  font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 400;
+  font-size: clamp(1.6rem, 3vw, 2.1rem); margin: 0 0 12px; color: var(--text);
+}
+.ei-gate-inner p { color: var(--text-muted); font-size: .9rem; line-height: 1.7; margin: 0 0 22px; }
+
+/* ── the form ───────────────────────────────────────────────────────────── */
+.ei-dialog {
+  width: min(640px, calc(100vw - 32px));
+  border: 1px solid var(--border); border-radius: 16px; padding: 0;
+  background: var(--bg-card); color: var(--text);
+  box-shadow: 0 30px 80px -30px rgba(0,0,0,.6);
+}
+.ei-dialog::backdrop { background: rgba(6,20,26,.55); backdrop-filter: blur(2px); }
+.ei-dialog form { padding: 26px 26px 22px; }
+.ei-dialog-title {
+  font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 600;
+  font-size: 1.4rem; margin: 0 0 6px;
+}
+.ei-dialog-sub { margin: 0 0 20px; font-size: .82rem; color: var(--text-muted); }
+.ei-dialog .ei-label { margin-top: 14px; }
+.ei-dialog-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.ei-dialog-actions {
+  display: flex; justify-content: flex-end; gap: 10px;
+  margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--border);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ei-btn, .ei-card, .ei-caret { transition: none; }
+  .ei-btn:hover { transform: none; }
+}
+
+@media (max-width: 620px) {
+  .ei-card-head { grid-template-columns: 1fr auto; }
+  .ei-card-marks { flex-direction: row; grid-column: 1 / -1; }
+}
+
+/* ═══════════════ NAVBAR ═══════════════
+   The bar is not in shared.css — every page carries its own copy, which is why
+   this page rendered with plain unstyled links until these were brought over.
+   Taken from performance-standards.css so the two match exactly; if the bar is
+   ever centralised, this block is one of the copies to delete. */
+/* ══════════════ NAVBAR ══════════════ */
+.navbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  height: var(--nav-height);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 clamp(16px, 4vw, 48px);
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  transition: var(--transition);
+}
+
+[data-theme="dark"] .navbar { background: rgba(13,13,15,0.92); }
+
+.nav-brand {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 700; font-size: 1.15rem;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  text-decoration: none; color: var(--text);
+}
+
+.nav-links { display: flex; gap: 8px; align-items: center; }
+
+.nav-link {
+  padding: 6px 14px; border-radius: 6px;
+  font-size: 0.82rem; font-weight: 400;
+  letter-spacing: 0.03em; text-decoration: none;
+  color: var(--text-muted); transition: var(--transition);
+}
+
+.nav-link:hover { color: var(--bp-teal); background: rgba(6,85,119,0.08); }
+
+.nav-theme-btn {
+  background: none; border: 1px solid var(--border);
+  border-radius: 50%; width: 36px; height: 36px;
+  display: grid; place-items: center; cursor: pointer;
+  color: var(--text-muted); transition: var(--transition);
+}
+
+.nav-theme-btn:hover { color: var(--bp-teal); border-color: var(--bp-teal); }
+
+.nav-hamburger {
+  display: none; background: none; border: none;
+  color: var(--text); cursor: pointer; padding: 4px;
+}
+
+@media (max-width: 900px) {
+  .nav-hamburger { display: block; }
+
+.nav-links {
+    display: none; position: absolute; top: var(--nav-height);
+    left: 0; right: 0; flex-direction: column;
+    background: var(--bg-card); border-bottom: 1px solid var(--border);
+    padding: 12px; gap: 4px;
+  }
+
+.nav-links.open { display: flex; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BRAND
+
+   The first pass was correct and colourless — neutral cards on a white page,
+   with colour used only for severity. That reads as a form, not as part of the
+   hub. The rest of the site opens on a teal band and threads gold through it,
+   so this does the same, with one rule: the brand colours frame and the
+   severity colours inform. Nothing brand-coloured is ever load-bearing, so a
+   Red card is still the loudest thing on the page.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── the band every hub page opens with ──────────────────────────────────── */
+.ei-hero {
+  position: relative;
+  padding: calc(var(--nav-height) + 46px) clamp(18px, 3vw, 40px) 108px;
+  background: linear-gradient(135deg,
+    var(--bp-teal-dark, #054762) 0%, var(--bp-teal, #065577) 52%,
+    var(--bp-teal-light, #28738A) 100%);
+  overflow: hidden;
+}
+/* Two soft lights, one gold, so the field is lit rather than flat. */
+.ei-hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(circle at 18% 82%, rgba(255,195,40,.10) 0%, transparent 52%),
+    radial-gradient(circle at 82% 14%, rgba(255,255,255,.07) 0%, transparent 50%);
+  pointer-events: none;
+}
+/* The band hands off to the page instead of stopping at a hard edge. */
+.ei-hero::after {
+  content: '';
+  position: absolute; left: 0; right: 0; bottom: 0; height: 110px;
+  background: linear-gradient(to top, var(--bg) 0%, transparent 100%);
+  pointer-events: none;
+}
+.ei-hero-inner {
+  position: relative; z-index: 1;
+  max-width: 1180px; margin: 0 auto;
+  display: flex; align-items: flex-end; justify-content: space-between;
+  gap: 28px; flex-wrap: wrap;
+}
+.ei-hero .ei-eyebrow { color: var(--bp-gold, #FFC328); }
+.ei-hero .ei-title   { color: #fff; margin-bottom: 12px; }
+.ei-hero .ei-title span { font-weight: 600; color: var(--bp-gold, #FFC328); }
+.ei-hero .ei-lead    { color: rgba(255,255,255,.82); }
+
+/* The page content rides up into the band's fade. */
+.ei { margin-top: -76px; position: relative; z-index: 2; padding-top: 0; }
+
+/* Primary button, on teal: gold reads as the action, and it is the only gold
+   button on the page so it cannot be confused with anything else. */
+.ei-hero .ei-btn-primary {
+  background: linear-gradient(135deg, var(--bp-gold, #FFC328), #F0A81A);
+  border-color: rgba(255,195,40,.9);
+  color: #2a1c00; font-weight: 600;
+  box-shadow: 0 8px 22px -10px rgba(0,0,0,.5);
+}
+.ei-hero .ei-btn-primary:hover { background: linear-gradient(135deg, #FFD253, #F5AF22); }
+
+/* ── the summary tiles ───────────────────────────────────────────────────── */
+/* A teal hairline along the top ties them to the band above; the severity
+   tones still override it where a count is actually bad. */
+.ei-stat {
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 16px -12px rgba(6,85,119,.5);
+}
+.ei-stat::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, var(--bp-teal, #065577), rgba(58,146,157,0));
+}
+.ei-stat.is-red:not(.is-quiet)::before {
+  background: linear-gradient(90deg, #D14545, rgba(209,69,69,0));
+}
+.ei-stat.is-amber:not(.is-quiet)::before {
+  background: linear-gradient(90deg, #E08A1E, rgba(224,138,30,0));
+}
+.ei-stat.is-green:not(.is-quiet)::before {
+  background: linear-gradient(90deg, #2E9E5C, rgba(46,158,92,0));
+}
+.ei-stat.is-quiet::before { opacity: .34; }
+
+/* ── cards ───────────────────────────────────────────────────────────────── */
+/* Teal on hover rather than plain grey — the same colour the whole site uses
+   to mean "this is interactive". */
+.ei-card:hover {
+  border-color: rgba(58,146,157,.55);
+  box-shadow: 0 10px 26px -14px rgba(6,85,119,.45);
+}
+.ei-card.is-open {
+  border-color: rgba(58,146,157,.5);
+  box-shadow: 0 14px 34px -16px rgba(6,85,119,.5);
+}
+.ei-link-tag {
+  border-color: rgba(58,146,157,.42);
+  color: var(--bp-teal-light, #28738A);
+  background: rgba(58,146,157,.07);
+}
+.ei-caret { color: var(--bp-teal, #065577); }
+
+/* ── controls ────────────────────────────────────────────────────────────── */
+.ei-filters select:focus-visible,
+.ei-dialog select:focus-visible,
+.ei-dialog input:focus-visible,
+.ei-dialog textarea:focus-visible,
+.ei-add-update textarea:focus-visible {
+  outline: 2px solid var(--bp-teal-light, #28738A);
+  outline-offset: 1px;
+  border-color: var(--bp-teal-light, #28738A);
+}
+.ei-check input { accent-color: var(--bp-teal, #065577); }
+
+/* ── the form ────────────────────────────────────────────────────────────── */
+/* It was pinned to the top-left corner. A modal <dialog> centres itself with
+   `margin: auto`, and the global reset in shared.css sets `margin: 0` on
+   everything — so the browser's own centring was being overwritten. Restoring
+   the margin is the whole fix; the rest here is the brand. */
+.ei-dialog {
+  margin: auto;
+  max-height: min(88vh, 860px);
+  overflow: auto;
+  border: none;
+  padding: 0;
+}
+.ei-dialog::backdrop { background: rgba(4,38,52,.62); backdrop-filter: blur(3px); }
+
+/* A teal cap on the form, so raising an issue looks like part of the site. */
+.ei-dialog form { padding-top: 0; }
+.ei-dialog-title {
+  margin: 0 -26px 0;
+  padding: 22px 26px 6px;
+  background: linear-gradient(135deg,
+    var(--bp-teal-dark, #054762), var(--bp-teal, #065577) 60%, var(--bp-teal-light, #28738A));
+  color: #fff;
+}
+.ei-dialog-sub {
+  margin: 0 -26px 20px;
+  padding: 0 26px 20px;
+  background: linear-gradient(135deg,
+    var(--bp-teal-dark, #054762), var(--bp-teal, #065577) 60%, var(--bp-teal-light, #28738A));
+  color: rgba(255,255,255,.8);
+  border-bottom: 3px solid var(--bp-gold, #FFC328);
+}
+.ei-dialog-actions .ei-btn-primary {
+  background: var(--bp-teal, #065577);
+  border-color: var(--bp-teal, #065577);
+}
+.ei-dialog-actions .ei-btn-primary:hover { background: #08688f; border-color: #08688f; }
+
+/* ── the wall ────────────────────────────────────────────────────────────── */
+.ei-gate-inner h1 { color: var(--bp-teal, #065577); }
+
+@media (max-width: 700px) {
+  .ei-hero { padding-bottom: 84px; }
+  .ei { margin-top: -58px; }
+}
+
+/* ── severity, once chosen ────────────────────────────────────────────────
+   The dropdown lists plain words — Critical, Moderate, Low — because a list of
+   colours is not a list of severities, and someone who cannot separate red from
+   amber cannot read a menu made of them. The colour arrives only once a level
+   has been picked, where it reinforces a word that is already there rather than
+   standing in for it. */
+select.is-sev-critical,
+select.is-sev-moderate,
+select.is-sev-low { font-weight: 600; }
+
+select.is-sev-critical {
+  color: #D14545; border-color: rgba(209,69,69,.55); background: rgba(209,69,69,.07);
+}
+select.is-sev-moderate {
+  color: #B4700F; border-color: rgba(224,138,30,.55); background: rgba(224,138,30,.08);
+}
+select.is-sev-low {
+  color: #2E9E5C; border-color: rgba(46,158,92,.5); background: rgba(46,158,92,.07);
+}
+/* The options themselves stay plain: a coloured menu is the thing being
+   avoided, and most browsers ignore option colours anyway. */
+select.is-sev-critical option,
+select.is-sev-moderate option,
+select.is-sev-low option { color: var(--text); font-weight: 400; background: var(--bg-card); }
+
+/* The "Other" box sits under the select it belongs to. */
+#nSubDeptOther { margin-top: 8px; }
+.ei-dialog select:disabled { opacity: .6; cursor: not-allowed; }

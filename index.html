@@ -8,6 +8,10 @@
 <script src="shared/js/hub-access.js"></script>
 <script src="shared/js/hub-texture.js"></script>
 <script src="shared/js/hub-account.js"></script>
+<!-- The home page never queried the database before the issues band; without
+     this SS.db is undefined and the band silently hides itself. -->
+<script src="shared/js/data-service.js"></script>
+<script defer src="js/home-issues.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="light dark">
 <!-- Theme decided before the first paint.
@@ -36,6 +40,8 @@
 <link rel="stylesheet" href="css/shared.css">
 <link rel="stylesheet" href="css/okr-cards.css">
 <link rel="stylesheet" href="css/main.css">
+<!-- Home only: takes over the sections it redesigns, so it loads last. -->
+<link rel="stylesheet" href="css/home.css">
 </head>
 <body class="home-single">
 
@@ -45,119 +51,74 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
   </button>
   <div class="hero-content">
-    <div class="hero-badge">BYU-Pathway: Service Central</div>
+    <div class="hero-badge">BYU-Pathway Worldwide</div>
     <!-- "Administrative Portal" sits on its own line rather than running on:
          the full name is too long to hold one line at a hero size without
          shrinking it to the point of being hard to read. -->
     <h1>Student Services <span>Administrative Portal</span></h1>
-    <p class="hero-subtitle">Autonomy &middot; Satisfaction &middot; Completion</p>
+    <p class="hero-tagline">The Bridge</p>
   </div>
 </section>
 
-<!-- ═══════════════ MISSION BAND ═══════════════ -->
-<section class="home-mission" id="mission" data-reveal>
-  <div class="home-mission-inner">
-    <div class="home-mission-label">Strategy Statement</div>
-    <p class="home-mission-text">Student Services delivers an intuitive and supportive student journey that enables progression from admission to graduation.</p>
+<!-- ═══════════════ STRATEGY ═══════════════ -->
+<section class="home-strategy" id="mission" data-reveal>
+  <div class="home-strategy-inner">
+    <div class="home-strategy-label">Strategy Statement</div>
+    <p class="home-strategy-lead">Student Services delivers an intuitive and supportive service experience that enables student progression from admission to graduation.</p>
+    <p class="home-strategy-body">Student Services is responsible for providing tools, processes, and supports to complement the core academic experience. Our success is defined by achieving maximum student autonomy, satisfaction, and completion, with the ideal state being students who navigate the experience intuitively and independently&mdash;to their delight&mdash;achieving certificates and degrees within a reasonable timeframe.</p>
   </div>
 </section>
 
-<!-- ═══════════════ ORGANIZATION STRUCTURE ═══════════════ -->
-<section class="home-org" id="structure" data-reveal>
-  <div class="home-row-head home-row-head-centered">
-    <div class="home-row-eyebrow">Organization Structure</div>
-    <h2 class="home-row-title">Student Services Leadership</h2>
-    <div class="home-row-divider"></div>
-  </div>
-
-  <div class="home-org-layout">
-    <div class="home-org-tree-wrap">
-      <div class="home-org-tree">
-        <!-- Level 1: VP -->
-        <div class="org-level org-level-top">
-          <div class="org-node org-node-vp">
-            <div class="org-node-title">Student Services</div>
-            <div class="org-node-name">Ben Packer</div>
-          </div>
-        </div>
-
-        <!-- Level 2: Directors + their sub-teams -->
-        <div class="org-level org-level-directors">
-          <div class="org-branch" style="--dc:#3A929D;--dc-r:58,146,157;">
-            <div class="org-node org-node-dir">
-              <div class="org-node-title">Student Records, Registration, and Support</div>
-              <div class="org-node-name">Mark Gefrom</div>
-            </div>
-            <div class="org-sub">
-              <div class="org-node">
-                <div class="org-node-title">Registrar</div>
-                <div class="org-node-name">Kari Johnson</div>
-              </div>
-              <div class="org-node">
-                <div class="org-node-title">Support &amp; Advising</div>
-                <div class="org-node-name">Brad Lester</div>
-              </div>
-              <div class="org-node">
-                <div class="org-node-title">IT Support</div>
-                <div class="org-node-name">Matt Smith</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="org-branch" style="--dc:#7E3F8F;--dc-r:126,63,143;">
-            <div class="org-node org-node-dir">
-              <div class="org-node-title">Enrollment &amp; Retention</div>
-              <div class="org-node-name">Alison Cundiff</div>
-            </div>
-            <div class="org-sub">
-              <div class="org-node">
-                <div class="org-node-title">Enrollment Services</div>
-                <div class="org-node-name">Trevor Shelton</div>
-              </div>
-              <div class="org-node">
-                <div class="org-node-title">Retention</div>
-                <div class="org-node-name">Katelyn Graf</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="org-branch" style="--dc:#A2C23D;--dc-r:162,194,61;">
-            <div class="org-node org-node-dir">
-              <div class="org-node-title">Dean of Students</div>
-              <div class="org-node-name">Steven K. Thomas</div>
-            </div>
-            <div class="org-sub">
-              <div class="org-node">
-                <div class="org-node-title">Associate Dean</div>
-                <div class="org-node-name">Anne Marie Clark</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="org-branch" style="--dc:#CB4A27;--dc-r:203,74,39;">
-            <div class="org-node org-node-dir">
-              <div class="org-node-title">Digital Operations</div>
-              <div class="org-node-name">Jacob Adams</div>
-            </div>
-            <div class="org-sub">
-              <div class="org-node">
-                <div class="org-node-title">Project Management</div>
-                <div class="org-node-name">Ricky Kailiponi</div>
-              </div>
-              <div class="org-node">
-                <div class="org-node-title">Research &amp; Reporting</div>
-                <div class="org-node-name">Josh Hadden</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+<!-- ═══════════════ EMERGING ISSUES ═══════════════
+     Above the four gateways, and styled unlike them, because it is the one
+     thing on this page that changes daily. Hidden entirely for partners — the
+     register is internal to Student Services, and the database refuses them the
+     underlying rows regardless. -->
+<section class="home-issues" id="homeIssues" hidden>
+  <div class="issue-band">
+    <div class="issue-band-mark">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+        <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+        <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+      </svg>
     </div>
+    <div class="issue-band-body">
+      <div class="issue-band-eyebrow">Live Register</div>
+      <div class="issue-band-title">Emerging Issues</div>
+      <p class="issue-band-desc" id="issueBandDesc">What Student Services is watching right now.</p>
+    </div>
+    <div class="issue-band-stats" id="issueBandStats"></div>
+    <!-- Two actions, not one. Raising something is the thing people will do
+         most often and the thing they are least likely to bother navigating
+         for, so it gets its own button; the register itself is behind the
+         quieter link beside it. -->
+    <div class="issue-band-actions">
+      <a class="issue-band-btn is-primary" href="emerging-issues/index.html#raise">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor"
+             stroke-width="2" aria-hidden="true">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Raise an issue
+      </a>
+      <a class="issue-band-btn" href="emerging-issues/index.html">
+        Open the register
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor"
+             stroke-width="2" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/>
+          <polyline points="13 6 19 12 13 18"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
 
-    <aside class="home-org-cta">
-      <a href="org-chart/index.html" class="home-org-cta-card" data-cta-color="teal">
-        <div class="home-org-cta-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+<!-- ═══════════════ THE FOUR GATEWAYS ═══════════════
+     Two labelled columns rather than four loose cards: the heading tells you
+     which question a pair of cards answers, so the grid reads as two ideas
+     instead of four links. -->
+<section class="home-gateways" id="structure" data-reveal>
+  <div class="home-gateways-grid">
+      <a href="org-chart/index.html" class="gateway" data-gw="chart">
+        <div class="gateway-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
             <circle cx="12" cy="5" r="3"/>
             <line x1="12" y1="8" x2="12" y2="12"/>
             <line x1="5" y1="12" x2="19" y2="12"/>
@@ -169,103 +130,61 @@
             <rect x="17" y="15" width="4" height="3" rx="0.5"/>
           </svg>
         </div>
-        <div class="home-org-cta-body">
-          <div class="home-org-cta-eyebrow">Interactive Hierarchy</div>
-          <div class="home-org-cta-title">Organizational Chart</div>
-          <div class="home-org-cta-desc">Zoom, search, and filter every team relationship in one canvas.</div>
+        <div class="gateway-body">
+          <div class="gateway-eyebrow">Interactive Hierarchy</div>
+          <div class="gateway-title">Organizational Chart</div>
+          <p class="gateway-desc">Zoom, search, and filter every team relationship in one canvas.</p>
         </div>
-        <svg class="home-org-cta-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>
+        <svg class="gateway-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>
       </a>
 
-      <a href="directory/index.html" class="home-org-cta-card" data-cta-color="mauve">
-        <div class="home-org-cta-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+      <a href="directory/index.html" class="gateway" data-gw="directory">
+        <div class="gateway-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
             <circle cx="9" cy="7" r="4"/>
             <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
             <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-            <line x1="19" y1="8" x2="19" y2="14"/>
-            <line x1="22" y1="11" x2="16" y2="11"/>
           </svg>
         </div>
-        <div class="home-org-cta-body">
-          <div class="home-org-cta-eyebrow">Team Roster</div>
-          <div class="home-org-cta-title">Complete Directory</div>
-          <div class="home-org-cta-desc">Search every team member by name, role, department, or employment type.</div>
+        <div class="gateway-body">
+          <div class="gateway-eyebrow">Team Roster</div>
+          <div class="gateway-title">Complete Directory</div>
+          <p class="gateway-desc">Search every team member by name, role, department, or employment type.</p>
         </div>
-        <svg class="home-org-cta-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>
+        <svg class="gateway-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>
       </a>
-    </aside>
-  </div>
-</section>
+      <a href="scorecard/index.html" class="gateway" data-gw="scorecard">
+        <div class="gateway-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+            <line x1="6" y1="20" x2="6" y2="13"/>
+            <line x1="12" y1="20" x2="12" y2="7"/>
+            <line x1="18" y1="20" x2="18" y2="10"/>
+            <line x1="3" y1="20" x2="21" y2="20"/>
+          </svg>
+        </div>
+        <div class="gateway-body">
+          <div class="gateway-eyebrow">Live Metrics</div>
+          <div class="gateway-title">KPI Scorecard</div>
+          <p class="gateway-desc">Drill from a rolled-up score down to any single measure across the organization.</p>
+        </div>
+        <svg class="gateway-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>
+      </a>
 
-<!-- ═══════════════ KPI SNAPSHOT ROW ═══════════════ -->
-<section class="home-row home-kpis" id="kpis" data-reveal>
-  <div class="home-row-head">
-    <div class="home-row-eyebrow">Performance Snapshot</div>
-    <h2 class="home-row-title">Key Performance Indicators (KPIs)</h2>
-    <div class="home-row-divider"></div>
-  </div>
-  <div class="home-kpi-grid">
-    <article class="kpi-card" data-accent="teal" data-img="dashboard-screenshots/Autonomy.png"
-             role="button" tabindex="0" aria-label="Expand Autonomy KPI"
-             data-reveal data-reveal-delay="0">
-      <div class="kpi-card-media">
-        <img src="dashboard-screenshots/Autonomy.png" alt="Autonomy dashboard snapshot" loading="lazy"
-             onerror="this.parentElement.classList.add('kpi-card-media--missing'); this.remove();">
-      </div>
-      <div class="kpi-card-body">
-        <div class="kpi-card-eyebrow">Metric</div>
-        <h3 class="kpi-card-header">Autonomy</h3>
-        <div class="kpi-card-underline"></div>
-        <p class="kpi-card-subheader">Percent of students not needing help from the home office.</p>
-      </div>
-    </article>
-
-    <article class="kpi-card" data-accent="mauve" data-img="dashboard-screenshots/Satisfaction.png"
-             role="button" tabindex="0" aria-label="Expand Satisfaction KPI"
-             data-reveal data-reveal-delay="1">
-      <div class="kpi-card-media">
-        <img src="dashboard-screenshots/Satisfaction.png" alt="Satisfaction dashboard snapshot" loading="lazy"
-             onerror="this.parentElement.classList.add('kpi-card-media--missing'); this.remove();">
-      </div>
-      <div class="kpi-card-body">
-        <div class="kpi-card-eyebrow">Metric</div>
-        <h3 class="kpi-card-header">Satisfaction</h3>
-        <div class="kpi-card-underline"></div>
-        <p class="kpi-card-subheader">Percent of students indicating satisfaction with BYU-Pathway services and supports.</p>
-      </div>
-    </article>
-
-    <article class="kpi-card" data-accent="gold" data-img="dashboard-screenshots/Completion.png"
-             role="button" tabindex="0" aria-label="Expand Completion KPI"
-             data-reveal data-reveal-delay="2">
-      <div class="kpi-card-media">
-        <img src="dashboard-screenshots/Completion.png" alt="Completion dashboard snapshot" loading="lazy"
-             onerror="this.parentElement.classList.add('kpi-card-media--missing'); this.remove();">
-      </div>
-      <div class="kpi-card-body">
-        <div class="kpi-card-eyebrow">Metric</div>
-        <h3 class="kpi-card-header">Completion</h3>
-        <div class="kpi-card-underline"></div>
-        <p class="kpi-card-subheader">Percent of certificate and degree students completing their first certificate within eight blocks.</p>
-      </div>
-    </article>
-  </div>
-  <div class="home-kpi-cta">
-    <a href="https://app.powerbi.com/groups/me/apps/d4fe7f49-1b93-41aa-9e7d-6ee6d5ec3eb0/reports/7d21915b-68c9-4191-a9bc-bec5420b90e1/6737639253dde3f6db57?experience=power-bi&amp;clientSideAuth=0"
-       target="_blank" rel="noopener" class="home-kpi-cta-btn">
-      <span>Complete List of KPIs</span>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>
-    </a>
-    <a href="scorecard/index.html" class="home-kpi-cta-btn home-kpi-cta-btn--scorecard">
-      <span>KPI Scorecard</span>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>
-    </a>
-    <a href="performance-standards/index.html" class="home-kpi-cta-btn home-kpi-cta-btn--performance">
-      <span>Performance Report</span>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>
-    </a>
+      <a href="performance-standards/index.html" class="gateway" data-gw="standards">
+        <div class="gateway-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+            <rect x="4" y="3" width="16" height="18" rx="2"/>
+            <polyline points="9 12 11 14 15 10"/>
+          </svg>
+        </div>
+        <div class="gateway-body">
+          <div class="gateway-eyebrow">Service Standards</div>
+          <div class="gateway-title">Performance Report</div>
+          <p class="gateway-desc">Every service, its standard, and how it&rsquo;s measured, by department.</p>
+        </div>
+        <svg class="gateway-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>
+      </a>
   </div>
 </section>
 

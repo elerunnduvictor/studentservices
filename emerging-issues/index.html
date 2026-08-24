@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <script src="../js/auth-guard.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light dark">
+<!-- Theme decided before the first paint — see the note in index.html. -->
+<script>
+  (function () {
+    try {
+      var saved = localStorage.getItem("ss-theme") || "light";
+      document.documentElement.setAttribute("data-theme", saved);
+      document.documentElement.style.colorScheme = saved === "dark" ? "dark" : "light";
+    } catch (e) { /* private mode: fall through to light */ }
+  })();
+</script>
+  <title>Emerging Issues — Student Services — BYU-Pathway Worldwide</title>
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Jost:wght@300;400;500;600&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="../css/shared.css">
+  <link rel="stylesheet" href="css/emerging-issues.css">
+</head>
+
+<body>
+
+  <!-- ═══════════════ NAVBAR ═══════════════ -->
+  <nav class="navbar" id="navbar">
+    <a href="../index.html" class="nav-brand">Student Services</a>
+    <button class="nav-hamburger" id="navHamburger" aria-label="Menu">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="3" y1="6" x2="21" y2="6" />
+        <line x1="3" y1="12" x2="21" y2="12" />
+        <line x1="3" y1="18" x2="21" y2="18" />
+      </svg>
+    </button>
+    <div class="nav-links" id="navLinks">
+      <a href="../index.html" class="nav-link">Home</a>
+      <a href="../index.html#departments" class="nav-link">Departments</a>
+      <a href="../scorecard/index.html" class="nav-link">KPI Scorecard</a>
+      <a href="../index.html#okrs" class="nav-link">OKRs</a>
+      <a href="index.html" class="nav-link">Emerging Issues</a>
+      <a href="../directory/index.html" class="nav-link">Directory</a>
+      <a href="../org-chart/index.html" class="nav-link">Org Chart</a>
+      <a href="../performance-standards/index.html" class="nav-link">Performance Report</a>
+    </div>
+    <button class="nav-theme-btn" id="themeToggle" title="Toggle theme">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+      </svg>
+    </button>
+  </nav>
+
+  <!-- Shown only to partners, who the database refuses outright. -->
+  <section class="ei-gate" id="eiGate" hidden>
+    <div class="ei-gate-inner">
+      <h1>Emerging Issues</h1>
+      <p>This register is internal to Student Services. Your account does not have access to it.</p>
+      <a href="../index.html" class="ei-btn">Back to the hub</a>
+    </div>
+  </section>
+
+  <div class="ei-page" id="eiMain">
+
+    <!-- The same teal band every other hub page opens with, so this reads as
+         part of the site rather than as a form bolted onto it. -->
+    <header class="ei-hero">
+      <div class="ei-hero-inner">
+        <div class="ei-head-text">
+          <div class="ei-eyebrow">Live Register</div>
+          <h1 class="ei-title">Emerging <span>Issues</span></h1>
+          <p class="ei-lead">
+            What Student Services is watching right now — ordered by what needs
+            attention first, with the reason it is near the top.
+          </p>
+        </div>
+        <button type="button" class="ei-btn ei-btn-primary" id="eiRaise">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+               stroke-width="2" aria-hidden="true">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          Raise an issue
+        </button>
+      </div>
+    </header>
+
+    <main class="ei">
+
+    <!-- The band Ben described: what is going on today, as figures. -->
+    <section class="ei-brief" id="eiBrief" aria-label="Summary"></section>
+
+    <section class="ei-controls">
+      <div class="ei-filters">
+        <select id="fDept" aria-label="Filter by department"></select>
+        <select id="fSeverity" aria-label="Filter by severity"></select>
+        <select id="fStatus" aria-label="Filter by status"></select>
+        <label class="ei-check">
+          <input type="checkbox" id="fResolved"> Include resolved
+        </label>
+      </div>
+      <div class="ei-count" id="eiCount"></div>
+    </section>
+
+    <div class="ei-say" id="eiSay" role="status" hidden></div>
+
+    <section class="ei-list" id="eiList">
+      <div class="ei-empty"><strong>Loading the register…</strong></div>
+    </section>
+    </main>
+  </div>
+
+  <!-- ═══════════════ RAISE AN ISSUE ═══════════════ -->
+  <dialog class="ei-dialog" id="eiDialog" aria-label="Raise an issue">
+    <form id="eiForm" method="dialog">
+      <h2 class="ei-dialog-title">Raise an issue</h2>
+      <p class="ei-dialog-sub">
+        Short and specific beats complete. You can add detail later as updates.
+      </p>
+
+      <!-- Hints say what belongs in the box, not a worked example. A specific
+           sample sentence gets copied, or read as the kind of issue that is
+           wanted here, which narrows what people bother to raise. -->
+      <label class="ei-label" for="nTitle">What is the issue</label>
+      <input id="nTitle" name="title" type="text" required maxlength="140"
+             placeholder="One line naming the problem">
+
+      <label class="ei-label" for="nSummary">What is happening</label>
+      <textarea id="nSummary" name="summary" rows="3"
+                placeholder="The detail: what changed, when it started, what has been tried"></textarea>
+
+      <label class="ei-label" for="nImpact">Who or what it affects</label>
+      <textarea id="nImpact" name="impact" rows="2"
+                placeholder="Who feels this — students, a team, a process — and how"></textarea>
+
+      <div class="ei-dialog-row">
+        <div>
+          <label class="ei-label" for="nDepartment">Department</label>
+          <select id="nDepartment" name="department"></select>
+        </div>
+        <div>
+          <label class="ei-label" for="nSubDept">Sub-department</label>
+          <select id="nSubDept" name="sub_department" disabled>
+            <option value="">Choose a department first</option>
+          </select>
+          <!-- Only appears when "Other" is chosen, so the register does not
+               fill up with issues filed against a sub-department called
+               "Other". -->
+          <input id="nSubDeptOther" name="sub_department_other" type="text" hidden
+                 placeholder="Name it" aria-label="Name the sub-department">
+        </div>
+      </div>
+
+      <!-- On its own line: a name needs the room, and pairing it with a
+           dropdown made the field look like half of a smaller choice. -->
+      <label class="ei-label" for="nOwner">Owner</label>
+      <input id="nOwner" name="owner" type="text" placeholder="Who is carrying this">
+
+      <div class="ei-dialog-row">
+        <div>
+          <label class="ei-label" for="nSeverity">Severity</label>
+          <select id="nSeverity" name="severity"></select>
+        </div>
+        <div>
+          <label class="ei-label" for="nStatus">Status</label>
+          <select id="nStatus" name="status"></select>
+        </div>
+        <div>
+          <label class="ei-label" for="nTarget">Settle by</label>
+          <input id="nTarget" name="target_date" type="date">
+        </div>
+      </div>
+
+      <div class="ei-dialog-actions">
+        <button type="button" class="ei-btn" id="eiCancel">Cancel</button>
+        <button type="submit" class="ei-btn ei-btn-primary" id="eiSubmit">Raise it</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="../js/shared.js"></script>
+  <script src="../shared/js/hub-palette.js"></script>
+  <script src="../shared/js/config.js"></script>
+  <script src="../shared/js/hub-access.js"></script>
+  <script src="../shared/js/hub-texture.js"></script>
+  <script src="../shared/js/hub-account.js"></script>
+  <script src="../shared/js/data-service.js"></script>
+  <script src="js/emerging-issues.js"></script>
+</body>
+
+</html>

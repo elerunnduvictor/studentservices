@@ -101,13 +101,31 @@
 @media (max-width: 760px) { .hub-account-text { display: none; } .hub-account-btn { padding: 0 5px; } }
 
 /* Chart-patterns toggle — a preference, styled as a row rather than a button
-   so it does not compete with Sign out. */
+   so it does not compete with Sign out.
+
+   `color: inherit` matters: this used to read `var(--ink, #1a1a1a)`, and no hub
+   page defines `--ink`, so in dark mode the fallback painted near-black text on
+   the near-black menu — the row was there and unreadable. The menu already sets
+   its own colour for each theme; inheriting it is both simpler and correct. */
 .hub-account-tex {
-  display: flex; align-items: center; justify-content: space-between; gap: 14px;
-  width: 100%; padding: 8px 12px; margin-bottom: 4px;
-  border: none; border-radius: 7px; background: none; cursor: pointer;
-  font: inherit; font-size: .78rem; color: var(--ink, #1a1a1a); text-align: left;
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 14px;
+  width: 100%; padding: 9px 12px; margin-bottom: 4px;
+  border: none; border-radius: 8px; background: none; cursor: pointer;
+  font: inherit; color: inherit; text-align: left;
 }
-.hub-account-tex:hover { background: rgba(127,137,138,.12); }
-.hub-account-tex-state { font-size: .7rem; letter-spacing: .1em; text-transform: uppercase; opacity: .6; }
-.hub-account-tex[aria-pressed="true"] .hub-account-tex-state { opacity: 1; color: #3A929D; font-weight: 600; }
+.hub-account-tex:hover { background: rgba(127,137,138,.14); }
+.hub-account-tex-text { display: block; min-width: 0; }
+.hub-account-tex-label { display: block; font-size: .8rem; font-weight: 500; }
+/* The line that answers "what is this?", which the label alone did not. */
+.hub-account-tex-hint {
+  display: block; margin-top: 3px; font-size: .68rem; line-height: 1.4; opacity: .68;
+}
+.hub-account-tex-state {
+  flex: none; margin-top: 2px;
+  font-size: .66rem; letter-spacing: .1em; text-transform: uppercase; opacity: .6;
+}
+.hub-account-tex[aria-pressed="true"] .hub-account-tex-state {
+  opacity: 1; color: #3A929D; font-weight: 600;
+}
+[data-theme="dark"] .hub-account-tex[aria-pressed="true"] .hub-account-tex-state { color: #5FB7C4; }
+[data-theme="dark"] .hub-account-tex:hover { background: rgba(255,255,255,.08); }

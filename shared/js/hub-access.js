@@ -259,11 +259,20 @@
   }
 
   /** Record a page hit. Never allowed to break the page it is measuring. */
+  /** The path a page is counted under, normalised to end in a slash. */
+  function pageKey() {
+    let p = location.pathname.replace(/\/index\.html$/, "/").replace(/\.html$/, "");
+    if (!p.endsWith("/")) p += "/";
+    return p || "/";
+  }
+
   function track(event, page) {
     if (!state.session) return Promise.resolve();
     return rpc("hub_track", {
       p_event: event || "page",
-      p_page: page || location.pathname.replace(/\/index\.html$/, "/") || "/",
+      // One key per page whether the URL carries index.html, a trailing slash or
+      // neither, so turning on cleanUrls does not split a page's history in two.
+      p_page: page || pageKey(),
       p_referrer: document.referrer || null,
       p_agent: navigator.userAgent || null,
     }).catch(() => null);
@@ -304,7 +313,11 @@
         // and without a session every page reads as empty — which looks like
         // the site is broken rather than like they need to sign in again. Send
         // them back to the login screen, which knows how to ask.
-        if (err.message === "needs-password" && !/\/login\//.test(location.pathname)) {
+        // Matches /login/, /login/index.html and a bare /login. The last one is
+        // what Vercel serves once cleanUrls is on, and a pattern that insisted on
+        // the trailing slash would decide the login page was not the login page —
+        // and bounce it to itself, forever.
+        if (err.message === "needs-password" && !/\/login(\/|$)/.test(location.pathname)) {
           const back = location.pathname.replace(/^\//, "");
           const up = back.split("/").length > 1 ? "../" : "";
           localStorage.removeItem(EMAIL_KEY);

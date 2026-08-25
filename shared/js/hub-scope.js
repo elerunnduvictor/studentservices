@@ -106,8 +106,11 @@
 
       document.documentElement.setAttribute("data-scope", "partner");
       const path = location.pathname;
-      if (/\/directory\//.test(path)) await scopeDirectory();
-      if (/\/departments\//.test(path)) scopeDepartmentPage();
+      // Trailing slash optional: with cleanUrls the directory page is served at
+      // /directory, and a pattern requiring /directory/ would quietly stop scoping
+      // what a partner is allowed to see.
+      if (/\/directory(\/|$)/.test(path)) await scopeDirectory();
+      if (/\/departments(\/|$)/.test(path)) scopeDepartmentPage();
     },
   };
 

@@ -2143,7 +2143,15 @@ body.home-single .tool-desc {
   }
   body.home-single::before { position: absolute; }
 
-  .hero-compact { min-height: 55vh; padding: 70px 24px 40px; }
+  /* Sized by its content, not by the screen.
+     `min-height: 55vh` reserved 464px on a 390x844 phone for 106px of badge,
+     title and tagline. The hero centres its content, so the surplus was split
+     into two dead bands — one above the badge and one between "The Bridge" and
+     the strategy statement, each read as a gap someone had left by mistake.
+     A hero has no business being half the screen when it holds three lines.
+     The padding-top stays generous because the theme toggle floats at
+     top: 18px and is 38px tall; the badge has to clear it. */
+  .hero-compact { min-height: 0; padding: 64px 24px 30px; }
 
   .hero-theme-btn {
     top: 18px;

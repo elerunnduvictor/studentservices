@@ -96,10 +96,19 @@
     }
 
     /* Already signed in? Straight into the workbooks. */
+    /* Where to land after signing in.
+       An allowlist, not a sanitiser: `next` arrives in the query string and
+       anything that is not plainly one of this app's own pages is discarded
+       rather than repaired, so it can never become an off-site redirect. The
+       `.html` is optional because cleanUrls serves these pages without it. */
+    function safeNext(v) {
+      return /^[a-z-]+(\.html)?$/.test(v || "") ? v : "okrs.html";
+    }
+
     const session = SS.shell.readSession();
     if (session) {
       const next = new URLSearchParams(location.search).get("next");
-      location.replace(/^[a-z-]+\.html$/.test(next || "") ? next : "okrs.html");
+      location.replace(safeNext(next));
       return;
     }
 
@@ -183,7 +192,7 @@
         if (creating) await SS.shell.createAccount(email, password);
         else          await SS.shell.signIn(email, password);
         const next = new URLSearchParams(location.search).get("next");
-        location.replace(/^[a-z-]+\.html$/.test(next || "") ? next : "okrs.html");
+        location.replace(safeNext(next));
       } catch (err) {
         show(err.message, "err");
         btn.disabled = false;

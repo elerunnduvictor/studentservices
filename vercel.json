@@ -1,13 +1,13 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "cleanUrls": false,
+  "cleanUrls": true,
   "trailingSlash": false,
 
   "redirects": [
     {
       "source": "/",
       "has": [{ "type": "host", "value": "studentservicespm.vercel.app" }],
-      "destination": "/signin.html",
+      "destination": "/signin",
       "permanent": false
     },
     {

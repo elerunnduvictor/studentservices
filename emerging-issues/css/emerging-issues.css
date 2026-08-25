@@ -313,9 +313,8 @@
 .ei-dialog form { padding: 26px 26px 22px; }
 .ei-dialog-title {
   font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 600;
-  font-size: 1.4rem; margin: 0 0 6px;
+  font-size: 1.4rem; margin: 0;
 }
-.ei-dialog-sub { margin: 0 0 20px; font-size: .82rem; color: var(--text-muted); }
 .ei-dialog .ei-label { margin-top: 14px; }
 .ei-dialog-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
 .ei-dialog-actions {
@@ -503,19 +502,16 @@
 
 /* A teal cap on the form, so raising an issue looks like part of the site. */
 .ei-dialog form { padding-top: 0; }
+/* The cap used to be two elements: the title carried the gradient and the
+   subtitle below it carried the gradient's bottom padding and the gold rule
+   that closes it. With the subtitle gone the title has to finish the band
+   itself, or it would stop 6px under the text with no rule at all. */
 .ei-dialog-title {
-  margin: 0 -26px 0;
-  padding: 22px 26px 6px;
+  margin: 0 -26px 20px;
+  padding: 22px 26px 20px;
   background: linear-gradient(135deg,
     var(--bp-teal-dark, #054762), var(--bp-teal, #065577) 60%, var(--bp-teal-light, #28738A));
   color: #fff;
-}
-.ei-dialog-sub {
-  margin: 0 -26px 20px;
-  padding: 0 26px 20px;
-  background: linear-gradient(135deg,
-    var(--bp-teal-dark, #054762), var(--bp-teal, #065577) 60%, var(--bp-teal-light, #28738A));
-  color: rgba(255,255,255,.8);
   border-bottom: 3px solid var(--bp-gold, #FFC328);
 }
 .ei-dialog-actions .ei-btn-primary {

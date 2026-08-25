@@ -2,16 +2,17 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<script src="js/auth-guard.js"></script>
-<script src="shared/js/hub-palette.js"></script>
-<script src="shared/js/config.js"></script>
-<script src="shared/js/hub-access.js"></script>
-<script src="shared/js/hub-texture.js"></script>
-<script src="shared/js/hub-account.js"></script>
+<script src="/js/auth-guard.js"></script>
+<script src="/shared/js/hub-palette.js"></script>
+<script src="/shared/js/config.js"></script>
+<script src="/shared/js/hub-access.js"></script>
+<script src="/shared/js/hub-texture.js"></script>
+<script src="/shared/js/hub-account.js"></script>
 <!-- The home page never queried the database before the issues band; without
      this SS.db is undefined and the band silently hides itself. -->
-<script src="shared/js/data-service.js"></script>
-<script defer src="js/home-issues.js"></script>
+<script src="/shared/js/data-service.js"></script>
+<script defer src="/js/home-issues.js"></script>
+<script defer src="/js/home-processes.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="light dark">
 <!-- Theme decided before the first paint.
@@ -35,13 +36,13 @@
   })();
 </script>
 <title>Student Services — BYU-Pathway Worldwide</title>
-<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/shared.css">
-<link rel="stylesheet" href="css/okr-cards.css">
-<link rel="stylesheet" href="css/main.css">
+<link rel="stylesheet" href="/css/shared.css">
+<link rel="stylesheet" href="/css/okr-cards.css">
+<link rel="stylesheet" href="/css/main.css">
 <!-- Home only: takes over the sections it redesigns, so it loads last. -->
-<link rel="stylesheet" href="css/home.css">
+<link rel="stylesheet" href="/css/home.css">
 </head>
 <body class="home-single">
 
@@ -93,14 +94,14 @@
          for, so it gets its own button; the register itself is behind the
          quieter link beside it. -->
     <div class="issue-band-actions">
-      <a class="issue-band-btn is-primary" href="emerging-issues/index.html#raise">
+      <a class="issue-band-btn is-primary" href="/emerging-issues/index.html#raise">
         <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor"
              stroke-width="2" aria-hidden="true">
           <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
         </svg>
         Raise an issue
       </a>
-      <a class="issue-band-btn" href="emerging-issues/index.html">
+      <a class="issue-band-btn" href="/emerging-issues/index.html">
         Open the register
         <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor"
              stroke-width="2" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/>
@@ -116,7 +117,7 @@
      instead of four links. -->
 <section class="home-gateways" id="structure" data-reveal>
   <div class="home-gateways-grid">
-      <a href="org-chart/index.html" class="gateway" data-gw="chart">
+      <a href="/org-chart/index.html" class="gateway" data-gw="chart">
         <div class="gateway-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
             <circle cx="12" cy="5" r="3"/>
@@ -138,7 +139,7 @@
         <svg class="gateway-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>
       </a>
 
-      <a href="directory/index.html" class="gateway" data-gw="directory">
+      <a href="/directory/index.html" class="gateway" data-gw="directory">
         <div class="gateway-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
@@ -154,7 +155,7 @@
         </div>
         <svg class="gateway-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>
       </a>
-      <a href="scorecard/index.html" class="gateway" data-gw="scorecard">
+      <a href="/scorecard/index.html" class="gateway" data-gw="scorecard">
         <div class="gateway-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
             <line x1="6" y1="20" x2="6" y2="13"/>
@@ -171,7 +172,7 @@
         <svg class="gateway-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>
       </a>
 
-      <a href="performance-standards/index.html" class="gateway" data-gw="standards">
+      <a href="/performance-standards/index.html" class="gateway" data-gw="standards">
         <div class="gateway-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
             <rect x="4" y="3" width="16" height="18" rx="2"/>
@@ -182,6 +183,28 @@
           <div class="gateway-eyebrow">Service Standards</div>
           <div class="gateway-title">Performance Report</div>
           <p class="gateway-desc">Every service, its standard, and how it&rsquo;s measured, by department.</p>
+        </div>
+        <svg class="gateway-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>
+      </a>
+
+      <!-- Shown only to process stewards and reviewers, revealed by
+           SS.initProcessGateway(). Hidden in the markup rather than built in
+           JavaScript so it matches the other four exactly and cannot drift from
+           them. The rule that decides who sees it is SS.processAccess(), the
+           same one the navbar link uses. -->
+      <a href="/processes/index.html" class="gateway" data-gw="processes" id="gatewayProcesses" hidden>
+        <div class="gateway-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <polyline points="9 13 10.5 14.5 14 11"/>
+            <line x1="9" y1="17.5" x2="15" y2="17.5"/>
+          </svg>
+        </div>
+        <div class="gateway-body">
+          <div class="gateway-eyebrow">How We Work</div>
+          <div class="gateway-title">Process Documentation</div>
+          <p class="gateway-desc">Write down how a process actually works, and keep it current as it&rsquo;s reviewed.</p>
         </div>
         <svg class="gateway-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>
       </a>
@@ -199,7 +222,7 @@
     <div class="home-okr-loading">Loading OKR summary…</div>
   </div>
   <div class="home-okr-cta">
-    <a href="okr-progress/index.html" class="home-okr-cta-btn">
+    <a href="/okr-progress/index.html" class="home-okr-cta-btn">
       <span>Complete List of OKRs</span>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>
     </a>
@@ -215,7 +238,7 @@
   </div>
   <div class="dept-grid">
 
-    <a href="departments/records.html" class="dept-card" style="--dc:#3A929D; --dc-r:58,146,157;" data-reveal data-reveal-delay="0">
+    <a href="/departments/records.html" class="dept-card" style="--dc:#3A929D; --dc-r:58,146,157;" data-reveal data-reveal-delay="0">
       <div class="dept-card-accent" style="background:#3A929D"></div>
       <div class="dept-card-inner">
         <div class="dept-icon">
@@ -228,7 +251,7 @@
       </div>
     </a>
 
-    <a href="departments/enrollment.html" class="dept-card" style="--dc:#7E3F8F; --dc-r:126,63,143;" data-reveal data-reveal-delay="1">
+    <a href="/departments/enrollment.html" class="dept-card" style="--dc:#7E3F8F; --dc-r:126,63,143;" data-reveal data-reveal-delay="1">
       <div class="dept-card-accent" style="background:#7E3F8F"></div>
       <div class="dept-card-inner">
         <div class="dept-icon">
@@ -241,7 +264,7 @@
       </div>
     </a>
 
-    <a href="departments/dean.html" class="dept-card" style="--dc:#A2C23D; --dc-r:162,194,61;" data-reveal data-reveal-delay="2">
+    <a href="/departments/dean.html" class="dept-card" style="--dc:#A2C23D; --dc-r:162,194,61;" data-reveal data-reveal-delay="2">
       <div class="dept-card-accent" style="background:#A2C23D"></div>
       <div class="dept-card-inner">
         <div class="dept-icon">
@@ -254,7 +277,7 @@
       </div>
     </a>
 
-    <a href="departments/digital.html" class="dept-card" style="--dc:#CB4A27; --dc-r:203,74,39;" data-reveal data-reveal-delay="3">
+    <a href="/departments/digital.html" class="dept-card" style="--dc:#CB4A27; --dc-r:203,74,39;" data-reveal data-reveal-delay="3">
       <div class="dept-card-accent" style="background:#CB4A27"></div>
       <div class="dept-card-inner">
         <div class="dept-icon">
@@ -313,8 +336,8 @@
 
 <!-- OKR data is shared with the OKR Progress page — same monthly refresh
      populates this section automatically. -->
-<script src="okr-progress/js/okr-progress-data.js"></script>
-<script src="js/okr-cards.js"></script>
+<script src="/okr-progress/js/okr-progress-data.js"></script>
+<script src="/js/okr-cards.js"></script>
 
 <!-- ═══════════════ JAVASCRIPT ═══════════════ -->
 <script>
@@ -474,7 +497,7 @@ function initOkrModal() {
       +   statusBars
       + '</div>'
       + '<div class="okr-modal-cta-row">'
-      +   '<a class="okr-modal-cta" href="okr-progress/index.html?okr=' + encodeURIComponent(okrName) + '">'
+      +   '<a class="okr-modal-cta" href="/okr-progress/index.html?okr=' + encodeURIComponent(okrName) + '">'
       +     '<span>View Full Report</span>'
       +     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>'
       +   '</a>'

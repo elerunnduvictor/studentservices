@@ -35,8 +35,7 @@
     ["ss_user_session", "ss_last_activity", "ss_hub_supabase"].forEach((k) => {
       try { localStorage.removeItem(k); } catch { /* private mode */ }
     });
-    const up = location.pathname.replace(/^\//, "").split("/").length > 1 ? "../" : "";
-    location.replace(up + "login/index.html");
+    location.replace("/login/index.html");
   }
 
   function build(email, role) {

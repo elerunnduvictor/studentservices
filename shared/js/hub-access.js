@@ -25,6 +25,7 @@
      SS.access.isStudentServices  inside the organisation: staff, director, admin
      SS.access.canSeePeople whether individuals may be drilled into at all
      SS.access.scope        { department, person } for staff and directors
+     SS.access.canUseProcesses()  steward or reviewer, for the Processes page
      SS.access.track(page)  records a page hit
 
    None of it is a security boundary. The boundary is in Postgres; this only
@@ -318,10 +319,8 @@
         // the trailing slash would decide the login page was not the login page —
         // and bounce it to itself, forever.
         if (err.message === "needs-password" && !/\/login(\/|$)/.test(location.pathname)) {
-          const back = location.pathname.replace(/^\//, "");
-          const up = back.split("/").length > 1 ? "../" : "";
           localStorage.removeItem(EMAIL_KEY);
-          location.replace(up + "login/index.html?again=1");
+          location.replace("/login/index.html?again=1");
           profileResolve(state);
           return state;
         }
@@ -368,6 +367,44 @@
      * let an unprovisioned session through a check meant to keep it out.
      */
     get isStudentServices() { return ["staff", "director", "admin"].indexOf(state.role) !== -1; },
+
+    /**
+     * May this person do anything on the Process Documentation page?
+     *
+     * Two ways in: a process steward (a row in process_stewards, a separate
+     * allow-list deliberately not derived from hub_access.role), or a reviewer
+     * (role 'admin'; directors are not reviewers of process documentation).
+     *
+     * It lives here rather than beside the navbar that first needed it because
+     * the home page needs the same answer and does not load that file. One rule
+     * in the access layer, asked by both, beats two copies drifting apart.
+     *
+     * Async and memoised: unlike every other check on this object it needs a
+     * round trip, and the answer cannot change within a page view. Resolves
+     * false on every failure path — like the rest of this file it hides doors
+     * rather than locking them, and row-level security on `processes` is what
+     * actually keeps the page empty for anyone who opens the URL directly.
+     */
+    canUseProcesses() {
+      if (state.procAccess) return state.procAccess;
+      state.procAccess = (async () => {
+        try { await SS.access.ready; } catch { return false; }
+        if (state.role === "admin") return true;                 // reviewer
+        if (!SS.db || !state.email) return false;
+        try {
+          // process_stewards is world-readable; there is no process_me() RPC.
+          const rows = await SS.db.select("process_stewards", {
+            select: "email",
+            filter: { email: "ilike." + state.email, active: "eq.true" },
+            limit: 1,
+          });
+          return rows.length > 0;
+        } catch {
+          return false;      // not a steward, or the table isn't reachable yet
+        }
+      })();
+      return state.procAccess;
+    },
     headers,
   };
 })();

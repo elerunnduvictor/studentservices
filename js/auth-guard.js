@@ -4,15 +4,7 @@
   const lastActivity = localStorage.getItem('ss_last_activity');
   const TIMEOUT_DURATION = 60 * 60 * 1000; // 60 minutes
 
-  // FIX: Remove trailing slashes so matching is highly reliable locally and in production
-  const isSubfolder = window.location.pathname.includes('/directory') ||
-    window.location.pathname.includes('/departments') ||
-    window.location.pathname.includes('/okr-progress') ||
-    window.location.pathname.includes('/org-chart') ||
-    window.location.pathname.includes('/performance-standards') ||
-    window.location.pathname.includes('/scorecard');
-
-  const loginPath = isSubfolder ? '../login/index.html' : 'login/index.html';
+  const loginPath = '/login/index.html';
 
   function logout() {
     localStorage.removeItem('ss_user_session');

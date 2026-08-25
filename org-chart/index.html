@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <script src="../js/auth-guard.js"></script>
+  <script src="/js/auth-guard.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="light dark">
 <!-- Theme decided before the first paint.
@@ -27,7 +27,7 @@
   })();
 </script>
   <title>Student Services — Interactive Organizational Chart</title>
-  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 
   <!-- Fonts -->
   <link
@@ -35,37 +35,37 @@
     rel="stylesheet">
 
   <!-- CSS Components (order matters for cascade) -->
-  <link rel="stylesheet" href="css/variables.css">
-  <link rel="stylesheet" href="css/reset.css">
-  <link rel="stylesheet" href="css/toolbar.css">
-  <link rel="stylesheet" href="css/header.css">
-  <link rel="stylesheet" href="css/hierarchy.css">
-  <link rel="stylesheet" href="css/tree.css">
-  <link rel="stylesheet" href="css/tiles.css">
-  <link rel="stylesheet" href="css/modal.css">
-  <link rel="stylesheet" href="css/animations.css">
-  <link rel="stylesheet" href="css/responsive.css">
-  <link rel="stylesheet" href="css/print.css">
+  <link rel="stylesheet" href="/org-chart/css/variables.css">
+  <link rel="stylesheet" href="/org-chart/css/reset.css">
+  <link rel="stylesheet" href="/org-chart/css/toolbar.css">
+  <link rel="stylesheet" href="/org-chart/css/header.css">
+  <link rel="stylesheet" href="/org-chart/css/hierarchy.css">
+  <link rel="stylesheet" href="/org-chart/css/tree.css">
+  <link rel="stylesheet" href="/org-chart/css/tiles.css">
+  <link rel="stylesheet" href="/org-chart/css/modal.css">
+  <link rel="stylesheet" href="/org-chart/css/animations.css">
+  <link rel="stylesheet" href="/org-chart/css/responsive.css">
+  <link rel="stylesheet" href="/org-chart/css/print.css">
 
   <!-- JS Components (order matters for dependencies) -->
   <!-- Bundled snapshot, used only if the database is unreachable. -->
-  <script src="js/data.js"></script>
-  <script src="js/helpers.js"></script>
-  <script src="js/renderer.js"></script>
-  <script src="js/modal.js"></script>
-  <script src="js/search.js"></script>
-  <script src="js/filter.js"></script>
-  <script src="js/zoom.js"></script>
-  <script src="js/pan.js"></script>
-  <script src="js/toolbar.js"></script>
-  <script src="js/animations.js"></script>
-  <script src="../shared/js/hub-palette.js"></script>
-<script src="../shared/js/config.js"></script>
-<script src="../shared/js/hub-access.js"></script>
-<script src="../shared/js/hub-texture.js"></script>
-<script src="../shared/js/hub-account.js"></script>
-  <script src="../shared/js/data-service.js"></script>
-  <script src="../shared/js/hub-boot.js"
+  <script src="/org-chart/js/data.js"></script>
+  <script src="/org-chart/js/helpers.js"></script>
+  <script src="/org-chart/js/renderer.js"></script>
+  <script src="/org-chart/js/modal.js"></script>
+  <script src="/org-chart/js/search.js"></script>
+  <script src="/org-chart/js/filter.js"></script>
+  <script src="/org-chart/js/zoom.js"></script>
+  <script src="/org-chart/js/pan.js"></script>
+  <script src="/org-chart/js/toolbar.js"></script>
+  <script src="/org-chart/js/animations.js"></script>
+  <script src="/shared/js/hub-palette.js"></script>
+<script src="/shared/js/config.js"></script>
+<script src="/shared/js/hub-access.js"></script>
+<script src="/shared/js/hub-texture.js"></script>
+<script src="/shared/js/hub-account.js"></script>
+  <script src="/shared/js/data-service.js"></script>
+  <script src="/shared/js/hub-boot.js"
           data-datasets="orgchart"
           data-then="org-chart/js/app.js"></script>
 </head>
@@ -74,7 +74,7 @@
 
   <!-- ═══════════════ TOOLBAR ═══════════════ -->
   <div class="toolbar" id="toolbar">
-    <a href="../index.html" class="toolbar-brand" style="text-decoration:none;color:inherit;">Student Services</a>
+    <a href="/index.html" class="toolbar-brand" style="text-decoration:none;color:inherit;">Student Services</a>
 
     <button class="menu-toggle" id="menuToggle" title="Menu">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
@@ -488,12 +488,12 @@
     <div class="footer-inner">
       <div class="footer-brand">Student Services &middot; BYU-Pathway Worldwide</div>
       <div class="footer-links">
-        <a href="../index.html" class="footer-link">Home</a>
-        <a href="hierarchy.html" class="footer-link">Hierarchy View</a>
-        <a href="../departments/records.html" class="footer-link">Records</a>
-        <a href="../departments/enrollment.html" class="footer-link">Enrollment</a>
-        <a href="../departments/dean.html" class="footer-link">Dean of Students</a>
-        <a href="../departments/digital.html" class="footer-link">Digital Ops</a>
+        <a href="/index.html" class="footer-link">Home</a>
+        <a href="/org-chart/hierarchy.html" class="footer-link">Hierarchy View</a>
+        <a href="/departments/records.html" class="footer-link">Records</a>
+        <a href="/departments/enrollment.html" class="footer-link">Enrollment</a>
+        <a href="/departments/dean.html" class="footer-link">Dean of Students</a>
+        <a href="/departments/digital.html" class="footer-link">Digital Ops</a>
       </div>
       <div class="footer-copy">&copy; 2026 BYU-Pathway Worldwide. All rights reserved.</div>
     </div>

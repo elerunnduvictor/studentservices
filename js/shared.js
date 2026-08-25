@@ -60,40 +60,21 @@
   };
 
   /**
-   * "Processes" is only worth showing to someone who can do something on that
-   * page: a process steward (a row in process_stewards — a separate allow-
-   * list, deliberately not derived from hub_access.role), or a reviewer
-   * (hub_access.role = 'admin' — directors are not reviewers of process
-   * documentation). Everyone else's nav is unchanged — this is a UX courtesy,
-   * not the access boundary. Row-level security on the `processes` table is
-   * still what actually keeps the page empty for anyone who opens the URL
-   * directly.
-   *
-   * Silent on every failure path (no session, no hub-access.js on this page)
-   * — a missing nav link should never announce itself as broken.
+   * "Processes" in the navbar, for anyone who can do something on that page.
+   * The rule itself is SS.access.canUseProcesses() — it lives in the access
+   * layer because the home page gateway needs the same answer and does not
+   * load this file.
    */
   function addProcessesNavLink(links) {
     if (links.dataset.ssProcNavChecked) return;
     links.dataset.ssProcNavChecked = "1";
-    if (!window.SS || !window.SS.access || !window.SS.db) return;
-
-    Promise.resolve(window.SS.access.ready).then(async function () {
-      var isSteward = false;
-      try {
-        // process_stewards is world-readable; there is no process_me() RPC.
-        var rows = await window.SS.db.select("process_stewards", {
-          select: "email",
-          filter: { email: "ilike." + SS.access.email, active: "eq.true" },
-          limit: 1,
-        });
-        isSteward = rows.length > 0;
-      } catch (e) { /* not a steward, or the table isn't reachable yet */ }
-
-      var isReviewer = SS.access.role === "admin";
-      if (!isSteward && !isReviewer) return;
-
+    if (!window.SS || !SS.access || !SS.access.canUseProcesses) return;
+    SS.access.canUseProcesses().then(function (allowed) {
+      if (!allowed) return;
       var a = document.createElement("a");
-      a.href = "../processes/index.html";
+      // Absolute: this link is injected into the navbar of every page, at every
+      // folder depth, so it cannot be written relative to any one of them.
+      a.href = "/processes/index.html";
       a.className = "nav-link";
       a.textContent = "Processes";
       links.appendChild(a);

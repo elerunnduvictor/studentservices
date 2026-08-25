@@ -206,9 +206,24 @@ body.home-single .hero-compact::before {
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: clamp(14px, 1.4vw, 20px);
 }
+/* Five when the Processes gateway is showing, which it is only for stewards
+   and reviewers. Stated as a class rather than auto-fit because the count is
+   known: auto-fit would happily pack seven across at this page's width, and a
+   fifth card left on a row of its own reads as a mistake. */
+.home-gateways-grid.has-processes { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+
 /* Two-up before the descriptions start breaking badly, one-up on a phone. */
-@media (max-width: 1180px) { .home-gateways-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 620px)  { .home-gateways-grid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 1180px) {
+  .home-gateways-grid,
+  .home-gateways-grid.has-processes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 620px) {
+  .home-gateways-grid,
+  .home-gateways-grid.has-processes { grid-template-columns: minmax(0, 1fr); }
+}
+/* The hidden gateway must not hold a grid cell open — `display: grid` on the
+   card would beat [hidden] and leave a gap where it sits. */
+.home-gateways-grid .gateway[hidden] { display: none; }
 
 /* Upright now: icon, then the naming, then the sentence, with the arrow parked
    in the corner. A vertical stack reads better in a narrow column than the
@@ -333,6 +348,11 @@ body.home-single .hero-compact::before {
 .gateway[data-gw="directory"] { --gw-from: #6B3080; --gw-mid: #94408A; --gw-to: #C05C90; }
 .gateway[data-gw="scorecard"] { --gw-from: #07344F; --gw-mid: #0E5878; --gw-to: #1F7A9B; }
 .gateway[data-gw="standards"] { --gw-from: #2A5F35; --gw-mid: #4C8038; --gw-to: #7BA33A; }
+/* A warm clay for Processes, at hue ~19deg — clear of the other four (teal 185,
+   magenta 307, blue 198, olive 103) and of the brand gold the CTAs use, so the
+   five cards stay tellable apart. White sits on the lightest stop at 4.87:1,
+   the same as the strongest of the existing four. */
+.gateway[data-gw="processes"]  { --gw-from: #5E2F1E; --gw-mid: #7E4227; --gw-to: #A85E33; }
 
 /* ── motion, only for those who want it ───────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {

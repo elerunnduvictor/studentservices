@@ -1,38 +1,74 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   PROCESS DOCUMENTATION — THE GATEWAY ON THE HOME PAGE
+   PROCESS DOCUMENTATION — THE BAND ON THE HOME PAGE
 
-   A fifth card beside the other four, shown only to people who can do
-   something with it: process stewards and reviewers. Everyone else's home page
-   is unchanged and shows four.
+   The twin of the Emerging Issues band beside it. Both are the parts of the hub
+   that change daily and that somebody is expected to act on, so they share one
+   design and sit in one row.
 
-   The card is written into index.html hidden rather than built here, so it is
-   the same markup as its four neighbours and cannot drift away from them. This
-   file only decides whether to reveal it, and tells the grid it now holds five.
+   Shown only to people who can do something with it — process stewards and
+   reviewers — via SS.access.canUseProcesses(), the same rule the navbar link
+   uses. Everyone else's home page simply has one band instead of two, and the
+   row copes with that on its own.
 
-   The rule is SS.access.canUseProcesses(), shared with the navbar link. None of
-   this is a security boundary — row-level security on `processes` is what keeps
-   the page empty for anyone who opens the URL directly. This just avoids
+   None of this is a security boundary. Row-level security on `processes` keeps
+   the page empty for anyone who opens the URL directly; this only avoids
    offering a door that leads to an empty room.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 (function () {
   "use strict";
 
+  function plural(n, one, many) { return n + " " + (n === 1 ? one : many); }
+
+  /** The one line worth reading, chosen by what most needs doing. */
+  function headline(counts) {
+    if (counts.needs) return plural(counts.needs, "process needs changes", "processes need changes");
+    if (counts.submitted) return plural(counts.submitted, "process awaiting review", "processes awaiting review");
+    if (counts.draft) return plural(counts.draft, "process still in draft", "processes still in draft");
+    if (counts.reviewed) return plural(counts.reviewed, "process documented", "processes documented");
+    return "Nothing documented yet — start with one you know well.";
+  }
+
   async function start() {
-    const card = document.getElementById("gatewayProcesses");
-    if (!card) return;                        // not the home page
-    if (!window.SS || !SS.access || !SS.access.canUseProcesses) return;
+    const band = document.getElementById("homeProcs");
+    if (!band || !window.SS || !SS.access || !SS.db) return;
 
     let allowed = false;
     try { allowed = await SS.access.canUseProcesses(); }
-    catch { return; }                         // the card simply stays hidden
+    catch { return; }                      // the band simply stays hidden
     if (!allowed) return;
 
-    card.hidden = false;
-    // Four columns is the default; the grid has to be told when there are five,
-    // or the fifth card is stranded on a row of its own.
-    const grid = card.closest(".home-gateways-grid");
-    if (grid) grid.classList.add("has-processes");
+    // Counted here rather than in a view: there is no aggregate for this table
+    // and one small select is cheaper than adding one. Status is a short fixed
+    // vocabulary, so counting client-side cannot drift from the database.
+    let rows = [];
+    try { rows = await SS.db.select("processes", { select: "id,status" }); }
+    catch { return; }                      // not built yet, or not readable
+
+    const counts = {
+      total: rows.length,
+      draft: rows.filter((r) => r.status === "Draft").length,
+      submitted: rows.filter((r) => r.status === "Submitted").length,
+      reviewed: rows.filter((r) => r.status === "Reviewed").length,
+      needs: rows.filter((r) => r.status === "Needs Changes").length,
+    };
+
+    const stat = (n, label, tone) =>
+      `<span class="issue-stat${tone ? " is-" + tone : ""}${n ? "" : " is-quiet"}">` +
+      `<b>${n}</b>${label}</span>`;
+
+    document.getElementById("procBandDesc").textContent = headline(counts);
+    document.getElementById("procBandStats").innerHTML =
+      stat(counts.reviewed, "documented", null) +
+      stat(counts.submitted, "in review", "amber") +
+      stat(counts.needs, "needs changes", "red");
+
+    band.hidden = false;
+    // Tell the row it now holds two bands, so they lay out as a pair.
+    if (SS.home && SS.home.syncBands) SS.home.syncBands();
+    // Arriving is softened rather than popped — it lands after the rest of the
+    // page, and a hard appearance reads as a glitch.
+    requestAnimationFrame(() => band.classList.add("is-in"));
   }
 
   if (document.readyState === "loading") {

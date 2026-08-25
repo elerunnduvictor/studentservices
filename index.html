@@ -10,7 +10,9 @@
 <script src="/shared/js/hub-account.js"></script>
 <!-- The home page never queried the database before the issues band; without
      this SS.db is undefined and the band silently hides itself. -->
+<script src="/shared/js/kpi-status.js"></script>
 <script src="/shared/js/data-service.js"></script>
+<script defer src="/js/home-tiles.js"></script>
 <script defer src="/js/home-issues.js"></script>
 <script defer src="/js/home-processes.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -39,7 +41,6 @@
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/shared.css">
-<link rel="stylesheet" href="/css/okr-cards.css">
 <link rel="stylesheet" href="/css/main.css">
 <!-- Home only: takes over the sections it redesigns, so it loads last. -->
 <link rel="stylesheet" href="/css/home.css">
@@ -70,162 +71,207 @@
   </div>
 </section>
 
-<!-- ═══════════════ EMERGING ISSUES ═══════════════
-     Above the four gateways, and styled unlike them, because it is the one
-     thing on this page that changes daily. Hidden entirely for partners — the
-     register is internal to Student Services, and the database refuses them the
-     underlying rows regardless. -->
-<section class="home-issues" id="homeIssues" hidden>
-  <div class="issue-band">
-    <div class="issue-band-mark">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
-        <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-        <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-      </svg>
-    </div>
-    <div class="issue-band-body">
-      <div class="issue-band-eyebrow">Live Register</div>
-      <div class="issue-band-title">Emerging Issues</div>
-      <p class="issue-band-desc" id="issueBandDesc">What Student Services is watching right now.</p>
-    </div>
-    <div class="issue-band-stats" id="issueBandStats"></div>
-    <!-- Two actions, not one. Raising something is the thing people will do
-         most often and the thing they are least likely to bother navigating
-         for, so it gets its own button; the register itself is behind the
-         quieter link beside it. -->
-    <div class="issue-band-actions">
-      <a class="issue-band-btn is-primary" href="/emerging-issues/index.html#raise">
-        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor"
-             stroke-width="2" aria-hidden="true">
-          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+<!-- ═══════════════ THE TWO LIVE BANDS ═══════════════
+     Emerging Issues and Process Documentation sit side by side because they are
+     the same kind of thing: the parts of the hub that change daily and that a
+     person is expected to act on, rather than reference material to look up.
+     They share one design for that reason.
+
+     Each is hidden until its own gate says otherwise, and they are gated on
+     different rules — Emerging Issues on belonging to Student Services, Process
+     Documentation on being a steward or reviewer. Either can appear without the
+     other, so the row is a grid that copes with one child or two. -->
+<div class="home-bands" id="homeBands">
+
+  <section class="home-issues" id="homeIssues" hidden>
+    <div class="issue-band">
+      <div class="issue-band-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+          <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
         </svg>
-        Raise an issue
-      </a>
-      <a class="issue-band-btn" href="/emerging-issues/index.html">
-        Open the register
-        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor"
-             stroke-width="2" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/>
-          <polyline points="13 6 19 12 13 18"/></svg>
-      </a>
+      </div>
+      <div class="issue-band-body">
+        <div class="issue-band-eyebrow">Live Register</div>
+        <div class="issue-band-title">Emerging Issues</div>
+        <p class="issue-band-desc" id="issueBandDesc">What Student Services is watching right now.</p>
+      </div>
+      <div class="issue-band-stats" id="issueBandStats"></div>
+      <!-- Two actions, not one. Raising something is the thing people will do
+           most often and the thing they are least likely to bother navigating
+           for, so it gets its own button; the register itself is behind the
+           quieter link beside it. -->
+      <div class="issue-band-actions">
+        <a class="issue-band-btn is-primary" href="/emerging-issues/index.html#raise">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor"
+               stroke-width="2" aria-hidden="true">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          Raise an issue
+        </a>
+        <a class="issue-band-btn" href="/emerging-issues/index.html">
+          Open the register
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor"
+               stroke-width="2" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/>
+            <polyline points="13 6 19 12 13 18"/></svg>
+        </a>
+      </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- ═══════════════ THE FOUR GATEWAYS ═══════════════
-     Two labelled columns rather than four loose cards: the heading tells you
-     which question a pair of cards answers, so the grid reads as two ideas
-     instead of four links. -->
-<section class="home-gateways" id="structure" data-reveal>
-  <div class="home-gateways-grid">
-      <a href="/org-chart/index.html" class="gateway" data-gw="chart">
-        <div class="gateway-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
-            <circle cx="12" cy="5" r="3"/>
-            <line x1="12" y1="8" x2="12" y2="12"/>
-            <line x1="5" y1="12" x2="19" y2="12"/>
-            <line x1="5" y1="12" x2="5" y2="15"/>
-            <line x1="12" y1="12" x2="12" y2="15"/>
-            <line x1="19" y1="12" x2="19" y2="15"/>
-            <rect x="3" y="15" width="4" height="3" rx="0.5"/>
-            <rect x="10" y="15" width="4" height="3" rx="0.5"/>
-            <rect x="17" y="15" width="4" height="3" rx="0.5"/>
+  <!-- Same band, same parts, its own gate. Shown to process stewards and
+       reviewers only — SS.access.canUseProcesses(), the rule the navbar link
+       uses too. -->
+  <section class="home-issues home-procs" id="homeProcs" hidden>
+    <div class="issue-band">
+      <div class="issue-band-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <polyline points="9 13 10.5 14.5 14 11"/><line x1="9" y1="17.5" x2="15" y2="17.5"/>
+        </svg>
+      </div>
+      <div class="issue-band-body">
+        <div class="issue-band-eyebrow">How We Work</div>
+        <div class="issue-band-title">Process Documentation</div>
+        <p class="issue-band-desc" id="procBandDesc">How a process actually works, written down.</p>
+      </div>
+      <div class="issue-band-stats" id="procBandStats"></div>
+      <div class="issue-band-actions">
+        <a class="issue-band-btn is-primary" href="/processes/index.html#new">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor"
+               stroke-width="2" aria-hidden="true">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
           </svg>
-        </div>
-        <div class="gateway-body">
-          <div class="gateway-eyebrow">Interactive Hierarchy</div>
-          <div class="gateway-title">Organizational Chart</div>
-          <p class="gateway-desc">Zoom, search, and filter every team relationship in one canvas.</p>
-        </div>
-        <svg class="gateway-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>
-      </a>
+          Document a process
+        </a>
+        <a class="issue-band-btn" href="/processes/index.html">
+          Open the library
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor"
+               stroke-width="2" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/>
+            <polyline points="13 6 19 12 13 18"/></svg>
+        </a>
+      </div>
+    </div>
+  </section>
 
-      <a href="/directory/index.html" class="gateway" data-gw="directory">
-        <div class="gateway-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-            <circle cx="9" cy="7" r="4"/>
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-          </svg>
-        </div>
-        <div class="gateway-body">
-          <div class="gateway-eyebrow">Team Roster</div>
-          <div class="gateway-title">Complete Directory</div>
-          <p class="gateway-desc">Search every team member by name, role, department, or employment type.</p>
-        </div>
-        <svg class="gateway-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>
-      </a>
-      <a href="/scorecard/index.html" class="gateway" data-gw="scorecard">
-        <div class="gateway-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
-            <line x1="6" y1="20" x2="6" y2="13"/>
-            <line x1="12" y1="20" x2="12" y2="7"/>
-            <line x1="18" y1="20" x2="18" y2="10"/>
-            <line x1="3" y1="20" x2="21" y2="20"/>
-          </svg>
-        </div>
-        <div class="gateway-body">
-          <div class="gateway-eyebrow">Live Metrics</div>
-          <div class="gateway-title">KPI Scorecard</div>
-          <p class="gateway-desc">Drill from a rolled-up score down to any single measure across the organization.</p>
-        </div>
-        <svg class="gateway-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>
-      </a>
+</div>
 
-      <a href="/performance-standards/index.html" class="gateway" data-gw="standards">
-        <div class="gateway-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
-            <rect x="4" y="3" width="16" height="18" rx="2"/>
-            <polyline points="9 12 11 14 15 10"/>
-          </svg>
-        </div>
-        <div class="gateway-body">
-          <div class="gateway-eyebrow">Service Standards</div>
-          <div class="gateway-title">Performance Report</div>
-          <p class="gateway-desc">Every service, its standard, and how it&rsquo;s measured, by department.</p>
-        </div>
-        <svg class="gateway-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>
-      </a>
 
-      <!-- Shown only to process stewards and reviewers, revealed by
-           SS.initProcessGateway(). Hidden in the markup rather than built in
-           JavaScript so it matches the other four exactly and cannot drift from
-           them. The rule that decides who sees it is SS.processAccess(), the
-           same one the navbar link uses. -->
-      <a href="/processes/index.html" class="gateway" data-gw="processes" id="gatewayProcesses" hidden>
-        <div class="gateway-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-            <polyline points="14 2 14 8 20 8"/>
-            <polyline points="9 13 10.5 14.5 14 11"/>
-            <line x1="9" y1="17.5" x2="15" y2="17.5"/>
-          </svg>
-        </div>
-        <div class="gateway-body">
-          <div class="gateway-eyebrow">How We Work</div>
-          <div class="gateway-title">Process Documentation</div>
-          <p class="gateway-desc">Write down how a process actually works, and keep it current as it&rsquo;s reviewed.</p>
-        </div>
-        <svg class="gateway-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>
-      </a>
-  </div>
-</section>
+<!-- ═══════════════ THE FOUR TILES ═══════════════
+     Two rows of two. Each opens in place rather than navigating away, so a
+     glance at the org chart or this week's KPI colour does not cost a page
+     load and a trip back. Every panel is filled on first expand, not on page
+     load: the home page stays fast, and nothing is fetched for a tile nobody
+     opens. What each panel shows is scoped to the reader — the server has
+     already filtered the rows, and the panels present what arrives.
+     -->
+<section class="home-gw-wrap" id="structure" data-reveal>
+  <div class="home-gw-grid">
 
-<!-- ═══════════════ OKR SUMMARY ROW ═══════════════ -->
-<section class="home-row home-okrs" id="okrs" data-reveal>
-  <div class="home-row-head">
-    <div class="home-row-eyebrow">Strategic Goals</div>
-    <h2 class="home-row-title">Objectives and Key Results (OKRs)</h2>
-    <div class="home-row-divider"></div>
-  </div>
-  <div class="home-okr-grid" id="homeOkrGrid">
-    <div class="home-okr-loading">Loading OKR summary…</div>
-  </div>
-  <div class="home-okr-cta">
-    <a href="/okr-progress/index.html" class="home-okr-cta-btn">
-      <span>Complete List of OKRs</span>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>
-    </a>
+      <article class="gw" data-gw="org" id="gw-org">
+        <button type="button" class="gw-head" aria-expanded="false" aria-controls="gwb-org">
+          <span class="gw-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="9" y="2" width="6" height="5" rx="1"/><rect x="2" y="16" width="6" height="5" rx="1"/><rect x="16" y="16" width="6" height="5" rx="1"/><path d="M12 7v4M5 16v-2h14v2M12 11v3"/></svg></span>
+          <span class="gw-text">
+            <span class="gw-eyebrow">Interactive Hierarchy</span>
+            <span class="gw-title">Organizational Chart</span>
+            <span class="gw-desc">Who reports to whom, across every team.</span>
+          </span>
+          <span class="gw-chev" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </span>
+          <span class="gw-hint">Click to expand</span>
+        </button>
+        <div class="gw-body" id="gwb-org">
+          <div class="gw-body-inner">
+            <div class="gw-panel" data-panel="org">
+              <div class="gw-loading">Loading&hellip;</div>
+            </div>
+            <a class="gw-cta" href="/org-chart/index.html">
+              View the whole Student Services org chart
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>
+            </a>
+          </div>
+        </div>
+      </article>
+
+      <article class="gw" data-gw="directory" id="gw-directory">
+        <button type="button" class="gw-head" aria-expanded="false" aria-controls="gwb-directory">
+          <span class="gw-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M17 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9.5" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+          <span class="gw-text">
+            <span class="gw-eyebrow">Team Roster</span>
+            <span class="gw-title">Complete Directory</span>
+            <span class="gw-desc">Every team member, by role, department and employment type.</span>
+          </span>
+          <span class="gw-chev" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </span>
+          <span class="gw-hint">Click to expand</span>
+        </button>
+        <div class="gw-body" id="gwb-directory">
+          <div class="gw-body-inner">
+            <div class="gw-panel" data-panel="directory">
+              <div class="gw-loading">Loading&hellip;</div>
+            </div>
+            <a class="gw-cta" href="/directory/index.html">
+              Open the full directory
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>
+            </a>
+          </div>
+        </div>
+      </article>
+
+      <article class="gw" data-gw="kpis" id="gw-kpis">
+        <button type="button" class="gw-head" aria-expanded="false" aria-controls="gwb-kpis">
+          <span class="gw-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><line x1="6" y1="20" x2="6" y2="13"/><line x1="12" y1="20" x2="12" y2="7"/><line x1="18" y1="20" x2="18" y2="10"/><line x1="3" y1="20" x2="21" y2="20"/></svg></span>
+          <span class="gw-text">
+            <span class="gw-eyebrow">Live Metrics</span>
+            <span class="gw-title">KPI Scorecard</span>
+            <span class="gw-desc">How the measures that matter are tracking right now.</span>
+          </span>
+          <span class="gw-chev" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </span>
+          <span class="gw-hint">Click to expand</span>
+        </button>
+        <div class="gw-body" id="gwb-kpis">
+          <div class="gw-body-inner">
+            <div class="gw-panel" data-panel="kpis">
+              <div class="gw-loading">Loading&hellip;</div>
+            </div>
+            <a class="gw-cta" href="/scorecard/index.html">
+              Open the full scorecard
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>
+            </a>
+          </div>
+        </div>
+      </article>
+
+      <article class="gw" data-gw="okrs" id="gw-okrs">
+        <button type="button" class="gw-head" aria-expanded="false" aria-controls="gwb-okrs">
+          <span class="gw-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/></svg></span>
+          <span class="gw-text">
+            <span class="gw-eyebrow">Strategic Goals</span>
+            <span class="gw-title">Objectives &amp; Key Results</span>
+            <span class="gw-desc">The objectives in flight and how far along they are.</span>
+          </span>
+          <span class="gw-chev" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </span>
+          <span class="gw-hint">Click to expand</span>
+        </button>
+        <div class="gw-body" id="gwb-okrs">
+          <div class="gw-body-inner">
+            <div class="gw-panel" data-panel="okrs">
+              <div class="gw-loading">Loading&hellip;</div>
+            </div>
+            <a class="gw-cta" href="/okr-progress/index.html">
+              See all OKRs and progress
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>
+            </a>
+          </div>
+        </div>
+      </article>
   </div>
 </section>
 
@@ -293,41 +339,7 @@
   </div>
 </section>
 
-<!-- ═══════════════ KPI LIGHTBOX MODAL ═══════════════ -->
-<div class="kpi-modal" id="kpiModal" hidden>
-  <div class="kpi-modal-backdrop" data-close></div>
-  <div class="kpi-modal-card" role="dialog" aria-modal="true" aria-labelledby="kpiModalHeader">
-    <button class="kpi-modal-close" data-close aria-label="Close">
-      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-    </button>
-    <div class="kpi-modal-image">
-      <img id="kpiModalImg" alt="" onerror="this.style.display='none'; this.parentElement.classList.add('kpi-modal-image--missing');">
-    </div>
-    <div class="kpi-modal-meta">
-      <div class="kpi-modal-eyebrow">Metric</div>
-      <h3 class="kpi-modal-header" id="kpiModalHeader"></h3>
-      <div class="kpi-modal-underline"></div>
-      <p class="kpi-modal-subheader" id="kpiModalSubheader"></p>
-    </div>
-  </div>
-</div>
 
-<!-- ═══════════════ OKR DETAIL MODAL ═══════════════ -->
-<div class="okr-modal" id="okrModal" hidden>
-  <div class="okr-modal-backdrop" data-close></div>
-  <div class="okr-modal-card" role="dialog" aria-modal="true" aria-labelledby="okrModalTitle">
-    <button class="okr-modal-close" data-close aria-label="Close">
-      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-    </button>
-    <div class="okr-modal-banner" id="okrModalBanner">
-      <div class="okr-modal-banner-grid"></div>
-      <div class="okr-modal-eyebrow">Objective</div>
-      <h2 class="okr-modal-title" id="okrModalTitle"></h2>
-      <div class="okr-modal-chips" id="okrModalChips"></div>
-    </div>
-    <div class="okr-modal-body" id="okrModalBody"></div>
-  </div>
-</div>
 
 <!-- ═══════════════ THIN FOOTER ═══════════════ -->
 <footer class="home-footer">
@@ -336,20 +348,9 @@
 
 <!-- OKR data is shared with the OKR Progress page — same monthly refresh
      populates this section automatically. -->
-<script src="/okr-progress/js/okr-progress-data.js"></script>
-<script src="/js/okr-cards.js"></script>
 
 <!-- ═══════════════ JAVASCRIPT ═══════════════ -->
 <script>
-/* Render the 3 OKR overview cards via the shared renderer. */
-function renderHomeOkrCards() {
-  window.OkrCards.render({
-    target: document.getElementById('homeOkrGrid'),
-    rows: window.OKR_PROGRESS_ROWS,
-    okrColors: window.OKR_COLORS,
-    statusColors: window.STATUS_COLORS
-  });
-}
 
 function initScrollReveal() {
   var elements = document.querySelectorAll('[data-reveal]');
@@ -390,196 +391,7 @@ function initTheme() {
   update();
 }
 
-/* Click any OKR card on the home page to open a detail modal showing the
-   ring, metrics, status breakdown, and a CTA to the full OKR Progress page.
-   Re-uses the shared OKR_PROGRESS_ROWS / OKR_COLORS / STATUS_COLORS data. */
-function initOkrModal() {
-  var modal = document.getElementById('okrModal');
-  if (!modal || !window.OKR_PROGRESS_ROWS || !window.OKR_COLORS || !window.STATUS_COLORS) return;
-  var ROWS = window.OKR_PROGRESS_ROWS;
-  var OKR_COLORS = window.OKR_COLORS;
-  var STATUS_COLORS = window.STATUS_COLORS;
-  var banner = document.getElementById('okrModalBanner');
-  var titleEl = document.getElementById('okrModalTitle');
-  var chipsEl = document.getElementById('okrModalChips');
-  var bodyEl = document.getElementById('okrModalBody');
 
-  function esc(s) {
-    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c) {
-      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
-    });
-  }
-  function uniq(arr) { return Array.from(new Set(arr.filter(function(x){ return x != null && x !== ''; }))); }
-  function effectiveStatus(r) {
-    if (r.status) return r.status;
-    if (r.progress == null) return 'Not Started';
-    return 'On Track';
-  }
-  function okrPal(name) {
-    return OKR_COLORS[name] || { bg: '#065577', light: '#28738A', pale: 'rgba(6,85,119,0.12)' };
-  }
-  function statusPal(s) { return STATUS_COLORS[s] || STATUS_COLORS['Not Started']; }
-  function darken(hex, amt) {
-    amt = amt || 0.25;
-    var h = hex.replace('#','');
-    var r = parseInt(h.slice(0,2),16), g = parseInt(h.slice(2,4),16), b = parseInt(h.slice(4,6),16);
-    function f(n){ return Math.max(0, Math.min(255, Math.round(n*(1-amt)))); }
-    return 'rgb(' + f(r) + ',' + f(g) + ',' + f(b) + ')';
-  }
-
-  function render(okrName) {
-    var rows = ROWS.filter(function(r){ return r.okr === okrName; });
-    if (!rows.length) return;
-    var c = okrPal(okrName);
-    var krCount = uniq(rows.map(function(r){ return r.keyResult; })).length;
-    var avg = Math.round(rows.reduce(function(s, r){ return s + (r.progress || 0); }, 0) / rows.length * 100);
-    var stakeholders = uniq(rows.map(function(r){ return r.stakeholder; }));
-    var pms = uniq(rows.map(function(r){ return r.projectManager; }));
-
-    // Status counts
-    var statusCounts = {};
-    rows.forEach(function(r){
-      var s = effectiveStatus(r);
-      statusCounts[s] = (statusCounts[s] || 0) + 1;
-    });
-
-    // Banner gradient using the OKR color
-    banner.setAttribute('style',
-      '--okrm-color:' + c.bg + ';' +
-      '--okrm-color-light:' + c.light + ';' +
-      '--okrm-color-dark:' + darken(c.bg, 0.25) + ';'
-    );
-    titleEl.textContent = okrName;
-    chipsEl.innerHTML = ''
-      + '<span class="okr-modal-chip">' + rows.length + ' Sub-KRs</span>'
-      + '<span class="okr-modal-chip">' + krCount + ' Key Results</span>'
-      + '<span class="okr-modal-chip">' + stakeholders.length + ' Stakeholder' + (stakeholders.length === 1 ? '' : 's') + '</span>';
-
-    // Big ring
-    var size = 140, rad = 56, cx = size/2, cy = size/2, sw = 12;
-    var circ = 2 * Math.PI * rad;
-    var dash = circ * (avg / 100);
-
-    // Status breakdown bars
-    var statusBars = Object.keys(statusCounts).map(function(s){
-      var ssc = statusPal(s);
-      var pct = Math.round(statusCounts[s] / rows.length * 100);
-      return ''
-        + '<div class="okr-modal-status-row">'
-        +   '<div class="okr-modal-status-label">'
-        +     '<span class="okr-modal-status-dot" style="background:' + ssc.bg + ';"></span>' + esc(s)
-        +     '<b>' + statusCounts[s] + '</b>'
-        +   '</div>'
-        +   '<div class="okr-modal-status-bar"><div style="width:' + pct + '%; background:' + ssc.bg + ';"></div></div>'
-        + '</div>';
-    }).join('');
-
-    bodyEl.innerHTML = ''
-      + '<div class="okr-modal-ring-card">'
-      +   '<div class="okr-modal-ring" style="--okrm-color:' + c.bg + ';">'
-      +     '<svg width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + ' ' + size + '">'
-      +       '<circle cx="' + cx + '" cy="' + cy + '" r="' + rad + '" fill="none" stroke="var(--bg-elevated)" stroke-width="' + sw + '"/>'
-      +       '<circle cx="' + cx + '" cy="' + cy + '" r="' + rad + '" fill="none" stroke="' + c.bg + '" stroke-width="' + sw + '" '
-      +         'stroke-dasharray="' + dash + ' ' + circ + '" stroke-linecap="round" '
-      +         'transform="rotate(-90 ' + cx + ' ' + cy + ')"/>'
-      +     '</svg>'
-      +     '<div class="okr-modal-ring-center"><div class="okr-modal-ring-val">' + avg + '%</div><div class="okr-modal-ring-label">Avg Progress</div></div>'
-      +   '</div>'
-      +   '<div class="okr-modal-stat-grid">'
-      +     '<div class="okr-modal-stat"><div class="okr-modal-stat-label">Sub-KRs</div><div class="okr-modal-stat-value">' + rows.length + '</div></div>'
-      +     '<div class="okr-modal-stat"><div class="okr-modal-stat-label">Key Results</div><div class="okr-modal-stat-value">' + krCount + '</div></div>'
-      +     '<div class="okr-modal-stat"><div class="okr-modal-stat-label">Stakeholders</div><div class="okr-modal-stat-value">' + stakeholders.length + '</div></div>'
-      +     '<div class="okr-modal-stat"><div class="okr-modal-stat-label">PMs</div><div class="okr-modal-stat-value">' + pms.length + '</div></div>'
-      +   '</div>'
-      + '</div>'
-      + '<div class="okr-modal-status">'
-      +   '<h4 class="okr-modal-section-title">Status Breakdown</h4>'
-      +   statusBars
-      + '</div>'
-      + '<div class="okr-modal-cta-row">'
-      +   '<a class="okr-modal-cta" href="/okr-progress/index.html?okr=' + encodeURIComponent(okrName) + '">'
-      +     '<span>View Full Report</span>'
-      +     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>'
-      +   '</a>'
-      + '</div>';
-  }
-
-  function open(okrName) {
-    render(okrName);
-    modal.hidden = false;
-    document.body.classList.add('modal-open');
-  }
-  function close() {
-    modal.hidden = true;
-    document.body.classList.remove('modal-open');
-  }
-
-  // Delegate clicks on the home OKR grid (cards are rendered dynamically)
-  var grid = document.getElementById('homeOkrGrid');
-  if (grid) {
-    grid.addEventListener('click', function(e) {
-      var card = e.target.closest('.okr-card');
-      if (card && card.dataset.okr) open(card.dataset.okr);
-    });
-    grid.addEventListener('keydown', function(e) {
-      var card = e.target.closest('.okr-card');
-      if (card && card.dataset.okr && (e.key === 'Enter' || e.key === ' ')) {
-        e.preventDefault();
-        open(card.dataset.okr);
-      }
-    });
-  }
-  modal.querySelectorAll('[data-close]').forEach(function(el) {
-    el.addEventListener('click', close);
-  });
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape' && !modal.hidden) close();
-  });
-}
-
-/* Click any KPI card to expand its full screenshot in a lightbox modal.
-   Lets the user actually see the chart even if its native aspect ratio
-   doesn't fit the compact grid card. */
-function initKpiModal() {
-  var modal = document.getElementById('kpiModal');
-  if (!modal) return;
-  var img = document.getElementById('kpiModalImg');
-  var headerEl = document.getElementById('kpiModalHeader');
-  var subEl = document.getElementById('kpiModalSubheader');
-
-  function open(card) {
-    var src = card.getAttribute('data-img') || '';
-    var header = (card.querySelector('.kpi-card-header') || {}).textContent || '';
-    var sub = (card.querySelector('.kpi-card-subheader') || {}).textContent || '';
-    var accent = card.getAttribute('data-accent') || 'teal';
-    img.style.display = '';
-    img.parentElement.classList.remove('kpi-modal-image--missing');
-    img.src = src;
-    img.alt = header + ' dashboard snapshot';
-    headerEl.textContent = header;
-    subEl.textContent = sub;
-    modal.setAttribute('data-accent', accent);
-    modal.hidden = false;
-    document.body.classList.add('modal-open');
-  }
-  function close() {
-    modal.hidden = true;
-    document.body.classList.remove('modal-open');
-  }
-
-  document.querySelectorAll('.kpi-card').forEach(function(card) {
-    card.addEventListener('click', function() { open(card); });
-    card.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(card); }
-    });
-  });
-  modal.querySelectorAll('[data-close]').forEach(function(el) {
-    el.addEventListener('click', close);
-  });
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape' && !modal.hidden) close();
-  });
-}
 
 function initTilt() {
   if (window.matchMedia('(max-width: 1023px)').matches) return;
@@ -600,9 +412,6 @@ function initTilt() {
 
 document.addEventListener('DOMContentLoaded', function() {
   initTheme();
-  renderHomeOkrCards();
-  initOkrModal();
-  initKpiModal();
   initScrollReveal();
   initTilt();
 });

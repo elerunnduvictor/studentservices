@@ -807,9 +807,12 @@
       out.push({ label: d, kind: "Department", href: "#/" + r.deptSlug });
     });
     KPIS.forEach(function (r) {
+      // A roll-up carries no name and no measure, and its id opens nothing.
+      // Indexing one would put a blank row in the results.
+      if (r.restricted) return;
       out.push({ label: r.subDept + " — " + r.dept, kind: "Sub-department", href: "#/" + r.deptSlug + "/" + r.subDeptSlug, key: r.deptSlug + r.subDeptSlug });
-      out.push({ label: r.employee, kind: "Stakeholder", href: "#/" + r.deptSlug + "/" + r.subDeptSlug + "/" + r.personSlug, key: r.personSlug });
-      out.push({ label: r.measure, kind: "KPI", href: "#/kpi/" + r.id, key: "k" + r.id });
+      if (r.employee) out.push({ label: r.employee, kind: "Stakeholder", href: "#/" + r.deptSlug + "/" + r.subDeptSlug + "/" + r.personSlug, key: r.personSlug });
+      if (r.measure) out.push({ label: r.measure, kind: "KPI", href: "#/kpi/" + r.id, key: "k" + r.id });
     });
     AREAS.forEach(function (a) { out.push({ label: a, kind: "Student outcome", href: "#/area/" + a.toLowerCase() }); });
 
@@ -827,6 +830,22 @@
     var input = document.getElementById("spotlightInput");
     var drop = document.getElementById("spotlightDropdown");
     if (!input || !drop) return;
+
+    /* A partner is offered no search, because there is nothing it could find.
+       Every row they receive is an anonymised roll-up: no employee, no measure,
+       and an id like "rollup-40" that opens to "that KPI is no longer in the
+       scorecard". Departments and sub-departments are not openable to them
+       either. So the index would be a list of blank labels leading to dead
+       ends — a box that looks like it works and never does. Removing it says
+       the true thing: this view is a summary, not something to search.
+       Waited for, not read here: this runs at boot, when the role is still
+       "none", and asking early would answer "not a partner" for everybody. */
+    var box = document.getElementById("spotlight");
+    if (box && window.SS && SS.access) {
+      Promise.resolve(SS.access.ready).then(function () {
+        if (SS.access.isPartner) box.hidden = true;
+      })["catch"](function () { /* leave the search in place */ });
+    }
     var active = -1, results = [];
 
     function close() { drop.hidden = true; active = -1; }

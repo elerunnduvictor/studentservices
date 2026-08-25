@@ -608,3 +608,29 @@
   transition: opacity 0.6s var(--smooth), transform 0.6s var(--smooth);
 }
 [data-reveal].revealed { opacity: 1; transform: none; }
+
+/* ══════════════ THE WALL ══════════════
+   Shown to anyone outside Student Services instead of the page.
+
+   The [hidden] rule first, and it is not belt-and-braces: `.proc-gate` is a
+   grid, and a `display` declaration beats the hidden attribute. Without this
+   line the wall renders for everybody — which is precisely how the same gate
+   on the Emerging Issues page broke once. */
+.proc-gate[hidden], #procMain[hidden] { display: none; }
+.proc-gate { min-height: 70vh; display: grid; place-items: center; padding: 120px 24px 60px; }
+.proc-gate-inner { max-width: 46ch; text-align: center; }
+.proc-gate-inner h1 {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: clamp(1.9rem, 4vw, 2.6rem); font-weight: 600;
+  color: var(--text); margin: 0 0 12px;
+}
+.proc-gate-inner p {
+  font-size: .95rem; line-height: 1.65; color: var(--text-muted); margin: 0 0 24px;
+}
+.proc-gate-inner .proc-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 22px; border-radius: 999px;
+  background: var(--bp-teal); color: #fff; text-decoration: none;
+  font-size: .85rem; font-weight: 600;
+}
+.proc-gate-inner .proc-btn:hover { background: var(--bp-teal-light); }

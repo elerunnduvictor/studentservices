@@ -57,13 +57,43 @@
       links.classList.toggle("open");
     });
     addProcessesNavLink(links);
+    gateEmergingIssuesLink(links);
   };
+
+  /**
+   * Emerging Issues leaves the navbar for anyone outside Student Services.
+   *
+   * The register is internal, and the page already refuses a partner with a
+   * wall — but a link to a wall is worse than no link. It advertises something
+   * they cannot have and makes them click to find that out. Processes never
+   * appears for them at all, and this makes the pair consistent.
+   *
+   * The link is written into six pages as plain markup, so this removes it
+   * rather than adding it: if the script fails, a partner sees a link that
+   * still leads to a locked door, which is the safe direction to fail in.
+   * Row-level security is the actual boundary either way.
+   */
+  function gateEmergingIssuesLink(links) {
+    if (!window.SS || !SS.access) return;
+    var link = null;
+    var all = links.querySelectorAll("a.nav-link");
+    for (var i = 0; i < all.length; i++) {
+      if ((all[i].getAttribute("href") || "").indexOf("/emerging-issues/") !== -1) {
+        link = all[i];
+        break;
+      }
+    }
+    if (!link) return;
+    Promise.resolve(SS.access.ready).then(function () {
+      if (!SS.access.isStudentServices) link.remove();
+    })["catch"](function () { /* leave the nav as it is */ });
+  }
 
   /**
    * "Processes" in the navbar, for anyone who can do something on that page.
    * The rule itself is SS.access.canUseProcesses() — it lives in the access
-   * layer because the home page gateway needs the same answer and does not
-   * load this file.
+   * layer because the home page band needs the same answer and does not load
+   * this file.
    */
   function addProcessesNavLink(links) {
     if (links.dataset.ssProcNavChecked) return;

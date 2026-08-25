@@ -57,6 +57,24 @@
   </nav>
 
   <!-- ═══════════════ HERO ═══════════════ -->
+  <!-- Outside Student Services, this page is not shown at all.
+       The register of how we work is internal, and a partner reaching this URL
+       should be told plainly rather than shown the page with everything on it
+       empty. Row-level security on `processes` is the real boundary; this is
+       what the reader sees.
+
+       Note the [hidden] guard in the stylesheet: .proc-gate is a grid, and a
+       display rule beats the hidden attribute — without it the wall renders
+       for everybody, which is exactly how the same gate broke once before. -->
+  <section class="proc-gate" id="procGate" hidden>
+    <div class="proc-gate-inner">
+      <h1>Process Documentation</h1>
+      <p>This library is internal to Student Services. Your account does not have access to it.</p>
+      <a href="/index.html" class="proc-btn">Back to the hub</a>
+    </div>
+  </section>
+
+  <div id="procMain">
   <header class="proc-hero">
     <div class="hero-pattern"></div>
     <div class="proc-hero-content">
@@ -142,6 +160,7 @@
 
     </div>
   </main>
+  </div>
 
   <!-- ═══════════════ FOOTER ═══════════════ -->
   <footer class="site-footer">

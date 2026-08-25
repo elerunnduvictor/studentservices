@@ -658,3 +658,27 @@
 .sc-kpi-row.is-locked { cursor: default; }
 .sc-kpi-row.is-locked:hover { background: var(--bg-card); }
 .sc-kpi-row.is-locked .sc-kpi-measure { color: var(--text-muted); }
+
+/* ══════════════ PERFORMANCE REPORT LINK ══════════════
+   Moved here from the home page, where it was one of five tiles competing for
+   attention with things people open daily. It answers the question that comes
+   straight after seeing a colour — what standard is this held to — so it sits
+   under the search rather than on another page. */
+.sc-hero-link {
+  display: inline-flex; align-items: center; gap: 9px;
+  margin-top: 18px; padding: 9px 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.28);
+  background: rgba(255,255,255,.10);
+  color: #fff; text-decoration: none;
+  font-family: 'Jost', sans-serif; font-size: .8rem; font-weight: 500;
+  transition: background .2s, border-color .2s, transform .2s;
+}
+.sc-hero-link:hover {
+  background: rgba(255,255,255,.18);
+  border-color: rgba(255,255,255,.45);
+  transform: translateX(2px);
+}
+/* Partners get no spotlight, so the link would otherwise sit against the
+   subtitle with nothing between them. */
+.sc-spotlight[hidden] + .sc-hero-link { margin-top: 22px; }

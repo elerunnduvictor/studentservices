@@ -182,30 +182,6 @@ body.home-single .hero-compact::before {
 }
 .home-head-centered { text-align: center; }
 .home-head-centered .home-head-rule { margin-inline: auto; }
-
-/* ── the four gateways ────────────────────────────────────────────────────
-   Four cards, no headings above them. There were two — "Student Services
-   Leadership" and "Key Performance Indicators" — and both named things this
-   page no longer contains: the leadership tree and the metric row were removed
-   in the same pass. A heading that labels absent content is worse than no
-   heading, so the cards speak for themselves; each carries its own eyebrow.
-
-   One row across the full width, not a 2×2 boxed in the middle. Capped at
-   1180px they sat in a column with dead margins either side, and at full width
-   a 2×2 would make each card 700px wide and 170px tall — a letterbox. Four
-   upright cards fill the same space and keep a proportion worth looking at. */
-.home-gateways {
-  position: relative;
-  max-width: calc(var(--home-max) + 2 * var(--home-gutter));
-  margin-inline: auto;
-  padding: clamp(6px, 1.4vw, 14px) var(--home-gutter) clamp(34px, 4vw, 52px);
-}
-.home-gateways-grid {
-  max-width: none;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: clamp(14px, 1.4vw, 20px);
-}
 /* Five when the Processes gateway is showing, which it is only for stewards
    and reviewers. Stated as a class rather than auto-fit because the count is
    known: auto-fit would happily pack seven across at this page's width, and a
@@ -225,121 +201,13 @@ body.home-single .hero-compact::before {
    card would beat [hidden] and leave a gap where it sits. */
 .home-gateways-grid .gateway[hidden] { display: none; }
 
-/* Upright now: icon, then the naming, then the sentence, with the arrow parked
-   in the corner. A vertical stack reads better in a narrow column than the
-   icon-beside-text row a wide card wanted. */
-.gateway {
-  position: relative;
-  isolation: isolate;
-  display: flex;
-  flex-direction: column;
-  min-height: 202px;
-  padding: 22px 22px 20px;
-  border-radius: 18px;
-  overflow: hidden;
-  text-decoration: none;
-  color: #fff;
-  background: linear-gradient(150deg, var(--gw-from) 0%, var(--gw-mid) 52%, var(--gw-to) 100%);
-  background-size: 170% 170%;
-  background-position: 0% 0%;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.16),
-    0 1px 2px rgba(0,0,0,.18),
-    0 14px 34px -16px rgba(0,0,0,.55);
-  transition:
-    transform .5s cubic-bezier(.2,.7,.3,1),
-    box-shadow .5s cubic-bezier(.2,.7,.3,1),
-    background-position .9s cubic-bezier(.2,.7,.3,1);
-}
-
-/* A wide diagonal highlight that travels across on hover. Slow and
-   low-contrast on purpose — you notice the card woke up, not the sweep. */
-.gateway::before {
-  content: "";
-  position: absolute;
-  inset: -40% -70%;
-  z-index: -1;
-  background: linear-gradient(105deg,
-    transparent 42%, rgba(255,255,255,.16) 50%, transparent 58%);
-  transform: translateX(-40%);
-  transition: transform 1.05s cubic-bezier(.22,.7,.28,1);
-  pointer-events: none;
-}
 .gateway:hover::before,
 .gateway:focus-visible::before { transform: translateX(40%); }
-
-/* Depth in the corners, so the fill has a form rather than being even ink. */
-.gateway::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -2;
-  background:
-    radial-gradient(80% 58% at 8% 0%, rgba(255,255,255,.22), transparent 62%),
-    radial-gradient(86% 76% at 100% 100%, rgba(0,0,0,.30), transparent 64%);
-  pointer-events: none;
-}
-
-.gateway:hover, .gateway:focus-visible {
-  transform: translateY(-6px);
-  background-position: 100% 100%;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.24),
-    0 2px 6px rgba(0,0,0,.2),
-    0 30px 58px -20px rgba(0,0,0,.66);
-}
 .gateway:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
-
-.gateway-icon {
-  width: 46px; height: 46px;
-  display: grid; place-items: center;
-  border-radius: 13px;
-  margin-bottom: 14px;
-  background: linear-gradient(160deg, rgba(255,255,255,.26), rgba(255,255,255,.09));
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.45),
-    inset 0 -1px 0 rgba(0,0,0,.12);
-  transition: transform .5s cubic-bezier(.2,.7,.3,1);
-}
 .gateway:hover .gateway-icon { transform: scale(1.06) rotate(-2deg); }
 .gateway-icon svg { width: 21px; height: 21px; stroke: #fff; }
 
 .gateway-body { display: contents; }
-.gateway-eyebrow {
-  font-size: .575rem;
-  font-weight: 600;
-  letter-spacing: .24em;
-  text-indent: .24em;
-  text-transform: uppercase;
-  color: rgba(255,255,255,.72);
-  margin-bottom: 8px;
-}
-.gateway-title {
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: clamp(1.24rem, 1.5vw, 1.5rem);
-  font-weight: 600;
-  line-height: 1.16;
-  letter-spacing: .01em;
-  text-wrap: balance;
-}
-/* Pushed to the bottom so every card's sentence sits on the same line,
-   whatever the title above it does. */
-.gateway-desc {
-  margin: auto 0 0;
-  padding-top: 13px;
-  border-top: 1px solid rgba(255,255,255,.18);
-  font-size: .81rem;
-  line-height: 1.6;
-  color: rgba(255,255,255,.86);
-  padding-right: 30px;
-}
-.gateway-arrow {
-  position: absolute;
-  right: 22px; bottom: 22px;
-  width: 19px; height: 19px;
-  stroke: rgba(255,255,255,.9);
-  transition: transform .5s cubic-bezier(.2,.7,.3,1);
-}
 .gateway:hover .gateway-arrow,
 .gateway:focus-visible .gateway-arrow { transform: translateX(6px); }
 
@@ -419,59 +287,9 @@ body.home-single .home-row-divider {
   background: linear-gradient(90deg, var(--gold), rgba(255,195,40,0));
 }
 
-/* ── OKR summary ──────────────────────────────────────────────────────────
-   Three objectives across the full width. The cards were flat black panels;
-   they now sit on the same lit surface as everything else, with the objective
-   colour running along the top edge instead of down the side. */
-body.home-single .home-okr-grid {
-  max-width: none;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: clamp(14px, 1.4vw, 20px);
-}
 @media (max-width: 1080px) { body.home-single .home-okr-grid { grid-template-columns: repeat(2, minmax(0,1fr)); } }
 @media (max-width: 700px)  { body.home-single .home-okr-grid { grid-template-columns: minmax(0,1fr); } }
-
-body.home-single .okr-card {
-  position: relative;
-  isolation: isolate;
-  border: 1px solid rgba(255,255,255,.10);
-  border-left: none;
-  border-radius: 16px;
-  padding: 26px 24px 22px;
-  overflow: hidden;
-  background:
-    linear-gradient(165deg, rgba(255,255,255,.075), rgba(255,255,255,.022) 46%, rgba(0,0,0,.14));
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.10), 0 14px 34px -20px rgba(0,0,0,.6);
-  transition: transform .5s cubic-bezier(.2,.7,.3,1),
-              box-shadow .5s cubic-bezier(.2,.7,.3,1),
-              border-color .5s;
-}
-/* The objective colour, along the top. `--okr-color` is already set inline on
-   each card by js/okr-cards.js, so nothing new has to be passed in. */
-body.home-single .okr-card::before {
-  content: "";
-  position: absolute;
-  inset: 0 0 auto 0;
-  height: 3px;
-  background: linear-gradient(90deg, var(--okr-color, #3A929D) 0%,
-              var(--okr-color, #3A929D) 42%, rgba(255,255,255,.10));
-  opacity: 1;
-  transition: opacity .4s;
-}
-body.home-single .okr-card:hover {
-  transform: translateY(-5px);
-  border-color: rgba(255,255,255,.18);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 28px 54px -22px rgba(0,0,0,.7);
-}
 body.home-single .okr-card:hover::before { opacity: 1; }
-
-body.home-single .okr-card-title {
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: clamp(1.12rem, 1.5vw, 1.32rem);
-  line-height: 1.24;
-  text-wrap: balance;
-}
 
 /* ── departments ──────────────────────────────────────────────────────────
    Four across, not a 2×2 stranded in the middle. Each carries its colour as
@@ -485,30 +303,38 @@ body.home-single .dept-grid {
 @media (max-width: 1180px) { body.home-single .dept-grid { grid-template-columns: repeat(2, minmax(0,1fr)); } }
 @media (max-width: 620px)  { body.home-single .dept-grid { grid-template-columns: minmax(0,1fr); } }
 
+/* Glass, like the four tiles above — a white wash on the teal field with the
+   department's colour as an accent, rather than a slab of the colour itself.
+   The hue was doing the work of a background here and competing with the text
+   on it; carrying it in the top edge, the border and the icon says the same
+   thing and leaves the card readable. A faint tint of it stays in the wash so
+   the four cards are still tellable apart at a distance. */
 body.home-single .dept-card {
   position: relative;
   isolation: isolate;
   min-height: 158px;
   background:
-    linear-gradient(160deg, rgba(var(--dc-r), .38), rgba(var(--dc-r), .13) 58%, rgba(0,0,0,.16));
-  border: 1px solid rgba(var(--dc-r), .42);
+    linear-gradient(165deg, rgba(255,255,255,.085), rgba(255,255,255,.025) 46%, rgba(0,0,0,.15)),
+    linear-gradient(165deg, rgba(var(--dc-r), .16), rgba(var(--dc-r), .04) 60%, transparent);
+  border: 1px solid rgba(255,255,255,.11);
   border-radius: 16px;
   overflow: hidden;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.10), 0 14px 32px -20px rgba(0,0,0,.55);
   transition: transform .5s cubic-bezier(.2,.7,.3,1),
               box-shadow .5s cubic-bezier(.2,.7,.3,1),
-              border-color .5s;
+              border-color .5s, background .5s;
 }
 body.home-single .dept-card:hover {
   transform: translateY(-6px);
-  border-color: rgba(var(--dc-r), .58);
+  border-color: rgba(var(--dc-r), .55);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,.16),
     0 28px 56px -22px rgba(0,0,0,.7);
 }
 /* The old accent bar becomes an edge that lights along its length. */
 body.home-single .dept-card-accent {
-  height: 2px;
+  height: 3px;
+  z-index: 2;
   background: linear-gradient(90deg, var(--dc), rgba(var(--dc-r), 0)) !important;
   opacity: .85;
   animation: none !important;
@@ -549,19 +375,6 @@ body.home-single .dept-desc {
 
 /* ── the button under the OKRs ────────────────────────────────────────────── */
 body.home-single .home-okr-cta { margin-top: clamp(22px, 3vw, 34px); }
-body.home-single .home-okr-cta-btn {
-  border-radius: 999px;
-  padding: 12px 26px;
-  background: linear-gradient(135deg, rgba(255,255,255,.14), rgba(255,255,255,.06));
-  border: 1px solid rgba(255,255,255,.2);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.18);
-  transition: transform .4s cubic-bezier(.2,.7,.3,1), border-color .4s, background .4s;
-}
-body.home-single .home-okr-cta-btn:hover {
-  transform: translateY(-2px);
-  border-color: rgba(255,195,40,.6);
-  background: linear-gradient(135deg, rgba(255,195,40,.20), rgba(255,255,255,.07));
-}
 
 @media (prefers-reduced-motion: reduce) {
   body.home-single .okr-card,
@@ -574,22 +387,6 @@ body.home-single .home-okr-cta-btn:hover {
   body.home-single .dept-card:hover .dept-icon { transform: none; }
 }
 
-/* ── legibility on this page, in both themes ──────────────────────────────
-   The home page keeps a teal field whatever the theme; only the rest of the hub
-   lightens. The OKR cards are shared components, so they inherit `--text`,
-   `--text-muted` and `--text-dim` — greys chosen to sit on a white page. On
-   teal, in light mode, that put "Key Results", "Sub-KRs" and the whole status
-   legend at almost no contrast: the numbers were readable and their labels were
-   not.
-
-   Rather than patch each one per theme, the cards are given a genuinely dark
-   surface here and all their ink is set light. One treatment, both themes, no
-   dependence on which way the rest of the hub is running. */
-body.home-single .okr-card {
-  background:
-    linear-gradient(165deg, rgba(4,26,34,.62), rgba(4,20,28,.78)) !important;
-  border-color: rgba(255,255,255,.14) !important;
-}
 body.home-single .okr-card,
 body.home-single .okr-card * { color: rgba(255,255,255,.88); }
 body.home-single .okr-card-eyebrow { color: rgba(255,255,255,.58) !important; }
@@ -618,12 +415,96 @@ body.home-single .home-okr-loading { color: rgba(255,255,255,.6); }
    Deliberately unlike the four gateways below it. They are doors to places
    that do not change; this reports a situation that does, so it is a wide
    single strip rather than a card in the set, and it carries live figures. */
-.home-issues {
+/* ── the two live bands, side by side ─────────────────────────────────────
+   The row is the element with the page's width and gutters; each band inside
+   just fills its column. `auto-fit` rather than a fixed two columns, because
+   either band can be hidden by its own gate — with one showing it should span
+   the row rather than sit in half of it with a hole beside it. */
+.home-bands {
   width: 100%;
   max-width: calc(var(--home-max) + 2 * var(--home-gutter));
   margin-inline: auto;
   padding: 0 var(--home-gutter) clamp(16px, 2vw, 22px);
+  display: grid;
+  /* Exactly two, never three. `auto-fit` fitted a third track at 1920 and left
+     the pair sitting in two of three columns. Two bands, two columns. */
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(14px, 1.6vw, 20px);
+  align-items: stretch;
 }
+/* Side by side from here up.
+   Measured, not guessed: at 1440 the pair fits with room to spare and at 1366
+   the chips and buttons push the page into horizontal scroll. 1420 clears it
+   with a little margin — 1400 exactly was still a pixel over. Below it they stack, full width, still one line each. */
+@media (min-width: 1420px) {
+  .home-bands { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+.home-issues {
+  width: 100%;
+  padding: 0;
+  min-width: 0;              /* a grid child may shrink below its content */
+}
+.home-issues .issue-band { height: 100%; }
+
+/* Two bands in one row have half the width each, but the band stays one line:
+   mark, wording, figures, actions, as it always was. Wrapping the figures and
+   buttons onto their own row made each band twice as tall for no gain — the
+   parts still fit, they just need less air between them.
+
+   `.is-pair` is set by the script that reveals the bands rather than derived
+   with :has(); the script already knows how many it revealed, and a class it
+   sets is true in every browser and visible in the DOM when something looks
+   off. */
+@media (min-width: 861px) {
+  /* Paired, everything on one line, and small enough to actually fit.
+     Measured, not guessed: at half of a 1500px screen a band gets ~700px, and
+     the parts have to come in under that or the row is forced to stack. So the
+     mark, the chips, the buttons and the gaps all give a little. */
+  .home-bands.is-pair .issue-band {
+    /* minmax(0, …), not a fixed floor. A grid item's automatic minimum size is
+       its content, so a floor of 84px plus un-wrappable chips and buttons made
+       the band wider than its track and pushed the whole page into horizontal
+       scroll below 1500px. At 0 the wording gives way instead — it is already
+       ellipsised, and the figures beside it say the same thing. */
+    grid-template-columns: auto minmax(96px, 1fr) auto auto;
+    gap: 10px;
+    padding: 13px 15px;
+  }
+  .home-bands.is-pair .issue-band-mark { width: 34px; height: 34px; }
+  .home-bands.is-pair .issue-band-mark svg { width: 17px; height: 17px; }
+  /* nowrap here too. Without it the eyebrow was the one thing left that could
+     wrap, and when the text column narrowed "HOW WE WORK" broke onto three
+     lines and took the whole band from 86px to 113px. */
+  .home-bands.is-pair .issue-band-eyebrow {
+    font-size: .52rem; letter-spacing: .11em;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .home-bands.is-pair .issue-band-body { min-width: 0; }
+  .home-bands.is-pair .issue-band-title {
+    font-size: .96rem;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  /* One line, trimmed. It is a summary sentence, and the figures beside it say
+     the same thing in less room. */
+  .home-bands.is-pair .issue-band-desc {
+    font-size: .72rem;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  /* Neither of these may wrap: a second row of chips or buttons is exactly what
+     made the band thick before. */
+  .home-bands.is-pair .issue-band-stats { gap: 4px; flex-wrap: nowrap; }
+  .home-bands.is-pair .issue-stat {
+    padding: 3px 6px; font-size: .55rem; letter-spacing: .03em; white-space: nowrap; gap: 3px;
+  }
+  .home-bands.is-pair .issue-stat b { font-size: .74rem; }
+  .home-bands.is-pair .issue-band-actions { gap: 5px; flex-wrap: nowrap; }
+  .home-bands.is-pair .issue-band-btn {
+    padding: 6px 10px; font-size: .66rem; gap: 4px; white-space: nowrap;
+  }
+  .home-bands.is-pair .issue-band-btn svg { width: 13px; height: 13px; }
+}
+/* Below that the two bands are already stacked full width, so they use the
+   layout they always had. */
 .issue-band {
   position: relative;
   display: grid;
@@ -748,4 +629,438 @@ body.home-single .hero-compact h1 span {
 .home-issues.is-in .issue-band { opacity: 1; transform: none; }
 @media (prefers-reduced-motion: reduce) {
   .home-issues .issue-band { opacity: 1; transform: none; transition: none; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   THE FOUR TILES
+
+   Glass, not paint. The same treatment the OKR cards carry: a translucent
+   wash over the page's teal field, a hairline of white, an inset highlight
+   along the top edge, and a deep soft shadow — so the card reads as a pane
+   lying on the field rather than a block covering it.
+
+   Colour is an accent, not a fill: a 3px bar along the top, fading out to the
+   right, in the tile's own hue. That is enough to tell four cards apart at a
+   glance without four slabs of colour competing with the content inside them.
+
+   Two by two, each opening in place. The interaction is the org chart's
+   stakeholder tile: press the head, the body grows, press again and it closes.
+   An expanded tile spans the whole row rather than growing inside its column —
+   an org tree or a pair of charts has nothing useful to say in half the width,
+   and pushing its neighbour aside would move what the reader was looking at.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.home-gw-wrap {
+  width: 100%;
+  max-width: calc(var(--home-max) + 2 * var(--home-gutter));
+  margin-inline: auto;
+  padding: 0 var(--home-gutter) clamp(20px, 2.4vw, 30px);
+}
+.home-gw-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(14px, 1.5vw, 20px);
+  align-items: start;
+}
+
+.gw {
+  position: relative;
+  isolation: isolate;
+  min-width: 0;
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 16px;
+  overflow: hidden;
+  /* Glass first, then a wash of the tile's own hue beneath it. The colour is
+     faint on purpose — enough that four cards are tellable apart across the
+     room, not so much that it competes with the words on top of it. */
+  background:
+    linear-gradient(165deg, rgba(255,255,255,.075), rgba(255,255,255,.022) 46%, rgba(0,0,0,.14)),
+    linear-gradient(165deg, rgba(var(--gw-r), .17), rgba(var(--gw-r), .05) 58%, transparent);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.10), 0 14px 34px -20px rgba(0,0,0,.6);
+  transition: transform .5s cubic-bezier(.2,.7,.3,1),
+              box-shadow .5s cubic-bezier(.2,.7,.3,1),
+              border-color .5s, background .5s;
+}
+/* The tile's colour, along the top and fading out — the OKR cards' accent. */
+.gw::before {
+  content: "";
+  position: absolute; inset: 0 0 auto 0; height: 4px; z-index: 2;
+  background: linear-gradient(90deg, var(--gw-c) 0%, var(--gw-c) 42%, rgba(255,255,255,.10));
+}
+/* Each tile keeps the colour its card carried before — the org chart's teal,
+   the directory's magenta, the scorecard's blue, and the green that used to be
+   the Performance Report's. Each is lifted until it reads against the page's
+   own teal field: the originals sit between 1.3:1 and 2.1:1 against it, which
+   is a colour you cannot see. Hue is preserved, lightness is not. */
+.gw[data-gw="org"]       { --gw-c: #4CC7B3; --gw-r: 76,199,179; }   /* was #2E9483 */
+.gw[data-gw="directory"] { --gw-c: #E58FBE; --gw-r: 229,143,190; }  /* was #C05C90 */
+.gw[data-gw="kpis"]      { --gw-c: #5FC0E2; --gw-r: 95,192,226; }   /* was #1F7A9B */
+.gw[data-gw="okrs"]      { --gw-c: #9BC94F; --gw-r: 155,201,79; }   /* was #7BA33A */
+
+.gw:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255,255,255,.18);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 28px 54px -22px rgba(0,0,0,.7);
+}
+/* An open tile grows in its own column, not across the row. Spanning made the
+   whole grid reflow and moved the tile beside the one you had just pressed;
+   staying put means the other three keep their places and the section keeps
+   its shape. `align-items: start` on the grid lets this one get taller than
+   its neighbour without dragging it along. */
+.gw.is-open {
+  transform: none;
+  border-color: rgba(var(--gw-r), .40);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 30px 60px -24px rgba(0,0,0,.72);
+}
+
+/* ── the head you press ────────────────────────────────────────────────── */
+.gw-head {
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 16px;
+  padding: 22px 24px;
+  background: none; border: 0; cursor: pointer;
+  font: inherit; color: rgba(255,255,255,.96); text-align: left;
+}
+/* The icon carries the accent, faintly — the one place the hue appears as a
+   surface rather than a line. */
+.gw-icon {
+  display: grid; place-items: center;
+  width: 42px; height: 42px; flex: 0 0 auto;
+  border-radius: 12px;
+  background: rgba(var(--gw-r), .18);
+  border: 1px solid rgba(var(--gw-r), .32);
+  color: var(--gw-c);
+}
+.gw-icon svg { width: 21px; height: 21px; }
+.gw-text { display: block; min-width: 0; }
+/* White, not the accent colour. Small uppercase text in a saturated hue on a
+   teal field lands around 2:1 — legible to me on a large screen and to nobody
+   on a laptop in daylight. The colour does its work in the bar and the icon,
+   where being decorative is the whole job. */
+.gw-eyebrow {
+  display: block;
+  font-size: .58rem; letter-spacing: .15em; text-transform: uppercase;
+  color: rgba(255,255,255,.72); font-weight: 700;
+}
+.gw-title {
+  display: block; margin-top: 4px;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: clamp(1.16rem, 1.5vw, 1.42rem); font-weight: 600; line-height: 1.2;
+  color: rgba(255,255,255,.97);
+}
+.gw-desc {
+  display: block; margin-top: 5px;
+  font-size: .82rem; line-height: 1.45; color: rgba(255,255,255,.68);
+}
+.gw-chev {
+  display: grid; place-items: center;
+  width: 30px; height: 30px; flex: 0 0 auto;
+  border-radius: 50%;
+  background: rgba(255,255,255,.07);
+  color: rgba(255,255,255,.8);
+  transition: transform .35s cubic-bezier(.2,.7,.3,1), background .3s;
+}
+.gw-chev svg { width: 17px; height: 17px; }
+.gw:hover .gw-chev { background: rgba(var(--gw-r), .30); }
+.gw.is-open .gw-chev { transform: rotate(180deg); background: rgba(var(--gw-r), .34); }
+/* Hover only. A permanent instruction on four tiles is four lines of noise
+   once you have learnt it. */
+.gw-hint {
+  position: absolute; right: 24px; bottom: 9px;
+  font-size: .54rem; letter-spacing: .13em; text-transform: uppercase;
+  color: rgba(255,255,255,.5);
+  opacity: 0; transition: opacity .25s; pointer-events: none;
+}
+.gw:hover .gw-hint { opacity: 1; }
+.gw.is-open .gw-hint { opacity: 0; }
+.gw-head:focus-visible { outline: 2px solid var(--bp-gold, #FFC328); outline-offset: -4px; }
+
+/* ── the body that grows ─────────────────────────────────────────────────
+   `hidden` is removed first and the class added on the next frame, so there is
+   a height to animate from. Both in one frame and it appears at full size with
+   no transition at all. */
+/* `visibility`, not the hidden attribute.
+   Collapsing with max-height alone leaves the content in the accessibility
+   tree and in the tab order — a screen reader would read four panels nobody
+   can see, and Tab would land inside them. Overriding [hidden] with
+   display:block to keep the animation had exactly that effect. visibility
+   flips to visible the moment it opens, and back only after the closing
+   animation has finished, so it hides properly without cutting the motion. */
+.gw-body {
+  max-height: 0; overflow: hidden; opacity: 0; visibility: hidden;
+  transition: max-height .45s cubic-bezier(.2,.7,.3,1), opacity .3s ease,
+              visibility 0s linear .45s;
+}
+/* A ceiling for the opening frame only — the script replaces it with the
+   content's real height as soon as the panel is filled, so a long panel can
+   never be silently clipped. */
+.gw.is-open .gw-body {
+  max-height: 4000px; opacity: 1; visibility: visible;
+  transition: max-height .45s cubic-bezier(.2,.7,.3,1), opacity .3s ease,
+              visibility 0s linear 0s;
+}
+.gw-body-inner { padding: 0 24px 24px; color: rgba(255,255,255,.92); }
+
+/* A second, fainter pane inside the first — the content sits on its own glass
+   so it separates from the card without a hard border. */
+.gw-panel {
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: 13px;
+  padding: clamp(15px, 1.7vw, 21px);
+  overflow-x: auto;                      /* wide content scrolls, the page does not */
+}
+.gw-loading, .gw-empty {
+  font-size: .85rem; color: rgba(255,255,255,.66); padding: 8px 2px;
+}
+.gw-cta {
+  display: inline-flex; align-items: center; gap: 9px;
+  margin-top: 15px; padding: 10px 19px;
+  border-radius: 999px;
+  border: 1px solid rgba(var(--gw-r), .45);
+  background: rgba(var(--gw-r), .18);
+  color: #fff;
+  font-size: .82rem; font-weight: 600; text-decoration: none;
+  transition: background .25s, border-color .25s, transform .25s;
+}
+.gw-cta:hover {
+  background: rgba(var(--gw-r), .32);
+  border-color: rgba(var(--gw-r), .7);
+  transform: translateX(2px);
+}
+
+@media (max-width: 900px) {
+  .home-gw-grid { grid-template-columns: minmax(0, 1fr); }
+  .gw-head { grid-template-columns: auto 1fr auto; padding: 18px 18px; }
+  .gw-body-inner { padding: 0 18px 18px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gw, .gw-body, .gw-chev, .gw-cta { transition: none; }
+  .gw:hover { transform: none; }
+}
+
+/* ── what lives inside an expanded tile ──────────────────────────────────
+   All of it sits on the tile's glass, so everything here is drawn in white at
+   varying strength rather than in theme tokens — the home page keeps its teal
+   field in both themes, and a token would resolve to near-black in light. */
+
+.ht-col-title {
+  font-size: .62rem; letter-spacing: .14em; text-transform: uppercase;
+  color: rgba(255,255,255,.62); font-weight: 700; margin-bottom: 12px;
+}
+.ht-sub { font-size: .78rem; color: rgba(255,255,255,.6); margin-top: 3px; }
+.ht-sec-title {
+  margin: 18px 0 10px; padding-top: 14px;
+  border-top: 1px solid rgba(255,255,255,.10);
+  font-size: .62rem; letter-spacing: .14em; text-transform: uppercase;
+  color: rgba(255,255,255,.62); font-weight: 700;
+}
+.ht-two {
+  display: grid; grid-template-columns: minmax(0,1.35fr) minmax(0,1fr);
+  gap: clamp(18px, 2.4vw, 34px); align-items: start;
+}
+/* The panels live inside half a row now, so they stack well before the page
+   itself is narrow. Container queries would say this more directly; this is
+   the width at which the bars and the ring stop having room side by side. */
+@media (max-width: 1500px) { .ht-two { grid-template-columns: minmax(0,1fr); } }
+
+/* ── org tree ───────────────────────────────────────────────────────────
+   Two different relationships, drawn two different ways.
+
+   Ben to the directors is a hierarchy, so it reads downward: a drop from him
+   to a horizontal bus, and a drop from that bus to each director.
+
+   The people under a director are not above or below one another — they are
+   peers reporting to the same person. Stacking them vertically with arrows
+   between would say the opposite. So they hang off a spine on the left, each
+   reached by a stub from the side, which is how an org chart says "these are
+   siblings" rather than "this one is under that one". */
+.ht-tree { display: grid; gap: 18px; justify-items: center; min-width: min-content; }
+
+.ht-node {
+  position: relative;
+  border: 1px solid rgba(var(--nc-r, 255,255,255), .38);
+  background: rgba(var(--nc-r, 255,255,255), .12);
+  border-radius: 10px; padding: 9px 13px; text-align: center;
+  min-width: 132px;
+}
+/* The department's colour down the leading edge. An inset shadow rather than a
+   pseudo-element on purpose: the sub-nodes need both of their pseudos for the
+   connectors, and a colour bar drawn with ::after would be overwritten by the
+   spine — the people under a director would quietly lose their colour. */
+.ht-node { box-shadow: inset 3px 0 0 var(--nc, rgba(255,255,255,.35)); }
+.ht-node-name { font-size: .84rem; font-weight: 600; color: rgba(255,255,255,.95); }
+.ht-node-role { font-size: .66rem; color: rgba(255,255,255,.6); margin-top: 2px; line-height: 1.35; }
+.ht-node.is-vp {
+  border-color: rgba(var(--nc-r, 255,195,40), .55);
+  background: rgba(var(--nc-r, 255,195,40), .18);
+}
+.ht-node.is-dir { font-weight: 600; }
+
+/* ── Ben down to the directors ── */
+.ht-top { position: relative; padding-bottom: 16px; }
+.ht-top::after {
+  content: ""; position: absolute; left: 50%; bottom: 0; width: 1px; height: 16px;
+  background: rgba(255,255,255,.28);
+}
+.ht-branches {
+  display: grid; grid-auto-flow: column; gap: 14px;
+  align-items: start; justify-content: center;
+}
+.ht-branch { position: relative; padding-top: 16px; display: grid; gap: 10px; justify-items: center; }
+/* The bus: each branch draws its own segment, and the outer two stop at their
+   own centre, so together they form one line spanning first to last. */
+.ht-branch::before {
+  content: "";
+  position: absolute; top: 0; height: 1px;
+  /* Half the 14px gap on each side, so neighbouring segments meet instead of
+     leaving the bus dashed across the gaps between branches. */
+  left: -7px; right: -7px;
+  background: rgba(255,255,255,.28);
+}
+.ht-branch:first-child::before { left: 50%; }
+.ht-branch:last-child::before  { right: 50%; }
+/* White, not the department colour. Records is teal and the page is teal, so
+   its connectors vanished while the other three showed — the colour belongs on
+   the node itself, where it sits on the node's own darker ground. */
+.ht-branch::after {
+  content: ""; position: absolute; top: 0; left: 50%; width: 1px; height: 16px;
+  background: rgba(255,255,255,.28);
+}
+
+/* ── a director's people, hanging off the side ── */
+.ht-sub {
+  position: relative;
+  display: grid; gap: 8px;
+  width: 100%;
+  padding-left: 18px; margin-top: 4px;
+}
+.ht-sub .ht-node { min-width: 0; padding: 7px 11px; text-align: left; }
+.ht-sub .ht-node-name { font-size: .78rem; }
+/* The stub in from the spine. */
+.ht-sub .ht-node::before {
+  content: ""; position: absolute; left: -18px; top: 50%; width: 18px; height: 1px;
+  background: rgba(255,255,255,.26);
+}
+/* The spine, drawn in pieces: each row carries the segment above itself and
+   stops at its own centre, so the line ends at the last person rather than
+   running on into empty space below them. */
+.ht-sub .ht-node::after {
+  content: ""; position: absolute; left: -18px; top: -9px; bottom: 50%; width: 1px;
+  background: rgba(255,255,255,.26);
+}
+/* The first one reaches further up, to meet the director it hangs from. */
+.ht-sub .ht-node:first-child::after { top: -14px; }
+.ht-more {
+  font-size: .68rem; color: rgba(255,255,255,.55);
+  padding: 2px 0 0 2px;
+}
+
+@media (max-width: 900px) {
+  .ht-branches { grid-auto-flow: row; }
+  .ht-branch::before { display: none; }
+}
+
+/* ── directory charts ─────────────────────────────────────────────────── */
+.ht-bar-row { display: grid; grid-template-columns: 1fr; gap: 5px; margin-bottom: 11px; }
+.ht-bar-label {
+  font-size: .74rem; color: rgba(255,255,255,.78);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ht-bar-track { height: 20px; background: rgba(255,255,255,.07); border-radius: 5px; overflow: hidden; }
+.ht-bar-fill {
+  height: 100%; border-radius: 5px;
+  display: flex; align-items: center; justify-content: flex-end;
+  padding-right: 7px; min-width: 26px;
+}
+.ht-bar-value { font-size: .68rem; font-weight: 700; color: #fff; }
+.ht-donut-wrap { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.ht-donut { width: 148px; height: 148px; flex: 0 0 auto; }
+.ht-donut-n { font-size: 26px; font-weight: 700; fill: #fff; }
+.ht-donut-l { font-size: 9px; fill: rgba(255,255,255,.6); letter-spacing: .1em; text-transform: uppercase; }
+.ht-legend { display: grid; gap: 7px; min-width: 0; }
+.ht-leg {
+  display: flex; align-items: center; gap: 8px;
+  font-size: .74rem; color: rgba(255,255,255,.78);
+}
+.ht-leg b { margin-left: auto; padding-left: 10px; color: #fff; }
+.ht-swatch { width: 10px; height: 10px; border-radius: 3px; flex: 0 0 auto; }
+
+/* ── KPI panel ────────────────────────────────────────────────────────── */
+.ht-kpi-head {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 18px; margin-bottom: 16px;
+}
+/* The head already names the scope; the column titles under it are a second
+   heading, and without this they sat straight on top of the sub-line. */
+.ht-kpi-head + .ht-two .ht-col-title { margin-top: 0; }
+.ht-health {
+  text-align: right; line-height: 1; flex: 0 0 auto;
+}
+.ht-health b { font-size: 1.7rem; font-weight: 700; color: #fff; }
+.ht-health span {
+  display: block; margin-top: 3px;
+  font-size: .56rem; letter-spacing: .14em; text-transform: uppercase;
+  color: rgba(255,255,255,.55);
+}
+
+/* One stacked bar per team: each segment a status, widths in proportion.
+   Reading which team carries the reds is the question a list of individual
+   KPIs made you do by hand. */
+.ht-stack {
+  display: flex; height: 20px; border-radius: 5px; overflow: hidden;
+  background: rgba(255,255,255,.07);
+}
+.ht-seg { height: 100%; }
+.ht-seg:first-child { border-radius: 5px 0 0 5px; }
+.ht-seg:last-child  { border-radius: 0 5px 5px 0; }
+.ht-bar-label { display: flex; align-items: baseline; gap: 8px; }
+.ht-bar-n { margin-left: auto; font-size: .68rem; color: rgba(255,255,255,.55); }
+
+/* ── OKR panel ────────────────────────────────────────────────────────── */
+.ht-okrs { display: grid; gap: 12px; }
+.ht-okr {
+  padding: 14px 16px; border-radius: 11px;
+  background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.09);
+}
+.ht-okr-head { display: flex; align-items: baseline; gap: 12px; }
+.ht-okr-name {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.02rem; font-weight: 600; color: rgba(255,255,255,.95); line-height: 1.25;
+}
+.ht-okr-meta { font-size: .72rem; color: rgba(255,255,255,.6); margin-top: 3px; }
+
+/* One row per key result: what it is, how far it has got, the number.
+   The name is allowed two lines and then trims — these run long, and a card
+   of forty full sentences is a document, not a summary. */
+.ht-krs { display: grid; gap: 7px; margin-top: 12px; }
+.ht-kr {
+  display: grid; grid-template-columns: minmax(0, 1fr) 96px 42px;
+  gap: 10px; align-items: center;
+}
+.ht-kr-name {
+  font-size: .74rem; color: rgba(255,255,255,.8); line-height: 1.35;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.ht-kr-bar { height: 6px; border-radius: 3px; background: rgba(255,255,255,.10); overflow: hidden; }
+.ht-kr-fill { height: 100%; border-radius: 3px; }
+.ht-kr-fill.is-good { background: linear-gradient(90deg,#2E9E5C,#57C083); }
+.ht-kr-fill.is-mid  { background: linear-gradient(90deg,#28738A,#4FA8D8); }
+.ht-kr-fill.is-risk { background: linear-gradient(90deg,#C9762E,#E8A33D); }
+.ht-kr-pct {
+  font-size: .7rem; font-weight: 700; color: rgba(255,255,255,.92);
+  text-align: right; white-space: nowrap;
+}
+.ht-kr-pct.is-none { color: rgba(255,255,255,.4); font-weight: 400; }
+@media (max-width: 620px) {
+  .ht-kr { grid-template-columns: minmax(0, 1fr) 64px 38px; gap: 8px; }
+}
+.ht-okr-meta .is-risk { color: #E8A33D; }
+.ht-okr-pct {
+  margin-left: auto;
+  font-size: .95rem; font-weight: 700; color: #fff; white-space: nowrap;
 }

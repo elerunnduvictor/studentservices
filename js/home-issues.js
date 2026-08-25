@@ -85,6 +85,8 @@
       stat(brief.going_stale || 0, "no update", "amber");
 
     band.hidden = false;
+    // Tell the row it may now hold two bands, so they lay out as a pair.
+    if (SS.home && SS.home.syncBands) SS.home.syncBands();
     // Arriving is softened rather than popped — it lands after the rest of the
     // page, and a hard appearance reads as a glitch.
     requestAnimationFrame(() => band.classList.add("is-in"));

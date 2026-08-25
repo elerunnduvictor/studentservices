@@ -10,6 +10,23 @@
    `allowed_editors` table and the RLS policies. This file only makes the rule
    visible early, so someone who isn't an editor is told on arrival instead of
    after typing into a grid.
+
+   ── NAMING THESE PAGES ────────────────────────────────────────────────────
+   The PM Hub answers on its own host and reaches these files through a rewrite
+   in vercel.json: /:path* -> /pm/:path*. Vercel checks the filesystem BEFORE it
+   applies a rewrite, so any page here whose name also exists at the repo root
+   is shadowed by the root one and never reached.
+
+   That is not hypothetical. pm/directory.html was reached at /directory, which
+   collides with the hub's own directory/ folder; once clean URLs were switched
+   on, a signed-in PM clicking "Directory" was served the hub's directory page,
+   which has its own auth guard and bounced them to the hub's sign-in screen.
+   The file is now workforce.html and the tab still reads "Directory".
+
+   So: before adding a page here, check the repo root for a folder or .html of
+   the same name. Currently taken — css, departments, directory, docs,
+   emerging-issues, js, login, okr-progress, org-chart, performance-standards,
+   photos, processes, scorecard, shared, supabase.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 (function () {

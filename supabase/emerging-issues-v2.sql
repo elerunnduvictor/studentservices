@@ -10,7 +10,7 @@
 --     something is being done, or whether it is finished:
 --
 --         Exploring              still working out what it is
---         Resolution in process  something is being done about it
+--         Resolution in progress something is being done about it
 --         Resolved               finished
 --
 --  2. NO TARGET DATE. Nobody was setting one honestly, and a promised date
@@ -60,11 +60,16 @@ update public.emerging_issues
    set status = case status
      when 'Open'          then 'Exploring'
      when 'Investigating' then 'Exploring'
-     when 'Monitoring'    then 'Resolution in process'
-     when 'Escalated'     then 'Resolution in process'
+     when 'Monitoring'    then 'Resolution in progress'
+     when 'Escalated'     then 'Resolution in progress'
+     -- The first pass of this patch said "in process". The word is "progress";
+     -- naming it here means re-running the file is all it takes to correct a
+     -- database that already went through the earlier version.
+     when 'Resolution in process' then 'Resolution in progress'
      else status
    end
- where status in ('Open', 'Investigating', 'Monitoring', 'Escalated');
+ where status in ('Open', 'Investigating', 'Monitoring', 'Escalated',
+                  'Resolution in process');
 
 -- The log keeps its own copy of the status at the time of writing, so those
 -- move too or the history would read in two vocabularies.
@@ -72,18 +77,23 @@ update public.emerging_issue_updates
    set status_then = case status_then
      when 'Open'          then 'Exploring'
      when 'Investigating' then 'Exploring'
-     when 'Monitoring'    then 'Resolution in process'
-     when 'Escalated'     then 'Resolution in process'
+     when 'Monitoring'    then 'Resolution in progress'
+     when 'Escalated'     then 'Resolution in progress'
+     -- The first pass of this patch said "in process". The word is "progress";
+     -- naming it here means re-running the file is all it takes to correct a
+     -- database that already went through the earlier version.
+     when 'Resolution in process' then 'Resolution in progress'
      else status_then
    end
- where status_then in ('Open', 'Investigating', 'Monitoring', 'Escalated');
+ where status_then in ('Open', 'Investigating', 'Monitoring', 'Escalated',
+                       'Resolution in process');
 
 alter table public.emerging_issues
   alter column status set default 'Exploring';
 
 alter table public.emerging_issues
   add constraint emerging_issues_status_check
-  check (status in ('Exploring', 'Resolution in process', 'Resolved'));
+  check (status in ('Exploring', 'Resolution in progress', 'Resolved'));
 
 -- ── 1b. who raised it, by name ────────────────────────────────────────────
 alter table public.emerging_issues
@@ -207,7 +217,7 @@ select * from (
     count(*) filter (where resolved_at is null and severity = 'Moderate')   as amber_open,
     count(*) filter (where resolved_at is null and status = 'Exploring')    as exploring,
     count(*) filter (where resolved_at is null
-                       and status = 'Resolution in process')                as in_process,
+                       and status = 'Resolution in progress')               as in_progress,
     -- Raised but untouched for a fortnight: the quiet failure mode, and now
     -- the only time-based signal left, since target dates are gone.
     count(*) filter (where resolved_at is null and days_since_update >= 14) as going_stale,

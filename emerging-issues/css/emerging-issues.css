@@ -180,7 +180,7 @@
   width: 100%; display: grid;
   /* A fixed first column, not `auto`.
      The status chips are words of very different lengths — "Exploring" against
-     "Resolution in process" — and an auto column sized itself to whichever
+     "Resolution in progress" — and an auto column sized itself to whichever
      chip that card happened to hold, so every title in the list started at a
      different place. The width fits the longest status at this font size. */
   grid-template-columns: 168px 1fr auto;

@@ -38,7 +38,7 @@
      this has been worked out yet, whether something is being done, or whether
      it is finished. See supabase/emerging-issues-v2.sql for the remapping of
      what was already raised under the old five. */
-  const STATUS = ["Exploring", "Resolution in process", "Resolved"];
+  const STATUS = ["Exploring", "Resolution in progress", "Resolved"];
 
   /* ── the three windows ──────────────────────────────────────────────────
      Buckets by age in days, not by calendar week. A calendar week would move

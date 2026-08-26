@@ -26,11 +26,12 @@
   function plural(n, one, many) { return n + " " + (n === 1 ? one : many); }
 
   /** The one line worth reading, chosen by what is most urgent.
-      "Escalated", "overdue" and "due this week" used to lead this sentence.
-      All three are gone: the status they counted no longer exists, and target
-      dates are no longer collected, so each could only ever have reported zero.
-      A banner that says "0 overdue" every day is a fact about the form, not
-      about the work. */
+      Kept to the same three things the figures beside it count, so the sentence
+      and the numbers never tell different stories. Counts that could only ever
+      report zero have been dropped as they arose — "overdue" and "due this
+      week" when target dates stopped being collected, "no recent update" when
+      issues became report-once. A banner that says "0 overdue" every day is a
+      fact about the form, not about the work. */
   function headline(b) {
     const bits = [];
     if (b.red_open)  bits.push(plural(b.red_open, "critical issue", "critical issues"));

@@ -33,14 +33,9 @@
       about the work. */
   function headline(b) {
     const bits = [];
-    if (b.red_open)   bits.push(plural(b.red_open, "critical issue", "critical issues"));
-    // The view still calls this going_stale and counts days_since_update, which
-    // falls back to the day the issue was raised. Nothing can be written on an
-    // issue any more, so that figure is simply its age — and the wording says
-    // age rather than implying somebody failed to post an update.
-    if (b.going_stale) bits.push(b.going_stale + " open over a fortnight");
-    if (!bits.length && b.exploring) bits.push(b.exploring + " still being explored");
-    if (!bits.length && b.raised_7d) bits.push(plural(b.raised_7d, "raised this week", "raised this week"));
+    if (b.red_open)  bits.push(plural(b.red_open, "critical issue", "critical issues"));
+    if (b.raised_7d) bits.push(b.raised_7d + " raised this week");
+    if (!bits.length && b.raised_prev7) bits.push(b.raised_prev7 + " raised last week");
     if (!bits.length) return "Nothing needs attention right now.";
     return bits.join(" · ") + ".";
   }
@@ -82,11 +77,15 @@
          <b>${n}</b>${label}</span>`;
 
     document.getElementById("issueBandDesc").textContent = headline(brief);
+    /* The same three the register itself is organised by: what came in this
+       week, what came in the week before, and what is critical. "Open" went
+       because it counted everything ever raised and unresolved — a number that
+       only grows, and one nobody can act on. These three are each a question
+       with an answer. */
     document.getElementById("issueBandStats").innerHTML =
-      stat(brief.open_total || 0, "open", null) +
-      stat(brief.red_open || 0, "critical", "red") +
-      // Age, now the only time-based signal the register keeps.
-      stat(brief.going_stale || 0, "over 14 days", "amber");
+      stat(brief.raised_7d || 0, "this week", null) +
+      stat(brief.raised_prev7 || 0, "last week", null) +
+      stat(brief.red_open || 0, "critical", "red");
 
     band.hidden = false;
     // Tell the row it may now hold two bands, so they lay out as a pair.

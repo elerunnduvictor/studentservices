@@ -222,7 +222,12 @@ select * from (
     -- the only time-based signal left, since target dates are gone.
     count(*) filter (where resolved_at is null and days_since_update >= 14) as going_stale,
     count(*) filter (where resolved_at >= now() - interval '30 days')       as resolved_30d,
-    count(*) filter (where created_at  >= now() - interval '7 days')        as raised_7d
+    count(*) filter (where created_at  >= now() - interval '7 days')        as raised_7d,
+    -- The week before this one, so the home page can mirror the register's own
+    -- Current Week / Last Week split rather than inventing a second vocabulary
+    -- for the same thing.
+    count(*) filter (where created_at  <  now() - interval '7 days'
+                       and created_at  >= now() - interval '14 days')        as raised_prev7
   from public.v_emerging_issues
 ) b
 where public.hub_role() in ('staff', 'director', 'admin');

@@ -62,7 +62,6 @@
   --shadow-hover: 0 8px 30px rgba(0,0,0,0.4);
 }
 
-
 .ei {
   max-width: 1180px;
   margin: 0 auto;
@@ -138,7 +137,6 @@
 [data-theme="dark"] .ei-tab.is-on .ei-tab-n  { background: #5FB3C9; color: #06222c; }
 [data-theme="dark"] .ei-tab-n.is-quiet       { background: none; color: var(--text-dim); }
 [data-theme="dark"] .ei-tab.is-on .ei-tab-n.is-quiet { background: rgba(95,179,201,.20); color: #5FB3C9; }
-
 
 /* ── controls ───────────────────────────────────────────────────────────── */
 .ei-controls {
@@ -231,31 +229,16 @@
 .ei-chip-sev-low      { background: rgba(46,158,92,.16);  color: #2E9E5C; }
 .ei-chip-status    { background: rgba(127,137,138,.16); color: var(--text-muted); font-weight: 500; }
 
-/* ── the log ────────────────────────────────────────────────────────────── */
-.ei-log { margin-top: 18px; display: flex; flex-direction: column; gap: 12px; }
-.ei-log-loading, .ei-log-empty { font-size: .8rem; color: var(--text-dim); margin: 0; }
-.ei-log-item { border-left: 2px solid var(--border); padding-left: 14px; }
-.ei-log-meta {
-  display: flex; flex-wrap: wrap; align-items: center; gap: 9px;
-  font-size: .7rem; color: var(--text-dim); margin-bottom: 5px;
-}
-.ei-log-who { font-weight: 500; color: var(--text-muted); }
-.ei-log-note { margin: 0; font-size: .84rem; line-height: 1.6; color: var(--text); }
-
-/* ── adding an update ───────────────────────────────────────────────────── */
-.ei-add-update { margin-top: 18px; padding-top: 16px; border-top: 1px dashed var(--border); }
 .ei-label {
   display: block; font-size: .68rem; font-weight: 600; letter-spacing: .12em;
   text-transform: uppercase; color: var(--text-dim); margin-bottom: 7px;
 }
-.ei-add-update textarea, .ei-dialog textarea, .ei-dialog input[type="text"],
-.ei-dialog input[type="date"], .ei-dialog select, .ei-add-update select {
+.ei-dialog textarea, .ei-dialog input[type="text"],
+.ei-dialog input[type="date"], .ei-dialog select {
   font: inherit; font-size: .84rem; width: 100%;
   padding: 9px 11px; border: 1px solid var(--border); border-radius: 8px;
   background: var(--bg); color: var(--text); resize: vertical;
 }
-.ei-add-row { display: flex; gap: 9px; margin-top: 9px; flex-wrap: wrap; }
-.ei-add-row select { width: auto; min-width: 130px; }
 
 /* ── buttons ────────────────────────────────────────────────────────────── */
 .ei-btn {
@@ -478,8 +461,7 @@
 .ei-filters select:focus-visible,
 .ei-dialog select:focus-visible,
 .ei-dialog input:focus-visible,
-.ei-dialog textarea:focus-visible,
-.ei-add-update textarea:focus-visible {
+.ei-dialog textarea:focus-visible {
   outline: 2px solid var(--bp-teal-light, #28738A);
   outline-offset: 1px;
   border-color: var(--bp-teal-light, #28738A);

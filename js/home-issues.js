@@ -6,7 +6,7 @@
 
    A link that always says the same thing is furniture; people stop seeing it.
    This one reads the register and says what is actually true today — "2 critical
-   issues · 3 with no recent update" — so the home page changes when the
+   issues · 3 open over a fortnight" — so the home page changes when the
    situation does, which is the whole argument for people coming back to it.
 
    It stays hidden until there is something to say. Three reasons, in order of
@@ -34,7 +34,11 @@
   function headline(b) {
     const bits = [];
     if (b.red_open)   bits.push(plural(b.red_open, "critical issue", "critical issues"));
-    if (b.going_stale) bits.push(b.going_stale + " with no recent update");
+    // The view still calls this going_stale and counts days_since_update, which
+    // falls back to the day the issue was raised. Nothing can be written on an
+    // issue any more, so that figure is simply its age — and the wording says
+    // age rather than implying somebody failed to post an update.
+    if (b.going_stale) bits.push(b.going_stale + " open over a fortnight");
     if (!bits.length && b.exploring) bits.push(b.exploring + " still being explored");
     if (!bits.length && b.raised_7d) bits.push(plural(b.raised_7d, "raised this week", "raised this week"));
     if (!bits.length) return "Nothing needs attention right now.";
@@ -81,8 +85,8 @@
     document.getElementById("issueBandStats").innerHTML =
       stat(brief.open_total || 0, "open", null) +
       stat(brief.red_open || 0, "critical", "red") +
-      // Silence, now the only time-based signal the register keeps.
-      stat(brief.going_stale || 0, "no update", "amber");
+      // Age, now the only time-based signal the register keeps.
+      stat(brief.going_stale || 0, "over 14 days", "amber");
 
     band.hidden = false;
     // Tell the row it may now hold two bands, so they lay out as a pair.

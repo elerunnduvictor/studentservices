@@ -61,7 +61,7 @@
     "Dean of Students",
     "Digital Operations",
   ];
-  const STALE_DAYS = 14;
+  const OLD_DAYS = 14;          // when an unresolved issue starts to look stuck
 
   const el = (id) => document.getElementById(id);
   const esc = (s) => String(s == null ? "" : s)
@@ -98,11 +98,15 @@
       score += 45;
       why.push(`still exploring after ${i.age_days} days`);
     }
-    // Silence. An issue nobody has written on is the one that quietly rots, and
-    // it is the cheapest thing on this page to detect.
-    if (i.days_since_update >= STALE_DAYS) {
-      score += 20 + Math.min(i.days_since_update, 60);
-      why.push(`no update in ${i.days_since_update} days`);
+    /* Age, not silence.
+       This used to say "no update in 25 days", which was fair when an issue
+       could be written on. Nothing can be added to one now — it is reported
+       once and that is the record — so the absence of updates says nothing
+       about the issue, only about the form. What still means something is how
+       long it has been sitting there. */
+    if (i.age_days >= OLD_DAYS) {
+      score += 20 + Math.min(i.age_days, 60);
+      why.push(`raised ${i.age_days} days ago`);
     }
     return { score, why };
   }
@@ -248,26 +252,14 @@
                stroke-width="2" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
         </button>
 
+        <!-- Report once, and that is the record.
+             There was an "Add an update" box here that could also move the
+             status and the severity. Raising an issue is a report, not a
+             ticket somebody comes back to edit — so what is written when it is
+             raised is what it says, and the card is read-only from then on. -->
         <div class="ei-card-body" ${open ? "" : "hidden"}>
           ${i.summary ? `<p class="ei-para">${esc(i.summary)}</p>` : ""}
           ${i.impact ? `<p class="ei-para"><strong>Who it affects.</strong> ${esc(i.impact)}</p>` : ""}
-          <div class="ei-log" data-log="${i.id}">
-            <p class="ei-log-loading">Loading updates…</p>
-          </div>
-          <form class="ei-add-update" data-issue="${i.id}">
-            <label class="ei-label" for="note-${i.id}">Add an update</label>
-            <textarea id="note-${i.id}" rows="2" required
-              placeholder="What changed, what you tried, what you need."></textarea>
-            <div class="ei-add-row">
-              <select name="status" aria-label="Move status to">
-                ${STATUS.map((s) => `<option value="${s}"${s === i.status ? " selected" : ""}>${s}</option>`).join("")}
-              </select>
-              <select name="severity" aria-label="Change severity">
-                ${SEVERITY.map((s) => `<option value="${s}"${s === i.severity ? " selected" : ""}>${s}</option>`).join("")}
-              </select>
-              <button type="submit" class="ei-btn ei-btn-small">Post update</button>
-            </div>
-          </form>
         </div>
       </article>`;
   }
@@ -276,7 +268,7 @@
     return afterFilters().filter((i) => bucketOf(i) === TAB).sort((a, b) => {
       const d = triage(b).score - triage(a).score;
       if (d) return d;
-      return (b.days_since_update || 0) - (a.days_since_update || 0);
+      return (b.age_days || 0) - (a.age_days || 0);
     });
   }
 
@@ -303,34 +295,6 @@
     }
     host.innerHTML = rows.map(issueCard).join("");
     watchSeverity(host);
-  }
-
-  /* ── the update log, fetched only when an issue is opened ───────────────── */
-  async function loadLog(id) {
-    const host = document.querySelector(`[data-log="${id}"]`);
-    if (!host) return;
-    try {
-      const rows = await SS.db.select("emerging_issue_updates", {
-        order: "created_at.desc",
-        filter: { issue_id: "eq." + id },
-      });
-      if (!rows.length) {
-        host.innerHTML = `<p class="ei-log-empty">No updates yet.</p>`;
-        return;
-      }
-      host.innerHTML = rows.map((u) => `
-        <div class="ei-log-item">
-          <div class="ei-log-meta">
-            ${chip("sev-" + String(u.severity_then || "").toLowerCase(), u.severity_then || "—")}
-            <span>${esc(u.status_then || "")}</span>
-            <span class="ei-log-who">${esc(u.created_by || "")}</span>
-            <span class="ei-log-when">${fmtDate(u.created_at)}</span>
-          </div>
-          <p class="ei-log-note">${esc(u.note)}</p>
-        </div>`).join("");
-    } catch (err) {
-      host.innerHTML = `<p class="ei-log-empty">Could not load updates — ${esc(err.message)}</p>`;
-    }
   }
 
   /* ── writing ───────────────────────────────────────────────────────────── */
@@ -379,23 +343,6 @@
       // that cannot be typed wrong.
     };
     await SS.db.insert("emerging_issues", [body]);
-  }
-
-  async function postUpdate(form) {
-    const id = Number(form.dataset.issue);
-    const note = form.querySelector("textarea").value.trim();
-    if (!note) return;
-    const status = form.querySelector('[name="status"]').value;
-    const severity = form.querySelector('[name="severity"]').value;
-
-    // The note first, so the log records the state it was written against, then
-    // the issue — otherwise a note explaining a change would be stamped with
-    // the state it was explaining the move *away* from.
-    await SS.db.insert("emerging_issue_updates", [{ issue_id: id, note: note }]);
-    const issue = ISSUES.find((x) => x.id === id);
-    if (issue && (issue.status !== status || issue.severity !== severity)) {
-      await SS.db.update("emerging_issues", id, { status, severity }, "id");
-    }
   }
 
   function say(msg, bad) {
@@ -534,24 +481,6 @@
       const id = Number(card.dataset.id);
       OPEN_ID = OPEN_ID === id ? null : id;
       renderList();
-      if (OPEN_ID) loadLog(OPEN_ID);
-    });
-
-    // Post an update
-    el("eiList").addEventListener("submit", async (e) => {
-      const form = e.target.closest(".ei-add-update");
-      if (!form) return;
-      e.preventDefault();
-      const btn = form.querySelector("button");
-      btn.disabled = true;
-      try {
-        await postUpdate(form);
-        await load();
-        if (OPEN_ID) loadLog(OPEN_ID);
-        say("Update posted.");
-      } catch (err) {
-        say(err.message || "Could not post that update.", true);
-      } finally { btn.disabled = false; }
     });
 
     // Raise an issue

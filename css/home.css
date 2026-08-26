@@ -505,6 +505,12 @@ body.home-single .home-okr-loading { color: rgba(255,255,255,.6); }
 }
 /* Below that the two bands are already stacked full width, so they use the
    layout they always had. */
+/* The whole card is a press target on this one band — see the click handler
+   in home-issues.js — so it gets the pointer cursor the two buttons already
+   had. The process band beside it is not wired the same way yet, so this
+   stays scoped to #homeIssues rather than joining the shared .issue-band
+   rule below. */
+#homeIssues .issue-band { cursor: pointer; }
 .issue-band {
   position: relative;
   display: grid;

@@ -11,7 +11,13 @@
    happens to have.
    ═══════════════════════════════════════════════════════════════════════════ */
 
-.hub-account { display: flex; align-items: center; z-index: 3; }
+/* `position: relative` makes this the anchor for `.hub-account-menu`'s
+   `position: absolute` below. Without it, on every page where the theme
+   toggle sits in a static-positioned navbar row (every page but the home
+   hero), the chip itself stays position:static too — so the menu skips
+   past it and anchors to the next positioned ancestor up the tree (the
+   fixed navbar), landing in the wrong spot and reading as cut off. */
+.hub-account { position: relative; display: flex; align-items: center; z-index: 3; }
 .hub-account.is-floating { position: fixed; top: 14px; right: 16px; z-index: 900; }
 
 .hub-account-btn {
@@ -76,14 +82,22 @@
   color: #E6EAEF;
 }
 
+/* Glass card, matching the frosted-panel recipe used by the navbar and the
+   login card elsewhere in the hub (translucent fill + blur + saturate, plus
+   an inset highlight to sell the glass edge) rather than a flat opaque menu. */
 .hub-account-menu {
   position: absolute; top: calc(100% + 8px); right: 0; min-width: 238px; z-index: 950;
-  background: #fff; color: #16202B;
+  background: rgba(255,255,255,.72); color: #16202B;
   border: 1px solid rgba(0,0,0,.12);
-  border-radius: 12px; box-shadow: 0 16px 40px rgba(0,0,0,.2); padding: 6px;
+  border-radius: 12px;
+  box-shadow: 0 16px 40px rgba(0,0,0,.2), inset 0 1px 0 rgba(255,255,255,.5);
+  backdrop-filter: blur(20px) saturate(1.3);
+  -webkit-backdrop-filter: blur(20px) saturate(1.3);
+  padding: 6px;
 }
 [data-theme="dark"] .hub-account-menu {
-  background: #161B21; color: #E6EAEF; border-color: #2A323C;
+  background: rgba(22,27,33,.72); color: #E6EAEF; border-color: rgba(255,255,255,.12);
+  box-shadow: 0 16px 40px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.06);
 }
 .hub-account-menu-email {
   padding: 11px 12px 12px; font-size: .76rem; line-height: 1.45;

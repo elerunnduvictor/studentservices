@@ -816,9 +816,13 @@ body.home-single .hero-compact h1 span {
 .gw-loading, .gw-empty {
   font-size: .85rem; color: rgba(255,255,255,.66); padding: 8px 2px;
 }
+/* Centred under the panel. `display: flex` with `width: fit-content` and auto
+   side margins, rather than centring the whole body — the panel above it holds
+   charts and a tree that must stay left-aligned to be readable. */
 .gw-cta {
-  display: inline-flex; align-items: center; gap: 9px;
-  margin-top: 15px; padding: 10px 19px;
+  display: flex; align-items: center; justify-content: center; gap: 9px;
+  width: fit-content;
+  margin: 16px auto 0; padding: 10px 19px;
   border-radius: 999px;
   border: 1px solid rgba(var(--gw-r), .45);
   background: rgba(var(--gw-r), .18);
@@ -829,7 +833,9 @@ body.home-single .hero-compact h1 span {
 .gw-cta:hover {
   background: rgba(var(--gw-r), .32);
   border-color: rgba(var(--gw-r), .7);
-  transform: translateX(2px);
+  /* Lifts rather than slides: a sideways nudge on a centred button reads as it
+     drifting out of alignment. */
+  transform: translateY(-2px);
 }
 
 @media (max-width: 900px) {

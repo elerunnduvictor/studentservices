@@ -119,15 +119,20 @@
         </div>
       </section>
 
-      <!-- Review (admin/director only) -->
+      <!-- Review (admin only) -->
       <section id="procReview" class="proc-card" hidden data-reveal>
         <div class="proc-card-header">
           <div>
             <div class="proc-card-title">Review</div>
             <div id="procReviewCount" class="proc-card-count"></div>
           </div>
+          <!-- Shown to every reviewer, org-wide admins included — the RLS
+               insert policy's admin branch allows scope_department IS NULL. -->
+          <button type="button" class="proc-btn proc-btn-primary" id="procReviewNewBtn" hidden>+ New Process for Steward</button>
         </div>
         <div id="procReviewScope" class="proc-hint proc-review-scope"></div>
+
+        <nav class="proc-tabs" id="procTabs" role="tablist" aria-label="Active or archived"></nav>
 
         <div id="procReviewKpis" class="proc-kpis"></div>
 

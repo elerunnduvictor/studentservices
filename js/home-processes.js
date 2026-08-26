@@ -22,7 +22,6 @@
 
   /** The one line worth reading, chosen by what most needs doing. */
   function headline(counts) {
-    if (counts.needs) return plural(counts.needs, "process needs changes", "processes need changes");
     if (counts.submitted) return plural(counts.submitted, "process awaiting review", "processes awaiting review");
     if (counts.draft) return plural(counts.draft, "process still in draft", "processes still in draft");
     if (counts.reviewed) return plural(counts.reviewed, "process documented", "processes documented");
@@ -50,7 +49,6 @@
       draft: rows.filter((r) => r.status === "Draft").length,
       submitted: rows.filter((r) => r.status === "Submitted").length,
       reviewed: rows.filter((r) => r.status === "Reviewed").length,
-      needs: rows.filter((r) => r.status === "Needs Changes").length,
     };
 
     const stat = (n, label, tone) =>
@@ -60,8 +58,7 @@
     document.getElementById("procBandDesc").textContent = headline(counts);
     document.getElementById("procBandStats").innerHTML =
       stat(counts.reviewed, "documented", null) +
-      stat(counts.submitted, "in review", "amber") +
-      stat(counts.needs, "needs changes", "red");
+      stat(counts.submitted, "in review", "amber");
 
     band.hidden = false;
     // Tell the row it now holds two bands, so they lay out as a pair.

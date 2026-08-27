@@ -9,14 +9,15 @@
    here instead, as plain cards straight to each page — no inline preview to
    load or expand, just the door itself.
 
-   The only thing left to do in script is decide whether the Process
-   Documentation card is worth showing at all. It keeps the gate it already
-   had on the home page — visible only to process stewards and reviewers,
-   SS.access.canUseProcesses(), the same rule the navbar link uses. Directory
-   carries no such gate; it never had one there either. Not a security
-   boundary either way: row-level security on `processes` is what actually
-   keeps the data out of reach, this only avoids drawing a door that leads to
-   an empty room.
+   Both cards are hidden until this decides they are worth showing:
+     - Directory needs SS.access.isStudentServices — a partner is refused
+       every row by row-level security on the employees tables, so the card
+       would just be a door to an empty table.
+     - Process Documentation keeps the gate it already had on the home page —
+       SS.access.canUseProcesses(), stewards and reviewers only.
+   Neither check is a security boundary; both tables enforce the real rule in
+   Postgres regardless of what this script does. This only avoids drawing a
+   door that leads to an empty room.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 (function () {
@@ -24,15 +25,37 @@
 
   var SS = (window.SS = window.SS || {});
 
+  function revealDirectory() {
+    var card = document.getElementById("oc-directory");
+    if (!card || !SS.access) return Promise.resolve();
+    return Promise.resolve(SS.access.ready).then(function () {
+      if (SS.access.isStudentServices) card.hidden = false;
+    })["catch"](function () { /* stays hidden */ });
+  }
+
   function revealProcesses() {
     var card = document.getElementById("oc-processes");
-    if (!card || !SS.access || !SS.access.canUseProcesses || !SS.db) return;
-    SS.access.canUseProcesses().then(function (allowed) {
+    if (!card || !SS.access || !SS.access.canUseProcesses || !SS.db) return Promise.resolve();
+    return SS.access.canUseProcesses().then(function (allowed) {
       if (allowed) card.hidden = false;
     })["catch"](function () { /* stays hidden */ });
   }
 
+  /* A partner with no process-steward row clears neither gate — both cards
+     stay hidden, and an otherwise-empty "Beyond the Chart" heading over a
+     blank grid is worse than no section at all. */
+  function hideSectionIfEmpty() {
+    var section = document.getElementById("ocRelated");
+    if (!section) return;
+    var anyVisible = !!section.querySelector(".oc-card:not([hidden])");
+    if (!anyVisible) section.hidden = true;
+  }
+
+  function start() {
+    Promise.all([revealDirectory(), revealProcesses()]).then(hideSectionIfEmpty);
+  }
+
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", revealProcesses, { once: true });
-  } else { revealProcesses(); }
+    document.addEventListener("DOMContentLoaded", start, { once: true });
+  } else { start(); }
 })();

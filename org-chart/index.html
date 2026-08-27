@@ -444,7 +444,11 @@
     </div>
     <div class="oc-related-grid">
 
-      <a class="oc-card" data-oc="directory" href="/directory/index.html">
+      <!-- Hidden until related-tiles.js confirms this reader belongs to
+           Student Services — a partner gets refused every row by row-level
+           security on the employees tables, so a card to it is a card to an
+           empty table. -->
+      <a class="oc-card" data-oc="directory" id="oc-directory" href="/directory/index.html" hidden>
         <span class="oc-card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M17 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9.5" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
         <span class="oc-card-eyebrow">Team Roster</span>
         <span class="oc-card-title">Complete Directory</span>

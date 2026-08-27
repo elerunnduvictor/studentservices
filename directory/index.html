@@ -62,6 +62,20 @@
     </button>
   </nav>
 
+  <!-- ═══════════════ ACCESS GATE ═══════════════
+       Shown only to a partner, whose account belongs outside Student
+       Services — row-level security on the employees tables already
+       refuses them every row, so #dirMain hides rather than rendering an
+       empty directory. See directory/js/dir-gate.js. -->
+  <section class="dir-gate" id="dirGate" hidden>
+    <div class="dir-gate-inner">
+      <h1>Student Services Directory</h1>
+      <p>This directory is internal to Student Services. Your account does not have access to it.</p>
+      <a href="/index.html" class="dir-btn">Back to the hub</a>
+    </div>
+  </section>
+
+  <div id="dirMain">
   <!-- ═══════════════ HERO ═══════════════ -->
   <header class="dir-hero">
     <div class="hero-pattern"></div>
@@ -128,6 +142,7 @@
 
     </div>
   </main>
+  </div><!-- /dirMain -->
 
   <!-- ═══════════════ FOOTER ═══════════════ -->
   <footer class="site-footer">
@@ -150,6 +165,7 @@
 <script src="/shared/js/hub-texture.js"></script>
 <script src="/shared/js/hub-account.js"></script>
 <script src="/shared/js/hub-scope.js"></script>
+  <script src="/directory/js/dir-gate.js"></script>
   <script src="/shared/js/data-service.js"></script>
   <script src="/shared/js/hub-boot.js"
           data-datasets="directory"

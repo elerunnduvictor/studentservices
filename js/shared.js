@@ -58,6 +58,7 @@
     });
     addProcessesNavLink(links);
     gateEmergingIssuesLink(links);
+    gateDirectoryLinks();
   };
 
   /**
@@ -86,6 +87,26 @@
     if (!link) return;
     Promise.resolve(SS.access.ready).then(function () {
       if (!SS.access.isStudentServices) link.remove();
+    })["catch"](function () { /* leave the nav as it is */ });
+  }
+
+  /**
+   * The Directory link leaves both the navbar and the footer for anyone
+   * outside Student Services — the same treatment Emerging Issues gets, and
+   * for the same reason: the directory page already refuses a partner every
+   * row (row-level security on employees/student_employees), so a link to it
+   * is a link to an empty table rather than a real door. Written into six
+   * pages as plain markup in two different places (nav + footer) each, so
+   * this scans the whole document for the href rather than a single known
+   * container.
+   */
+  function gateDirectoryLinks() {
+    if (!window.SS || !SS.access) return;
+    var found = document.querySelectorAll('a[href="/directory/index.html"]');
+    if (!found.length) return;
+    Promise.resolve(SS.access.ready).then(function () {
+      if (SS.access.canSeeDirectory) return;
+      found.forEach(function (a) { a.remove(); });
     })["catch"](function () { /* leave the nav as it is */ });
   }
 

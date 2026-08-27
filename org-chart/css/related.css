@@ -12,7 +12,7 @@
 
 .oc-related {
   width: 100%;
-  max-width: 960px;
+  max-width: 1160px;
   margin: 8px auto 44px;
   padding: 0 24px;
 }
@@ -50,8 +50,8 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  min-height: 210px;
-  padding: 22px 24px 20px;
+  min-height: 150px;
+  padding: 18px 24px 16px;
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   overflow: hidden;
@@ -77,25 +77,25 @@
 .oc-card:focus-visible { outline: 2px solid var(--gold); outline-offset: -3px; }
 
 .oc-card-icon {
-  display: grid; place-items: center; width: 42px; height: 42px; flex: 0 0 auto;
-  margin-bottom: 14px;
-  border-radius: 12px;
+  display: grid; place-items: center; width: 34px; height: 34px; flex: 0 0 auto;
+  margin-bottom: 8px;
+  border-radius: 10px;
   background: rgba(var(--gw-r), .14);
   border: 1px solid rgba(var(--gw-r), .3);
   color: var(--gw-c);
 }
-.oc-card-icon svg { width: 21px; height: 21px; }
+.oc-card-icon svg { width: 17px; height: 17px; }
 .oc-card-eyebrow {
   font-size: .56rem; letter-spacing: .14em; text-transform: uppercase;
   color: var(--text-dim); font-weight: 700;
 }
 .oc-card-title {
-  margin-top: 4px;
+  margin-top: 3px;
   font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: clamp(1.1rem, 1.5vw, 1.3rem); font-weight: 600; color: var(--text);
+  font-size: clamp(1.05rem, 1.4vw, 1.2rem); font-weight: 600; color: var(--text);
 }
 .oc-card-desc {
-  margin-top: 6px; font-size: .82rem; line-height: 1.5; color: var(--text-muted);
+  margin-top: 4px; font-size: .8rem; line-height: 1.4; color: var(--text-muted);
 }
 /* Pushes the button to the bottom of the card regardless of how long the
    description above it runs, which is what keeps the button itself lined
@@ -104,12 +104,12 @@
 
 .oc-card-cta {
   display: inline-flex; align-items: center; gap: 8px;
-  margin-top: 18px; padding: 10px 18px;
+  margin-top: 10px; padding: 8px 16px;
   border-radius: 999px;
   border: 1px solid rgba(var(--gw-r), .4);
   background: rgba(var(--gw-r), .12);
   color: var(--gw-c);
-  font-size: .8rem; font-weight: 600;
+  font-size: .78rem; font-weight: 600;
   transition: background .2s, border-color .2s;
 }
 .oc-card:hover .oc-card-cta {

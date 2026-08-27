@@ -12,9 +12,9 @@
      this SS.db is undefined and the band silently hides itself. -->
 <script src="/shared/js/kpi-status.js"></script>
 <script src="/shared/js/data-service.js"></script>
+<script defer src="/shared/js/gw-tiles.js"></script>
 <script defer src="/js/home-tiles.js"></script>
 <script defer src="/js/home-issues.js"></script>
-<script defer src="/js/home-processes.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="light dark">
 <!-- Theme decided before the first paint.
@@ -71,16 +71,15 @@
   </div>
 </section>
 
-<!-- ═══════════════ THE TWO LIVE BANDS ═══════════════
-     Emerging Issues and Process Documentation sit side by side because they are
-     the same kind of thing: the parts of the hub that change daily and that a
-     person is expected to act on, rather than reference material to look up.
-     They share one design for that reason.
+<!-- ═══════════════ THE LIVE BAND ═══════════════
+     Emerging Issues: the part of the hub that changes daily and that a person
+     is expected to act on, rather than reference material to look up. Hidden
+     until its own gate says otherwise — belonging to Student Services.
 
-     Each is hidden until its own gate says otherwise, and they are gated on
-     different rules — Emerging Issues on belonging to Student Services, Process
-     Documentation on being a steward or reviewer. Either can appear without the
-     other, so the row is a grid that copes with one child or two. -->
+     Process Documentation used to share this row on the same terms. It has
+     moved to the org chart page (see org-chart/js/related-tiles.js) as one of
+     the click-to-expand tiles there instead — the row here is built to cope
+     with any number of bands, so nothing else needed to change to lose one. -->
 <div class="home-bands" id="homeBands">
 
   <section class="home-issues" id="homeIssues" hidden>
@@ -118,57 +117,30 @@
     </div>
   </section>
 
-  <!-- Same band, same parts, its own gate. Shown to process stewards and
-       reviewers only — SS.access.canUseProcesses(), the rule the navbar link
-       uses too. -->
-  <section class="home-issues home-procs" id="homeProcs" hidden>
-    <div class="issue-band">
-      <div class="issue-band-mark">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-          <polyline points="14 2 14 8 20 8"/>
-          <polyline points="9 13 10.5 14.5 14 11"/><line x1="9" y1="17.5" x2="15" y2="17.5"/>
-        </svg>
-      </div>
-      <div class="issue-band-body">
-        <div class="issue-band-eyebrow">How We Work</div>
-        <div class="issue-band-title">Process Documentation</div>
-        <p class="issue-band-desc" id="procBandDesc">How a process actually works, written down.</p>
-      </div>
-      <div class="issue-band-stats" id="procBandStats"></div>
-      <div class="issue-band-actions">
-        <a class="issue-band-btn is-primary" href="/processes/index.html#new">
-          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor"
-               stroke-width="2" aria-hidden="true">
-            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-          </svg>
-          Document a process
-        </a>
-        <a class="issue-band-btn" href="/processes/index.html">
-          Open the library
-          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor"
-               stroke-width="2" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/>
-            <polyline points="13 6 19 12 13 18"/></svg>
-        </a>
-      </div>
-    </div>
-  </section>
-
 </div>
 
 
-<!-- ═══════════════ THE FOUR TILES ═══════════════
-     Two rows of two. Each opens in place rather than navigating away, so a
-     glance at the org chart or this week's KPI colour does not cost a page
-     load and a trip back. Every panel is filled on first expand, not on page
-     load: the home page stays fast, and nothing is fetched for a tile nobody
-     opens. What each panel shows is scoped to the reader — the server has
-     already filtered the rows, and the panels present what arrives.
-     -->
+<!-- ═══════════════ THE THREE TILES ═══════════════
+     The org chart runs the full width of the row on its own — it is the one
+     of the three that actually wants the room, a tree rather than a chart or
+     a list — and KPIs and OKRs share the row beneath it as a pair, the way
+     the whole set used to sit two-by-two. Each opens in place rather than
+     navigating away, so a glance at the org chart or this week's KPI colour
+     does not cost a page load and a trip back. Every panel is filled on first
+     expand, not on page load: the home page stays fast, and nothing is
+     fetched for a tile nobody opens. What each panel shows is scoped to the
+     reader — the server has already filtered the rows, and the panels present
+     what arrives.
+
+     The Directory tile that used to sit beside the org chart, and the fourth
+     tile Process Documentation never quite had room for, both moved to the
+     org chart page instead — see org-chart/js/related-tiles.js. Both answer
+     questions that follow the org chart more naturally than they follow this
+     page. -->
 <section class="home-gw-wrap" id="structure" data-reveal>
   <div class="home-gw-grid">
 
-      <article class="gw" data-gw="org" id="gw-org">
+      <article class="gw gw-full" data-gw="org" id="gw-org">
         <button type="button" class="gw-head" aria-expanded="false" aria-controls="gwb-org">
           <span class="gw-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="9" y="2" width="6" height="5" rx="1"/><rect x="2" y="16" width="6" height="5" rx="1"/><rect x="16" y="16" width="6" height="5" rx="1"/><path d="M12 7v4M5 16v-2h14v2M12 11v3"/></svg></span>
           <span class="gw-text">
@@ -188,32 +160,6 @@
             </div>
             <a class="gw-cta" href="/org-chart/index.html">
               View the whole Student Services org chart
-              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>
-            </a>
-          </div>
-        </div>
-      </article>
-
-      <article class="gw" data-gw="directory" id="gw-directory">
-        <button type="button" class="gw-head" aria-expanded="false" aria-controls="gwb-directory">
-          <span class="gw-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M17 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9.5" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
-          <span class="gw-text">
-            <span class="gw-eyebrow">Team Roster</span>
-            <span class="gw-title">Complete Directory</span>
-            <span class="gw-desc">Every team member, by role, department and employment type.</span>
-          </span>
-          <span class="gw-chev" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-          </span>
-          <span class="gw-hint">Click to expand</span>
-        </button>
-        <div class="gw-body" id="gwb-directory">
-          <div class="gw-body-inner">
-            <div class="gw-panel" data-panel="directory">
-              <div class="gw-loading">Loading&hellip;</div>
-            </div>
-            <a class="gw-cta" href="/directory/index.html">
-              Open the full directory
               <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>
             </a>
           </div>

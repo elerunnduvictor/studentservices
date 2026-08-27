@@ -42,6 +42,7 @@
   <link rel="stylesheet" href="/org-chart/css/hierarchy.css">
   <link rel="stylesheet" href="/org-chart/css/tree.css">
   <link rel="stylesheet" href="/org-chart/css/tiles.css">
+  <link rel="stylesheet" href="/org-chart/css/related.css">
   <link rel="stylesheet" href="/org-chart/css/modal.css">
   <link rel="stylesheet" href="/org-chart/css/animations.css">
   <link rel="stylesheet" href="/org-chart/css/responsive.css">
@@ -58,6 +59,7 @@
   <script src="/org-chart/js/zoom.js"></script>
   <script src="/org-chart/js/pan.js"></script>
   <script src="/org-chart/js/toolbar.js"></script>
+  <script src="/org-chart/js/tool-menu.js"></script>
   <script src="/org-chart/js/animations.js"></script>
   <script src="/shared/js/hub-palette.js"></script>
 <script src="/shared/js/config.js"></script>
@@ -65,6 +67,7 @@
 <script src="/shared/js/hub-texture.js"></script>
 <script src="/shared/js/hub-account.js"></script>
   <script src="/shared/js/data-service.js"></script>
+  <script src="/org-chart/js/related-tiles.js"></script>
   <script src="/shared/js/hub-boot.js"
           data-datasets="orgchart"
           data-then="org-chart/js/app.js"></script>
@@ -122,31 +125,54 @@
             <line x1="5" y1="12" x2="19" y2="12" />
           </svg>
         </button>
-        <button class="tool-btn" id="zoomReset" title="Reset Zoom">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-            <path d="M3 3v5h5" />
-          </svg>
-        </button>
-        <button class="tool-btn" id="expandAll" title="Expand All">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="7 13 12 18 17 13" />
-            <polyline points="7 6 12 11 17 6" />
-          </svg>
-        </button>
-        <button class="tool-btn" id="collapseAll" title="Collapse All">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="17 11 12 6 7 11" />
-            <polyline points="17 18 12 13 7 18" />
-          </svg>
-        </button>
-        <button class="tool-btn" id="printBtn" title="Print">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="6 9 6 2 18 2 18 9" />
-            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
-            <rect x="6" y="14" width="12" height="8" />
-          </svg>
-        </button>
+        <!-- Reset Zoom, Expand All, Collapse All and Print used to sit here
+             as four more square icon buttons beside zoom — eight buttons in
+             a row read as clutter, and half of them are used far less than
+             zoom is. Tucked into one menu instead; zoom stays put because
+             it's the one people reach for while actually looking at the
+             chart, not between glances at it. Same element ids as before
+             (org-chart/js/toolbar.js and zoom.js bind to those directly), so
+             only the markup around them changed. -->
+        <div class="tool-menu" id="toolMenu">
+          <button class="tool-btn" id="toolMenuBtn" title="More tools" aria-haspopup="true" aria-expanded="false">
+            <svg viewBox="0 0 24 24" fill="currentColor" stroke="none">
+              <circle cx="12" cy="5" r="1.6" />
+              <circle cx="12" cy="12" r="1.6" />
+              <circle cx="12" cy="19" r="1.6" />
+            </svg>
+          </button>
+          <div class="tool-menu-panel" id="toolMenuPanel" hidden>
+            <button class="tool-menu-item" id="zoomReset">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                <path d="M3 3v5h5" />
+              </svg>
+              Reset Zoom
+            </button>
+            <button class="tool-menu-item" id="expandAll">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="7 13 12 18 17 13" />
+                <polyline points="7 6 12 11 17 6" />
+              </svg>
+              Expand All
+            </button>
+            <button class="tool-menu-item" id="collapseAll">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="17 11 12 6 7 11" />
+                <polyline points="17 18 12 13 7 18" />
+              </svg>
+              Collapse All
+            </button>
+            <button class="tool-menu-item" id="printBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 6 2 18 2 18 9" />
+                <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                <rect x="6" y="14" width="12" height="8" />
+              </svg>
+              Print
+            </button>
+          </div>
+        </div>
         <button class="tool-btn" id="themeToggle" title="Toggle Dark/Light Mode">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
@@ -401,6 +427,50 @@
       </div>
     </div>
   </div><!-- /hierarchySection -->
+
+  <!-- ═══════════════ BEYOND THE CHART ═══════════════
+       The org chart answers "who reports to whom." These answer the two
+       questions that tend to follow it — "who is on my team" and "how does
+       the work actually get done" — without sending the reader off the page
+       to find out. Plain link cards rather than the home page's
+       click-to-expand tile: no preview to load in place, just the door
+       itself — see org-chart/js/related-tiles.js for the one thing that
+       still happens in script, which is deciding whether the second card
+       is worth showing at all. -->
+  <section class="oc-related" id="ocRelated">
+    <div class="oc-related-head">
+      <div class="oc-related-eyebrow">Beyond the Chart</div>
+      <h2 class="oc-related-title">Who's on the team, and how the work gets done</h2>
+    </div>
+    <div class="oc-related-grid">
+
+      <a class="oc-card" data-oc="directory" href="/directory/index.html">
+        <span class="oc-card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M17 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9.5" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+        <span class="oc-card-eyebrow">Team Roster</span>
+        <span class="oc-card-title">Complete Directory</span>
+        <span class="oc-card-desc">Every team member, by role, department and employment type.</span>
+        <span class="oc-card-cta">
+          Open the full directory
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>
+        </span>
+      </a>
+
+      <!-- Hidden until related-tiles.js confirms this reader is a process
+           steward or reviewer — the same rule the Processes navbar link and
+           the card's old home page band used. -->
+      <a class="oc-card" data-oc="processes" id="oc-processes" href="/processes/index.html" hidden>
+        <span class="oc-card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><polyline points="9 13 10.5 14.5 14 11"/><line x1="9" y1="17.5" x2="15" y2="17.5"/></svg></span>
+        <span class="oc-card-eyebrow">How We Work</span>
+        <span class="oc-card-title">Process Documentation</span>
+        <span class="oc-card-desc">How each process actually works, written down.</span>
+        <span class="oc-card-cta">
+          Open the process library
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>
+        </span>
+      </a>
+
+    </div>
+  </section>
 
   <!-- ═══════════════ FOOTER ═══════════════ -->
   <style>

@@ -1,0 +1,128 @@
+/* ══════════════════════════════════════════════════════════
+   BEYOND THE CHART — Directory & Process Documentation cards
+
+   Plain link cards, one <a> each — no click-to-expand, no preview panel to
+   load; press anywhere on the card and it goes. Grid's default
+   align-items:stretch is what actually keeps the two the same height (a
+   fixed min-height on its own would just be a floor either card could
+   still grow past); the min-height is only there to say how tall that
+   common height should start out, since two lines of description left them
+   shorter than they read well at.
+   ══════════════════════════════════════════════════════════ */
+
+.oc-related {
+  width: 100%;
+  max-width: 960px;
+  margin: 8px auto 44px;
+  padding: 0 24px;
+}
+.oc-related-head { text-align: center; margin-bottom: 20px; }
+.oc-related-eyebrow {
+  font-size: .58rem; letter-spacing: .24em; text-transform: uppercase;
+  color: var(--text-dim); font-weight: 600;
+}
+.oc-related-title {
+  font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 300;
+  font-size: clamp(1.2rem, 2.4vw, 1.6rem); color: var(--text); margin-top: 5px;
+}
+
+.oc-related-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  /* No align-items set — grid's default `stretch` is what gives both cards
+     the same height; overriding it to `start` is exactly the mistake that
+     would bring the mismatched-height problem back. */
+}
+/* Process Documentation only reveals itself for stewards and reviewers (see
+   related-tiles.js) — for everyone else its card is present in the DOM with
+   the `hidden` attribute, not absent, so `:only-child` would never match it.
+   Targeting the hidden attribute directly instead: while it is there,
+   Directory is the row's only visible card and should fill the row rather
+   than sit in half of it with a hole beside it. Once related-tiles.js clears
+   the attribute, this rule stops matching and the grid returns to two
+   columns on its own. */
+.oc-related-grid:has(> .oc-card[hidden]) { grid-template-columns: minmax(0, 1fr); }
+
+.oc-card {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-height: 210px;
+  padding: 22px 24px 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--bg-card);
+  box-shadow: var(--shadow);
+  text-decoration: none;
+  color: var(--text);
+  transition: transform .3s var(--smooth), box-shadow .3s var(--smooth), border-color .3s;
+}
+.oc-card::before {
+  content: "";
+  position: absolute; inset: 0 0 auto 0; height: 3px; z-index: 2;
+  background: linear-gradient(90deg, var(--gw-c) 0%, var(--gw-c) 42%, transparent);
+}
+.oc-card[data-oc="directory"] { --gw-c: var(--teal); --gw-r: var(--teal-r); }
+.oc-card[data-oc="processes"] { --gw-c: var(--gold); --gw-r: var(--gold-r); }
+
+.oc-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-hover);
+  border-color: rgba(var(--gw-r), .4);
+}
+.oc-card:focus-visible { outline: 2px solid var(--gold); outline-offset: -3px; }
+
+.oc-card-icon {
+  display: grid; place-items: center; width: 42px; height: 42px; flex: 0 0 auto;
+  margin-bottom: 14px;
+  border-radius: 12px;
+  background: rgba(var(--gw-r), .14);
+  border: 1px solid rgba(var(--gw-r), .3);
+  color: var(--gw-c);
+}
+.oc-card-icon svg { width: 21px; height: 21px; }
+.oc-card-eyebrow {
+  font-size: .56rem; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--text-dim); font-weight: 700;
+}
+.oc-card-title {
+  margin-top: 4px;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: clamp(1.1rem, 1.5vw, 1.3rem); font-weight: 600; color: var(--text);
+}
+.oc-card-desc {
+  margin-top: 6px; font-size: .82rem; line-height: 1.5; color: var(--text-muted);
+}
+/* Pushes the button to the bottom of the card regardless of how long the
+   description above it runs, which is what keeps the button itself lined
+   up between the two cards even before the shared height does the rest. */
+.oc-card-desc { flex: 1; }
+
+.oc-card-cta {
+  display: inline-flex; align-items: center; gap: 8px;
+  margin-top: 18px; padding: 10px 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(var(--gw-r), .4);
+  background: rgba(var(--gw-r), .12);
+  color: var(--gw-c);
+  font-size: .8rem; font-weight: 600;
+  transition: background .2s, border-color .2s;
+}
+.oc-card:hover .oc-card-cta {
+  background: rgba(var(--gw-r), .22);
+  border-color: rgba(var(--gw-r), .6);
+}
+.oc-card:hover .oc-card-cta svg { transform: translateX(3px); }
+.oc-card-cta svg { transition: transform .25s var(--smooth); }
+
+@media (max-width: 640px) {
+  .oc-related-grid { grid-template-columns: minmax(0,1fr); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .oc-card, .oc-card-cta svg { transition: none; }
+  .oc-card:hover { transform: none; }
+}

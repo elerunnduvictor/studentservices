@@ -69,25 +69,41 @@
     });
   }
 
-  function toggle(tile, panels) {
+  function closeTile(tile) {
     var head = tile.querySelector(".gw-head");
+    tile.classList.remove("is-open");
+    if (head) head.setAttribute("aria-expanded", "false");
+    sizeToContent(tile);                // clears it, so the stylesheet's 0 wins
+  }
 
-    if (tile.classList.contains("is-open")) {
-      tile.classList.remove("is-open");
-      head.setAttribute("aria-expanded", "false");
-      sizeToContent(tile);             // clears it, so the stylesheet's 0 wins
-      return;
-    }
-
+  function openTile(tile, panels) {
+    var head = tile.querySelector(".gw-head");
     tile.classList.add("is-open");
-    head.setAttribute("aria-expanded", "true");
-    sizeToContent(tile);               // for a panel already filled
+    if (head) head.setAttribute("aria-expanded", "true");
+    sizeToContent(tile);                 // for a panel already filled
 
     var key = tile.dataset.gw;
     if (!filled[key]) {
       filled[key] = true;
       fill(key, tile.querySelector(".gw-panel"), panels);
     }
+  }
+
+  function toggle(tile, panels, grid) {
+    if (tile.classList.contains("is-open")) {
+      closeTile(tile);
+      return;
+    }
+
+    // Accordion: at most one tile open at a time. Closing whichever else was
+    // open before opening the one just pressed, rather than letting several
+    // long panels stack up open at once and turn the section into a scroll.
+    if (grid) {
+      grid.querySelectorAll(".gw.is-open").forEach(function (other) {
+        if (other !== tile) closeTile(other);
+      });
+    }
+    openTile(tile, panels);
   }
 
   /** Shut every open tile inside `root`, without animating — used when
@@ -110,7 +126,7 @@
     if (!grid) return;
     grid.addEventListener("click", function (e) {
       var head = e.target.closest(".gw-head");
-      if (head) toggle(head.closest(".gw"), panels);
+      if (head) toggle(head.closest(".gw"), panels, grid);
     });
     window.addEventListener("pagehide", function () { closeAll(grid); });
     window.addEventListener("pageshow", function (e) { if (e.persisted) closeAll(grid); });

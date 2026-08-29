@@ -19,12 +19,29 @@ from pathlib import Path
 import openpyxl
 
 REPO = Path(__file__).resolve().parent.parent
-SHEETS = REPO / "data-sources"
 OUT = REPO / "supabase" / "seed.sql"
 
-OKR_XLSX = SHEETS / "Profit.co Monthly Reports.xlsx"
-DIR_XLSX = SHEETS / "Student Services Org Directory.xlsx"
-KPI_XLSX = SHEETS / "Student Services KPIs.xlsx"
+# Where a workbook might be sitting.
+#
+# This used to be the single path REPO/"data-sources", a directory that does not
+# exist in this repository — so every workbook resolved to a missing file and the
+# script could not run at all. Sheets are dropped in the repo root in practice,
+# so both are searched, root first.
+SEARCH_DIRS = [REPO, REPO / "data-sources"]
+
+
+def find_workbook(filename):
+    """The first place this workbook actually exists, or None."""
+    for d in SEARCH_DIRS:
+        p = d / filename
+        if p.exists():
+            return p
+    return None
+
+
+OKR_XLSX = find_workbook("Profit.co Monthly Reports.xlsx")
+DIR_XLSX = find_workbook("Student Services Org Directory.xlsx")
+KPI_XLSX = find_workbook("Student Services KPIs.xlsx")
 
 PM_EDITORS_JS = REPO / "pm" / "js" / "pm-editors.js"
 
@@ -236,55 +253,95 @@ def load_editors():
 
 # ── main ───────────────────────────────────────────────────────────────────
 def main():
-    for f in (OKR_XLSX, DIR_XLSX, KPI_XLSX):
-        if not f.exists():
-            sys.exit(f"Missing workbook: {f.name}")
+    # Only the workbooks that are actually present are loaded, and only their
+    # tables are touched.
+    #
+    # This used to exit unless all three were found, which — once the path was
+    # wrong and none were — was the only thing standing between a run and a
+    # catastrophe: the truncate below names five tables unconditionally, so a
+    # missing workbook would have emptied its table and inserted nothing back.
+    # Skipping a table entirely is the safe reading of "that workbook isn't here".
+    if not any((OKR_XLSX, DIR_XLSX, KPI_XLSX)):
+        sys.exit(
+            "No source workbooks found. Looked in:\n  "
+            + "\n  ".join(str(d) for d in SEARCH_DIRS)
+            + "\nExpected one or more of:\n"
+              "  Profit.co Monthly Reports.xlsx\n"
+              "  Student Services Org Directory.xlsx\n"
+              "  Student Services KPIs.xlsx"
+        )
 
-    okrs = load_okrs()
-    employees = load_employees()
-    students = load_student_employees()
-    org_chart = load_org_chart()
-    kpis = load_kpis()
-    editors = load_editors()
+    for label, path in (("OKRs", OKR_XLSX), ("Directory", DIR_XLSX), ("KPIs", KPI_XLSX)):
+        print(f"  {label:10} {path if path else '— not found, its tables are left alone'}")
+    print()
+
+    okrs      = load_okrs()             if OKR_XLSX else None
+    employees = load_employees()        if DIR_XLSX else None
+    students  = load_student_employees() if DIR_XLSX else None
+    org_chart = load_org_chart()        if DIR_XLSX else None
+    kpis      = load_kpis()             if KPI_XLSX else None
+    editors   = load_editors()
+
+    # table -> (audit trigger name, rows) for everything we actually have data
+    # for. Nothing else is truncated, disabled or re-enabled.
+    loaded = [
+        ("okrs",              "okrs_audit",              okrs),
+        ("employees",         "employees_audit",         employees),
+        ("student_employees", "student_employees_audit", students),
+        ("org_chart_nodes",   "org_chart_nodes_audit",   org_chart),
+        ("kpis",              "kpis_audit",              kpis),
+    ]
+    present = [(t, trg, rows) for t, trg, rows in loaded if rows is not None]
 
     parts = [
         "-- ═══════════ SEED DATA ═══════════\n"
         f"-- Generated {datetime.date.today().isoformat()} by supabase/import_sheets.py\n"
-        "-- Reloads every table from the source workbooks. Safe to re-run.\n"
+        "--\n"
+        "-- DESTRUCTIVE. This truncates and reloads the tables listed below, which\n"
+        "-- discards anything that lives only in the database — the Active/Inactive\n"
+        "-- flags PMs set in the Hub included. It is a disaster-recovery tool for\n"
+        "-- rebuilding from nothing, not the way to take on an updated workbook.\n"
+        "-- The PM Hub is the source of truth for this data now. Running this\n"
+        "-- against the live database would replace what PMs have maintained\n"
+        "-- there with whatever a workbook happens to say.\n"
+        "--\n"
         "-- Audit triggers are suspended so the import is not logged as user edits.\n\n"
         "begin;\n\n"
-        "alter table public.okrs disable trigger okrs_audit;\n"
-        "alter table public.employees disable trigger employees_audit;\n"
-        "alter table public.student_employees disable trigger student_employees_audit;\n"
-        "alter table public.org_chart_nodes disable trigger org_chart_nodes_audit;\n"
-        "alter table public.kpis disable trigger kpis_audit;\n\n"
-        "truncate public.okrs, public.employees, public.student_employees,\n"
-        "         public.org_chart_nodes, public.kpis restart identity;\n\n"
     ]
+    parts += [f"alter table public.{t} disable trigger {trg};\n" for t, trg, _ in present]
+    parts.append(
+        "\ntruncate " + ",\n         ".join(f"public.{t}" for t, _, _ in present)
+        + " restart identity;\n\n"
+    )
 
-    parts.append(insert("okrs", [
-        "sort_order", "okr", "key_result", "sub_key_result", "sub_key_result_child",
-        "period", "primary_stakeholder", "secondary_stakeholders", "project_manager",
-        "type", "goal", "stretch_goal", "progress", "status", "trend", "comment",
-        "update_date"], okrs))
+    if okrs is not None:
+        parts.append(insert("okrs", [
+            "sort_order", "okr", "key_result", "sub_key_result", "sub_key_result_child",
+            "period", "primary_stakeholder", "secondary_stakeholders", "project_manager",
+            "type", "goal", "stretch_goal", "progress", "status", "trend", "comment",
+            "update_date"], okrs))
 
-    parts.append(insert("employees", [
-        "sort_order", "name", "role", "department", "employment_type",
-        "primary_stakeholder", "sub_department", "contract_organization", "tier"], employees))
+    if employees is not None:
+        parts.append(insert("employees", [
+            "sort_order", "name", "role", "department", "employment_type",
+            "primary_stakeholder", "sub_department", "contract_organization", "tier"], employees))
 
-    parts.append(insert("student_employees", [
-        "sort_order", "name", "job_name", "role_title", "sub_department",
-        "supervisor", "department"], students))
+    if students is not None:
+        parts.append(insert("student_employees", [
+            "sort_order", "name", "job_name", "role_title", "sub_department",
+            "supervisor", "department"], students))
 
-    parts.append(insert("org_chart_nodes", [
-        "sort_order", "name", "role", "employee_status", "stewardships", "key_kpis",
-        "reports_to", "department", "link", "key_responsibilities", "direct_reports"], org_chart))
+    if org_chart is not None:
+        parts.append(insert("org_chart_nodes", [
+            "sort_order", "name", "role", "employee_status", "stewardships", "key_kpis",
+            "reports_to", "department", "link", "key_responsibilities", "direct_reports"], org_chart))
 
-    parts.append(insert("kpis", [
-        "sort_order", "employee", "role", "department", "kpi_measure", "kpi_category",
-        "category_type", "data_availability", "band_green", "band_yellow", "band_red",
-        "tracking_status", "current_value", "data_source", "update_frequency",
-        "update_date", "direction_hint", "green_cutoff", "red_cutoff"], kpis))
+    if kpis is not None:
+        parts.append(insert("kpis", [
+            "sort_order", "employee", "role", "department", "kpi_measure", "kpi_category",
+            "category_type", "data_availability", "band_green", "band_yellow", "band_red",
+            "tracking_status", "current_value", "data_source", "update_frequency",
+            "update_date", "direction_hint", "green_cutoff", "red_cutoff"], kpis))
 
     if editors:
         parts.append(
@@ -293,26 +350,35 @@ def main():
             + "\non conflict (email) do nothing;\n\n"
         )
 
-    parts.append(
-        "alter table public.okrs enable trigger okrs_audit;\n"
-        "alter table public.employees enable trigger employees_audit;\n"
-        "alter table public.student_employees enable trigger student_employees_audit;\n"
-        "alter table public.org_chart_nodes enable trigger org_chart_nodes_audit;\n"
-        "alter table public.kpis enable trigger kpis_audit;\n\n"
-        "commit;\n"
-    )
+    parts += [f"alter table public.{t} enable trigger {trg};\n" for t, trg, _ in present]
+    parts.append("\ncommit;\n")
 
-    OUT.write_text("".join(parts), encoding="utf-8", newline="\n")
+    # A partial run must not overwrite the committed full seed.
+    #
+    # seed.sql is the disaster-recovery artefact: every table, fully populated.
+    # Running this with only one workbook present used to rewrite that file with
+    # just the tables it had, silently discarding the OKR and KPI sections — the
+    # database was never at risk (the truncate only names tables it is about to
+    # fill) but the file was, and the file is the whole point of it.
+    missing = [n for n, p in (("OKRs", OKR_XLSX), ("Directory", DIR_XLSX),
+                              ("KPIs", KPI_XLSX)) if p is None]
+    out = OUT
+    if missing:
+        out = OUT.with_name("seed-partial.sql")
+        print(f"!! {', '.join(missing)} not found, so this is a PARTIAL seed.")
+        print(f"!! Writing {out.name} instead of overwriting {OUT.name}.")
+        print("!! It is safe to run — it only truncates the tables it refills —")
+        print("!! but it is not a replacement for the full seed.\n")
 
-    print(f"wrote {OUT.relative_to(REPO)}")
-    print(f"  okrs              {len(okrs):4}")
-    print(f"  employees         {len(employees):4}")
-    print(f"  student_employees {len(students):4}")
-    print(f"  org_chart_nodes   {len(org_chart):4}")
-    print(f"  kpis              {len(kpis):4}")
-    print(f"  allowed_editors   {len(editors):4}")
-    tracked = sum(1 for k in kpis if str(k[11]).strip().lower() == "tracking")
-    print(f"    of which tracking: {tracked}")
+    out.write_text("".join(parts), encoding="utf-8", newline="\n")
+
+    print(f"wrote {out.relative_to(REPO)}")
+    for table, _, rows in loaded:
+        print(f"  {table:18}{len(rows) if rows is not None else '— skipped':>6}")
+    print(f"  {'allowed_editors':18}{len(editors):>6}")
+    if kpis:
+        tracked = sum(1 for k in kpis if str(k[11]).strip().lower() == "tracking")
+        print(f"    of which tracking: {tracked}")
 
 
 if __name__ == "__main__":

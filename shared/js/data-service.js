@@ -144,7 +144,7 @@
   const DATASETS = {
     directory: {
       global: "EMPLOYEES",
-      fallbackSrc: "js/employees.js",
+      fallbackSrc: "/directory/js/employees.js",
       view: "v_hub_directory",
       order: "dept.asc,subDept.asc,name.asc",
       map: (r) => ({
@@ -181,7 +181,7 @@
     },
     okrs: {
       global: "OKR_PROGRESS_ROWS",
-      fallbackSrc: "js/okr-progress-data.js",
+      fallbackSrc: "/okr-progress/js/okr-progress-data.js",
       view: "v_hub_okrs",
       order: "id.asc",
       map: (r) => ({
@@ -273,7 +273,7 @@
 
     kpis: {
       global: "SCORECARD_KPIS",
-      fallbackSrc: "js/scorecard-data.js",
+      fallbackSrc: "/scorecard/js/scorecard-data.js",
       view: "v_hub_kpis",
       order: "id.asc",
       // The scorecard needs derived fields (slugs, computed colour, outcome
@@ -372,7 +372,18 @@
     if (fallbackLoaded[def.fallbackSrc]) return fallbackLoaded[def.fallbackSrc];
     fallbackLoaded[def.fallbackSrc] = new Promise((resolve) => {
       const s = document.createElement("script");
-      // Relative to the page, which is where the snapshots live.
+      // Absolute, because the snapshot lives in one place and is loaded from
+      // many. These used to be page-relative ("js/employees.js"), which
+      // resolved only on the single page sitting in the matching folder: from
+      // /directory/ it found /directory/js/employees.js, but from the home
+      // page it asked for /js/employees.js and from a department page for
+      // /departments/js/employees.js — neither of which exists. The request
+      // 404ed, onerror resolved null, and the page rendered empty.
+      //
+      // That is the opposite of what this whole mechanism is for. The fallback
+      // exists so an unreachable database shows yesterday's numbers rather than
+      // an error, and it was silently broken on every page but one — failing in
+      // exactly the situation it was written for.
       s.src = def.fallbackSrc;
       s.onload = () => resolve(def.bundled ? def.bundled() : window[def.global]);
       s.onerror = () => resolve(null);

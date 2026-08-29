@@ -411,7 +411,17 @@ alter view public.v_hub_directory set (security_invoker = on);
 alter view public.v_hub_okrs      set (security_invoker = on);
 alter view public.v_hub_kpis      set (security_invoker = on);
 
-grant select on public.v_hub_directory, public.v_hub_okrs, public.v_hub_kpis to anon, authenticated;
+-- v_hub_directory is deliberately NOT granted to anon.
+--
+-- The directory is internal to Student Services: row-level security on
+-- `employees` and `student_employees` (see access-control.sql) is the real gate,
+-- and it refuses a partner or an unauthenticated caller every row. But nothing
+-- about the roster should be reachable by a request that never signed in, so the
+-- grant is withheld as well. This line previously read
+--   grant select on ... v_hub_directory ... to anon, authenticated;
+-- which meant a rebuild from this file silently handed anon the view back.
+grant select on public.v_hub_directory to authenticated;
+grant select on public.v_hub_okrs, public.v_hub_kpis to anon, authenticated;
 
 revoke all on function public.touch_row()     from public, anon, authenticated;
 revoke all on function public.record_change() from public, anon, authenticated;

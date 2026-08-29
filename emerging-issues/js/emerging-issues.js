@@ -28,16 +28,20 @@
   "use strict";
 
   /* Words, not colours. The colour is how the page paints a level; it is not
-     what the level is. Stored this way too — see
-     supabase/emerging-issues-severity.sql — so a digest reads "this issue is
-     Critical" rather than "this issue is red", and so the level survives being
-     read by someone who cannot tell the two hues apart. */
+     what the level is. Stored this way in the database too, so a digest reads
+     "this issue is Critical" rather than "this issue is red", and so the level
+     survives being read by someone who cannot tell the two hues apart.
+
+     These three must match the severity_check constraint on emerging_issues;
+     a value not in that constraint is refused on save. */
   const SEVERITY = ["Critical", "Moderate", "Low"];
   /* Three, not five. "Open / Investigating / Monitoring / Escalated" asked for
      a distinction nobody was drawing: what anyone wanted to know was whether
      this has been worked out yet, whether something is being done, or whether
-     it is finished. See supabase/emerging-issues-v2.sql for the remapping of
-     what was already raised under the old five. */
+     it is finished. Issues raised under the old five were remapped onto these
+     when the change was made.
+
+     Same rule as above: these must match the status_check constraint. */
   const STATUS = ["Exploring", "Resolution in progress", "Resolved"];
 
   /* ── the three windows ──────────────────────────────────────────────────
@@ -298,35 +302,15 @@
   }
 
   /* ── writing ───────────────────────────────────────────────────────────── */
-  /**
-   * A short heading for one issue, taken from the first thing it says.
-   *
-   * The form asks one question now, so there is no separate title to store —
-   * but the register still needs something short to put at the head of each
-   * card, and a digest still needs a way to name an issue in a sentence. Both
-   * are better served by the writer's own opening words than by a truncation
-   * at whatever character happens to fall on the limit, so this cuts at the
-   * first sentence end or line break and only falls back to a hard trim when
-   * the opening runs long.
-   */
-  const TITLE_MAX = 140;
-  function headline(text) {
-    const flat = String(text || "").replace(/\s+/g, " ").trim();
-    if (!flat) return "Untitled issue";
-    const stop = flat.search(/[.!?](\s|$)/);
-    let head = (stop > 0 && stop <= TITLE_MAX) ? flat.slice(0, stop + 1) : flat;
-    if (head.length > TITLE_MAX) head = head.slice(0, TITLE_MAX - 1).replace(/\s+\S*$/, "") + "…";
-    return head;
-  }
-
   async function raiseIssue(form) {
     const f = new FormData(form);
+    const title = (f.get("title") || "").toString().trim();
     const summary = (f.get("summary") || "").toString().trim();
-    if (!summary) throw new Error("Say what is happening before raising it.");
+    if (!title) throw new Error("Name the problem before raising it.");
+    if (!summary) throw new Error("Say who or what it affects before raising it.");
 
     const body = {
-      // Derived, not asked for. See headline() above.
-      title: headline(summary),
+      title: title,
       summary: summary,
       department: f.get("department") || null,
       sub_department: (function () {
@@ -436,14 +420,17 @@
     try {
       await load();
     } catch (err) {
-      // Before supabase/emerging-issues.sql has been run the tables are simply
-      // not there, and PostgREST answers 404. That is a setup step, not a
-      // fault, and it should not be reported to a reader as a stack trace.
+      // If the tables are not there PostgREST answers 404. That is a setup
+      // problem, not a fault of the reader's, and it should not be reported to
+      // them as a stack trace. The message no longer names a migration file:
+      // those were applied long ago and have since been removed from the repo,
+      // so telling somebody to run one sent them looking for a file that does
+      // not exist.
       const notBuiltYet = /404|PGRST205|does not exist/i.test(err.message || "");
       el("eiList").innerHTML = notBuiltYet
-        ? `<div class="ei-empty"><strong>The register is not switched on yet.</strong>
-             <p>Once <code>supabase/emerging-issues.sql</code> has been run, issues
-                raised here will appear in this list.</p></div>`
+        ? `<div class="ei-empty"><strong>The register is not available.</strong>
+             <p>Its tables are missing from the database. Contact Ben Packer or
+                Jess Swinburne — this needs fixing at the database, not here.</p></div>`
         : `<div class="ei-empty"><strong>Could not load the register.</strong>
              <p>${esc(err.message)}</p></div>`;
       el("eiRaise").disabled = notBuiltYet;
@@ -488,7 +475,7 @@
     el("eiRaise").addEventListener("click", () => {
       if (typeof dlg.showModal === "function") dlg.showModal();
       else dlg.setAttribute("open", "");
-      el("nSummary").focus();
+      el("nTitle").focus();
     });
     el("nDepartment").addEventListener("change", (e) => fillSubDepartments(e.target.value));
     el("nSubDept").addEventListener("change", (e) => {
@@ -504,7 +491,7 @@
     if (location.hash === "#raise") {
       history.replaceState(null, "", location.pathname);   // don't re-open on refresh
       if (typeof dlg.showModal === "function") dlg.showModal(); else dlg.setAttribute("open", "");
-      el("nSummary").focus();
+      el("nTitle").focus();
     }
     el("eiForm").addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -524,20 +511,26 @@
         await load();
         say("Issue raised.");
       } catch (err) {
-        /* Two different patches can be missing, and each needs its own name.
-           A single "check constraint" catch-all used to answer both, which
-           meant a status the database had not heard of sent whoever hit it to
-           the severity file. */
+        /* Two different constraints can reject a value, and each needs its own
+           wording — a single "check constraint" catch-all used to answer both,
+           which meant a status the database had not heard of was reported as a
+           severity problem.
+
+           These no longer name a migration file. The files they used to point
+           at were applied long ago and have since been removed from the repo,
+           so naming one sent whoever hit this looking for something that is not
+           there. What matters to the reader is that the value was refused and
+           that it is a database issue rather than something they typed. */
         const m = err.message || "";
         const oldStatus = /status_check/i.test(m);
         const oldLevels = /severity_check/i.test(m);
         say(
           oldStatus
-            ? "The database still expects the old five statuses — run supabase/emerging-issues-v2.sql."
+            ? "The database does not recognise that status. It is out of step with this page — contact Ben Packer or Jess Swinburne."
           : oldLevels
-            ? "The database still expects the old Red / Amber / Green levels — run supabase/emerging-issues-severity.sql."
+            ? "The database does not recognise that severity. It is out of step with this page — contact Ben Packer or Jess Swinburne."
           : /check constraint/i.test(m)
-            ? "The database refused that value — supabase/emerging-issues-v2.sql may not have been run yet."
+            ? "The database refused that value. It is out of step with this page — contact Ben Packer or Jess Swinburne."
             : (m || "Could not raise that issue."), true);
       } finally { btn.disabled = false; }
     });

@@ -56,9 +56,9 @@ is not logged as though a person typed it.
 **The source workbooks are no longer in the repository.** They were a one-time
 bootstrap: the data now lives in Postgres and PMs edit it through the PM Hub,
 so the spreadsheets stopped being the source of truth the moment the import ran.
-`import_sheets.py` and `update_workbook.py` are kept as a record of how the data
-got here — if you ever need to re-import, drop the workbooks back into
-`data-sources/` and run:
+`import_sheets.py` is kept as a record of how the data got here. If you ever
+need to re-import, drop the workbooks into the repo root (or `data-sources/`)
+and run:
 
 ```bash
 python supabase/import_sheets.py     # reads data-sources/*.xlsx → supabase/seed.sql
@@ -116,51 +116,28 @@ That file is the only list to edit. `import_sheets.py` reads it to fill the
 row-level security checks the table again on every single write. Add or remove
 an address, re-run the import, and access genuinely changes.
 
-### 4c. Reconcile the directory (one time)
+### 4c. The numbered patches are gone
 
-The Org Directory workbook had fallen behind the hub on several reporting-line
-changes, so seeding from it reverted them. Run **`supabase/reconcile-directory.sql`**
-once, after seed.sql. It restores those changes, adds Katelyn Graf and Charles
-Crankson, and widens `v_hub_directory` so the hub's directory lists student
-employees again as it always did.
+Everything that used to be described here as a numbered patch —
+`reconcile-directory.sql`, `patch-02` through `patch-18`, the
+`emerging-issues*.sql` and `kpi-*.sql` files — has been applied to the live
+database and removed from the repository. They were a migration history, not
+setup steps, and keeping them invited someone to re-run one over data that had
+moved on.
 
-The workbook itself has now been corrected too, so a future re-seed carries the
-same state and this file is not needed again.
+What they did is now folded into the files that remain:
 
-### 4d. Department names and student contractor counts
+| File | What it now covers |
+|---|---|
+| `schema.sql` | tables, views, RLS, audit triggers, and the grants — including withholding `v_hub_directory` from `anon` |
+| `access-control.sql` | the four roles, `hub_access`, the scoping functions, and the access list |
+| `process-documentation.sql` | the Processes tables and their policies |
+| `seed.sql` | a full data load, for rebuilding from nothing |
 
-Run **`supabase/patch-02-departments.sql`** last. It gives the Records
-department a single spelling (staff and student employees had drifted apart, so
-the hub drew two bars for one team) and moves the per-department student
-contractor headcount — the last figure that was still hardcoded — into a
-`student_contractor_counts` table that PMs can edit.
+If you are standing up a fresh project, run them in that order. Against the live
+database, none of them should be run at all — see the warning in step 3.
 
-### 4e. Security hardening and the org chart
-
-Run these two last:
-
-- **`supabase/patch-03-security.sql`** — clears every advisory Supabase raised.
-  It turns on `security_invoker` for the three hub views (they were reading with
-  the owner's rights and would have bypassed RLS), pins `search_path` on the
-  trigger functions, revokes public EXECUTE on them, and retires `is_editor()`
-  entirely — the write policies now ask "is my email in allowed_editors?"
-  directly, so no privileged function needs to be callable by clients. It also
-  makes `change_log` append-only, so an editor cannot rewrite the record of
-  what they did.
-
-- **`supabase/patch-04-org-chart.sql`** — widens `org_chart_nodes` to hold what
-  the chart actually draws (tile level, department slug, photo, email, PM flag)
-  and reloads all 53 nodes. The table previously held 43 leadership rows with
-  none of those fields, so the chart could not have been pointed at it as-is.
-
-- **`supabase/patch-05-performance-standards.sql`** — the last static page. Its
-  12 sections and 56 services become `performance_sections` and
-  `performance_services`, the key-metric → Power BI lookup becomes
-  `performance_metric_links` (including the four metrics deliberately parked as
-  "no report for now"), and the intro paragraph goes in `app_text` so it can be
-  reworded without a deploy.
-
-**Every page on the hub now reads from the database.**
+**Every page on the hub reads from the database.**
 
 ### 5. Connect the apps
 Open `shared/js/config.js` and fill in the two values from
@@ -297,9 +274,9 @@ A few examples of things that are *just* data:
 | OKR status, progress, comments | OKRs → edit → Save |
 | A new column or a whole new sheet | **Add column** / **New sheet** buttons |
 
-**patch-14 is the last patch.** The numbered files in `supabase/` are finished.
-They remain as the migration history — a fresh rebuild replays them in order, so
-none may be deleted — but no more are to be added.
+**There are no numbered patches any more.** They were all applied and then
+removed from the repository; what they built is folded into `schema.sql`,
+`access-control.sql` and `process-documentation.sql`. No more are to be added.
 
 That is workable because the PM Hub now covers the cases that used to need one.
 Rows, columns and whole sheets can all be created and removed from the app, and
@@ -318,9 +295,9 @@ If something genuinely cannot be done from the app — a new policy, a trigger, 
 column changing type — that is a conversation first, then a single statement
 pasted into the SQL editor. Not a file, and not without asking.
 
-Two of the existing patches (09 and 12) are single-row data edits that should
-have been done in the app. They stay only because they are already applied and
-removing them would change what a rebuild produces.
+Some of the old patches were single-row data edits that should have been done
+in the app. That is the habit this section exists to break: a person's row is
+changed in the PM Hub, not in SQL.
 
 ---
 

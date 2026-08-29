@@ -32,8 +32,15 @@
   })();
 </script>
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <!-- Allow iframe embedding -->
-  <meta http-equiv="X-Frame-Options" content="ALLOWALL">
+  <!-- This page is meant to be embeddable in an iframe, and it is — by default.
+       There used to be a <meta http-equiv="X-Frame-Options" content="ALLOWALL">
+       here trying to say so. It did nothing twice over: browsers only honour
+       X-Frame-Options as an HTTP header, never from a meta tag, and ALLOWALL is
+       not one of its values (DENY and SAMEORIGIN are). All it produced was a
+       console warning on every load.
+       Nothing sets a frame header for this site, so embedding already works. If
+       frame protection is ever wanted, it belongs in vercel.json's headers —
+       and would need an exception for this page. -->
   <title>Student Services Hierarchy</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link

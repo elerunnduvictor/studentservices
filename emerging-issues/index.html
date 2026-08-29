@@ -45,7 +45,6 @@
       <a href="/emerging-issues/index.html" class="nav-link">Emerging Issues</a>
       <a href="/directory/index.html" class="nav-link">Directory</a>
       <a href="/org-chart/index.html" class="nav-link">Org Chart</a>
-      <a href="/performance-standards/index.html" class="nav-link">Performance Report</a>
     </div>
     <button class="nav-theme-btn" id="themeToggle" title="Toggle theme">
       <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
@@ -123,14 +122,17 @@
     <form id="eiForm" method="dialog">
       <h2 class="ei-dialog-title">Raise an issue</h2>
 
-      <!-- One box, not three.
-           "What is the issue", "What is happening" and "Who or what it affects"
-           asked for the same paragraph three times, and the answer people gave
-           the first box was usually a compressed version of the other two.
-           No placeholder: the label is the question, and prompt text inside the
-           box only competes with it. -->
-      <label class="ei-label" for="nSummary">What is Happening and What does it affect</label>
-      <textarea id="nSummary" name="summary" rows="6" required></textarea>
+      <!-- Two boxes now, not the three this used to be nor the one it became.
+           A title first — name the problem in a line, the way the register
+           lists it — then the detail box asks only what that line doesn't
+           already say: who or what it affects. Splitting them stopped the
+           title being a compressed rehash of the paragraph beneath it. No
+           placeholder text inside either: the label is the question. -->
+      <label class="ei-label" for="nTitle">What is the problem</label>
+      <input id="nTitle" name="title" type="text" maxlength="140" required>
+
+      <label class="ei-label" for="nSummary">Who or what it affects</label>
+      <textarea id="nSummary" name="summary" rows="5" required></textarea>
 
       <div class="ei-dialog-row">
         <div>

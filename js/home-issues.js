@@ -41,9 +41,25 @@
     return bits.join(" · ") + ".";
   }
 
+  /* The tile reads as one clickable card — hover lift and arrow cursor already
+     said so before this existed — so a press anywhere on it should behave like
+     one, not just on the quiet "Full List" link buried at the bottom. The two
+     buttons keep their own destinations (raising an issue is not the same
+     action as opening the register), so a click inside `.issue-band-actions`
+     is left alone and only falls through to the register otherwise. */
+  function wireCardClick(band) {
+    const link = band.querySelector(".issue-band");
+    if (!link) return;
+    link.addEventListener("click", (e) => {
+      if (e.target.closest(".issue-band-actions")) return;
+      window.location.href = "/emerging-issues/index.html";
+    });
+  }
+
   async function start() {
     const band = document.getElementById("homeIssues");
     if (!band || !window.SS || !window.SS.db) return;
+    wireCardClick(band);
 
     /* Both at once, not one after the other.
        The old order was: wait for the session, then wait for hub_me to say who

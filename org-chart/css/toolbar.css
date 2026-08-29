@@ -125,6 +125,47 @@
   user-select: none;
 }
 
+/* ── the "more tools" menu ── */
+.tool-menu { position: relative; }
+#toolMenuBtn[aria-expanded="true"] {
+  color: var(--gold);
+  border-color: var(--gold);
+  background: rgba(var(--gold-r), 0.08);
+}
+.tool-menu-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 176px;
+  z-index: 150;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow-hover);
+  padding: 6px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+.tool-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 10px;
+  background: none;
+  border: none;
+  border-radius: 7px;
+  font: inherit;
+  font-size: 0.76rem;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition);
+}
+.tool-menu-item svg { width: 15px; height: 15px; flex-shrink: 0; color: var(--text-muted); }
+.tool-menu-item:hover { background: var(--ice-gray); color: var(--gold); }
+.tool-menu-item:hover svg { color: var(--gold); }
+
 /* ── Hamburger Menu Toggle ── */
 .menu-toggle {
   display: none;

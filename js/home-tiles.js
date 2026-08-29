@@ -1,9 +1,12 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   THE FOUR HOME TILES
+   THE HOME PAGE TILES
 
-   Org chart, directory, KPIs and OKRs, each opening in place instead of
-   navigating away. The interaction is the org chart's stakeholder tile: press
-   the head, the body grows, press again and it closes.
+   Org chart, KPIs and OKRs, each opening in place instead of navigating away.
+   The click-to-expand mechanics (press the head, the body grows) live in
+   shared/js/gw-tiles.js now — the org chart page grew its own pair of these
+   tiles (Directory, Process Documentation, moved off this page) and the
+   interaction is identical on both, so only the engine is shared; each page
+   keeps its own PANELS map.
 
    Two decisions are worth stating, because both are easy to undo by accident.
 
@@ -27,17 +30,12 @@
   "use strict";
 
   var SS = (window.SS = window.SS || {});
+  var esc = SS.gw.esc, dataset = SS.gw.dataset, ready = SS.gw.ready;
 
-  function esc(s) {
-    return String(s == null ? "" : s)
-      .replace(/&/g, "&amp;").replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-  }
-  function cls(s) { return String(s || "").toLowerCase().split(" ").join("-"); }
-
-  /* ── the two live bands share a row ─────────────────────────────────────
-     Each band is revealed by its own script on its own rule. Whichever reveals
-     last makes the row a pair, so both call this and it simply recounts. */
+  /* The emerging issues band used to share this row with a process
+     documentation band; now it is always alone in it, but another page may
+     one day add a second gate here, so the row still copes with either
+     count rather than assuming one. */
   SS.home = SS.home || {};
   SS.home.syncBands = function () {
     var row = document.getElementById("homeBands");
@@ -46,21 +44,6 @@
     row.classList.toggle("is-pair", shown > 1);
   };
 
-  /* ── data, loaded once per visit ───────────────────────────────────────── */
-  var loading = {};
-  function dataset(name) {
-    if (!loading[name]) {
-      if (!SS.data || !SS.data.load) {
-        return Promise.reject(new Error("the data service is not available on this page"));
-      }
-      loading[name] = SS.data.load(name);
-      loading[name]["catch"](function () { delete loading[name]; });
-    }
-    return loading[name];
-  }
-  function ready() {
-    return Promise.resolve(SS.access && SS.access.ready)["catch"](function () {});
-  }
   function myDept() { return (SS.access && SS.access.scope && SS.access.scope.department) || null; }
   function myName() {
     var a = SS.access || {};
@@ -147,99 +130,6 @@
         '<div class="ht-top">' + node(vp, "is-vp") + "</div>" +
         '<div class="ht-branches">' + branches + "</div>" +
         "</div>";
-    });
-  }
-
-  /* ═══════════════ DIRECTORY ═══════════════
-     The two charts the directory page carries — headcount by department, and
-     the split by employment type — drawn from the same numbers by the same
-     route, so the tile and the page cannot disagree.
-
-     A partner receives no directory rows at all (the view refuses them), so
-     there is nothing to chart and the panel says so rather than drawing an
-     empty axis. */
-  function panelDirectory() {
-    return Promise.all([dataset("directory"), ready()]).then(function () {
-      var people = window.EMPLOYEES || [];
-      var contractors = window.STUDENT_CONTRACTORS || {};
-      var DEPTC = window.DEPT_COLORS || {};
-      var TYPEC = window.TYPE_COLORS || {};
-
-      var byDept = {}, byType = {}, scTotal = 0;
-      people.forEach(function (e) {
-        if (e.dept) byDept[e.dept] = (byDept[e.dept] || 0) + 1;
-        if (e.type) byType[e.type] = (byType[e.type] || 0) + 1;
-      });
-      Object.keys(contractors).forEach(function (d) {
-        var n = Number(contractors[d]) || 0;
-        if (!n) return;
-        byDept[d] = (byDept[d] || 0) + n;
-        scTotal += n;
-      });
-      if (scTotal) byType["Student Contractor"] = scTotal;
-
-      var deptRows = Object.keys(byDept).map(function (k) {
-        return { label: k, value: byDept[k] };
-      }).sort(function (a, b) { return b.value - a.value; });
-
-      if (!deptRows.length) {
-        return '<div class="gw-empty">The directory is not available to your account. ' +
-               "The button below opens what you can see.</div>";
-      }
-
-      var max = deptRows[0].value || 1;
-      var total = people.length + scTotal;
-      var bars = deptRows.map(function (r) {
-        var c = DEPTC[r.label] || { bg: "#065577", light: "#28738A" };
-        return '<div class="ht-bar-row">' +
-          '<div class="ht-bar-label" title="' + esc(r.label) + '">' + esc(r.label) + "</div>" +
-          '<div class="ht-bar-track"><div class="ht-bar-fill" style="width:' +
-            ((r.value / max) * 100).toFixed(1) + "%;background:linear-gradient(90deg," +
-            c.bg + "," + (c.light || c.bg) + ');"><span class="ht-bar-value">' +
-            r.value + "</span></div></div></div>";
-      }).join("");
-
-      var typeRows = Object.keys(byType).map(function (k) {
-        return { label: k, value: byType[k], color: TYPEC[k] || "#7F898A" };
-      }).sort(function (a, b) { return b.value - a.value; });
-      var tTotal = typeRows.reduce(function (s, d) { return s + d.value; }, 0) || 1;
-
-      var size = 168, cx = size / 2, cy = size / 2, rad = size * 0.36, sw = size * 0.15;
-      var cum = 0;
-      var segs = typeRows.map(function (d) {
-        // One slice covering the whole circle cannot be drawn as an arc: its
-        // start and end points coincide and the path collapses to nothing.
-        if (typeRows.length === 1) {
-          return '<circle cx="' + cx + '" cy="' + cy + '" r="' + rad +
-            '" fill="none" stroke="' + d.color + '" stroke-width="' + sw + '"/>';
-        }
-        var a0 = cum * 2 * Math.PI - Math.PI / 2;
-        cum += d.value / tTotal;
-        var a1 = cum * 2 * Math.PI - Math.PI / 2;
-        var large = d.value / tTotal > 0.5 ? 1 : 0;
-        return '<path d="M ' + (cx + rad * Math.cos(a0)).toFixed(2) + " " +
-          (cy + rad * Math.sin(a0)).toFixed(2) + " A " + rad + " " + rad + " 0 " + large + " 1 " +
-          (cx + rad * Math.cos(a1)).toFixed(2) + " " + (cy + rad * Math.sin(a1)).toFixed(2) +
-          '" fill="none" stroke="' + d.color + '" stroke-width="' + sw + '"/>';
-      }).join("");
-
-      var legend = typeRows.map(function (d) {
-        return '<div class="ht-leg"><span class="ht-swatch" style="background:' + d.color +
-          '"></span>' + esc(d.label) + "<b>" + d.value + "</b></div>";
-      }).join("");
-
-      return '<div class="ht-two">' +
-        '<div class="ht-col"><div class="ht-col-title">Employees by department</div>' + bars + "</div>" +
-        '<div class="ht-col"><div class="ht-col-title">Employment types</div>' +
-          '<div class="ht-donut-wrap">' +
-            '<svg class="ht-donut" viewBox="0 0 ' + size + " " + size +
-              '" role="img" aria-label="Employment types">' + segs +
-              '<text class="ht-donut-n" x="' + cx + '" y="' + (cy - 1) + '" text-anchor="middle">' +
-                total + "</text>" +
-              '<text class="ht-donut-l" x="' + cx + '" y="' + (cy + 15) + '" text-anchor="middle">total</text>' +
-            "</svg>" +
-            '<div class="ht-legend">' + legend + "</div>" +
-          "</div></div></div>";
     });
   }
 
@@ -561,94 +451,11 @@
     });
   }
 
-  var PANELS = { org: panelOrg, directory: panelDirectory, kpis: panelKpis, okrs: panelOkrs };
-
-  /* ── expand / collapse ─────────────────────────────────────────────────── */
-  var filled = {};
-
-  /* Give an open panel exactly the height its content needs.
-     The CSS opens to a fixed max-height, which has to be a guess, and a guess
-     that is too small clips the bottom off silently — the partner's OKR panel
-     already runs to 1722px and would grow with the data. Measuring after the
-     content lands removes the guess. Cleared on close so the stylesheet's
-     zero takes over again and it animates shut. */
-  function sizeToContent(tile) {
-    var body = tile.querySelector(".gw-body");
-    var inner = tile.querySelector(".gw-body-inner");
-    if (!body || !inner) return;
-    body.style.maxHeight = tile.classList.contains("is-open")
-      ? inner.scrollHeight + 40 + "px"
-      : "";
-  }
-
-  function fill(key, panel) {
-    if (!panel) return;
-    var tile = panel.closest(".gw");
-    PANELS[key]().then(function (html) {
-      panel.innerHTML = html || '<div class="gw-empty">Nothing to show here.</div>';
-      if (tile) sizeToContent(tile);
-    })["catch"](function (err) {
-      // Never a stack trace on the home page. One sentence, and the button
-      // below still takes them to the real page.
-      panel.innerHTML = '<div class="gw-empty">Could not load this right now &mdash; ' +
-        esc(err && err.message ? err.message : "try the full page below.") + "</div>";
-      if (tile) sizeToContent(tile);
-      delete filled[key];              // a second press may try again
-    });
-  }
-
-  function toggle(tile) {
-    var head = tile.querySelector(".gw-head");
-
-    if (tile.classList.contains("is-open")) {
-      tile.classList.remove("is-open");
-      head.setAttribute("aria-expanded", "false");
-      sizeToContent(tile);             // clears it, so the stylesheet's 0 wins
-      return;
-    }
-
-    // The class is all that opens it; CSS handles the height, the fade and
-    // taking it out of the accessibility tree once it has closed.
-    tile.classList.add("is-open");
-    head.setAttribute("aria-expanded", "true");
-    sizeToContent(tile);               // for a panel already filled
-
-    var key = tile.dataset.gw;
-    if (!filled[key]) {
-      filled[key] = true;
-      fill(key, tile.querySelector(".gw-panel"));
-    }
-  }
-
-  /** Shut every tile, without animating — used when leaving the page. */
-  function closeAll() {
-    document.querySelectorAll(".gw.is-open").forEach(function (tile) {
-      tile.classList.remove("is-open");
-      var head = tile.querySelector(".gw-head");
-      if (head) head.setAttribute("aria-expanded", "false");
-      var body = tile.querySelector(".gw-body");
-      if (body) body.style.maxHeight = "";
-    });
-  }
+  var PANELS = { org: panelOrg, kpis: panelKpis, okrs: panelOkrs };
 
   function start() {
     SS.home.syncBands();
-    var grid = document.querySelector(".home-gw-grid");
-    if (!grid) return;                 // not the home page
-    grid.addEventListener("click", function (e) {
-      var head = e.target.closest(".gw-head");
-      if (head) toggle(head.closest(".gw"));
-    });
-
-    /* Leave the page with the tiles shut.
-       Following a tile's button navigates away, and coming back — with the
-       Back button, from the browser's cache — restores the DOM exactly as it
-       was left, open tile and all. That is not where anyone wants to land:
-       the home page should look like the home page. `pagehide` covers the
-       journey out, `pageshow` the restore, because a cached page never fires
-       its scripts again. */
-    window.addEventListener("pagehide", closeAll);
-    window.addEventListener("pageshow", function (e) { if (e.persisted) closeAll(); });
+    SS.gw.mount(".home-gw-grid", PANELS);
   }
 
   if (document.readyState === "loading") {

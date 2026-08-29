@@ -128,6 +128,41 @@
   --extra-pr: 0px !important;
 }
 
+/* Smaller tiles, on this view only.
+   .leadership-view is the whole org at once — VP, four directors, every
+   senior manager under them — and at full tile size that no longer fits a
+   screen without a lot of scrolling before the Directory / Process
+   Documentation cards below it even come into view. The department pages
+   (departments/*.html) render through OC.renderSubtree() directly and wrap
+   their tree in .single-dept-view, never this class, so they keep the
+   original size untouched — as does this same org chart page once a single
+   department filter narrows .leadership-view to .single-dept-view too;
+   there is little enough on screen at that point that full size fits fine.
+   Sizes shrink, proportions don't: everything below is the same tile at
+   about 70% scale rather than a redesign.
+
+   `:not(.expanded)` on every rule, not just the width: tiles.css already has
+   its own, larger sizes for an opened tile's name/title/badge, defined at
+   equal or lower specificity and earlier in the cascade (tiles.css loads
+   before this file) — without the guard here these would win by load order
+   and an expanded tile in this view would keep its collapsed, shrunk text
+   while sitting at full 680px width, which reads as broken rather than
+   compact. */
+.tree.leadership-view .tile:not(.expanded) { width: 158px; }
+.tree.leadership-view .tile:not(.expanded) .tile-header { padding: 11px 10px 7px; gap: 6px; }
+.tree.leadership-view .tile:not(.expanded) .avatar { width: 50px; height: 50px; font-size: .92rem; }
+.tree.leadership-view .tile:not(.expanded) .tile-name { font-size: .76rem; }
+.tree.leadership-view .tile:not(.expanded) .tile-title { font-size: .58rem; }
+.tree.leadership-view .tile:not(.expanded) .tile-level-badge { font-size: .42rem; padding: 1px 6px; margin-top: 1px; }
+.tree.leadership-view .tile:not(.expanded) .tile-expand-indicator { font-size: .46rem; padding-bottom: 4px; }
+/* The tree's own rhythm — how far apart each level sits — shrinks with the
+   tiles, or the extra headroom a full-size tree needed stays even though
+   the tiles no longer need it. */
+.tree.leadership-view li { padding-top: 18px; }
+.tree.leadership-view ul { padding-top: 18px; }
+.tree.leadership-view ul::before,
+.tree.leadership-view li::before { height: 18px; }
+
 /* Leadership view shows only senior managers — hide PMs (both flanking and inline) */
 .tree.leadership-view .pm-branch { display: none !important; }
 .tree.leadership-view .assistant-group { display: none !important; }

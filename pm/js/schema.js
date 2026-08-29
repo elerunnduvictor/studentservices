@@ -190,6 +190,16 @@ const DEPARTMENTS = [
  * `seed` matters: without it a person added on a sub-tab would save with no
  * department or type and vanish from the tab they were just typed into.
  */
+/* Shared by every person-shaped sheet — FTE, Temporary, Professional
+   Contractors and Student Employees alike. Setting someone Inactive is how
+   they leave their tab's Active view and appear under that department's
+   Archived tab instead; the row is never deleted, so someone who returns
+   keeps their history. */
+const STATUS_OPTIONS = [
+  { value: true,  label: "Active",   tone: "green" },
+  { value: false, label: "Inactive", tone: "grey" },
+];
+
 const PEOPLE_COLUMNS = [
   { key: "name",                label: "Name",                type: "text", width: 135, required: true },
   { key: "role",                label: "Role",                type: "text", width: 175 },
@@ -203,15 +213,15 @@ const PEOPLE_COLUMNS = [
   { key: "employment_type",     label: "Employment Type",     type: "select", width: 140,
     options: EMPLOYMENT_TYPES,
     help: "Changing this moves the person to the matching tab." },
+  { key: "active",              label: "Status",              type: "select", width: 100,
+    options: STATUS_OPTIONS,
+    help: "Set to Inactive to move this person to the department's Archived tab." },
 ];
 
-/* Student employees sit in their own table and carry their own status. Setting
-   someone Inactive is how they leave the Active tab and appear under Archived —
-   the row is never deleted, so a returning student keeps their history. */
-const STUDENT_STATUS = [
-  { value: true,  label: "Active",   tone: "green" },
-  { value: false, label: "Inactive", tone: "grey" },
-];
+/* Kept as an alias: student sheets were written against this name before
+   PEOPLE_COLUMNS carried a status of its own, and both are the same two
+   options either way. */
+const STUDENT_STATUS = STATUS_OPTIONS;
 
 const STUDENT_COLUMNS = [
   { key: "name",           label: "Employee Name", type: "text", width: 130, required: true },
@@ -234,8 +244,11 @@ const departmentSheets = (key, label, department) => [
     // Alphabetical by name — a department roster is read by looking someone up.
     table: "employees",
     order: "name.asc.nullslast",
-    filter: { department: `eq.${department}`, employment_type: "eq.Full-Time Employee" },
-    seed: { department, employment_type: "Full-Time Employee" },
+    // Active only — an FTE set Inactive leaves this tab and appears on the
+    // department's Archived tab below instead, same as a student employee
+    // already does on theirs.
+    filter: { department: `eq.${department}`, employment_type: "eq.Full-Time Employee", active: "eq.true" },
+    seed: { department, employment_type: "Full-Time Employee", active: true },
     columns: PEOPLE_COLUMNS,
   },
   {
@@ -246,8 +259,9 @@ const departmentSheets = (key, label, department) => [
     // Both temporary kinds. Quoted because PostgREST treats a bare comma inside
     // in.() as a value separator.
     filter: { department: `eq.${department}`,
-              employment_type: `in.(${TEMPORARY_TYPES.map((t) => `"${t}"`).join(",")})` },
-    seed: { department, employment_type: "Full-Time Temporary" },
+              employment_type: `in.(${TEMPORARY_TYPES.map((t) => `"${t}"`).join(",")})`,
+              active: "eq.true" },
+    seed: { department, employment_type: "Full-Time Temporary", active: true },
     columns: PEOPLE_COLUMNS,
   },
   {
@@ -255,8 +269,8 @@ const departmentSheets = (key, label, department) => [
     // Alphabetical by name.
     table: "employees",
     order: "name.asc.nullslast",
-    filter: { department: `eq.${department}`, employment_type: "eq.Professional Contractor" },
-    seed: { department, employment_type: "Professional Contractor" },
+    filter: { department: `eq.${department}`, employment_type: "eq.Professional Contractor", active: "eq.true" },
+    seed: { department, employment_type: "Professional Contractor", active: true },
     columns: PEOPLE_COLUMNS,
   },
   {
@@ -268,6 +282,21 @@ const departmentSheets = (key, label, department) => [
     filter: { department: `eq.${department}`, active: "eq.true" },
     seed: { department, active: true },
     columns: STUDENT_COLUMNS,
+  },
+  {
+    key: key + "_archived", group: key, groupLabel: label, label: "Archived",
+    // FTE, Temporary and Professional Contractors share one archive rather
+    // than one each — Employment Type is already a visible column on
+    // PEOPLE_COLUMNS, so which kind someone was stays legible, and setting
+    // them back to Active returns them to the matching tab above on its own.
+    // Student employees keep their own separate archive (the "Student
+    // Employees" group above, Archived sub-tab) since they live in a
+    // different table entirely.
+    table: "employees",
+    order: "name.asc.nullslast",
+    filter: { department: `eq.${department}`, active: "eq.false" },
+    seed: { department, active: false },
+    columns: PEOPLE_COLUMNS,
   },
 ];
 

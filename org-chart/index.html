@@ -42,7 +42,6 @@
   <link rel="stylesheet" href="/org-chart/css/hierarchy.css">
   <link rel="stylesheet" href="/org-chart/css/tree.css">
   <link rel="stylesheet" href="/org-chart/css/tiles.css">
-  <link rel="stylesheet" href="/org-chart/css/related.css">
   <link rel="stylesheet" href="/org-chart/css/modal.css">
   <link rel="stylesheet" href="/org-chart/css/animations.css">
   <link rel="stylesheet" href="/org-chart/css/responsive.css">
@@ -67,7 +66,6 @@
 <script src="/shared/js/hub-texture.js"></script>
 <script src="/shared/js/hub-account.js"></script>
   <script src="/shared/js/data-service.js"></script>
-  <script src="/org-chart/js/related-tiles.js"></script>
   <script src="/shared/js/hub-boot.js"
           data-datasets="orgchart"
           data-then="org-chart/js/app.js"></script>
@@ -77,7 +75,10 @@
 
   <!-- ═══════════════ TOOLBAR ═══════════════ -->
   <div class="toolbar" id="toolbar">
-    <a href="/index.html" class="toolbar-brand" style="text-decoration:none;color:inherit;">Student Services</a>
+    <!-- No inline colour. It used to carry `color:inherit` to stop the browser
+         painting it link-blue, but an inline style outranks the stylesheet, so
+         it also blocked .toolbar-brand's own colour. The class sets both now. -->
+    <a href="/index.html" class="toolbar-brand">Student Services</a>
 
     <button class="menu-toggle" id="menuToggle" title="Menu">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
@@ -427,54 +428,6 @@
       </div>
     </div>
   </div><!-- /hierarchySection -->
-
-  <!-- ═══════════════ BEYOND THE CHART ═══════════════
-       The org chart answers "who reports to whom." These answer the two
-       questions that tend to follow it — "who is on my team" and "how does
-       the work actually get done" — without sending the reader off the page
-       to find out. Plain link cards rather than the home page's
-       click-to-expand tile: no preview to load in place, just the door
-       itself — see org-chart/js/related-tiles.js for the one thing that
-       still happens in script, which is deciding whether the second card
-       is worth showing at all. -->
-  <section class="oc-related" id="ocRelated">
-    <div class="oc-related-head">
-      <div class="oc-related-eyebrow">Beyond the Chart</div>
-      <h2 class="oc-related-title">Who's on the team, and how the work gets done</h2>
-    </div>
-    <div class="oc-related-grid">
-
-      <!-- Hidden until related-tiles.js confirms this reader belongs to
-           Student Services — a partner gets refused every row by row-level
-           security on the employees tables, so a card to it is a card to an
-           empty table. -->
-      <a class="oc-card" data-oc="directory" id="oc-directory" href="/directory/index.html" hidden>
-        <span class="oc-card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M17 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9.5" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
-        <span class="oc-card-eyebrow">Team Roster</span>
-        <span class="oc-card-title">Complete Directory</span>
-        <span class="oc-card-desc">Every team member, by role, department and employment type.</span>
-        <span class="oc-card-cta">
-          Open the full directory
-          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>
-        </span>
-      </a>
-
-      <!-- Hidden until related-tiles.js confirms this reader is a process
-           steward or reviewer — the same rule the Processes navbar link and
-           the card's old home page band used. -->
-      <a class="oc-card" data-oc="processes" id="oc-processes" href="/processes/index.html" hidden>
-        <span class="oc-card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><polyline points="9 13 10.5 14.5 14 11"/><line x1="9" y1="17.5" x2="15" y2="17.5"/></svg></span>
-        <span class="oc-card-eyebrow">How We Work</span>
-        <span class="oc-card-title">Process Documentation</span>
-        <span class="oc-card-desc">How each process actually works, written down.</span>
-        <span class="oc-card-cta">
-          Open the process library
-          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>
-        </span>
-      </a>
-
-    </div>
-  </section>
 
   <!-- ═══════════════ FOOTER ═══════════════ -->
   <style>

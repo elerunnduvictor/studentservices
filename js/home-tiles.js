@@ -32,17 +32,6 @@
   var SS = (window.SS = window.SS || {});
   var esc = SS.gw.esc, dataset = SS.gw.dataset, ready = SS.gw.ready;
 
-  /* The emerging issues band used to share this row with a process
-     documentation band; now it is always alone in it, but another page may
-     one day add a second gate here, so the row still copes with either
-     count rather than assuming one. */
-  SS.home = SS.home || {};
-  SS.home.syncBands = function () {
-    var row = document.getElementById("homeBands");
-    if (!row) return;
-    var shown = row.querySelectorAll(".home-issues:not([hidden])").length;
-    row.classList.toggle("is-pair", shown > 1);
-  };
 
   function myDept() { return (SS.access && SS.access.scope && SS.access.scope.department) || null; }
   function myName() {
@@ -453,9 +442,55 @@
 
   var PANELS = { org: panelOrg, kpis: panelKpis, okrs: panelOkrs };
 
+  /* ═══════════════ THE BOTTOM MENU ═══════════════
+     Directory and Process Documentation, at the foot of the page.
+
+     It lives here rather than in js/shared.js — where the rest of the hub's nav
+     gating sits — for a concrete reason: the home page does not load
+     shared.js. It carries its own inline theme and reveal code, and pulling
+     shared.js in alongside would wire the theme toggle twice, so a click would
+     toggle and toggle back.
+
+     No access rule is duplicated by that. The rules themselves are
+     SS.access.canSeeDirectory and SS.access.canUseProcesses(), which live in
+     hub-access.js and are read by the top nav too — this only asks them.
+
+     Links are REMOVED, not hidden. A hidden link is still in the DOM, still
+     findable, and still announces that the thing exists; for access control the
+     honest form is absence. If nothing survives, the strip goes with it rather
+     than leaving a heading over an empty row. */
+  function gateBottomMenu() {
+    var nav = document.getElementById("homeBottomNav");
+    if (!nav || !SS.access) return;
+    var wrap = document.getElementById("homeBottomLinks");
+    if (!wrap) return;
+
+    function drop(need) {
+      var el = wrap.querySelector('.home-bottom-link[data-need="' + need + '"]');
+      if (el) el.remove();
+    }
+
+    var directoryOK = Promise.resolve(SS.access.ready)
+      .then(function () { return !!SS.access.canSeeDirectory; })
+      ["catch"](function () { return false; });
+
+    var processesOK = (SS.access.canUseProcesses
+      ? SS.access.canUseProcesses() : Promise.resolve(false))
+      ["catch"](function () { return false; });
+
+    // Both answers before anything is revealed, so the strip appears once in
+    // its final shape rather than showing and then losing a link.
+    Promise.all([directoryOK, processesOK]).then(function (ok) {
+      if (!ok[0]) drop("directory");
+      if (!ok[1]) drop("processes");
+      if (wrap.querySelector(".home-bottom-link")) nav.hidden = false;
+      else nav.remove();
+    });
+  }
+
   function start() {
-    SS.home.syncBands();
     SS.gw.mount(".home-gw-grid", PANELS);
+    gateBottomMenu();
   }
 
   if (document.readyState === "loading") {

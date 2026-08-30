@@ -8,9 +8,10 @@
 <script src="/shared/js/hub-access.js"></script>
 <script src="/shared/js/hub-texture.js"></script>
 <script src="/shared/js/hub-account.js"></script>
-<!-- The home page never queried the database before the issues band; without
-     this SS.db is undefined and the band silently hides itself. -->
 <script src="/shared/js/kpi-status.js"></script>
+<!-- Defines SS.db. The home page never queried the database until the
+     Emerging Issues alert needed a critical count; without this js/home-issues.js
+     finds no SS.db and hides the alert without complaining. -->
 <script src="/shared/js/data-service.js"></script>
 <script defer src="/shared/js/gw-tiles.js"></script>
 <script defer src="/js/home-tiles.js"></script>
@@ -52,6 +53,51 @@
   <button class="hero-theme-btn" id="themeToggle" title="Toggle theme" aria-label="Toggle theme">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
   </button>
+  <!-- ═══════ EMERGING ISSUES — the alert ═══════
+       Not a fourth tile. This is the one thing on the page that changes daily
+       and may need acting on today, so it sits where a notification belongs:
+       top right, under the account chip, in its own alert red.
+
+       Compact by design — a bell, the headline figure, and the two actions.
+       The detail lives in the register; this only has to say whether anything
+       needs attention and get you there. Hidden until home-issues.js confirms
+       the reader belongs to Student Services. -->
+  <aside class="ei-alert" id="homeIssues" hidden aria-label="Emerging issues">
+    <a class="ei-alert-main" href="/emerging-issues/index.html">
+      <span class="ei-alert-bell" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+        <!-- Rendered only when the critical count is above zero — see
+             home-issues.js. No badge at all when nothing is critical. -->
+        <span class="ei-alert-badge" id="eiAlertBadge" hidden></span>
+      </span>
+      <span class="ei-alert-text">
+        <span class="ei-alert-title">Emerging Issues</span>
+        <span class="ei-alert-line" id="eiAlertLine">What Student Services is watching right now.</span>
+      </span>
+    </a>
+    <!-- Two icon buttons rather than two labelled ones. The card has to stay
+         out of the hero title's way, and "Raise an issue" spelled out made it
+         wide enough to collide with it. The tooltips carry the wording. -->
+    <div class="ei-alert-actions">
+      <a class="ei-alert-btn is-primary" href="/emerging-issues/index.html#raise"
+         title="Raise an issue" aria-label="Raise an issue">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor"
+             stroke-width="2.4" aria-hidden="true">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+      </a>
+      <a class="ei-alert-btn" href="/emerging-issues/index.html"
+         title="Open the register" aria-label="Open the register">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor"
+             stroke-width="2.4" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/>
+          <polyline points="13 6 19 12 13 18"/></svg>
+      </a>
+    </div>
+  </aside>
+
   <div class="hero-content">
     <div class="hero-badge">BYU-Pathway Worldwide</div>
     <!-- "Administrative Portal" sits on its own line rather than running on:
@@ -71,54 +117,6 @@
   </div>
 </section>
 
-<!-- ═══════════════ THE LIVE BAND ═══════════════
-     Emerging Issues: the part of the hub that changes daily and that a person
-     is expected to act on, rather than reference material to look up. Hidden
-     until its own gate says otherwise — belonging to Student Services.
-
-     Process Documentation used to share this row on the same terms. It has
-     moved to the org chart page (see org-chart/js/related-tiles.js) as one of
-     the click-to-expand tiles there instead — the row here is built to cope
-     with any number of bands, so nothing else needed to change to lose one. -->
-<div class="home-bands" id="homeBands">
-
-  <section class="home-issues" id="homeIssues" hidden>
-    <div class="issue-band">
-      <div class="issue-band-mark">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
-          <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-        </svg>
-      </div>
-      <div class="issue-band-body">
-        <div class="issue-band-title">Emerging Issues</div>
-        <p class="issue-band-desc" id="issueBandDesc">What Student Services is watching right now.</p>
-      </div>
-      <div class="issue-band-stats" id="issueBandStats"></div>
-      <!-- Two actions, not one. Raising something is the thing people will do
-           most often and the thing they are least likely to bother navigating
-           for, so it gets its own button; the register itself is behind the
-           quieter link beside it. -->
-      <div class="issue-band-actions">
-        <a class="issue-band-btn is-primary" href="/emerging-issues/index.html#raise">
-          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor"
-               stroke-width="2" aria-hidden="true">
-            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-          </svg>
-          Raise an issue
-        </a>
-        <a class="issue-band-btn" href="/emerging-issues/index.html">
-          Full List
-          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor"
-               stroke-width="2" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/>
-            <polyline points="13 6 19 12 13 18"/></svg>
-        </a>
-      </div>
-    </div>
-  </section>
-
-</div>
-
 
 <!-- ═══════════════ THE THREE TILES ═══════════════
      The org chart runs the full width of the row on its own — it is the one
@@ -132,11 +130,10 @@
      reader — the server has already filtered the rows, and the panels present
      what arrives.
 
-     The Directory tile that used to sit beside the org chart, and the fourth
-     tile Process Documentation never quite had room for, both moved to the
-     org chart page instead — see org-chart/js/related-tiles.js. Both answer
-     questions that follow the org chart more naturally than they follow this
-     page. -->
+     Directory and Process Documentation are not here. They were tiles, then
+     cards on the org chart, and neither fitted: both are reference you go and
+     look something up in, not something you watch. They are in the bottom menu
+     at the foot of this page. -->
 <section class="home-gw-wrap" id="structure" data-reveal>
   <div class="home-gw-grid">
 
@@ -285,6 +282,52 @@
 </section>
 
 
+
+<!-- ═══════════════ BOTTOM MENU ═══════════════
+     The two references that are not day-to-day work: the full directory and the
+     process library. They were tiles on this page, then cards on the org chart,
+     and neither fitted — they are things you go and look something up in, not
+     things you watch. A menu at the foot of the page is what that is.
+
+     Every entry is gated, and gated by removal rather than by hiding: if a
+     reader may not have it, the link is not in the DOM at all. The rules are
+     SS.access.canSeeDirectory and SS.access.canUseProcesses() — the same two
+     the top nav reads on every other page, so the two menus cannot disagree
+     about who may see what. Applied by gateBottomMenu() in js/home-tiles.js
+     (this page does not load js/shared.js). If nothing survives the gate the
+     whole strip goes with it, rather than leaving an empty heading. -->
+<nav class="home-bottom" id="homeBottomNav" aria-label="More" hidden>
+  <div class="home-bottom-inner">
+    <span class="home-bottom-label">Look something up</span>
+    <div class="home-bottom-links" id="homeBottomLinks">
+      <a class="home-bottom-link" data-need="directory" href="/directory/index.html">
+        <span class="home-bottom-ico" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9.5" cy="7" r="4"/>
+            <path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+        </span>
+        <span class="home-bottom-text">
+          <span class="home-bottom-name">Complete Directory</span>
+          <span class="home-bottom-sub">Every team member, by role and department</span>
+        </span>
+      </a>
+      <a class="home-bottom-link" data-need="processes" href="/processes/index.html">
+        <span class="home-bottom-ico" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <polyline points="9 13 10.5 14.5 14 11"/><line x1="9" y1="17.5" x2="15" y2="17.5"/>
+          </svg>
+        </span>
+        <span class="home-bottom-text">
+          <span class="home-bottom-name">Process Documentation</span>
+          <span class="home-bottom-sub">How each process actually works, written down</span>
+        </span>
+      </a>
+    </div>
+  </div>
+</nav>
 
 <!-- ═══════════════ THIN FOOTER ═══════════════ -->
 <footer class="home-footer">

@@ -41,3 +41,68 @@ img { max-width: 100%; }
   0%   { transform: translate(0, 0); }
   100% { transform: translate(40px, 40px); }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   EMERGING ISSUES — the nav bell
+
+   The alert lives on the home page; on every other page it is this: the
+   Emerging Issues nav link, wearing a bell when something is critical.
+
+   The bell is not decoration and it is not always there. js/shared.js adds it
+   only when the critical count is above zero — at zero the link is an ordinary
+   nav link with no bell and no badge. A badge that is always present is
+   wallpaper; one that appears only when something is wrong is a signal, and it
+   is the appearing that carries the meaning.
+
+   Loaded from shared.css because every page in the hub loads that file, so one
+   definition serves the navbar wherever it appears.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.nav-bell {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  margin-left: 6px;
+  vertical-align: -2px;
+  color: var(--alert-red, #A32222);
+}
+.nav-bell svg { width: 14px; height: 14px; }
+
+.nav-bell-badge {
+  position: absolute;
+  top: -6px; right: -8px;
+  min-width: 15px; height: 15px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--alert-red, #A32222);
+  color: #fff;
+  font-size: .56rem; font-weight: 700; line-height: 15px;
+  text-align: center;
+  letter-spacing: 0;
+}
+
+/* Three rings, then still. Enough to be noticed on arrival, not so much that
+   it keeps tugging at the corner of the eye while somebody works. */
+.nav-bell.is-ringing svg {
+  animation: navBellRing 1.1s ease-in-out 3;
+  transform-origin: 50% 3px;
+}
+@keyframes navBellRing {
+  0%, 60%, 100% { transform: rotate(0); }
+  8%  { transform: rotate(-14deg); }
+  18% { transform: rotate(12deg); }
+  28% { transform: rotate(-9deg); }
+  38% { transform: rotate(6deg); }
+  48% { transform: rotate(-3deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav-bell.is-ringing svg { animation: none; }
+}
+
+/* The link itself takes the alert colour once it is carrying a bell, so the
+   whole thing reads as one warning rather than a link with a sticker on it. */
+.nav-link.has-critical { color: var(--alert-red, #A32222); font-weight: 500; }
+
+/* `--alert-red` is defined in css/home.css, which only the home page loads, so
+   every other page needs its own copy. Same value; stated once here. */
+:root { --alert-red: #A32222; }

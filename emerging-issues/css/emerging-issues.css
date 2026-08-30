@@ -20,12 +20,20 @@
    here resolved to nothing. Copied from performance-standards.css so the two
    are identical. Another copy to delete if these are ever centralised. */
 :root {
-  --bp-teal: #065577;
-  --bp-teal-light: #28738A;
-  --bp-teal-dark: #054762;
+  /* The register wears the alert red, not the hub teal.
+     Emerging Issues is an alert: the tile that opens this page is dark red, and
+     a page must carry the colour of the thing that opened it. These token names
+     are kept — every rule below already reads them, and renaming them would be
+     a large diff for no gain — but their values are now the red. Read
+     "--bp-teal" here as "this page's accent".
+     Values chosen for contrast, not just hue: #A32222 on white is 7.6:1, and
+     the dark-mode override further down lifts it for the dark ground. */
+  --bp-teal: #A32222;
+  --bp-teal-light: #C93A3A;
+  --bp-teal-dark: #6E1414;
   --bp-gold: #FFC328;
 
-  --deep-teal: #065577;
+  --deep-teal: #A32222;
   --gold: #FFC328;
 
   --bg: #FFFFFF;
@@ -118,25 +126,25 @@
   font-size: .7rem; font-weight: 600; line-height: 1;
   min-width: 20px; padding: 4px 6px;
   border-radius: 999px; text-align: center;
-  background: rgba(6,85,119,.10); color: var(--bp-teal);
+  background: rgba(163,34,34,.10); color: var(--bp-teal);
 }
 .ei-tab.is-on .ei-tab-n { background: var(--bp-teal); color: #fff; }
 /* An empty tab is not a problem to be highlighted — it recedes. */
 .ei-tab-n.is-quiet { background: none; color: var(--text-dim); font-weight: 400; }
-.ei-tab.is-on .ei-tab-n.is-quiet { background: rgba(6,85,119,.14); color: var(--bp-teal); }
+.ei-tab.is-on .ei-tab-n.is-quiet { background: rgba(163,34,34,.14); color: var(--bp-teal); }
 
-/* Dark mode needs its own teal. --bp-teal is #065577, a deep navy that reads
-   at 8.2:1 on white and 2.4:1 on this page's dark background — legible in one
-   theme and very nearly invisible in the other. This one clears 8:1 on dark,
-   and the badge takes dark ink rather than white, which #5FB3C9 would only
-   carry at 2.4:1. */
+/* Dark mode needs its own red. --bp-teal (this page's accent, now #A32222)
+   reads 7.6:1 on white but only ~2.6:1 on this page's dark ground — legible in
+   one theme and very nearly invisible in the other, the same problem the teal
+   it replaced had. #E86C6C clears 7:1 on dark, and the badge takes dark ink
+   rather than white, which the lighter red would not carry. */
 [data-theme="dark"] .ei-tab:hover,
-[data-theme="dark"] .ei-tab.is-on            { color: #5FB3C9; }
-[data-theme="dark"] .ei-tab.is-on            { border-bottom-color: #5FB3C9; }
-[data-theme="dark"] .ei-tab-n                { background: rgba(95,179,201,.16); color: #5FB3C9; }
-[data-theme="dark"] .ei-tab.is-on .ei-tab-n  { background: #5FB3C9; color: #06222c; }
+[data-theme="dark"] .ei-tab.is-on            { color: #E86C6C; }
+[data-theme="dark"] .ei-tab.is-on            { border-bottom-color: #E86C6C; }
+[data-theme="dark"] .ei-tab-n                { background: rgba(232,108,108,.16); color: #E86C6C; }
+[data-theme="dark"] .ei-tab.is-on .ei-tab-n  { background: #E86C6C; color: #2c0606; }
 [data-theme="dark"] .ei-tab-n.is-quiet       { background: none; color: var(--text-dim); }
-[data-theme="dark"] .ei-tab.is-on .ei-tab-n.is-quiet { background: rgba(95,179,201,.20); color: #5FB3C9; }
+[data-theme="dark"] .ei-tab.is-on .ei-tab-n.is-quiet { background: rgba(232,108,108,.20); color: #E86C6C; }
 
 /* ── controls ───────────────────────────────────────────────────────────── */
 .ei-controls {
@@ -250,7 +258,7 @@
 }
 .ei-btn:hover { border-color: var(--light-gray); transform: translateY(-1px); }
 .ei-btn-primary {
-  background: var(--deep-teal, #065577); border-color: var(--deep-teal, #065577); color: #fff;
+  background: var(--deep-teal, #A32222); border-color: var(--deep-teal, #A32222); color: #fff;
 }
 .ei-btn-primary:hover { background: #08688f; border-color: #08688f; }
 .ei-btn-small { padding: 8px 14px; font-size: .78rem; }
@@ -350,7 +358,7 @@
   color: var(--text-muted); transition: var(--transition);
 }
 
-.nav-link:hover { color: var(--bp-teal); background: rgba(6,85,119,0.08); }
+.nav-link:hover { color: var(--bp-teal); background: rgba(163,34,34,0.08); }
 
 .nav-theme-btn {
   background: none; border: 1px solid var(--border);
@@ -395,8 +403,8 @@
   position: relative;
   padding: calc(var(--nav-height) + 46px) clamp(18px, 3vw, 40px) 108px;
   background: linear-gradient(135deg,
-    var(--bp-teal-dark, #054762) 0%, var(--bp-teal, #065577) 52%,
-    var(--bp-teal-light, #28738A) 100%);
+    var(--bp-teal-dark, #6E1414) 0%, var(--bp-teal, #A32222) 52%,
+    var(--bp-teal-light, #C93A3A) 100%);
   overflow: hidden;
 }
 /* Two soft lights, one gold, so the field is lit rather than flat. */
@@ -444,29 +452,29 @@
    to mean "this is interactive". */
 .ei-card:hover {
   border-color: rgba(58,146,157,.55);
-  box-shadow: 0 10px 26px -14px rgba(6,85,119,.45);
+  box-shadow: 0 10px 26px -14px rgba(163,34,34,.45);
 }
 .ei-card.is-open {
   border-color: rgba(58,146,157,.5);
-  box-shadow: 0 14px 34px -16px rgba(6,85,119,.5);
+  box-shadow: 0 14px 34px -16px rgba(163,34,34,.5);
 }
 .ei-link-tag {
   border-color: rgba(58,146,157,.42);
-  color: var(--bp-teal-light, #28738A);
+  color: var(--bp-teal-light, #C93A3A);
   background: rgba(58,146,157,.07);
 }
-.ei-caret { color: var(--bp-teal, #065577); }
+.ei-caret { color: var(--bp-teal, #A32222); }
 
 /* ── controls ────────────────────────────────────────────────────────────── */
 .ei-filters select:focus-visible,
 .ei-dialog select:focus-visible,
 .ei-dialog input:focus-visible,
 .ei-dialog textarea:focus-visible {
-  outline: 2px solid var(--bp-teal-light, #28738A);
+  outline: 2px solid var(--bp-teal-light, #C93A3A);
   outline-offset: 1px;
-  border-color: var(--bp-teal-light, #28738A);
+  border-color: var(--bp-teal-light, #C93A3A);
 }
-.ei-check input { accent-color: var(--bp-teal, #065577); }
+.ei-check input { accent-color: var(--bp-teal, #A32222); }
 
 /* ── the form ────────────────────────────────────────────────────────────── */
 /* It was pinned to the top-left corner. A modal <dialog> centres itself with
@@ -492,18 +500,18 @@
   margin: 0 -26px 20px;
   padding: 22px 26px 20px;
   background: linear-gradient(135deg,
-    var(--bp-teal-dark, #054762), var(--bp-teal, #065577) 60%, var(--bp-teal-light, #28738A));
+    var(--bp-teal-dark, #6E1414), var(--bp-teal, #A32222) 60%, var(--bp-teal-light, #C93A3A));
   color: #fff;
   border-bottom: 3px solid var(--bp-gold, #FFC328);
 }
 .ei-dialog-actions .ei-btn-primary {
-  background: var(--bp-teal, #065577);
-  border-color: var(--bp-teal, #065577);
+  background: var(--bp-teal, #A32222);
+  border-color: var(--bp-teal, #A32222);
 }
 .ei-dialog-actions .ei-btn-primary:hover { background: #08688f; border-color: #08688f; }
 
 /* ── the wall ────────────────────────────────────────────────────────────── */
-.ei-gate-inner h1 { color: var(--bp-teal, #065577); }
+.ei-gate-inner h1 { color: var(--bp-teal, #A32222); }
 
 @media (max-width: 700px) {
   .ei-hero { padding-bottom: 84px; }

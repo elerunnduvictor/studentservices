@@ -15,6 +15,27 @@
   --light-gray: #BCBEC0;
   --ice-gray: #ECEFF2;
 
+  /* ── The page's own accent ──
+     The org chart page carries the green of the tile that opens it on the home
+     page (#9BC94F) — but only in the chrome you interact with: the tools menu
+     open and hover states, the mobile menu toggle, the search-match highlight,
+     and the faint wash behind the chart.
+
+     The "Student Services" wordmarks are deliberately NOT this. The page title,
+     the toolbar brand and the footer brand stay brand gold, because they are
+     the brand rather than page decoration and read as gold everywhere else in
+     the hub. They were briefly green and it was wrong.
+
+     Contrast sets the exact value: #9BC94F itself is 1.9:1 on this page's white
+     ground, fine on a dark hero but too faint here. #6B9130 is 3.9:1 and the
+     same hue, so it still reads as the tile's green.
+
+     `--gold` is untouched and does double duty: the wordmarks above, and the
+     Executive department on the legend dot, the Leadership filter, the VP tile
+     and the executive PM nodes. */
+  --page-accent: #6B9130;
+  --page-accent-r: 107,145,48;
+
   /* ── Brand Accents ── */
   --gold: #FFC328;
   --gold-r: 255,195,40;
@@ -58,6 +79,12 @@
    DARK THEME OVERRIDES
    ══════════════════════════════════════════════════════════ */
 [data-theme="dark"] {
+  /* On #0d0d0f the light-theme green reads at ~3:1; the tile's own green
+     clears 9:1 and is the colour the tile actually is, so dark mode uses it
+     directly. */
+  --page-accent: #9BC94F;
+  --page-accent-r: 155,201,79;
+
   --bg: #0d0d0f;
   --bg-card: #13120e;
   --bg-elevated: #1a1918;

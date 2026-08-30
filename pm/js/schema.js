@@ -165,11 +165,18 @@ const EMPLOYMENT_TYPES = [
   { value: "Student Employee",       label: "Student Employee",       tone: "grey" },
 ];
 
+/* Five, and the fifth matters. "VP - Student Services" holds the executive PM
+   and assistant PM, who report to Ben Packer rather than to a director. It was
+   missing here and from the sheet list below, so those two had no tab to be
+   edited on and could not be assigned to their own department from this
+   dropdown — and the workforce dashboard, which used the same four-department
+   list, reported a headcount two people short of its own type breakdown. */
 const DEPARTMENTS = [
   "Dean of Students",
   "Digital Operations",
   "Enrollment & Retention",
   "Student Records, Registration, and Support",
+  "VP - Student Services",
 ].map((d) => ({ value: d, label: d }));
 
 /**
@@ -234,6 +241,40 @@ const STUDENT_COLUMNS = [
   { key: "active",         label: "Status",        type: "select", width: 105,
     options: STUDENT_STATUS,
     help: "Set to Inactive to move this student to the Archived tab." },
+];
+
+/* Student contractors are their own table and their own tabs, and they are the
+   one roster in this workbook that never reaches the public hub.
+
+   `v_hub_directory` unions `employees` and `student_employees`; it does not
+   mention `student_contractors`, so a name entered here cannot appear on the
+   hub's directory page. That is a structural guarantee rather than a filter
+   somebody has to remember — there is no flag to set wrong.
+
+   The hub does show student contractors, but only as a headcount per
+   department, from the separate `student_contractor_counts` table. For now
+   these tabs do not touch that number: adding someone here leaves the hub's
+   figure exactly as it was.
+
+   That may change once real names are being entered. If it does, the thing to
+   check first is scale — the headcount is currently 793 people against a named
+   directory of 179, because these contractors are counted rather than listed.
+   Deriving the count from this table while it holds a fraction of them would
+   report far too few and shrink what the hub shows. Wire the two together only
+   once this table actually holds the population the number claims. */
+const STUDENT_CONTRACTOR_COLUMNS = [
+  { key: "name",           label: "Contractor Name", type: "text", width: 130, required: true,
+    help: "Kept in the PM Hub only. Student contractors are never listed by " +
+          "name on the hub's directory." },
+  { key: "job_name",       label: "Job Name",        type: "text", width: 115 },
+  { key: "role_title",     label: "Role Title",      type: "text", width: 143 },
+  { key: "sub_department", label: "Sub-Dept",        type: "text", width: 130 },
+  { key: "supervisor",     label: "Supervisor",      type: "text", width: 117,
+    help: "Must match a name in a department's staff tabs exactly.",
+    check: checkReportsTo },
+  { key: "active",         label: "Status",          type: "select", width: 105,
+    options: STATUS_OPTIONS,
+    help: "Set to Inactive to move this contractor to the Archived tab." },
 ];
 
 const TEMPORARY_TYPES = ["Full-Time Temporary", "Part-Time Temporary"];
@@ -442,13 +483,20 @@ window.SS.WORKBOOKS = {
       },
       // One page per department, each split by kind of employment. The
       // Employee Directory tab is gone: it listed all 108 staff in one sheet,
-      // which is the thing these four tabs exist to break up. Nobody was
-      // removed — every person still appears, on their department's page.
+      // which is the thing these tabs exist to break up. Nobody is removed —
+      // every person appears on their department's page.
+      //
+      // Every department the `employees` table can hold needs a page here. When
+      // VP - Student Services was missing, its two people were editable from
+      // nowhere: they had no tab, and the Department dropdown could not even
+      // name their department. A person in a department with no page is a
+      // person the Hub cannot maintain.
       ...departmentSheets("dept_digital",    "Digital Operations",     "Digital Operations"),
       ...departmentSheets("dept_dean",       "Dean of Students",       "Dean of Students"),
       ...departmentSheets("dept_enrollment", "Enrollment & Retention", "Enrollment & Retention"),
       ...departmentSheets("dept_records",    "Records, Registration & Support",
                           "Student Records, Registration, and Support"),
+      ...departmentSheets("dept_vp",         "VP - Student Services",  "VP - Student Services"),
       // Every student employee, across all departments, split by status. The
       // same rows also appear on their own department's Student Employees tab.
       {
@@ -469,6 +517,31 @@ window.SS.WORKBOOKS = {
         // is how a returning student comes off this tab.
         seed: { active: false },
         columns: STUDENT_COLUMNS.concat(
+          [{ key: "department", label: "Dept", type: "select", width: 143, options: DEPARTMENTS }]),
+      },
+      /* Student contractors — the same two tabs, a different table, and the one
+         roster here that is deliberately invisible to the public hub. See
+         STUDENT_CONTRACTOR_COLUMNS above for why that is structural rather than
+         a setting: `v_hub_directory` does not union this table, so nothing the
+         hub queries can reach these names. */
+      {
+        key: "contractors_active", group: "contractors", groupLabel: "Student Contractors",
+        label: "Active",
+        table: "student_contractors", order: "name.asc.nullslast",
+        filter: { active: "eq.true" },
+        seed: { active: true },
+        columns: STUDENT_CONTRACTOR_COLUMNS.concat(
+          [{ key: "department", label: "Dept", type: "select", width: 143, options: DEPARTMENTS }]),
+      },
+      {
+        key: "contractors_archived", group: "contractors", groupLabel: "Student Contractors",
+        label: "Archived",
+        table: "student_contractors", order: "name.asc.nullslast",
+        filter: { active: "eq.false" },
+        // Editable, not read-only: setting someone back to Active is how a
+        // returning contractor comes off this tab.
+        seed: { active: false },
+        columns: STUDENT_CONTRACTOR_COLUMNS.concat(
           [{ key: "department", label: "Dept", type: "select", width: 143, options: DEPARTMENTS }]),
       },
       {

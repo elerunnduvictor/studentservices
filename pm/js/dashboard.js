@@ -31,16 +31,25 @@
 (function () {
   "use strict";
 
+  /* Five, not four. "VP - Student Services" was missing, and its two people —
+     the executive PM and assistant PM, who report to Ben Packer rather than to
+     a director — fell into the `other` bucket below, which is accumulated and
+     then never rendered. The effect was two totals on one page that disagreed:
+     "Total workforce" read 177 because it sums these departments, while
+     "Employment types" read 179 because it counts every live person whatever
+     their department. The two contractors in the gap were exactly the pair. */
   const DEPARTMENTS = [
     "Digital Operations",
     "Dean of Students",
     "Enrollment & Retention",
     "Student Records, Registration, and Support",
+    "VP - Student Services",
   ];
 
   // Shortened for the axis; the table underneath carries the full name.
   const SHORT = {
     "Student Records, Registration, and Support": "Records, Registration & Support",
+    "VP - Student Services": "VP — Student Services",
   };
 
   /* The four kinds the department tabs are split into, in the order they are
@@ -310,10 +319,22 @@
       .map((t) => ({ label: t, value: byType[t], color: typeColor(t) }));
     const typeTotal = typeRows.reduce((n, d) => n + d.value, 0);
 
+    /* `other` is drawn, not discarded.
+       It collects anyone whose department is not one of the five above — a
+       typo, a blank, or a department somebody added to the data without adding
+       it here. Accumulating it and then leaving it out of `rows` is what let
+       this page show two totals that disagreed: the people were counted, then
+       dropped on the way to the chart, and nothing said so.
+       Now they appear under their own heading, so the bars and the tile always
+       add up to the same number the type breakdown does, and an unrecognised
+       department is visible instead of silently shrinking the workforce. */
+    const otherTotal = KINDS.reduce((n, k) => n + other[k.key], 0);
     const rows = DEPARTMENTS.map((d) => {
       const c = byDept.get(d);
       return { dept: d, counts: c, total: KINDS.reduce((n, k) => n + c[k.key], 0) };
-    }).sort((a, b) => b.total - a.total);
+    })
+      .concat(otherTotal ? [{ dept: "Not in a listed department", counts: other, total: otherTotal }] : [])
+      .sort((a, b) => b.total - a.total);
 
     const grand = KINDS.reduce((o, k) => (o[k.key] = rows.reduce((n, r) => n + r.counts[k.key], 0), o), {});
     const headcount = KINDS.reduce((n, k) => n + grand[k.key], 0);

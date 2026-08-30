@@ -43,7 +43,10 @@
 body.home-single .hero-compact {
   position: relative;
   isolation: isolate;
-  padding-bottom: 34px;
+  /* Enough room for the emerging-issues alert, which sits absolutely at
+     top:92px and is ~52px tall. The hero clips its own overflow (for the glow
+     and the arc), so a hero shorter than 92+52+air cuts the card in half. */
+  padding-bottom: 46px;
   /* The glow and the arc are both drawn wider than the hero on purpose — a
      light that stops at the edge reads as a box. The compact hero does not
      inherit the clipping the full hero has, so without this they pushed the
@@ -303,12 +306,12 @@ body.home-single .dept-grid {
 @media (max-width: 1180px) { body.home-single .dept-grid { grid-template-columns: repeat(2, minmax(0,1fr)); } }
 @media (max-width: 620px)  { body.home-single .dept-grid { grid-template-columns: minmax(0,1fr); } }
 
-/* Glass, like the four tiles above — a white wash on the teal field with the
+/* Glass, like the tiles above — a white wash on the teal field with the
    department's colour as an accent, rather than a slab of the colour itself.
    The hue was doing the work of a background here and competing with the text
    on it; carrying it in the top edge, the border and the icon says the same
    thing and leaves the card readable. A faint tint of it stays in the wash so
-   the four cards are still tellable apart at a distance. */
+   the cards are still tellable apart at a distance. */
 body.home-single .dept-card {
   position: relative;
   isolation: isolate;
@@ -411,183 +414,202 @@ body.home-single .dept-desc { color: rgba(255,255,255,.78) !important; }
 body.home-single .home-okr-cta-btn { color: rgba(255,255,255,.94) !important; }
 body.home-single .home-okr-loading { color: rgba(255,255,255,.6); }
 
-/* ── the emerging-issues band ─────────────────────────────────────────────
-   Deliberately unlike the four gateways below it. They are doors to places
-   that do not change; this reports a situation that does, so it is a wide
-   single strip rather than a card in the set, and it carries live figures. */
-/* ── the two live bands, side by side ─────────────────────────────────────
-   The row is the element with the page's width and gutters; each band inside
-   just fills its column. `auto-fit` rather than a fixed two columns, because
-   either band can be hidden by its own gate — with one showing it should span
-   the row rather than sit in half of it with a hole beside it. */
-.home-bands {
-  width: 100%;
-  max-width: calc(var(--home-max) + 2 * var(--home-gutter));
-  margin-inline: auto;
-  padding: 0 var(--home-gutter) clamp(16px, 2vw, 22px);
+/* ══════════════════════════════════════════════════════════════════════════
+   EMERGING ISSUES — the alert
+
+   It used to be a full-width band below the strategy statement, sized and
+   weighted like the tiles beneath it. That was the wrong shape for what it is:
+   the tiles are doors to places that do not change, while this reports a
+   situation that does. Read as a fourth tile it competed with them; read as an
+   alert it only has to answer "is anything wrong, and where do I go".
+
+   So it sits where a notification sits — top right of the hero, under the
+   account chip — and it is deliberately small. A bell, one line of figures, two
+   actions. Everything else is one click away in the register.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.ei-alert {
+  position: absolute;
+  /* Under the account chip. That chip is placed from the theme toggle by
+     hub-account.js (toggle.offsetTop, ~14–22px, plus its own 36px height), so
+     68px clears both with a little air.
+
+     Width and height are both constrained hard, and not for neatness: the hero
+     title is centred and runs wide, and the hero clips its own overflow. A
+     taller card was cut off at the hero's bottom edge; a wider one ran under
+     "Administrative Portal". One row, icon buttons, ~290px.
+
+     `top` is measured, not chosen. The h1 occupies y 45–84 at 1440px and
+     45–90 at 1920px, and its box reaches x 1143 / 1445 — which the card's left
+     edge (1113 / 1586) crosses at the narrower widths. Sitting the card below
+     the title's bottom edge sidesteps the collision entirely at every width,
+     rather than tuning a width that only clears at some of them. The hero's
+     padding-bottom was raised to keep the card inside it. */
+  top: 92px;
+  /* The same gutter the theme toggle keeps, so the two line up on one edge.
+     Defined on .hero in main.css — see the note there. */
+  right: var(--hero-gutter);
+  z-index: 4;
+  width: min(290px, calc(100vw - 36px));
   display: grid;
-  /* Exactly two, never three. `auto-fit` fitted a third track at 1920 and left
-     the pair sitting in two of three columns. Two bands, two columns. */
-  grid-template-columns: minmax(0, 1fr);
-  gap: clamp(14px, 1.6vw, 20px);
-  align-items: stretch;
-}
-/* Side by side from here up, and only when there are two to sit side by side.
-   Measured, not guessed: at 1440 the pair fits with room to spare and at 1366
-   the chips and buttons push the page into horizontal scroll. 1420 clears it
-   with a little margin — 1400 exactly was still a pixel over. Below it they
-   stack, full width, still one line each.
-
-   Gated on `.is-pair` (set by SS.home.syncBands once it knows how many bands
-   actually showed) rather than applying unconditionally — a lone band in a
-   two-column grid sits in the first column with an empty second one beside
-   it, which is exactly the "hole beside it" the comment above warns against.
-   Process Documentation was the second band this row ever held, and it has
-   since moved to the org chart page, so today this is always the emerging
-   issues band alone — but the row is still built to cope with two. */
-@media (min-width: 1420px) {
-  .home-bands.is-pair { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
-.home-issues {
-  width: 100%;
-  padding: 0;
-  min-width: 0;              /* a grid child may shrink below its content */
-}
-.home-issues .issue-band { height: 100%; }
-
-/* Two bands in one row have half the width each, but the band stays one line:
-   mark, wording, figures, actions, as it always was. Wrapping the figures and
-   buttons onto their own row made each band twice as tall for no gain — the
-   parts still fit, they just need less air between them.
-
-   `.is-pair` is set by the script that reveals the bands rather than derived
-   with :has(); the script already knows how many it revealed, and a class it
-   sets is true in every browser and visible in the DOM when something looks
-   off. */
-@media (min-width: 861px) {
-  /* Paired, everything on one line, and small enough to actually fit.
-     Measured, not guessed: at half of a 1500px screen a band gets ~700px, and
-     the parts have to come in under that or the row is forced to stack. So the
-     mark, the chips, the buttons and the gaps all give a little. */
-  .home-bands.is-pair .issue-band {
-    /* minmax(0, …), not a fixed floor. A grid item's automatic minimum size is
-       its content, so a floor of 84px plus un-wrappable chips and buttons made
-       the band wider than its track and pushed the whole page into horizontal
-       scroll below 1500px. At 0 the wording gives way instead — it is already
-       ellipsised, and the figures beside it say the same thing. */
-    grid-template-columns: auto minmax(96px, 1fr) auto auto;
-    gap: 10px;
-    padding: 13px 15px;
-  }
-  .home-bands.is-pair .issue-band-mark { width: 34px; height: 34px; }
-  .home-bands.is-pair .issue-band-mark svg { width: 17px; height: 17px; }
-  /* nowrap here too. Without it the eyebrow was the one thing left that could
-     wrap, and when the text column narrowed "HOW WE WORK" broke onto three
-     lines and took the whole band from 86px to 113px. */
-  .home-bands.is-pair .issue-band-eyebrow {
-    font-size: .52rem; letter-spacing: .11em;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  }
-  .home-bands.is-pair .issue-band-body { min-width: 0; }
-  .home-bands.is-pair .issue-band-title {
-    font-size: .96rem;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  }
-  /* One line, trimmed. It is a summary sentence, and the figures beside it say
-     the same thing in less room. */
-  .home-bands.is-pair .issue-band-desc {
-    font-size: .72rem;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  }
-  /* Neither of these may wrap: a second row of chips or buttons is exactly what
-     made the band thick before. */
-  .home-bands.is-pair .issue-band-stats { gap: 4px; flex-wrap: nowrap; }
-  .home-bands.is-pair .issue-stat {
-    padding: 3px 6px; font-size: .55rem; letter-spacing: .03em; white-space: nowrap; gap: 3px;
-  }
-  .home-bands.is-pair .issue-stat b { font-size: .74rem; }
-  .home-bands.is-pair .issue-band-actions { gap: 5px; flex-wrap: nowrap; }
-  .home-bands.is-pair .issue-band-btn {
-    padding: 6px 10px; font-size: .66rem; gap: 4px; white-space: nowrap;
-  }
-  .home-bands.is-pair .issue-band-btn svg { width: 13px; height: 13px; }
-}
-/* Below that the two bands are already stacked full width, so they use the
-   layout they always had. */
-/* The whole card is a press target on this one band — see the click handler
-   in home-issues.js — so it gets the pointer cursor the two buttons already
-   had. The process band beside it is not wired the same way yet, so this
-   stays scoped to #homeIssues rather than joining the shared .issue-band
-   rule below. */
-#homeIssues .issue-band { cursor: pointer; }
-.issue-band {
-  position: relative;
-  display: grid;
-  grid-template-columns: auto 1fr auto auto;
+  grid-template-columns: 1fr auto;
   align-items: center;
-  gap: clamp(14px, 1.8vw, 24px);
-  padding: 18px 22px;
-  border-radius: 16px;
-  text-decoration: none;
-  color: rgba(255,255,255,.96);
+  gap: 10px;
+  padding: 9px 10px 9px 11px;
+  border-radius: 14px;
   background:
-    linear-gradient(115deg, rgba(203,74,39,.30), rgba(255,195,40,.16) 46%, rgba(4,26,34,.42));
-  border: 1px solid rgba(255,195,40,.34);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.14), 0 14px 34px -22px rgba(0,0,0,.6);
-  transition: transform .45s cubic-bezier(.2,.7,.3,1),
-              border-color .45s, box-shadow .45s;
+    linear-gradient(150deg, rgba(var(--alert-red-r), .50),
+                            rgba(var(--alert-red-r), .22) 60%,
+                            rgba(10,4,6,.52));
+  border: 1px solid rgba(var(--alert-red-r), .62);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 16px 34px -20px rgba(0,0,0,.75);
+  color: rgba(255,255,255,.96);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  animation: eiAlertIn .5s cubic-bezier(.2,.7,.3,1) both;
 }
-.issue-band:hover {
-  transform: translateY(-3px);
-  border-color: rgba(255,195,40,.6);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.2), 0 24px 48px -22px rgba(0,0,0,.7);
+.ei-alert[hidden] { display: none; }
+@keyframes eiAlertIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: none; }
 }
-.issue-band-mark {
-  width: 42px; height: 42px; display: grid; place-items: center;
-  border-radius: 12px; flex: none;
-  background: linear-gradient(160deg, rgba(255,195,40,.38), rgba(203,74,39,.28));
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.4);
-}
-.issue-band-mark svg { width: 20px; height: 20px; stroke: #fff; }
-.issue-band-eyebrow {
-  font-size: .56rem; font-weight: 600; letter-spacing: .26em; text-indent: .26em;
-  text-transform: uppercase; color: rgba(255,255,255,.72); margin-bottom: 5px;
-}
-.issue-band-title {
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: clamp(1.16rem, 1.5vw, 1.36rem); font-weight: 600; line-height: 1.15;
-}
-.issue-band-desc {
-  margin: 5px 0 0; font-size: .8rem; line-height: 1.5; color: rgba(255,255,255,.84);
-}
-.issue-band-stats { display: flex; gap: 8px; flex-wrap: wrap; }
-.issue-stat {
-  display: inline-flex; align-items: baseline; gap: 6px;
-  padding: 7px 13px; border-radius: 999px;
-  font-size: .68rem; letter-spacing: .1em; text-transform: uppercase;
-  background: rgba(0,0,0,.24); border: 1px solid rgba(255,255,255,.16);
-  color: rgba(255,255,255,.82);
-}
-.issue-stat b { font-size: 1rem; font-weight: 600; letter-spacing: 0; color: #fff; }
-/* Zero is good news: it should not shout. */
-.issue-stat.is-quiet { opacity: .5; }
-.issue-stat.is-red:not(.is-quiet)   { border-color: rgba(255,140,130,.6); }
-.issue-stat.is-red:not(.is-quiet) b { color: #FFB3A8; }
-.issue-stat.is-amber:not(.is-quiet) { border-color: rgba(255,195,40,.55); }
-.issue-stat.is-amber:not(.is-quiet) b { color: #FFD470; }
-.issue-band-arrow { width: 20px; height: 20px; stroke: rgba(255,255,255,.9);
-                    transition: transform .45s cubic-bezier(.2,.7,.3,1); }
-.issue-band:hover .issue-band-arrow { transform: translateX(5px); }
 
-@media (max-width: 1080px) {
-  .issue-band { grid-template-columns: auto 1fr; }
-  .issue-band-stats,
-  .issue-band-actions { grid-column: 1 / -1; }
+/* Bell and wording are one link to the register; the buttons sit beside them. */
+.ei-alert-main {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  text-decoration: none;
+  color: inherit;
+}
+
+/* ── the bell ──────────────────────────────────────────────────────────── */
+.ei-alert-bell {
+  position: relative;
+  display: grid; place-items: center;
+  width: 32px; height: 32px; flex: none;
+  border-radius: 9px;
+  background: rgba(var(--alert-red-r), .55);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.26);
+}
+.ei-alert-bell svg { width: 16px; height: 16px; stroke: #fff; }
+
+/* Rendered only when something is critical — home-issues.js leaves it hidden at
+   zero rather than showing a "0". A badge that is always there stops being a
+   signal. */
+.ei-alert-badge {
+  position: absolute;
+  top: -5px; right: -5px;
+  min-width: 18px; height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #FFC328;
+  color: #3a2600;
+  font-size: .62rem; font-weight: 700; line-height: 18px;
+  text-align: center;
+  border: 2px solid #7a1717;
+  box-shadow: 0 2px 6px rgba(0,0,0,.4);
+}
+.ei-alert-badge[hidden] { display: none; }
+
+/* A critical count should catch the eye once, then stop. Three rings, not a
+   permanent animation: this sits on screen the whole time someone reads the
+   page, and something that never stops moving becomes noise. */
+.ei-alert.has-critical .ei-alert-bell {
+  animation: eiRing 1.1s ease-in-out 3;
+  transform-origin: 50% 4px;
+}
+@keyframes eiRing {
+  0%, 60%, 100% { transform: rotate(0); }
+  8%  { transform: rotate(-13deg); }
+  18% { transform: rotate(11deg); }
+  28% { transform: rotate(-8deg); }
+  38% { transform: rotate(6deg); }
+  48% { transform: rotate(-3deg); }
+}
+
+.ei-alert-text { display: grid; gap: 2px; min-width: 0; }
+.ei-alert-title {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: .94rem; font-weight: 600; line-height: 1.1;
+  color: #fff;
+  white-space: nowrap;
+}
+/* One line, trimmed. It is a summary; the register carries the detail. */
+.ei-alert-line {
+  font-size: .68rem; line-height: 1.3;
+  color: rgba(255,255,255,.82);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* ── the two actions ───────────────────────────────────────────────────── */
+.ei-alert-actions { display: flex; gap: 6px; flex: none; }
+.ei-alert-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; flex: none;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,.28);
+  background: rgba(255,255,255,.08);
+  color: rgba(255,255,255,.95);
+  text-decoration: none;
+  transition: background .25s, border-color .25s, transform .25s;
+}
+.ei-alert-btn:hover {
+  background: rgba(255,255,255,.16);
+  border-color: rgba(255,255,255,.5);
+  transform: translateY(-1px);
+}
+.ei-alert-btn.is-primary {
+  background: linear-gradient(135deg, var(--alert-red-light), var(--alert-red));
+  border-color: rgba(255,255,255,.34);
+  font-weight: 600;
+}
+.ei-alert-btn.is-primary:hover {
+  background: linear-gradient(135deg, #D94A4A, var(--alert-red-light));
+  border-color: rgba(255,255,255,.6);
+}
+
+/* Below the hero's own breakpoint the chip and toggle shuffle about and an
+   absolutely positioned card lands on the title. It becomes an ordinary block
+   at the top of the page instead.
+
+   1023px, matching the hero's reflow in main.css — not the 900px this used to
+   say. In the 123px between the two the h1 had already collapsed onto one line
+   and dropped to y121 while the card was still pinned at y92, so the card sat
+   squarely on top of "Administrative Portal". Giving this its own breakpoint
+   is what opened the gap, so it tracks the hero's instead. */
+@media (max-width: 1023px) {
+  .ei-alert {
+    position: static;
+    width: auto;
+    margin: 16px var(--home-gutter) 0;
+    animation: none;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
-  .issue-band, .issue-band-arrow { transition: none; }
-  .issue-band:hover { transform: none; }
-  .issue-band:hover .issue-band-arrow { transform: none; }
+  .ei-alert,
+  .ei-alert.has-critical .ei-alert-bell { animation: none; }
+  .ei-alert-btn { transition: none; }
+  .ei-alert-btn:hover { transform: none; }
+}
+
+/* ── the alert red ────────────────────────────────────────────────────────
+   Emerging Issues is not another doorway; it is an alert that happens to sit
+   on the home page. It reads in its own dark red — a colour nothing else in
+   the hub uses, so it cannot be mistaken for one of the tiles — and the
+   register page carries the same red, so the alert and the page it opens are
+   plainly the same thing.
+
+   Deliberately not the brand's #CB4A27: that orange-red is the Digital
+   Operations department colour, and an alert wearing a department's colour is
+   exactly the confusion this is meant to avoid. */
+:root {
+  --alert-red:       #A32222;
+  --alert-red-light: #C93A3A;
+  --alert-red-deep:  #6E1414;
+  --alert-red-r:     163,34,34;
 }
 
 /* ── the title, on one line ───────────────────────────────────────────────
@@ -616,38 +638,8 @@ body.home-single .hero-compact h1 span {
   margin-top: 0;
 }
 
-/* The band's two actions. */
-.issue-band-actions { display: flex; gap: 9px; flex-wrap: wrap; align-items: center; }
-.issue-band-btn {
-  display: inline-flex; align-items: center; gap: 7px; white-space: nowrap;
-  font-size: .78rem; font-weight: 500; padding: 9px 16px; border-radius: 9px;
-  text-decoration: none; color: rgba(255,255,255,.92);
-  border: 1px solid rgba(255,255,255,.24); background: rgba(0,0,0,.2);
-  transition: transform .3s cubic-bezier(.2,.7,.3,1), border-color .3s, background .3s;
-}
-.issue-band-btn:hover { transform: translateY(-1px); border-color: rgba(255,255,255,.5); }
-.issue-band-btn.is-primary {
-  background: linear-gradient(135deg, rgba(255,195,40,.94), rgba(240,160,26,.94));
-  border-color: rgba(255,195,40,.9); color: #2a1c00; font-weight: 600;
-}
-.issue-band-btn.is-primary:hover { background: linear-gradient(135deg, #FFCE4B, #F5A81C); }
-@media (prefers-reduced-motion: reduce) {
-  .issue-band-btn { transition: none; }
-  .issue-band-btn:hover { transform: none; }
-}
-
-/* The band lands a moment after the rest of the page — it waits on a query the
-   static content does not. Fading rather than snapping keeps that from reading
-   as a glitch; reduced-motion gets it immediately. */
-.home-issues .issue-band { opacity: 0; transform: translateY(6px);
-  transition: opacity .45s ease, transform .45s cubic-bezier(.2,.7,.3,1); }
-.home-issues.is-in .issue-band { opacity: 1; transform: none; }
-@media (prefers-reduced-motion: reduce) {
-  .home-issues .issue-band { opacity: 1; transform: none; transition: none; }
-}
-
 /* ═══════════════════════════════════════════════════════════════════════════
-   THE FOUR TILES
+   THE TILES
 
    Glass, not paint. The same treatment the OKR cards carry: a translucent
    wash over the page's teal field, a hairline of white, an inset highlight
@@ -655,8 +647,8 @@ body.home-single .hero-compact h1 span {
    lying on the field rather than a block covering it.
 
    Colour is an accent, not a fill: a 3px bar along the top, fading out to the
-   right, in the tile's own hue. That is enough to tell four cards apart at a
-   glance without four slabs of colour competing with the content inside them.
+   right, in the tile's own hue. That is enough to tell the cards apart at a
+   glance without slabs of colour competing with the content inside them.
 
    Two by two, each opening in place. The interaction is the org chart's
    stakeholder tile: press the head, the body grows, press again and it closes.
@@ -692,7 +684,7 @@ body.home-single .hero-compact h1 span {
   border-radius: 16px;
   overflow: hidden;
   /* Glass first, then a wash of the tile's own hue beneath it. The colour is
-     faint on purpose — enough that four cards are tellable apart across the
+     faint on purpose — enough that the cards are tellable apart across the
      room, not so much that it competes with the words on top of it. */
   background:
     linear-gradient(165deg, rgba(255,255,255,.075), rgba(255,255,255,.022) 46%, rgba(0,0,0,.14)),
@@ -713,9 +705,20 @@ body.home-single .hero-compact h1 span {
    Report's. Each is lifted until it reads against the page's own teal field:
    the originals sit between 1.3:1 and 2.1:1 against it, which is a colour you
    cannot see. Hue is preserved, lightness is not. */
-.gw[data-gw="org"]       { --gw-c: #4CC7B3; --gw-r: 76,199,179; }   /* was #2E9483 */
-.gw[data-gw="kpis"]      { --gw-c: #5FC0E2; --gw-r: 95,192,226; }   /* was #1F7A9B */
-.gw[data-gw="okrs"]      { --gw-c: #9BC94F; --gw-r: 155,201,79; }   /* was #7BA33A */
+/* A tile's colour is a promise about where it leads: press a green tile and the
+   green page opens. Org Chart and OKRs were swapped so that KPIs and OKRs — the
+   two measurement pages — read as a cool pair, and so each tile now matches the
+   page behind it:
+
+     org   green  #9BC94F  ->  org chart page      (green accent)
+     kpis  blue   #5FC0E2  ->  KPI scorecard       (blue hero)
+     okrs  teal   #4CC7B3  ->  OKR progress        (teal hero)
+
+   The department cards below already work this way; this brings the tiles into
+   line with them. */
+.gw[data-gw="org"]       { --gw-c: #9BC94F; --gw-r: 155,201,79; }   /* was #4CC7B3 */
+.gw[data-gw="kpis"]      { --gw-c: #5FC0E2; --gw-r: 95,192,226; }   /* unchanged */
+.gw[data-gw="okrs"]      { --gw-c: #4CC7B3; --gw-r: 76,199,179; }   /* was #9BC94F */
 
 .gw:hover {
   transform: translateY(-4px);
@@ -786,8 +789,8 @@ body.home-single .hero-compact h1 span {
 .gw-chev svg { width: 17px; height: 17px; }
 .gw:hover .gw-chev { background: rgba(var(--gw-r), .30); }
 .gw.is-open .gw-chev { transform: rotate(180deg); background: rgba(var(--gw-r), .34); }
-/* Hover only. A permanent instruction on four tiles is four lines of noise
-   once you have learnt it. */
+/* Hover only. A permanent instruction on every tile is a line of noise on
+   each, once you have learnt it. */
 .gw-hint {
   position: absolute; right: 24px; bottom: 9px;
   font-size: .54rem; letter-spacing: .13em; text-transform: uppercase;
@@ -804,7 +807,7 @@ body.home-single .hero-compact h1 span {
    no transition at all. */
 /* `visibility`, not the hidden attribute.
    Collapsing with max-height alone leaves the content in the accessibility
-   tree and in the tab order — a screen reader would read four panels nobody
+   tree and in the tab order — a screen reader would read panels nobody
    can see, and Tab would land inside them. Overriding [hidden] with
    display:block to keep the animation had exactly that effect. visibility
    flips to visible the moment it opens, and back only after the closing
@@ -1089,4 +1092,94 @@ body.home-single .hero-compact h1 span {
 .ht-okr-pct {
   margin-left: auto;
   font-size: .95rem; font-weight: 700; color: #fff; white-space: nowrap;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   THE BOTTOM MENU
+
+   Directory and Process Documentation. Both are reference — you go there to
+   look something up and then leave — which is why neither works as a tile at
+   the top of the page competing with the things you actually watch.
+
+   Two links, not two cards. They sit at the foot of the page where a reader
+   who has finished with the dashboard will find them, and they are quiet on
+   purpose: this is a menu, not a feature.
+
+   Visibility is decided in js/shared.js, which removes any link the reader may
+   not use and hides the whole strip when none survive.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.home-bottom {
+  width: 100%;
+  max-width: calc(var(--home-max) + 2 * var(--home-gutter));
+  margin-inline: auto;
+  padding: clamp(18px, 2.4vw, 28px) var(--home-gutter) clamp(20px, 2.6vw, 30px);
+}
+.home-bottom[hidden] { display: none; }
+
+.home-bottom-inner {
+  border-top: 1px solid rgba(255,255,255,.12);
+  padding-top: clamp(16px, 2vw, 22px);
+}
+
+.home-bottom-label {
+  display: block;
+  margin-bottom: 12px;
+  font-size: .58rem;
+  font-weight: 600;
+  letter-spacing: .28em;
+  text-indent: .28em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.5);
+}
+
+.home-bottom-links {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: clamp(10px, 1.4vw, 16px);
+}
+
+.home-bottom-link {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 15px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.04);
+  color: rgba(255,255,255,.94);
+  text-decoration: none;
+  transition: background .25s, border-color .25s, transform .25s;
+}
+.home-bottom-link:hover {
+  background: rgba(255,255,255,.09);
+  border-color: rgba(255,255,255,.22);
+  transform: translateY(-2px);
+}
+
+.home-bottom-ico {
+  display: grid; place-items: center;
+  width: 34px; height: 34px; flex: none;
+  border-radius: 9px;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.14);
+  color: rgba(255,255,255,.85);
+}
+.home-bottom-ico svg { width: 17px; height: 17px; }
+
+.home-bottom-text { display: grid; gap: 2px; min-width: 0; }
+.home-bottom-name {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: .98rem; font-weight: 600; line-height: 1.15;
+}
+.home-bottom-sub {
+  font-size: .72rem; line-height: 1.4;
+  color: rgba(255,255,255,.62);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-bottom-link { transition: none; }
+  .home-bottom-link:hover { transform: none; }
 }

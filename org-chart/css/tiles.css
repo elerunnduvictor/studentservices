@@ -29,8 +29,8 @@
 }
 
 .tile.highlighted {
-  border-color: var(--gold) !important;
-  box-shadow: 0 0 20px rgba(var(--gold-r), 0.2);
+  border-color: var(--page-accent) !important;
+  box-shadow: 0 0 20px rgba(var(--page-accent-r), 0.25);
 }
 
 .tile.dimmed {

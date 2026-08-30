@@ -74,20 +74,87 @@
    * still leads to a locked door, which is the safe direction to fail in.
    * Row-level security is the actual boundary either way.
    */
-  function gateEmergingIssuesLink(links) {
-    if (!window.SS || !SS.access) return;
-    var link = null;
+  function findEmergingIssuesLink(links) {
     var all = links.querySelectorAll("a.nav-link");
     for (var i = 0; i < all.length; i++) {
       if ((all[i].getAttribute("href") || "").indexOf("/emerging-issues/") !== -1) {
-        link = all[i];
-        break;
+        return all[i];
       }
     }
-    if (!link) return;
+    return null;
+  }
+
+  function gateEmergingIssuesLink(links) {
+    if (!window.SS || !SS.access) return;
+
+    var link = findEmergingIssuesLink(links);
+
+    /* Added where it is missing rather than only removed where it is present.
+       Most pages carry the link as markup, but the four department pages have
+       a nav of their own (Home / Mission / Team / Other Depts) and never had
+       it. Emerging Issues is meant to be reachable from anywhere in the hub,
+       so if the link is absent it is created — still behind the same gate, so
+       a partner never sees one appear. */
+    if (!link) {
+      link = document.createElement("a");
+      link.href = "/emerging-issues/index.html";
+      link.className = "nav-link";
+      link.textContent = "Emerging Issues";
+      link.hidden = true;                       // until the gate says otherwise
+      links.appendChild(link);
+    }
+
     Promise.resolve(SS.access.ready).then(function () {
-      if (!SS.access.isStudentServices) link.remove();
-    })["catch"](function () { /* leave the nav as it is */ });
+      if (!SS.access.isStudentServices) { link.remove(); return; }
+      link.hidden = false;
+      addCriticalBell(link);
+    })["catch"](function () {
+      // The gate could not be asked. A link that was already in the markup
+      // stays (row-level security is the real boundary); one this function
+      // invented is removed, so a failure cannot conjure a door.
+      if (link.hidden) link.remove();
+    });
+  }
+
+  /**
+   * A bell on the Emerging Issues nav link, but only when something is critical.
+   *
+   * At zero this does nothing at all — no bell, no badge, no "0". The link
+   * stays an ordinary nav link. That is the point: the bell's presence is the
+   * message, so it has to be absent most of the time to mean anything when it
+   * appears.
+   *
+   * Reads the same view the home page's alert reads, so the two can never
+   * disagree about how many criticals there are. Fails silently: a nav link
+   * without a bell is the normal state, so an unreachable database is
+   * indistinguishable from good news — which is the safe way round for
+   * something decorative, and the register itself is one click away regardless.
+   */
+  function addCriticalBell(link) {
+    if (!SS.db || !SS.db.select || link.querySelector(".nav-bell")) return;
+    SS.db.select("v_emerging_issues_brief", { limit: 1 })
+      .then(function (rows) {
+        var brief = (rows || [])[0];
+        var critical = brief ? Number(brief.red_open) || 0 : 0;
+        if (critical <= 0) return;              // nothing critical: no bell
+
+        var bell = document.createElement("span");
+        bell.className = "nav-bell is-ringing";
+        bell.setAttribute("aria-hidden", "true");
+        bell.innerHTML =
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+            '<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>' +
+            '<path d="M13.73 21a2 2 0 0 1-3.46 0"/>' +
+          "</svg>" +
+          '<span class="nav-bell-badge">' + (critical > 99 ? "99+" : critical) + "</span>";
+        link.appendChild(bell);
+        link.classList.add("has-critical");
+        // The badge is aria-hidden, so the count is put where a screen reader
+        // will actually reach it.
+        link.setAttribute("aria-label",
+          "Emerging Issues — " + critical +
+          (critical === 1 ? " critical issue" : " critical issues"));
+      })["catch"](function () { /* no bell; the link still works */ });
   }
 
   /**
@@ -113,7 +180,7 @@
   /**
    * "Processes" in the navbar, for anyone who can do something on that page.
    * The rule itself is SS.access.canUseProcesses() — it lives in the access
-   * layer because the home page band needs the same answer and does not load
+   * layer because the home page menu needs the same answer and does not load
    * this file.
    */
   function addProcessesNavLink(links) {

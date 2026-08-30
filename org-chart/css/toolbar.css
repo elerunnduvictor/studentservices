@@ -22,7 +22,8 @@
   font-size: 1.1rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--gold);
+  color: var(--gold);             /* the wordmark stays brand gold */
+  text-decoration: none;          /* it is a link home, but it reads as a brand */
   white-space: nowrap;
   margin-right: 8px;
 }
@@ -128,9 +129,9 @@
 /* ── the "more tools" menu ── */
 .tool-menu { position: relative; }
 #toolMenuBtn[aria-expanded="true"] {
-  color: var(--gold);
-  border-color: var(--gold);
-  background: rgba(var(--gold-r), 0.08);
+  color: var(--page-accent);
+  border-color: var(--page-accent);
+  background: rgba(var(--page-accent-r), 0.10);
 }
 .tool-menu-panel {
   position: absolute;
@@ -163,8 +164,8 @@
   transition: background var(--transition), color var(--transition);
 }
 .tool-menu-item svg { width: 15px; height: 15px; flex-shrink: 0; color: var(--text-muted); }
-.tool-menu-item:hover { background: var(--ice-gray); color: var(--gold); }
-.tool-menu-item:hover svg { color: var(--gold); }
+.tool-menu-item:hover { background: var(--ice-gray); color: var(--page-accent); }
+.tool-menu-item:hover svg { color: var(--page-accent); }
 
 /* ── Hamburger Menu Toggle ── */
 .menu-toggle {
@@ -183,7 +184,7 @@
 
 .menu-toggle:hover { border-color: var(--light-gray); color: var(--text); background: var(--bg-elevated); }
 
-.menu-toggle.open { color: var(--gold); border-color: var(--gold); background: rgba(var(--gold-r), 0.08); }
+.menu-toggle.open { color: var(--page-accent); border-color: var(--page-accent); background: rgba(var(--page-accent-r), 0.10); }
 
 /* ── Collapsible wrapper (no effect on desktop) ── */
 .toolbar-collapsible {

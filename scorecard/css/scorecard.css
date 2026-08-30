@@ -1,19 +1,30 @@
 /* ══════════════ KPI SCORECARD — DESIGN TOKENS ══════════════
-   The scorecard takes brand plum as its page identity rather than the teal
-   used by OKR Progress and the directory, so the two dashboards stay visually
-   distinct. Plum + gold also separate far better than teal + gold for
-   colour-vision deficiency (ΔE 25 vs 6 on the adjacent pair), which matters
-   because the two headline gauges sit side by side.
+   The page wears the colour of the tile that opens it. On the home page the
+   KPI Scorecard tile is #5FC0E2, so `--sc-accent-light` is exactly that and the
+   rest of the ramp is built down from it. Press a blue tile, get a blue page.
+
+   This was brand plum until then, chosen partly because plum separated from
+   the gold coverage ring far better than teal did for colour-vision deficiency
+   (ΔE 25 vs 6) — the two headline gauges sit side by side, so that pairing
+   still has to work. Blue keeps it: the earlier problem was teal, a green-blue
+   that collapses toward gold under red-green deficiency, whereas blue and gold
+   sit on the one axis red-green deficiency leaves intact. --ring-health is
+   #2E86AB, deliberately blue rather than cyan, to hold that separation.
+
+   The tokens were called --bp-plum*. They are --sc-accent* now: a variable
+   named for a colour it no longer holds is a trap for whoever reads it next.
+   The PM Hub still defines its own --bp-plum in pm/css/app.css; that is a
+   different file for a different app and is untouched.
    ══════════════════════════════════════════════════════════ */
 :root {
-  --bp-plum: #7B476B;
-  --bp-plum-deep: #3E2238;
-  --bp-plum-mid: #884E77;
-  --bp-plum-light: #B687AC;
+  --sc-accent: #1E6E8C;
+  --sc-accent-deep: #0C3547;
+  --sc-accent-mid: #2E8FB0;
+  --sc-accent-light: #5FC0E2;
   --bp-gold: #FFC328;
   --bp-gold-dark: #d4a020;
 
-  --ring-health: #9C5F8E;
+  --ring-health: #2E86AB;
   --ring-cov: #D4A020;
 
   --status-green: #2E9E5C;
@@ -48,9 +59,9 @@
   --nav-height: 60px;
 }
 [data-theme="dark"] {
-  --bp-plum: #A5648F;
-  --bp-plum-light: #C98FB8;
-  --ring-health: #AE5C9C;
+  --sc-accent: #5FB4D4;
+  --sc-accent-light: #8AD3EE;
+  --ring-health: #4FA8C9;
   --ring-cov: #C29433;
 
   --status-manual: #94A3B8;
@@ -101,15 +112,15 @@
   letter-spacing: 0.03em; text-decoration: none;
   color: var(--text-muted); transition: var(--transition);
 }
-.nav-link:hover { color: var(--bp-plum); background: rgba(123,71,107,0.09); }
-.nav-link.is-current { color: var(--bp-plum); font-weight: 500; }
+.nav-link:hover { color: var(--sc-accent); background: rgba(30,110,140,0.10); }
+.nav-link.is-current { color: var(--sc-accent); font-weight: 500; }
 .nav-theme-btn {
   background: none; border: 1px solid var(--border);
   border-radius: 50%; width: 36px; height: 36px;
   display: grid; place-items: center; cursor: pointer;
   color: var(--text-muted); transition: var(--transition);
 }
-.nav-theme-btn:hover { color: var(--bp-plum); border-color: var(--bp-plum); }
+.nav-theme-btn:hover { color: var(--sc-accent); border-color: var(--sc-accent); }
 .nav-hamburger {
   display: none; background: none; border: none;
   color: var(--text); cursor: pointer; padding: 4px;
@@ -133,7 +144,7 @@
   position: relative;
   display: flex; align-items: center; justify-content: center;
   padding: calc(var(--nav-height) + 54px) 24px 96px;
-  background: linear-gradient(135deg, var(--bp-plum-deep) 0%, var(--bp-plum) 48%, var(--bp-plum-light) 100%);
+  background: linear-gradient(135deg, var(--sc-accent-deep) 0%, var(--sc-accent) 48%, var(--sc-accent-light) 100%);
 }
 .sc-hero::before {
   content: '';
@@ -237,17 +248,17 @@
   flex-wrap: wrap; margin-bottom: 22px;
 }
 .sc-crumb {
-  font-size: 0.8rem; color: var(--bp-plum);
+  font-size: 0.8rem; color: var(--sc-accent);
   border: 1px solid var(--border);
   background: none; cursor: pointer;
   border-radius: 999px; padding: 5px 15px;
   font-family: 'Jost', sans-serif;
   transition: var(--transition);
 }
-.sc-crumb:hover { background: var(--bg-elevated); border-color: var(--bp-plum); }
+.sc-crumb:hover { background: var(--bg-elevated); border-color: var(--sc-accent); }
 .sc-crumb.is-current {
-  background: var(--bp-plum); color: #fff;
-  border-color: var(--bp-plum); font-weight: 500; cursor: default;
+  background: var(--sc-accent); color: #fff;
+  border-color: var(--sc-accent); font-weight: 500; cursor: default;
 }
 .sc-crumb-sep { color: var(--text-dim); font-size: 0.8rem; }
 
@@ -280,9 +291,9 @@
   border-radius: 999px; padding: 5px 15px;
   transition: var(--transition);
 }
-.sc-chip-btn:hover { border-color: var(--bp-plum); color: var(--bp-plum); }
+.sc-chip-btn:hover { border-color: var(--sc-accent); color: var(--sc-accent); }
 .sc-chip-btn.is-on {
-  background: var(--bp-plum); border-color: var(--bp-plum);
+  background: var(--sc-accent); border-color: var(--sc-accent);
   color: #fff;
 }
 
@@ -354,17 +365,17 @@
   transition: var(--transition);
 }
 .sc-kid:hover {
-  border-color: var(--bp-plum);
+  border-color: var(--sc-accent);
   box-shadow: var(--shadow-hover);
   transform: translateY(-2px);
 }
-.sc-kid:focus-visible { outline: 2px solid var(--bp-plum); outline-offset: 2px; }
+.sc-kid:focus-visible { outline: 2px solid var(--sc-accent); outline-offset: 2px; }
 .sc-kid-arrow {
   position: absolute; top: 14px; right: 16px;
   color: var(--text-dim); font-size: 1rem; line-height: 1;
   transition: var(--transition);
 }
-.sc-kid:hover .sc-kid-arrow { color: var(--bp-plum); transform: translateX(3px); }
+.sc-kid:hover .sc-kid-arrow { color: var(--sc-accent); transform: translateX(3px); }
 .sc-kid-name {
   font-size: 1.08rem; font-weight: 600; color: var(--text);
   padding-right: 20px; line-height: 1.3;
@@ -397,7 +408,7 @@
   width: 100%; text-align: left; font-family: 'Jost', sans-serif;
   transition: var(--transition);
 }
-.sc-watch-row:hover { border-color: var(--bp-plum); }
+.sc-watch-row:hover { border-color: var(--sc-accent); }
 .sc-watch-text { flex: 1; min-width: 0; }
 .sc-watch-who { font-size: 0.74rem; color: var(--text-dim); white-space: nowrap; }
 @media (max-width: 640px) {
@@ -440,10 +451,10 @@
 .sc-area .sc-spectrum { margin-top: auto; }
 .sc-area::before {
   content: ''; position: absolute; inset: 0 0 auto 0; height: 4px;
-  background: linear-gradient(90deg, var(--bp-plum), var(--bp-plum-light));
+  background: linear-gradient(90deg, var(--sc-accent), var(--sc-accent-light));
 }
-.sc-area:hover { border-color: var(--bp-plum); box-shadow: var(--shadow-hover); transform: translateY(-2px); }
-.sc-area:focus-visible { outline: 2px solid var(--bp-plum); outline-offset: 2px; }
+.sc-area:hover { border-color: var(--sc-accent); box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+.sc-area:focus-visible { outline: 2px solid var(--sc-accent); outline-offset: 2px; }
 .sc-area-top { display: flex; align-items: center; gap: 16px; margin-bottom: 14px; }
 .sc-area-name { font-size: 1.25rem; font-weight: 600; color: var(--text); line-height: 1.15; }
 .sc-area-q {
@@ -574,8 +585,8 @@
   font-weight: 600; margin-bottom: 4px;
 }
 .sc-meta span { font-size: 0.88rem; color: var(--text); }
-.sc-meta a { color: var(--bp-plum); text-decoration: underline; text-underline-offset: 3px; }
-.sc-meta a:hover { color: var(--bp-plum-mid); }
+.sc-meta a { color: var(--sc-accent); text-decoration: underline; text-underline-offset: 3px; }
+.sc-meta a:hover { color: var(--sc-accent-mid); }
 
 /* ══════════════ EMPTY STATE ══════════════ */
 .sc-empty {
@@ -638,7 +649,7 @@
   padding: 11px 22px;
   background: var(--bg-subtle, var(--bg-card));
   border-bottom: 1px solid var(--border);
-  box-shadow: inset 3px 0 0 var(--bp-plum);
+  box-shadow: inset 3px 0 0 var(--sc-accent);
 }
 .sc-kpi-group-name {
   font-family: 'Jost', sans-serif;

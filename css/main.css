@@ -166,6 +166,14 @@
    HERO
    ══════════════════════════════════════════════════════════ */
 .hero {
+  /* The distance anything pinned to the hero's top-right keeps from the page
+     edge. Declared once here because the theme toggle and the Emerging Issues
+     alert both sit on that edge and have to line up: they used to carry their
+     own values — the toggle a flat 20px in three separate media queries, the
+     alert a `clamp(18px, 2.6vw, 44px)` — so their right edges agreed at no
+     width at all, drifting 17px apart at 1440 and 24px at 1920. Both read this
+     now, so they cannot come apart again. */
+  --hero-gutter: 20px;
   position: relative;
   min-height: 100vh;
   display: flex;
@@ -807,6 +815,7 @@ body.home-single .hero-compact::before { display: none; }
 
 .hero-theme-btn {
   position: absolute;
+  right: var(--hero-gutter);
   width: 36px;
   height: 36px;
   border-radius: 10px;
@@ -2043,7 +2052,7 @@ body.home-single .tool-desc {
     letter-spacing: 0.22em;
   }
 
-  .hero-theme-btn { top: 14px; right: 20px; width: 36px; height: 36px; }
+  .hero-theme-btn { top: 14px; width: 36px; height: 36px; }
   .hero-theme-btn svg { width: 16px; height: 16px; }
 
   /* --- MISSION (tight) --- */
@@ -2109,7 +2118,8 @@ body.home-single .tool-desc {
   .home-mission-text { max-width: 1100px; }
   .home-mission { padding: 12px 32px 10px; }
   body.home-single .hero-compact .hero-subtitle { font-size: 0.85rem; }
-  .hero-theme-btn { top: 12px; right: 18px; width: 32px; height: 32px; }
+  .hero { --hero-gutter: 18px; }
+  .hero-theme-btn { top: 12px; width: 32px; height: 32px; }
   .home-mission-label { font-size: 0.58rem; margin-bottom: 4px; }
   .home-mission-text { font-size: 0.92rem; line-height: 1.5; }
   .home-row { padding: 6px 40px; }
@@ -2153,9 +2163,9 @@ body.home-single .tool-desc {
      top: 18px and is 38px tall; the badge has to clear it. */
   .hero-compact { min-height: 0; padding: 64px 24px 30px; }
 
+  .hero { --hero-gutter: 18px; }
   .hero-theme-btn {
     top: 18px;
-    right: 18px;
     width: 38px;
     height: 38px;
   }

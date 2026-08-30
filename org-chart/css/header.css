@@ -14,7 +14,7 @@
   font-size: clamp(1.6rem, 4vw, 2.6rem);
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--gold);
+  color: var(--gold);          /* the wordmark stays brand gold */
   margin-bottom: 6px;
 }
 

@@ -12,38 +12,57 @@
    not the source — the migration was applied by hand in the SQL Editor):
 
      process_stewards   email (pk), full_name, department, job_title, active
-                         — world-readable (RLS: select using true); written
-                         only by allowed_editors (the PM Hub roster), same as
-                         every other reference table. No write UI here.
+                         — readable by any signed-in staff/director/admin
+                         (partners cannot); written only by allowed_editors
+                         (the PM Hub roster), same as every other reference
+                         table. No write UI here.
 
-     processes          created_by is the ownership column — there is no
-                         steward_email. steward_name/steward_role are display
-                         text only. The impact multi-select column is
-                         population_impacted, not "impacts". department is
-                         NOT NULL with a foreign key to departments(name).
+     processes          created_by is who wrote the row (the PM, for a
+                         PM-created one) — steward_email (added 2026-08-26) is
+                         who the row is actually for, so a steward can still
+                         see/edit a process a PM created on their behalf.
+                         steward_name/steward_role are display text only. The
+                         impact multi-select column is population_impacted,
+                         not "impacts". department is NOT NULL with a foreign
+                         key to departments(name). status is one of
+                         Draft/Submitted/Reviewed/Archived — there is no
+                         status_note column and no Needs Changes status; both
+                         were retired together (2026-08-26), since status_note
+                         only ever existed to carry a reviewer's reason for
+                         bouncing a row back to that state.
 
    Row-level security, exactly as deployed:
-     select   own rows (created_by), OR hub_access.role = 'admin' (directors
-              are NOT reviewers here) with active=true and
-              scope_department is null or equals processes.department.
-     insert   created_by must be the caller, and the caller must have an
-              active process_stewards row.
-     update   ONE combined policy, own-row-while-unlocked OR admin-in-scope.
-              A BEFORE UPDATE trigger, process_guard(), is the actual
-              enforcement for who may touch status/status_note/reviewed_by/
-              reviewed_at:
+     select   own rows (created_by = caller OR steward_email = caller), OR
+              hub_access.role = 'admin' (directors are NOT reviewers here)
+              with active=true and scope_department is null or equals
+              processes.department.
+     insert   created_by must be the caller, and either the caller has an
+              active process_stewards row (a steward creating their own row —
+              steward_email = created_by = the steward's own email), or the
+              caller is an admin whose scope_department is null or equals the
+              row's department (a PM creating on behalf of a steward —
+              created_by is still the PM's own email, steward_email is the
+              picked steward's). Same "null or equals" shape as select/update,
+              so a scoped PM can create only within their own department, and
+              an org-wide admin (Jess Swinburne, Elie Gilles Ravel Mambou) can
+              create for any steward anywhere (2026-08-26 — deliberately
+              widened from an earlier, exact-match version of this branch).
+     update   ONE combined policy, own-row-while-unlocked (created_by =
+              caller OR steward_email = caller, status Draft or Submitted) OR
+              admin-in-scope. A BEFORE UPDATE trigger,
+              process_guard(), is the actual enforcement for who may touch
+              status/reviewed_by/reviewed_at:
                 reviewer   any status change auto-stamps reviewed_by/
                            reviewed_at server-side; a client-sent value for
                            either is discarded, never trusted.
-                steward    status_note/reviewed_by/reviewed_at are never
-                           theirs — any change raises an exception. status
-                           may move to exactly one place, Submitted; any
-                           other new status (jumping straight to Reviewed or
-                           Archived) also raises. RLS's own USING clause is
-                           what already limits which rows a steward can
-                           reach at all (status in Draft/Needs Changes), so
-                           the trigger only has to police where they can
-                           move TO.
+                steward    reviewed_by/reviewed_at are never theirs — any
+                           change raises an exception. status may move to
+                           exactly one place, Submitted; any other new status
+                           (jumping straight to Reviewed or Archived) also
+                           raises. RLS's own USING clause is what already
+                           limits which rows a steward can reach at all
+                           (status in Draft/Submitted), so the trigger only
+                           has to police where they can move TO.
               This is why save() below only ever sends the steward-editable
               columns plus status — a defensive whitelist mirroring the
               trigger, so a client bug fails with a normal validation
@@ -51,6 +70,14 @@
      delete   allowed_editors only (the PM Hub roster) — nobody reachable
               from this page can delete a row, which is why there's no
               delete affordance in the UI.
+
+   process-review.js additionally hides Draft rows from the reviewer UI on
+   its own — RLS's admin select branch has no status restriction, so an
+   admin's own query can technically return a Draft row in their department.
+   That's accepted as a UI-only boundary, not promoted to RLS: worst case a
+   department PM sees one of their own team's Drafts slightly early, which
+   isn't a real exposure given they're already fully trusted with that data
+   the moment it's Submitted.
 
    Deliberately NOT run through shared/js/data-service.js's dataset loader.
    That loader exists to fall back to a bundled snapshot when Supabase is
@@ -75,8 +102,9 @@
 
   async function loadSteward() {
     try {
-      // process_stewards is world-readable, so this is a plain filtered
-      // select — no RPC exists for it (there is no process_me()).
+      // process_stewards is readable by any signed-in staff/director/admin,
+      // so this is a plain filtered select — no RPC exists for it (there is
+      // no process_me()).
       const rows = await SS.db.select("process_stewards", {
         select: "email,full_name,department,job_title,active",
         filter: { email: "ilike." + SS.access.email, active: "eq.true" },
@@ -87,6 +115,24 @@
       // A reviewer with no steward row at all is expected, not an error.
       state.steward = null;
     }
+  }
+
+  /**
+   * For the reviewer's "New Process for Steward" picker. A department-scoped
+   * PM gets active stewards in their own department only; an org-wide admin
+   * (department is null/undefined — matches processes_insert's own `scope_
+   * department IS NULL` branch) gets every active steward, unfiltered, since
+   * they may create on behalf of anyone. The resulting process's department
+   * comes from whichever steward is picked, not from the admin's own scope.
+   */
+  async function stewardsInDepartment(department) {
+    const opts = {
+      select: "email,full_name,department,job_title",
+      filter: { active: "eq.true" },
+      order: "full_name.asc",
+    };
+    if (department) opts.filter.department = "eq." + department;
+    return SS.db.select("process_stewards", opts);
   }
 
   async function loadDepartments() {
@@ -138,9 +184,17 @@
 
   async function create(payload) {
     const email = SS.access.email;
+    // steward_email links the row to the steward's own login even when a PM
+    // created it on their behalf (created_by stays the PM, never the
+    // steward). Defaults to the caller when absent — a steward creating
+    // their own row — so this always ends up set to somebody.
     const rows = await SS.db.insert("processes", [Object.assign(
       pickStewardFields(payload),
-      { created_by: email, status: payload.status || "Draft" }
+      {
+        created_by: email,
+        steward_email: payload.steward_email || email,
+        status: payload.status || "Draft",
+      }
     )]);
     await refresh();
     return rows[0];
@@ -155,17 +209,14 @@
   }
 
   /**
-   * Reviewer action: status + a note. reviewed_by/reviewed_at are NOT sent —
+   * Reviewer action: status only. reviewed_by/reviewed_at are NOT sent —
    * process_guard() stamps both server-side from the caller's own JWT and the
    * clock whenever a reviewer changes status, and ignores whatever a client
    * sends for either column. Sending them here would just be a value the
    * trigger throws away; one source of truth beats two that could drift.
    */
   async function review(id, patch) {
-    const rows = await SS.db.update("processes", id, {
-      status: patch.status,
-      status_note: patch.status_note || null,
-    });
+    const rows = await SS.db.update("processes", id, { status: patch.status });
     await refresh();
     return rows[0];
   }
@@ -202,7 +253,6 @@
     "Draft": "grey",
     "Submitted": "yellow",
     "Reviewed": "accent",
-    "Needs Changes": "red",
     "Archived": "grey",
   };
 
@@ -210,6 +260,7 @@
   PROC.create = create;
   PROC.save = save;
   PROC.review = review;
+  PROC.stewardsInDepartment = stewardsInDepartment;
   PROC.statusTone = (status) => STATUS_TONE[status] || "grey";
   PROC.formatDate = (iso) => {
     if (!iso) return "—";

@@ -213,6 +213,52 @@
   margin-bottom: 12px;
 }
 
+/* ══════════════ REVIEW TABS ══════════════
+   Same pattern as emerging-issues.css's .ei-tabs — underline + count badge,
+   not a stat band, so the number is also the way to go look at what it
+   counts. */
+.proc-tabs {
+  display: flex; gap: 6px; flex-wrap: wrap;
+  margin-bottom: clamp(14px, 1.8vw, 18px);
+  border-bottom: 1px solid var(--border);
+}
+.proc-tab {
+  display: inline-flex; align-items: center; gap: 9px;
+  font-family: 'Jost', sans-serif;
+  font-size: .84rem; font-weight: 500;
+  color: var(--text-muted);
+  background: none; border: 0; cursor: pointer;
+  padding: 11px 16px 12px;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color .15s, border-color .15s;
+}
+.proc-tab:hover { color: var(--bp-teal); }
+.proc-tab.is-on {
+  color: var(--bp-teal);
+  border-bottom-color: var(--bp-teal);
+  font-weight: 600;
+}
+.proc-tab-n {
+  font-size: .7rem; font-weight: 600; line-height: 1;
+  min-width: 20px; padding: 4px 6px;
+  border-radius: 999px; text-align: center;
+  background: rgba(6,85,119,.10); color: var(--bp-teal);
+}
+.proc-tab.is-on .proc-tab-n { background: var(--bp-teal); color: #fff; }
+.proc-tab-n.is-quiet { background: none; color: var(--text-dim); font-weight: 400; }
+.proc-tab.is-on .proc-tab-n.is-quiet { background: rgba(6,85,119,.14); color: var(--bp-teal); }
+
+/* --bp-teal (#065577) reads at 8.2:1 on white and only 2.4:1 on this page's
+   dark background — the same fix emerging-issues.css uses for its tabs. */
+[data-theme="dark"] .proc-tab:hover,
+[data-theme="dark"] .proc-tab.is-on            { color: #5FB3C9; }
+[data-theme="dark"] .proc-tab.is-on            { border-bottom-color: #5FB3C9; }
+[data-theme="dark"] .proc-tab-n                { background: rgba(95,179,201,.16); color: #5FB3C9; }
+[data-theme="dark"] .proc-tab.is-on .proc-tab-n { background: #5FB3C9; color: #06222c; }
+[data-theme="dark"] .proc-tab-n.is-quiet       { background: none; color: var(--text-dim); }
+[data-theme="dark"] .proc-tab.is-on .proc-tab-n.is-quiet { background: rgba(95,179,201,.20); color: #5FB3C9; }
+
 /* ══════════════ REVIEW SUMMARY KPIs ══════════════ */
 .proc-kpis {
   display: grid;

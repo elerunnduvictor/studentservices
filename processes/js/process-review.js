@@ -9,10 +9,17 @@
    set, not a second access boundary. It's hidden entirely for a scoped PM,
    since for them it can only ever have one useful value.
 
+   Draft rows are excluded here even though RLS's admin select branch has no
+   status restriction and can technically return one — Draft is private to
+   the steward by UI convention only. Accepted as-is (2026-08-26): worst case
+   a department PM sees one of their own team's Drafts slightly early, not a
+   real exposure given they're already fully trusted with that data the
+   moment it's Submitted.
+
    Built for the eventual volume (200+ rows) this panel is meant to carry:
-   summary counts, a filter bar, and a days-waiting column so the oldest
-   unresolved submissions don't get lost in a plain chronological list. No
-   bulk actions — reviewing one process at a time is deliberate, not a gap.
+   summary counts, two tabs (Active / Archived), a filter bar, and a
+   days-waiting column so the oldest unresolved submissions don't get lost.
+   No bulk actions — reviewing one process at a time is deliberate, not a gap.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 (function () {
@@ -22,17 +29,25 @@
   const PROC = window.PROC;
   const escapeHtml = SS.escapeHtml;
 
-  // Matches process-form.js's DECIDABLE_STATUSES — a row only opens the
-  // editable status/note form while a decision is actually pending.
-  const DECIDABLE = ["Submitted", "Needs Changes"];
-  const ALL_STATUSES = ["Draft", "Submitted", "Needs Changes", "Reviewed", "Archived"];
+  // "Waiting" only means anything for a row still pending a first decision.
+  const DECIDABLE = ["Submitted"];
+  // Matches process-form.js's SETTABLE_STATUSES — a row opens with an
+  // editable Status control (not just a read-only view) for any of these,
+  // since a reviewer can move freely between Reviewed and Archived too.
+  const EDITABLE = ["Submitted", "Reviewed", "Archived"];
   const WAITING_DAYS_WARN = 7;
 
   // Newest activity that still needs eyes rises to the top; oldest within
   // that bucket sorts first, since that's the row that's been waiting longest.
-  const PRIORITY = { "Submitted": 0, "Needs Changes": 1, "Draft": 2, "Reviewed": 3, "Archived": 4 };
+  const PRIORITY = { "Submitted": 0, "Reviewed": 1, "Archived": 2 };
+
+  const TABS = [
+    { id: "active", label: "Active", statuses: ["Submitted", "Reviewed"] },
+    { id: "archived", label: "Archived", statuses: ["Archived"] },
+  ];
 
   const state = { department: "", status: "", steward: "" };
+  let TAB = "active";
   let filtersWired = false;
 
   function daysWaiting(r) {
@@ -40,18 +55,22 @@
     return Math.floor((Date.now() - new Date(r.updated_at).getTime()) / 86400000);
   }
 
+  /** Everything a reviewer may see at all — RLS's rows, minus Draft. */
+  function reviewableRows() {
+    return PROC.rows.filter((r) => r.status !== "Draft");
+  }
+
   function renderKpis(rows) {
     const target = document.getElementById("procReviewKpis");
     if (!target) return;
     const counts = {
-      Submitted: 0, "Needs Changes": 0, Reviewed: 0,
+      Submitted: 0, Reviewed: 0,
       waiting: rows.filter((r) => r.status === "Submitted" && (daysWaiting(r) ?? 0) >= WAITING_DAYS_WARN).length,
     };
     rows.forEach((r) => { if (r.status in counts) counts[r.status]++; });
 
     const cards = [
       { label: "Submitted", value: counts.Submitted, color: "var(--proc-yellow)" },
-      { label: "Needs Changes", value: counts["Needs Changes"], color: "var(--proc-red)" },
       { label: "Reviewed", value: counts.Reviewed, color: "var(--proc-accent)" },
       { label: "Waiting 7+ Days", value: counts.waiting, color: "var(--proc-red)" },
     ];
@@ -78,8 +97,16 @@
         depts.map((d) => `<option value="${escapeHtml(d)}"${state.department === d ? " selected" : ""}>${escapeHtml(d)}</option>`).join("");
     }
 
-    statusSel.innerHTML = `<option value="">All Statuses</option>` +
-      ALL_STATUSES.map((s) => `<option value="${s}"${state.status === s ? " selected" : ""}>${s}</option>`).join("");
+    // The current tab decides what's worth filtering by — offering "Reviewed"
+    // as a choice while looking at Archived would just be a dead option.
+    const statuses = TABS.find((t) => t.id === TAB).statuses;
+    if (statuses.length < 2) {
+      statusSel.hidden = true;
+    } else {
+      statusSel.hidden = false;
+      statusSel.innerHTML = `<option value="">All Statuses</option>` +
+        statuses.map((s) => `<option value="${s}"${state.status === s ? " selected" : ""}>${s}</option>`).join("");
+    }
   }
 
   function wireFilters() {
@@ -99,16 +126,40 @@
       document.getElementById("procFilterSteward").value = "";
       render();
     });
+    document.getElementById("procTabs").addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-tab]");
+      if (!btn || btn.dataset.tab === TAB) return;
+      TAB = btn.dataset.tab;
+      state.status = ""; // last tab's status choice rarely applies to this one
+      render();
+    });
+    const newForSteward = document.getElementById("procReviewNewBtn");
+    if (newForSteward) newForSteward.addEventListener("click", () => PROC.form.openCreateForSteward());
   }
 
-  function getFiltered() {
+  /** Department + steward filters, before the tab split — tab counts have to
+   *  come from this, or each tab would report the number showing on the tab
+   *  you are already looking at. */
+  function afterFilters() {
     const q = state.steward.trim().toLowerCase();
-    return PROC.rows.filter((r) => {
+    return reviewableRows().filter((r) => {
       if (state.department && r.department !== state.department) return false;
-      if (state.status && r.status !== state.status) return false;
       if (q && !String(r.steward_name || r.created_by || "").toLowerCase().includes(q)) return false;
       return true;
     });
+  }
+
+  function renderTabs(filtered) {
+    const host = document.getElementById("procTabs");
+    host.innerHTML = TABS.map((t) => {
+      const n = filtered.filter((r) => t.statuses.indexOf(r.status) !== -1).length;
+      const on = TAB === t.id;
+      return `<button type="button" class="proc-tab${on ? " is-on" : ""}"
+                role="tab" aria-selected="${on}" data-tab="${t.id}">
+                <span class="proc-tab-l">${escapeHtml(t.label)}</span>
+                <span class="proc-tab-n${n ? "" : " is-quiet"}">${n}</span>
+              </button>`;
+    }).join("");
   }
 
   function render() {
@@ -124,22 +175,35 @@
       ? "Showing processes in " + PROC.reviewScopeDepartment + "."
       : "Showing processes across every department.";
 
-    renderKpis(PROC.rows);
+    // Shown to every reviewer, org-wide admins included — processes_insert's
+    // admin branch now allows scope_department IS NULL, same as select/update.
+    const newForSteward = document.getElementById("procReviewNewBtn");
+    if (newForSteward) newForSteward.hidden = false;
+
+    renderKpis(reviewableRows());
+
+    const filtered = afterFilters();
+    renderTabs(filtered);
     renderFilterOptions();
     document.getElementById("procFilterClear").disabled =
       !(state.department || state.status || state.steward);
 
-    const rows = getFiltered().sort((a, b) =>
-      (PRIORITY[a.status] ?? 9) - (PRIORITY[b.status] ?? 9) ||
-      new Date(a.updated_at) - new Date(b.updated_at));
+    const tabStatuses = TABS.find((t) => t.id === TAB).statuses;
+    const rows = filtered
+      .filter((r) => tabStatuses.indexOf(r.status) !== -1)
+      .filter((r) => !state.status || r.status === state.status)
+      .sort((a, b) =>
+        (PRIORITY[a.status] ?? 9) - (PRIORITY[b.status] ?? 9) ||
+        new Date(a.updated_at) - new Date(b.updated_at));
 
     const body = document.getElementById("procReviewBody");
     const count = document.getElementById("procReviewCount");
+    const tabTotal = filtered.filter((r) => tabStatuses.indexOf(r.status) !== -1).length;
     count.textContent = rows.length + (rows.length === 1 ? " process" : " processes") +
-      (rows.length !== PROC.rows.length ? ` (of ${PROC.rows.length})` : "");
+      (rows.length !== tabTotal ? ` (of ${tabTotal})` : "");
 
     if (!rows.length) {
-      const msg = PROC.rows.length ? "Nothing matches these filters." : "Nothing here yet.";
+      const msg = tabTotal ? "Nothing matches these filters." : "Nothing here yet.";
       body.innerHTML = `<tr><td colspan="7"><div class="proc-empty">${msg}</div></td></tr>`;
       return;
     }
@@ -157,7 +221,7 @@
         <td><span class="proc-pill proc-pill-${PROC.statusTone(r.status)}">${escapeHtml(r.status)}</span></td>
         <td>${waitingCell}</td>
         <td class="proc-cell-dim">${PROC.formatDate(r.updated_at)}</td>
-        <td><button type="button" class="proc-btn proc-btn-small" data-review="${r.id}">${DECIDABLE.indexOf(r.status) !== -1 ? "Review" : "View"}</button></td>
+        <td><button type="button" class="proc-btn proc-btn-small" data-review="${r.id}">${EDITABLE.indexOf(r.status) !== -1 ? "Review" : "View"}</button></td>
       </tr>`;
     }).join("");
 

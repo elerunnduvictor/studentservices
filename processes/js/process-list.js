@@ -8,7 +8,7 @@
   const SS = window.SS;
   const PROC = window.PROC;
   const escapeHtml = SS.escapeHtml;
-  const UNLOCKED = ["Draft", "Needs Changes"];
+  const UNLOCKED = ["Draft", "Submitted"];
 
   function render() {
     const panel = document.getElementById("procMine");
@@ -17,8 +17,13 @@
     if (!PROC.isSteward) { panel.hidden = true; return; }
     panel.hidden = false;
 
+    // created_by alone misses a process a PM created on this steward's
+    // behalf — that row's created_by is the PM, not them. steward_email is
+    // what actually ties it back to the person it's for.
+    const email = String(SS.access.email || "").toLowerCase();
     const mine = PROC.rows.filter(
-      (r) => String(r.created_by || "").toLowerCase() === String(SS.access.email || "").toLowerCase()
+      (r) => String(r.created_by || "").toLowerCase() === email ||
+             String(r.steward_email || "").toLowerCase() === email
     );
 
     const body = document.getElementById("procMineBody");

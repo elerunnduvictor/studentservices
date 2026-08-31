@@ -426,6 +426,15 @@ body.home-single .home-okr-loading { color: rgba(255,255,255,.6); }
    So it sits where a notification sits — top right of the hero, under the
    account chip — and it is deliberately small. A bell, one line of figures, two
    actions. Everything else is one click away in the register.
+
+   Known collision, not yet solved: the account chip opens a dropdown from
+   the theme toggle (hub-account.js) that isn't height-bounded against a card
+   sitting below it, so an open dropdown can land on this alert. Several
+   repositions were tried (top left below the title, top left in the header
+   row, a collapse-to-bell popover) and reverted — each traded this collision
+   for a different one (the hero title, or the badge) without actually fixing
+   anything, so the widget stays here and the dropdown collision gets solved
+   on its own terms instead.
    ══════════════════════════════════════════════════════════════════════════ */
 
 .ei-alert {

@@ -71,26 +71,53 @@
 
     const btn = wrap.querySelector(".hub-account-btn");
     const menu = wrap.querySelector(".hub-account-menu");
+
+    /* Moved to <body>, not left as a normal descendant of the chip.
+       .hero-compact (home.css) clips its own overflow on purpose, for the
+       background glow/arc — and on the home page this chip lives inside
+       it. A short menu fit inside that clip box by luck; the real one
+       (email, the colour-blind toggle, Sign out) is taller than the room
+       .hero-compact leaves, so its bottom — Sign out — rendered past the
+       clip and was genuinely unreachable, not just visually cut off.
+       Reparenting escapes *any* ancestor's overflow, on this page or a
+       future one, rather than tuning padding to fit today's content.
+       `position: absolute` in document coordinates (not `fixed`) so it
+       still scrolls with the button with no extra scroll-tracking — the
+       coordinates already include the page's current scroll offset. */
+    document.body.append(menu);
+    function placeMenu() {
+      const r = btn.getBoundingClientRect();
+      const gap = 8;
+      menu.style.position = "absolute";
+      menu.style.top = (window.scrollY + r.bottom + gap) + "px";
+      menu.style.right = (document.documentElement.clientWidth - (window.scrollX + r.right)) + "px";
+      menu.style.left = "auto";
+    }
     btn.addEventListener("click", (e) => {
       e.stopPropagation();
       const open = !menu.hidden;
+      if (!open) placeMenu();
       menu.hidden = open;
       btn.setAttribute("aria-expanded", String(!open));
     });
-    // A click anywhere else closes it — but not one inside the menu itself,
+    addEventListener("resize", () => { if (!menu.hidden) placeMenu(); });
+    // A click anywhere else closes it — but not one inside the chip or the
+    // menu itself (no longer a descendant of it, since the move above),
     // which would swallow the Sign out button before it fired.
     document.addEventListener("click", (e) => {
-      if (wrap.contains(e.target)) return;
+      if (wrap.contains(e.target) || menu.contains(e.target)) return;
       menu.hidden = true;
       btn.setAttribute("aria-expanded", "false");
     });
-    wrap.querySelector(".hub-account-signout").addEventListener("click", signOut);
+    // Queried from `menu`, not `wrap` — the reparent above already moved
+    // .hub-account-signout and .hub-account-tex out of wrap's own subtree.
+    menu.querySelector(".hub-account-signout").addEventListener("click", signOut);
 
     /* Hatching as a second channel for the charts. Lives here because it is a
        reader's preference, not a property of any one page, and because the
        charts that need it are spread across six of them. */
     const tex = window.SS && window.SS.texture;
-    const texBtn = wrap.querySelector(".hub-account-tex");
+    const texBtn = menu.querySelector(".hub-account-tex");
     if (tex && texBtn) {
       const paint = () => {
         const on = tex.enabled();

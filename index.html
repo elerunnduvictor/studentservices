@@ -58,6 +58,13 @@
        and may need acting on today, so it sits where a notification belongs:
        top right, under the account chip, in its own alert red.
 
+       Known: the account chip's dropdown can open over/near this card at
+       this position — not fixed here. Several repositions (top left below
+       the title, top left in the header row, a collapse-to-bell popover)
+       were tried and reverted; the dropdown collision is being solved on its
+       own terms rather than by relocating the widget. See .ei-alert in
+       css/home.css.
+
        Compact by design — a bell, the headline figure, and the two actions.
        The detail lives in the register; this only has to say whether anything
        needs attention and get you there. Hidden until home-issues.js confirms

@@ -183,13 +183,21 @@ export async function mountWorkbook(bookKey) {
     });
   }
 
-  function setDirtyUI(count) {
+  // `deleteCount` gets its own colour and its own sentence — a staged delete
+  // disappears from the grid immediately, so "3 unsaved changes" alone reads
+  // as a completed action rather than one still waiting on Save.
+  function setDirtyUI(count, deleteCount = 0) {
     const dirty = count > 0;
     els.saveBtn.disabled = !dirty;
     els.revertBtn.disabled = !dirty;
-    els.saveState.className = "save-state" + (dirty ? " is-dirty" : "");
-    els.saveState.innerHTML =
-      `<span class="pip"></span>${dirty ? `${count} unsaved change${count === 1 ? "" : "s"}` : "All changes saved"}`;
+    els.saveState.className = "save-state" +
+      (deleteCount > 0 ? " has-deletes" : dirty ? " is-dirty" : "");
+    els.saveState.innerHTML = "<span class=\"pip\"></span>" + (
+      deleteCount > 0
+        ? `${count} unsaved change${count === 1 ? "" : "s"} — ` +
+          `${deleteCount} row${deleteCount === 1 ? "" : "s"} will be deleted on Save`
+        : dirty ? `${count} unsaved change${count === 1 ? "" : "s"}` : "All changes saved"
+    );
     window.onbeforeunload = dirty ? (e) => { e.preventDefault(); e.returnValue = ""; } : null;
   }
 
@@ -300,7 +308,7 @@ export async function mountWorkbook(bookKey) {
     els.addBtn.disabled = !!sheet.readOnly;
     els.addBtn.title = sheet.readOnly ? "This sheet is reference data" : "Add a row";
 
-    setDirtyUI(grid.dirtyCount);
+    setDirtyUI(grid.dirtyCount, grid.deleted.length);
     grid.wrap.focus({ preventScroll: true });
   }
 
@@ -352,7 +360,7 @@ export async function mountWorkbook(bookKey) {
       els.statusMsg.textContent = "Last saved " + new Date().toLocaleTimeString();
     } catch (err) {
       SS.shell.toast("Nothing was saved", err.message, "err");
-      setDirtyUI(grid.dirtyCount);
+      setDirtyUI(grid.dirtyCount, grid.deleted.length);
     }
   }
 
@@ -438,13 +446,9 @@ export async function mountWorkbook(bookKey) {
     if (state.sheet.readOnly) {
       return SS.shell.toast("Reference sheet", "This sheet is read from the workbook.", "err");
     }
-    const vi = grid.active.r;
-    const row = grid.rows[grid.view[vi]];
-    const label = row && (row.name || row.employee_name || row.employee ||
-                          row.sub_key_result || row.kpi_measure || `row ${vi + 1}`);
-    if (!confirm(`Delete "${String(label).slice(0, 60)}"?\n\n` +
-                 `It is removed from the database when you press Save, and Ctrl+Z will not bring it back.`)) return;
-    grid.deleteRows([vi]);
+    // Shared with the right-click "Delete row" menu item, so both entry
+    // points always carry the same warning.
+    grid.confirmDelete([grid.active.r]);
   });
 
   /**

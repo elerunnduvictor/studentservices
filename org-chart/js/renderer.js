@@ -37,11 +37,28 @@ OC.renderTile = function(emp) {
 
   var deptHtml = '<div class="tile-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>' + dept.name + '</div>';
 
+  // The +/- handle. Present only where there is something under the card, so
+  // its absence is meaningful: a card with no handle is a leaf. Counts PMs as
+  // reports, because they are — they just sit beside rather than below.
+  var hasReports = OC.getChildren(emp.id).length > 0;
+  var toggleHtml = hasReports
+    ? '<button class="tile-toggle" type="button" data-toggle="' + emp.id + '"' +
+      ' aria-expanded="false" title="Show who reports to ' + emp.name + '"' +
+      ' aria-label="Show who reports to ' + emp.name + '">' +
+        '<svg class="tile-toggle-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true">' +
+          '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>' +
+        '</svg>' +
+        '<svg class="tile-toggle-minus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true">' +
+          '<line x1="5" y1="12" x2="19" y2="12"/>' +
+        '</svg>' +
+      '</button>'
+    : '';
+
   var viewMoreHtml = !isVP
     ? '<a class="tile-view-more" href="' + (emp.roleInventoryUrl || '#') + '" target="_blank" rel="noopener" data-view-more>View Role Inventory <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>'
     : '';
 
-  return '<div class="' + tileClass + '" data-id="' + emp.id + '" data-dept="' + emp.dept + '" data-level="' + emp.level + '" data-name="' + emp.name.toLowerCase() + '" data-title="' + emp.title.toLowerCase() + '" style="--tile-color:' + dept.color + '; --tile-color-r:' + dept.colorR + ';">' +
+  return '<div class="' + tileClass + '" data-id="' + emp.id + '" data-dept="' + emp.dept + '" data-level="' + emp.level + '" data-name="' + emp.name.toLowerCase() + '" data-title="' + emp.title.toLowerCase() + '" title="Click for details" style="--tile-color:' + dept.color + '; --tile-color-r:' + dept.colorR + ';">' +
     '<div class="tile-accent" style="background:' + dept.color + '"></div>' +
     '<div class="tile-header">' +
       '<div class="avatar">' + (emp.photoUrl ? '<img src="' + emp.photoUrl + '" alt="' + emp.name + '" loading="lazy" onerror="this.outerHTML=\'' + OC.getInitials(emp.name) + '\'">' : OC.getInitials(emp.name)) + '</div>' +
@@ -49,7 +66,8 @@ OC.renderTile = function(emp) {
       '<div class="tile-title">' + emp.title + '</div>' +
       '<div class="tile-level-badge">' + levelBadge + '</div>' +
     '</div>' +
-    '<div class="tile-expand-indicator">Click to expand</div>' +
+    '<div class="tile-expand-indicator">Click for details</div>' +
+    toggleHtml +
     '<div class="tile-body"><div class="tile-body-inner">' +
       responsibilitiesHtml + kpisHtml + directReportsHtml +
       '<div class="tile-meta">' +
@@ -59,12 +77,12 @@ OC.renderTile = function(emp) {
     '</div></div></div>';
 };
 
-// Directors render PMs as inline children (handled in renderSubtree).
-// Everyone else (VP, PMs with sub-PMs) keeps the flanking layout.
+// Everyone flanks their PMs — the VP, the directors, and PMs with PMs of
+// their own. Directors used to be the exception, dropping their PMs into the
+// row of children below them instead; now that a card's handle reveals its own
+// reports, "beside" is what distinguishes a PM from a line report, so the
+// exception had to go.
 OC.renderTileWithAssistants = function(emp) {
-  var isDirector = emp.level === 2 && emp.role !== 'pm';
-  if (isDirector) return OC.renderTile(emp);
-
   var assistants = OC.getAssistants(emp.id);
   if (assistants.length === 0) return OC.renderTile(emp);
 
@@ -96,19 +114,8 @@ OC.renderTileWithAssistants = function(emp) {
 
 OC.renderSubtree = function(parentId) {
   var parent = OC.employees.find(function(e) { return e.id === parentId; });
-  var nonPMs = OC.getTreeChildren(parentId);
-  var children;
-  // Only directors merge their PMs into the children row.
-  // Other parents (VP, PMs) keep their PMs flanking via renderTileWithAssistants.
-  var parentIsDirector = parent && parent.level === 2 && parent.role !== 'pm';
-  if (parentIsDirector) {
-    var pms = OC.getAssistants(parentId);
-    // PMs sit centered under the director, between the SMs.
-    var splitIndex = Math.ceil(nonPMs.length / 2);
-    children = nonPMs.slice(0, splitIndex).concat(pms).concat(nonPMs.slice(splitIndex));
-  } else {
-    children = nonPMs;
-  }
+  // PMs are never in this row: every parent flanks them instead.
+  var children = OC.getTreeChildren(parentId);
   if (children.length === 0) return '';
 
   var parentLevel = parent ? parent.level : 0;
@@ -120,23 +127,21 @@ OC.renderSubtree = function(parentId) {
     var isDeptBranch = child.level === 2 && !isPM;
     var deptColor = OC.getDeptInfo(child.dept).color;
 
-    // Children that flank their own PMs (e.g. Jess flanks David) need
-    // padding so the flanking tiles don't get clipped.
-    var childIsDirector = isDeptBranch;
-    var extraStyles = '';
-    if (!childIsDirector) {
-      var childAssistants = OC.getAssistants(child.id);
-      var hasLeftPM = childAssistants.some(function(a) { return a.pmPosition === 'left'; });
-      var hasRightPM = childAssistants.some(function(a) { return a.pmPosition !== 'left'; });
-      if (hasLeftPM) extraStyles += 'padding-left:208px;--extra-pl:208px;';
-      if (hasRightPM) extraStyles += 'padding-right:208px;--extra-pr:208px;';
-    }
+    // Room for the flanking PMs, as classes rather than inline padding.
+    // Inline padding was unconditional, so once PMs could be hidden it held
+    // 208px of empty space open beside a director with nothing in it. The CSS
+    // applies these only while that card's PMs are actually showing.
+    var childAssistants = OC.getAssistants(child.id);
+    var hasLeftPM = childAssistants.some(function(a) { return a.pmPosition === 'left'; });
+    var hasRightPM = childAssistants.some(function(a) { return a.pmPosition !== 'left'; });
 
     var classNames = [];
     if (isDeptBranch) classNames.push('dept-branch');
     if (isPM) classNames.push('pm-branch');
+    if (hasLeftPM) classNames.push('has-pm-left');
+    if (hasRightPM) classNames.push('has-pm-right');
     var classAttr = classNames.length ? ' class="' + classNames.join(' ') + '"' : '';
-    var inlineStyles = (isDeptBranch ? '--dc:' + deptColor + ';' : '') + extraStyles;
+    var inlineStyles = (isDeptBranch ? '--dc:' + deptColor + ';' : '');
     var styleAttr = inlineStyles ? ' style="' + inlineStyles + '"' : '';
     var deptAttr = isDeptBranch ? ' data-branch-dept="' + child.dept + '"' : '';
     var branchAttr = classAttr + deptAttr + ' data-lvl="' + child.level + '"' + styleAttr;
@@ -176,7 +181,11 @@ OC.renderSubtree = function(parentId) {
 
 OC.renderChart = function() {
   var vp = OC.employees.find(function(e) { return e.level === 1; });
-  var html = '<div class="tree leadership-view">';
+  // No `leadership-view` class any more. That was a whole-tree mode that hid
+  // everything below level 3 with `display:none !important`, which is exactly
+  // the thing per-card collapsing has to be able to override. The same opening
+  // view is now produced by setting each node's own state — see OC.initExpand.
+  var html = '<div class="tree">';
   html += OC.renderTileWithAssistants(vp);
   html += OC.renderSubtree(vp.id);
   html += '</div>';

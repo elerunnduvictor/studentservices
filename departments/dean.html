@@ -193,6 +193,35 @@
     </div>
   </section>
 
+  <!-- ═══════════════ KPI SCORECARD ═══════════════
+       This department's slice of the hub scorecard, in the same card shape that
+       page uses. Filled by departments/js/dept-goals.js, which hides the
+       section outright if the department tracks no KPIs. -->
+  <section class="section" id="kpis">
+    <div class="section-inner">
+      <div data-reveal>
+        <div class="section-label">How We Are Doing</div>
+        <div class="section-title">KPI Scorecard</div>
+        <div class="section-divider"></div>
+      </div>
+      <div id="deptKpis" data-reveal></div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ OKR PROGRESS ═══════════════
+       A card per objective, stacked below the KPIs rather than beside them:
+       both want the full width, and the two answer different questions. -->
+  <section class="section" id="okrs" style="background: var(--bg-elevated);">
+    <div class="section-inner">
+      <div data-reveal>
+        <div class="section-label">What We Are Working Towards</div>
+        <div class="section-title">OKR Progress</div>
+        <div class="section-divider"></div>
+      </div>
+      <div id="deptOkrs" data-reveal></div>
+    </div>
+  </section>
+
   <!-- ═══════════════ TEAM ORG CHART ═══════════════ -->
   <section class="section" id="team">
     <div class="section-inner">
@@ -280,31 +309,53 @@
 <script src="/shared/js/hub-texture.js"></script>
 <script src="/shared/js/hub-account.js"></script>
 <script src="/shared/js/hub-scope.js"></script>
+  <!-- Required by data-service's `kpis` dataset, which maps every live KPI row
+       through SS.kpiStatus.decorate(). Without it the fetch succeeds and then
+       throws on the map, and the page silently falls back to the bundled
+       snapshot with "Cannot read properties of undefined (reading 'decorate')".
+       Only signed-in readers ever saw it: an anonymous request is refused
+       before it reaches the map. Must load before data-service. -->
+  <script src="/shared/js/kpi-status.js"></script>
   <script src="/shared/js/data-service.js"></script>
   <script src="/shared/js/hub-boot.js"
-          data-datasets="directory,orgchart"
-          data-then="departments/js/dept-dashboard.js"></script>
+          data-datasets="directory,orgchart,kpis,okrs"
+          data-then="departments/js/dept-dashboard.js,departments/js/dept-goals.js"></script>
   <script src="/org-chart/js/data.js"></script>
   <script src="/org-chart/js/helpers.js"></script>
   <script src="/org-chart/js/renderer.js"></script>
+  <script src="/org-chart/js/expand.js"></script>
   <script src="/org-chart/js/modal.js"></script>
   <script>
     /* Render department subtree + wire interactions */
     (function () {
       var director = OC.employees.find(function (e) { return e.dept === 'dean' && e.level === 2 && e.role !== 'pm'; });
       if (!director) return;
-      var html = '<div class="tree single-dept-view">';
+      var html = '<div class="tree">';
       html += OC.renderTileWithAssistants(director);
       html += OC.renderSubtree(director.id);
       html += '</div>';
       var container = document.getElementById('deptChart');
       container.innerHTML = html;
 
+      /* renderer.js puts a +/- handle on every card with reports; expand.js is
+         what listens for them. Same opening state as the org chart page — the
+         director, their senior managers, and everything below behind a +. It
+         opened fully expanded at first, which put the entire department on
+         screen at once and left nothing for the handles to do. */
+      OC.initExpand('leadership', container);
+
       container.addEventListener('click', function (e) {
         if (e.target.closest('[data-view-more]')) {
           e.stopPropagation();
           return;
         }
+        /* The +/- handle belongs to expand.js. Both listeners sit on this same
+           element, and stopPropagation in the other one does not stop a
+           listener on the element it fired from — only stopImmediatePropagation
+           would, and that would depend on which of the two was registered
+           first. Checking here is the version that cannot break: pressing +
+           was expanding the node and opening the card's detail body at once. */
+        if (e.target.closest('.tile-toggle')) return;
         var tile = e.target.closest('.tile:not(.spacer-tile)');
         if (tile) tile.classList.toggle('expanded');
       });

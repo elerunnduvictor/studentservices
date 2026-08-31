@@ -13,48 +13,86 @@
   // ── Event delegation for tiles ──
   var chartContainer = document.getElementById('chartContainer');
 
-  // ── Tile click (expand/collapse) ──
-  chartContainer.addEventListener('click', function(e) {
+  // ── Tile click (open the card's detail body) ──
+  // The +/- handle lives inside the card and opens the card's *reports*
+  // instead; expand.js claims that click before this sees it.
+  chartContainer.addEventListener('click', function (e) {
     if (e.target.closest('[data-view-more]')) return;
+    if (e.target.closest('.tile-toggle')) return;
     var tile = e.target.closest('.tile:not(.spacer-tile)');
     if (!tile) return;
+    var opening = !tile.classList.contains('expanded');
     tile.classList.toggle('expanded');
+
+    /* Bring the opened card fully into view.
+
+       A card triples in width when it opens, and one near an edge opens partly
+       outside the window — the far-left and far-right columns, and the PM
+       cards flanking a director, which start at the outer edge of the chart to
+       begin with. Rather than special-casing each position, ask the scroller
+       to make the card visible and let it work out the direction and distance.
+
+       `nearest` moves as little as possible, so a card already fully visible
+       does not move at all, and one that is half out slides just far enough.
+
+       It has to wait for the width transition to finish, not just for the next
+       frame. A frame in, the card is still its collapsed 220px and already
+       fully visible, so the scroller correctly decided there was nothing to
+       do — and then the card grew to 680px and hung off the edge anyway. */
+    if (opening) {
+      var scrolled = false;
+      var bring = function () {
+        if (scrolled) return;
+        scrolled = true;
+        /* Scrolling the chart's own scroller by a measured amount, rather than
+           asking scrollIntoView to work it out. The chart container carries a
+           scale() transform for zoom, and scrollIntoView reads through that
+           inconsistently — it moved the card that was 13px out and ignored the
+           one that was 960px out. This is just arithmetic on two rectangles. */
+        var vp = document.getElementById('chartViewport');
+        if (!vp) return;
+        var vr = vp.getBoundingClientRect();
+        var tr = tile.getBoundingClientRect();
+        var pad = 20;
+        var dx = 0;
+        if (tr.right > vr.right - pad) dx = tr.right - vr.right + pad;
+        // Left takes priority: if the card is too wide to fit either way, its
+        // start is the half worth showing.
+        if (tr.left - dx < vr.left + pad) dx = tr.left - vr.left - pad;
+        if (Math.abs(dx) > 1) {
+          vp.scrollBy({
+            left: dx,
+            behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'
+          });
+        }
+      };
+      tile.addEventListener('transitionend', function done(ev) {
+        if (ev.propertyName !== 'width') return;
+        tile.removeEventListener('transitionend', done);
+        bring();
+      });
+      // Belt and braces: transitionend does not fire if the transition is
+      // cancelled, or at all under reduced motion.
+      setTimeout(bring, 420);
+    }
   });
 
   // ── Initialize all modules ──
+  // No initFilter: the department chips it drove are gone, and with them the
+  // single-department view. The chart is one chart now, opened card by card.
   OC.initSearch();
-  OC.initFilter();
+  OC.initExpand('leadership');
   OC.initZoom();
   OC.initPan();
   OC.initToolbar();
 
-  // ── Hamburger menu toggle ──
-  var menuToggle = document.getElementById('menuToggle');
-  var toolbarCollapsible = document.getElementById('toolbarCollapsible');
-
-  menuToggle.addEventListener('click', function() {
-    menuToggle.classList.toggle('open');
-    toolbarCollapsible.classList.toggle('open');
-  });
-
-  // Close menu when a filter or action button is clicked
-  toolbarCollapsible.addEventListener('click', function(e) {
-    if (e.target.closest('.filter-btn') || e.target.closest('.tool-btn')) {
-      menuToggle.classList.remove('open');
-      toolbarCollapsible.classList.remove('open');
-    }
-  });
-
-  // Close menu on outside click
-  document.addEventListener('click', function(e) {
-    if (!e.target.closest('.toolbar') && toolbarCollapsible.classList.contains('open')) {
-      menuToggle.classList.remove('open');
-      toolbarCollapsible.classList.remove('open');
-    }
-  });
+  // The navbar's hamburger and theme button belong to js/shared.js, which
+  // every other page uses too. The toolbar below it no longer has a hamburger
+  // of its own — with the chips gone it holds only search and zoom, few enough
+  // to wrap on a narrow screen.
 
   // ── Keyboard shortcuts ──
-  document.addEventListener('keydown', function(e) {
+  document.addEventListener('keydown', function (e) {
     if ((e.ctrlKey && e.key === 'f') || (e.key === '/' && document.activeElement.tagName !== 'INPUT')) {
       e.preventDefault();
       document.getElementById('searchInput').focus();
@@ -65,87 +103,20 @@
     }
   });
 
+  // ── Open looking at the middle of the chart ──
+  // The tree is centred inside a container wider than the window, so at
+  // scrollLeft 0 the view sits against its left edge and the VP appears off to
+  // the right. Nudge the scroller to the middle instead. Only on load: doing
+  // this after every expand would yank the chart around under the cursor.
+  (function centreChart() {
+    var vp = document.getElementById('chartViewport');
+    if (!vp) return;
+    requestAnimationFrame(function () {
+      var over = vp.scrollWidth - vp.clientWidth;
+      if (over > 0) vp.scrollLeft = Math.round(over / 2);
+    });
+  })();
+
   // ── Init animations ──
   OC.initAnimations();
-
-  // ── Hierarchy Tree toggle ──
-  var hierarchyToggle = document.getElementById('hierarchyToggle');
-  var hierarchySection = document.getElementById('hierarchySection');
-  var chartViewport = document.getElementById('chartViewport');
-  var legendEl = document.querySelector('.legend');
-  var noResults = document.getElementById('noResults');
-  var toolbarSearch = document.getElementById('toolbarSearch');
-  var toolbarFilters = document.getElementById('toolbarFilters');
-  var toolbarActions = document.getElementById('toolbarActions');
-
-  hierarchyToggle.addEventListener('click', function(e) {
-    e.stopPropagation();
-    var isActive = hierarchyToggle.classList.toggle('active');
-
-    if (isActive) {
-      // Remove active from department filter buttons
-      document.querySelectorAll('.filter-btn[data-filter]').forEach(function(b) { b.classList.remove('active'); });
-      // Show hierarchy, hide org chart
-      chartViewport.style.display = 'none';
-      legendEl.style.display = 'none';
-      noResults.style.display = 'none';
-      hierarchySection.style.display = '';
-      // Recalculate max-height now that section is visible
-      requestAnimationFrame(function() {
-        document.querySelectorAll('.ht-dept:not(.ht-collapsed) .ht-dept-body').forEach(function(body) {
-          body.style.maxHeight = body.scrollHeight + 'px';
-        });
-      });
-    } else {
-      // Show org chart, hide hierarchy
-      hierarchySection.style.display = 'none';
-      chartViewport.style.display = '';
-      legendEl.style.display = '';
-      // Re-activate "Leadership" filter
-      document.querySelectorAll('.filter-btn[data-filter]').forEach(function(b) { b.classList.remove('active'); });
-      document.querySelector('.filter-btn[data-filter="all"]').classList.add('active');
-      // Show all branches in leadership view
-      document.querySelectorAll('.dept-branch').forEach(function(b) { b.style.display = ''; });
-      var tree = document.querySelector('.tree');
-      if (tree) { tree.classList.add('leadership-view'); tree.classList.remove('single-dept-view'); }
-    }
-  });
-
-  // When a department filter is clicked, deactivate hierarchy toggle and restore org chart
-  document.querySelectorAll('.filter-btn[data-filter]').forEach(function(btn) {
-    btn.addEventListener('click', function() {
-      if (hierarchyToggle.classList.contains('active')) {
-        hierarchyToggle.classList.remove('active');
-        hierarchySection.style.display = 'none';
-        chartViewport.style.display = '';
-        legendEl.style.display = '';
-      }
-    });
-  });
-
-  // ── Hierarchy tree: department collapse/expand (mobile) ──
-  OC.toggleHtDept = function(header) {
-    var chevron = header.querySelector('.ht-chevron');
-    if (getComputedStyle(chevron).display === 'none') return;
-
-    var dept = header.closest('.ht-dept');
-    var body = dept.querySelector('.ht-dept-body');
-
-    if (dept.classList.contains('ht-collapsed')) {
-      dept.classList.remove('ht-collapsed');
-      body.style.maxHeight = body.scrollHeight + 'px';
-    } else {
-      dept.classList.add('ht-collapsed');
-      body.style.maxHeight = '0px';
-    }
-  };
-
-  // Note: initial max-height is set when hierarchy section becomes visible
-
-  // Recalculate on resize
-  window.addEventListener('resize', function() {
-    document.querySelectorAll('.ht-dept:not(.ht-collapsed) .ht-dept-body').forEach(function(body) {
-      body.style.maxHeight = body.scrollHeight + 'px';
-    });
-  });
 })();

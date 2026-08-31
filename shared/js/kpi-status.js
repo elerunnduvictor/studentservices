@@ -217,32 +217,96 @@
       bandYellow: r.bandYellow ?? r.band_yellow ?? null,
       bandRed: r.bandRed ?? r.band_red ?? null,
       value: r.value ?? r.current_value ?? null,
+      priority: r.priority ?? null,
       source: r.source || r.data_source || null,
       frequency: r.frequency || r.update_frequency || null,
       ...evaluated,
     };
   }
 
+  /* ── How much a KPI counts ──
+
+     `priority` is the organisation's own judgement of which measures matter,
+     and the scorecard weighs by it. The column is text because no vocabulary
+     has been agreed yet, so this accepts the three shapes it might arrive in
+     and falls back to 1 for anything it cannot read.
+
+     The default of 1 is the important part: while the column is empty every
+     KPI weighs the same and a weighted mean *is* the plain mean, so the
+     scorecard reads exactly as it did before priorities existed. Fill the
+     column in and the same arithmetic starts telling a different, truer story
+     — no switch to throw, no second code path to keep in step.
+
+     ── A convention worth knowing ──
+
+     For numbers this reads SMALLER AS MORE IMPORTANT, the P1/P2/P3 convention:
+     priority 1 outweighs priority 5. If your sheet means the opposite — 5 as
+     "most important" — flip PRIORITY_ASCENDING to false and nothing else needs
+     to change. Named values are unambiguous and are read directly. */
+  const PRIORITY_ASCENDING = true;   // 1 is the highest priority
+  const PRIORITY_SCALE = 5;          // the top of a numeric scale, for inverting
+  const PRIORITY_WORDS = {
+    critical: 5, highest: 5, urgent: 5,
+    high: 4,
+    medium: 3, moderate: 3, normal: 3, standard: 3,
+    low: 2,
+    lowest: 1, minimal: 1, "nice to have": 1,
+  };
+
+  function priorityWeight(row) {
+    const raw = row && row.priority;
+    if (raw == null || String(raw).trim() === "") return 1;
+
+    const text = String(raw).trim().toLowerCase();
+    if (PRIORITY_WORDS[text] !== undefined) return PRIORITY_WORDS[text];
+
+    // "P1", "1", "Priority 2", "3 - high"
+    const m = text.match(/-?\d+(\.\d+)?/);
+    if (m) {
+      const n = Number(m[0]);
+      if (!isFinite(n) || n <= 0) return 1;
+      if (!PRIORITY_ASCENDING) return n;
+      // 1 -> PRIORITY_SCALE, 5 -> 1. Clamped so a stray 9 cannot go negative.
+      return Math.max(1, PRIORITY_SCALE - Math.min(n, PRIORITY_SCALE) + 1);
+    }
+    return 1;   // an unreadable value must not silently count for more or less
+  }
+
+  /* Health = weighted mean of Green 100 / Yellow 50 / Red 0 over KPIs that
+     report a status. Coverage = the weight that is actually reporting, over
+     all the weight being tracked — so a silent high-priority KPI costs more
+     coverage than a silent minor one, which is the point of tracking it.
+
+     `weighted` says whether any row carried a priority at all, so a caller can
+     tell the reader which of the two stories the number is. */
   function rollup(rows) {
     const counts = { Green: 0, Yellow: 0, Red: 0, "Manual Review": 0, "No Data": 0 };
-    let total = 0;
+    let total = 0, scoredWeight = 0, trackedWeight = 0, weighted = false;
     rows.forEach((r) => {
       if (counts[r.status] === undefined) counts[r.status] = 0;
       counts[r.status]++;
-      if (SCORE[r.status] !== undefined) total += SCORE[r.status];
+      const w = priorityWeight(r);
+      if (w !== 1) weighted = true;
+      trackedWeight += w;
+      if (SCORE[r.status] !== undefined) {
+        total += SCORE[r.status] * w;
+        scoredWeight += w;
+      }
     });
     const scored = counts.Green + counts.Yellow + counts.Red;
     return {
       tracked: rows.length,
       scored,
       counts,
-      health: scored ? Math.round(total / scored) : null,
-      coverage: rows.length ? Math.round((100 * scored) / rows.length) : 0,
+      weighted,
+      health: scoredWeight ? Math.round(total / scoredWeight) : null,
+      coverage: trackedWeight ? Math.round((100 * scoredWeight) / trackedWeight) : 0,
     };
   }
 
   window.SS = window.SS || {};
   window.SS.kpiStatus = {
-    parseBand, inferDirection, reconcile, classify, evaluate, decorate, rollup, slug, SCORE,
+    parseBand, inferDirection, reconcile, classify, evaluate, decorate, rollup,
+    priorityWeight, slug, SCORE,
   };
 })();

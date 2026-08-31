@@ -693,3 +693,160 @@
 /* Partners get no spotlight, so the link would otherwise sit against the
    subtitle with nothing between them. */
 .sc-spotlight[hidden] + .sc-hero-link { margin-top: 22px; }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   OUTCOMES
+
+   The two questions the scorecard exists to answer, above the departments that
+   answer "who". Each outcome is a band across the page with its own score, and
+   its three parts sit inside it as a row — the nesting is the point, so the
+   parts are visibly *within* the band rather than another grid beside it.
+   ══════════════════════════════════════════════════════════════════════════ */
+.sc-outcomes { margin: 30px 0 8px; }
+
+.sc-outcomes-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.sc-outcomes-label {
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+/* Which arithmetic produced these numbers. Quiet, but never absent: "83" means
+   a different thing once priorities are filled in. */
+.sc-outcomes-note {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  font-style: italic;
+}
+
+.sc-outcome {
+  border: 1px solid var(--border-subtle, var(--border));
+  border-radius: 16px;
+  padding: clamp(18px, 2.2vw, 26px);
+  background: var(--bg-card);
+  margin-bottom: 18px;
+}
+.sc-outcome:last-child { margin-bottom: 0; }
+
+.sc-outcome-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.sc-outcome-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(1.3rem, 2.2vw, 1.7rem);
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.2;
+}
+.sc-outcome-blurb {
+  font-size: 0.86rem;
+  color: var(--text-dim);
+  margin-top: 3px;
+}
+.sc-outcome-figures { text-align: right; }
+.sc-outcome-score {
+  display: block;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(2rem, 3.6vw, 2.9rem);
+  font-weight: 600;
+  line-height: 1;
+  color: var(--sc-accent);
+}
+.sc-outcome-score small {
+  font-size: 0.36em;
+  color: var(--text-dim);
+  font-weight: 400;
+}
+.sc-outcome-score.is-empty { color: var(--text-dim); }
+.sc-outcome-cov {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+
+/* ── the three parts ── */
+.sc-parts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: clamp(12px, 1.4vw, 18px);
+  margin-top: 16px;
+}
+.sc-part {
+  border: 1px solid var(--border-subtle, var(--border));
+  border-radius: 12px;
+  padding: 14px 15px 13px;
+  background: var(--bg);
+}
+/* A part nobody measures is shown, not omitted: a missing card would read as
+   "covered", which is the opposite of the truth. */
+.sc-part.is-empty {
+  border-style: dashed;
+  background: transparent;
+}
+.sc-part.is-empty .sc-part-name,
+.sc-part.is-empty .sc-part-note { opacity: 0.6; }
+
+.sc-part-name {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.sc-part-score {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.9rem;
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--text);
+  margin: 6px 0 2px;
+}
+.sc-part-score small { font-size: 0.42em; color: var(--text-dim); font-weight: 400; }
+.sc-part-score.is-empty { color: var(--text-dim); }
+.sc-part-meta { font-size: 0.74rem; color: var(--text-dim); margin-bottom: 9px; }
+.sc-part-note {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  line-height: 1.45;
+  margin-top: 9px;
+}
+
+/* ── the departments, now clearly the second half of the page ── */
+.sc-kids-head {
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin: 34px 0 14px;
+}
+
+@media (max-width: 700px) {
+  .sc-outcome-head { align-items: flex-start; }
+  .sc-outcome-figures { text-align: left; }
+}
+
+/* The three student outcomes are phrased as questions, and they are set the
+   way the page has always set them — the same serif italic at the same size
+   the retired "Sort by student outcome" panel used, so moving them up here
+   changed where they live and nothing about how they read. */
+.sc-part-note--q {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 1rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+  margin-top: 12px;
+}

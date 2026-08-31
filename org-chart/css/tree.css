@@ -112,35 +112,54 @@
   transform: translateX(-50%);
 }
 
-/* ── Leadership view ── */
-/* Show senior managers (level 3) under directors, hide everything below */
-.tree.leadership-view .dept-branch > ul > li > ul { display: none !important; }
-/* Hide non-level-3 direct children of directors */
-.tree.leadership-view .dept-branch > ul > li:not([data-lvl="3"]) { display: none !important; }
-/* Suppress dangling half-bar when sole visible child has hidden siblings */
-.tree.leadership-view .dept-branch > ul:has(> li[data-lvl]:not([data-lvl="3"])) > li[data-lvl="3"]::after { display: none !important; }
+/* ══════════════════════════════════════════════════════════
+   COLLAPSED NODES
 
-/* Tight spacing between directors */
-.tree.leadership-view > ul > li {
-  padding-left: 8px !important;
-  padding-right: 8px !important;
-  --extra-pl: 0px !important;
-  --extra-pr: 0px !important;
+   Replaces the old `leadership-view` and `single-dept-view` modes. Those hid
+   parts of the tree with `display:none !important` on whole classes of node,
+   which no per-card control could have overridden. State now lives on each
+   node — see org-chart/js/expand.js for why there are two flags.
+   ══════════════════════════════════════════════════════════ */
+
+/* Line reports: the row below the card. */
+.tree.is-collapsed > ul,
+.tree li.is-collapsed > ul { display: none; }
+
+/* Project managers: the flanks. Child combinator throughout, so collapsing a
+   director hides its own PMs and not those of a card inside it. */
+.tree.pm-collapsed > .tile-with-assistants > .assistant-group,
+.tree li.pm-collapsed > .tile-with-assistants > .assistant-group { display: none; }
+
+/* Room for the flanks, only while they are showing. This used to be inline
+   padding written by the renderer, which reserved 208px whether or not a PM
+   was there to stand in it. */
+/* 264px = a 220px card + its 40px connector + 4px of slack. It was 208px,
+   which never actually fitted: the flank hung 52px past the space reserved
+   for it. That matters more than it looks, because an .assistant-group is
+   absolutely positioned and so contributes nothing to the container's width —
+   anything hanging past this padding hangs outside the scrollable area
+   entirely, where no amount of panning reaches it. */
+.tree li.has-pm-left:not(.pm-collapsed) { padding-left: 264px; --extra-pl: 264px; }
+.tree li.has-pm-right:not(.pm-collapsed) { padding-right: 264px; --extra-pr: 264px; }
+
+/* A card with one visible child would otherwise draw half a connector bar out
+   towards nothing. */
+.tree li:not(.is-collapsed) > ul:has(> li:only-child) > li::after { display: none; }
+
+/* ── the reveal ──
+   display:none cannot be transitioned, so the motion is on the cards that
+   just appeared rather than on the box that holds them. */
+@keyframes ocReveal {
+  from { opacity: 0; transform: translateY(-8px) scale(0.97); }
+  to   { opacity: 1; transform: none; }
 }
-
-/* Leadership view shows only senior managers — hide PMs (both flanking and inline) */
-.tree.leadership-view .pm-branch { display: none !important; }
-.tree.leadership-view .assistant-group { display: none !important; }
-/* When hiding PMs leaves a single SM child, suppress its orphan half-bar */
-.tree.leadership-view .dept-branch > ul:not(:has(> li:not(.pm-branch) ~ li:not(.pm-branch))) > li:not(.pm-branch)::after {
-  display: none !important;
+.tile.is-revealing {
+  animation: ocReveal 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--reveal-delay, 0ms);
 }
-
-/* Single-dept filter on the main org chart: hide the orphan bar that
-   would otherwise extend from the lone visible dept-branch toward the
-   hidden sibling depts. Scoped to .dept-branch so it doesn't strip the
-   connector bar between a director's children on the dept pages. */
-.tree.single-dept-view > ul > li.dept-branch::after { display: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  .tile.is-revealing { animation: none; }
+}
 
 
 .tree .dept-branch .spacer-connector {
@@ -235,6 +254,27 @@
   top: 0;
   transform: none;
   z-index: 15;
+}
+
+/* A card in the LEFT group has to open rightwards.
+   That group hangs off `right: 100%`, so its right edge is pinned to the
+   parent's left edge and anything that gets wider grows away to the left.
+   At 220px that is fine; opening a card to 680px put Victor Elerunndu's
+   detail panel at x -461, which is not merely off screen but outside the
+   scrolling container, so no amount of panning reached it — while Brad
+   Lester, an ordinary child, opened rightwards and stayed put.
+
+   Shifting it by the difference between the two widths pins its *left* edge
+   instead, so it opens across the chart like every other card. It lies over
+   the parent while open, which the group's z-index already accounts for.
+   Shifted with `left`, not `transform`. Every card carries
+   `.animate-in`, whose entrance animation is `forwards` — so it holds its last
+   keyframe, `transform: translateY(0) scale(1)`, for the life of the page, and
+   a filled animation outranks a plain declaration. A transform here was simply
+   ignored. `.tile` is already position:relative, so `left` does the same job
+   with nothing to override it. */
+.assistant-group-left .tile.expanded {
+  left: calc(680px - var(--card-w));
 }
 
 /* Assistant tiles share base tile sizing; only color accent differs */

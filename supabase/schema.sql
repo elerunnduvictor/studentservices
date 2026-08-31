@@ -254,6 +254,13 @@ create table if not exists public.kpis (
   data_source       text,
   update_frequency  text,
   update_date       date,
+  -- How much this KPI counts towards its outcome's score. Text, not a number,
+  -- because the organisation has not settled on a vocabulary yet: it accepts
+  -- "1".."5", "High"/"Medium"/"Low", "P1", or anything else, and
+  -- shared/js/kpi-status.js turns whatever is here into a weight. Empty means
+  -- "weigh like everything else", so an unfilled column scores exactly as the
+  -- scorecard did before it existed.
+  priority          text,
   direction_hint    text,           -- sheet's Direction column (reference only)
   green_cutoff      text,           -- sheet's helper column (reference only)
   red_cutoff        text,           -- sheet's helper column (reference only)
@@ -261,6 +268,10 @@ create table if not exists public.kpis (
   updated_at        timestamptz not null default now(),
   updated_by        text
 );
+-- Existing databases were created before `priority`; this file is run against
+-- them as well as fresh ones, so the column is added rather than assumed.
+alter table public.kpis add column if not exists priority text;
+
 create index if not exists kpis_sort_idx on public.kpis (sort_order, id);
 create index if not exists kpis_tracking_idx on public.kpis (tracking_status);
 create index if not exists kpis_employee_idx on public.kpis (lower(employee));
@@ -399,6 +410,7 @@ create or replace view public.v_hub_kpis as
          k.kpi_category as category, k.category_type as type,
          k.band_green as "bandGreen", k.band_yellow as "bandYellow",
          k.band_red as "bandRed", k.current_value as value,
+         k.priority,
          k.data_source as source, k.update_frequency as frequency,
          e.sub_department as "subDept"
   from public.kpis k

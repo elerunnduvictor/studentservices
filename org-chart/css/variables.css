@@ -36,6 +36,31 @@
   --page-accent: #6B9130;
   --page-accent-r: 107,145,48;
 
+  /* ── One card size, for every card ──
+     Cards used to size themselves to their content and came out at four
+     different heights — 199, 213, 217 and 231px — depending on whether the
+     name wrapped to a second line and whether the title did. In a tree where
+     cards sit side by side that reads as sloppiness, not information.
+
+     So the box is fixed and the content fits it, rather than the other way
+     round: the name always occupies two lines' worth of space and the title
+     always two, whether or not they use them. A card with a short name and a
+     short title now has empty space where a longer one has text, and the row
+     lines up.
+
+     The height also has to hold the +/- handle clear of the FTE badge. At 205px
+     the badge ran to 184px and the handle began at 176 — an 8px overlap. The
+     badge is the last thing in the header and the handle is pinned to the
+     bottom, so the only thing that separates them is the card being tall
+     enough. 224px gave the clearance but made every row taller than it had
+     been, and three rows of that pushed the opening view off the bottom of the
+     screen; the avatar, the gaps and the badge margin gave 12px back. At 212px
+     the gap holds and the card sits inside the 199-231px range these used to
+     occupy, so the chart is no taller than before. Anything longer than two lines is clamped with an ellipsis — the
+     full text is in the card's expanded body and in the modal. */
+  --card-w: 220px;
+  --card-h: 212px;
+
   /* ── Brand Accents ── */
   --gold: #FFC328;
   --gold-r: 255,195,40;

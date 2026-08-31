@@ -371,6 +371,19 @@ const kpiMatrixSheet = (key, label, department) => ({
   ],
 });
 
+/* What a KPI is worth when its outcome is scored. 1 is the highest, matching
+   the P1/P2/P3 convention that shared/js/kpi-status.js reads. A blank weighs
+   the same as everything else, so a half-filled column still scores sensibly —
+   the rows nobody has judged yet simply sit at the middle of the scale rather
+   than dropping out. */
+const PRIORITY = [
+  { value: "1", label: "1 — Critical", tone: "red" },
+  { value: "2", label: "2 — High",     tone: "yellow" },
+  { value: "3", label: "3 — Medium" },
+  { value: "4", label: "4 — Low" },
+  { value: "5", label: "5 — Minor",    tone: "grey" },
+];
+
 const TRACKING = [
   { value: "Tracking",     label: "Tracking",     tone: "green" },
   { value: "Not Tracking", label: "Not Tracking", tone: "grey" },
@@ -638,6 +651,9 @@ window.SS.WORKBOOKS = {
           help: "The anchor band — green and red sit beyond its two ends." },
         { key: "band_red",          label: "Red",            type: "text",   width: 120, tone: "red",
           help: 'e.g. "Below 70%", "> 7 days"' },
+        { key: "priority",          label: "Priority",       type: "select", width: 110, options: PRIORITY,
+          help: "How much this KPI counts towards its outcome's score. 1 is the highest. " +
+                "Leave blank and it weighs the same as everything else." },
         { key: "tracking_status",   label: "Tracking",       type: "select", width: 130, options: TRACKING,
           help: "Only Tracking rows appear on the hub's KPI Scorecard." },
         { key: "current_value",     label: "Current Value",  type: "text",   width: 120,

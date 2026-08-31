@@ -148,8 +148,16 @@
   padding: clamp(48px, 8vw, 80px) clamp(16px, 4vw, 48px);
 }
 .section-inner {
-  max-width: 1100px; margin: 0 auto;
+  /* 1100px was a reading measure applied to the whole page, which left a third
+     of a wide screen empty either side of content that wanted the room — the
+     org chart, the dashboard and now the KPI and OKR cards. Matches the
+     scorecard's own container. Prose that genuinely needs a short line caps
+     itself below rather than making every section narrow. */
+  max-width: 1720px; margin: 0 auto;
 }
+
+/* The one thing on the page that is a paragraph rather than a layout. */
+.mission-card .mission-text { max-width: 78ch; }
 .section-label {
   font-size: 0.7rem; font-weight: 500;
   letter-spacing: 0.2em; text-transform: uppercase;
@@ -759,3 +767,245 @@
 [data-reveal].revealed {
   opacity: 1; transform: none;
 }
+
+
+/* ══════════════════════════════════════════════════════════
+   DEPARTMENT KPIs & OKRs
+
+   Card layouts borrowed from the two pages these summarise, so a department's
+   numbers look the same here as they do there: a ring, a couple of figures and
+   a status spectrum per card.
+   ══════════════════════════════════════════════════════════ */
+
+/* ── the section's headline figures ── */
+.dg-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(28px, 5vw, 64px);
+  margin-bottom: 26px;
+}
+.dg-fig-val {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(2rem, 3.4vw, 2.8rem);
+  font-weight: 600;
+  line-height: 1;
+  color: var(--text);
+}
+.dg-fig-val small {
+  font-size: 0.42em;
+  color: var(--text-dim);
+  font-weight: 400;
+  margin-left: 1px;
+}
+.dg-fig-label {
+  font-size: 0.7rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-top: 6px;
+}
+
+/* ── the cards ── */
+/* auto-fit, not auto-fill: a department with one sub-department or one
+   objective has one card, and auto-fill would hold the empty columns open and
+   leave it sitting in a corner of an otherwise blank row. auto-fit collapses
+   the empty tracks so the card takes the width instead. */
+.dg-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: clamp(14px, 1.6vw, 22px);
+  align-items: start;
+}
+.dg-cards--okr { grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); }
+
+/* Which means a lone objective card can end up 1700px wide, where a single
+   column of key results would be a very long thin list. Let them flow into as
+   many columns as the card can hold. */
+.dg-card--okr .dg-krs {
+  column-width: 400px;
+  column-gap: clamp(24px, 3vw, 44px);
+}
+.dg-card--okr .dg-kr {
+  break-inside: avoid;
+  -webkit-column-break-inside: avoid;
+}
+/* The first item in each column must not inherit the spacing that separates
+   siblings, or the columns start at different heights. */
+.dg-card--okr .dg-kr:first-child { margin-top: 0; }
+
+.dg-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--dg-accent, var(--dept-color));
+  border-radius: 12px;
+  padding: 18px 18px 16px;
+  transition: box-shadow 0.25s, transform 0.25s;
+}
+.dg-card:hover { box-shadow: var(--shadow-hover, 0 8px 26px rgba(0,0,0,.08)); }
+
+.dg-card-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+.dg-card-eyebrow {
+  font-size: 0.6rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.dg-card-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.12rem;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--text);
+  margin-top: 2px;
+}
+
+.dg-ring { flex-shrink: 0; }
+.dg-ring-val {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.05rem;
+  font-weight: 600;
+  fill: var(--text);
+}
+
+.dg-card-figs {
+  display: flex;
+  gap: 18px;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+.dg-card-figs b { color: var(--text); font-weight: 600; }
+
+/* One bar, segments in proportion — the shape of the thing before any of the
+   numbers are read. */
+.dg-spectrum {
+  display: flex;
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--ice-gray);
+}
+.dg-spectrum i { display: block; }
+
+.dg-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 14px;
+  margin-top: 10px;
+  font-size: 0.66rem;
+  color: var(--text-muted);
+}
+.dg-legend-item { display: inline-flex; align-items: center; gap: 6px; }
+.dg-legend-item b { color: var(--text); font-weight: 600; }
+.dg-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+/* ── needs attention ── */
+.dg-att-wrap { margin-top: 26px; }
+.dg-att-label {
+  font-size: 0.68rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 10px;
+}
+.dg-att-list { list-style: none; padding: 0; margin: 0; }
+.dg-att {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 11px 14px;
+  border-radius: 8px;
+  background: var(--bg-elevated);
+  margin-bottom: 7px;
+}
+.dg-att-chip {
+  font-size: 0.64rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  padding: 3px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.dg-att-chip--red    { background: rgba(192,57,43,.12);  color: #C0392B; }
+.dg-att-chip--yellow { background: rgba(216,154,30,.14); color: #A9761A; }
+.dg-att-chip--silent { background: var(--ice-gray);      color: var(--text-dim); }
+.dg-att-measure { flex: 1; font-size: 0.82rem; color: var(--text); line-height: 1.4; }
+.dg-att-owner {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ── key results inside an objective card ── */
+.dg-krs {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0 0;
+  border-top: 1px solid var(--border);
+  padding-top: 14px;
+}
+.dg-kr + .dg-kr { margin-top: 13px; }
+.dg-kr-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 5px;
+}
+.dg-kr-name { font-size: 0.74rem; line-height: 1.4; color: var(--text-muted); }
+.dg-kr-status {
+  font-size: 0.6rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.dg-kr-track {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--ice-gray);
+  overflow: hidden;
+}
+.dg-kr-fill { height: 100%; border-radius: 3px; }
+.dg-kr-figures {
+  display: flex;
+  gap: 14px;
+  margin-top: 4px;
+  font-size: 0.64rem;
+  color: var(--text-dim);
+}
+.dg-kr-figures b { color: var(--text); }
+
+.dg-more {
+  display: inline-block;
+  margin-top: 22px;
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.dg-more:hover { color: var(--text); }
+
+@media (max-width: 620px) {
+  .dg-cards, .dg-cards--okr { grid-template-columns: 1fr; }
+  .dg-att { flex-wrap: wrap; gap: 8px; }
+  .dg-att-owner { width: 100%; }
+}
+
+/* Shown when a department genuinely tracks nothing — and, just as importantly,
+   when a matching bug means nothing was found. The section stays put either
+   way, so a failure cannot disguise itself as an empty department. */
+.dg-empty {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  padding: 20px 0;
+}
+.dg-empty .dg-more { margin-top: 0; margin-left: 6px; }

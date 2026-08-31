@@ -40,7 +40,8 @@
      definitions against its current value — never read from the spreadsheet's
      "Performance Status" column, whose formula is wrong. "Manual Review" means
      a value exists but the KPI defines no thresholds to score it against. */
-  var SCORE = { Green: 100, Yellow: 50, Red: 0 };
+  /* The Green/Yellow/Red scale now lives with the rollup that applies it,
+     in shared/js/kpi-status.js. */
   var STATUS = {
     Green:           { cls: "green",  glyph: "✓", label: "Green" },
     Yellow:          { cls: "yellow", glyph: "▲", label: "Yellow" },
@@ -56,6 +57,30 @@
     "Manual Review": "var(--status-manual)",
     "No Data": "var(--status-nodata)"
   };
+
+  /* The six category types in the order this page reads them: the three
+     operational ones, then the three student ones — the same two groups the
+     outcome sections are built from. Sorting alphabetically interleaved them
+     (Completion, Quality, Speed, Student Autonomy...) so the lens gave no clue
+     that the six are really two sets of three.
+
+     Cost is listed although nothing is filed against it yet: keeping its place
+     here means its first KPI lands in the right position rather than being
+     appended wherever it happens to sort. */
+  var TYPE_ORDER = [
+    "Quality", "Speed", "Cost",
+    "Completion", "Student Autonomy", "Student Satisfaction",
+  ];
+
+  /* What the data calls a type, and what people call it. The "Student " prefix
+     is what the database matches on and is redundant on screen — under a
+     heading that already says Student Outcomes it is said twice. Display only:
+     every filter and lookup still uses the full value. */
+  var TYPE_LABEL = {
+    "Student Autonomy": "Autonomy",
+    "Student Satisfaction": "Satisfaction",
+  };
+  function typeLabel(t) { return TYPE_LABEL[t] || t; }
 
   var AREAS = ["Autonomy", "Completion", "Satisfaction"];
   var AREA_QUESTION = {
@@ -109,23 +134,13 @@
   /* Health = mean(Green 100 / Yellow 50 / Red 0) over KPIs that report a
      status. Coverage = those scored KPIs / all tracked KPIs in scope. Keeping
      them separate stops a unit from looking healthy by reporting only wins. */
-  function rollup(rows) {
-    var counts = { Green: 0, Yellow: 0, Red: 0, "No Data": 0 };
-    var total = 0;
-    rows.forEach(function (r) {
-      if (counts[r.status] === undefined) counts[r.status] = 0;
-      counts[r.status]++;
-      total += SCORE[r.status] === undefined ? 0 : SCORE[r.status];
-    });
-    var scored = counts.Green + counts.Yellow + counts.Red;
-    return {
-      tracked: rows.length,
-      scored: scored,
-      counts: counts,
-      health: scored ? Math.round(total / scored) : null,
-      coverage: rows.length ? Math.round((100 * scored) / rows.length) : 0
-    };
-  }
+  /* Delegated to shared/js/kpi-status.js rather than computed here, so this
+     page, the department pages and the PM hub's live preview cannot drift
+     apart — and so the priority weighting has exactly one definition.
+
+     While the priority column is empty every weight is 1 and a weighted mean
+     is the plain mean, so this reads exactly as it always has. */
+  function rollup(rows) { return window.SS.kpiStatus.rollup(rows); }
 
   /* `displayValue` is the current value already lifted onto the same scale as
      the bands (percentages as 0–100), computed at build time. */
@@ -201,13 +216,167 @@
   }
 
   function lensBar(rows) {
-    var types = unique(KPIS.map(function (r) { return r.type; })).filter(Boolean).sort();
+    var present = unique(KPIS.map(function (r) { return r.type; })).filter(Boolean);
+    var ordered = TYPE_ORDER.filter(function (t) { return present.indexOf(t) >= 0; });
+    // Anything the data carries that TYPE_ORDER has not heard of goes on the
+    // end rather than disappearing — a new category type must still be usable
+    // before anyone edits this file.
+    var extra = present.filter(function (t) { return TYPE_ORDER.indexOf(t) < 0; }).sort();
+    var types = ordered.concat(extra);
+
     var chips = ["All"].concat(types).map(function (t) {
       var on = state.lens === t;
+      // The chip shows the short name; `data-lens` keeps the value the rows
+      // are actually filtered on.
       return '<button type="button" class="sc-chip-btn' + (on ? " is-on" : "") + '" data-lens="' + esc(t) + '"' +
-        (on ? ' aria-current="true"' : "") + ">" + esc(t) + "</button>";
+        (on ? ' aria-current="true"' : "") + ">" + esc(typeLabel(t)) + "</button>";
     }).join("");
     return '<div class="sc-lens"><span class="sc-lens-label">Lens</span>' + chips + "</div>";
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     OUTCOMES — the scorecard the organisation actually keeps
+
+     Departments answer "who is responsible". Outcomes answer "is it working",
+     and that is the question the scorecard exists for. Every KPI is filed
+     under one of two, and under one of three parts within it:
+
+       Operational Outcomes — Speed, Quality, Cost      (how the work runs)
+       Student Outcomes     — Autonomy, Satisfaction,
+                              Completion                (what changes for students)
+
+     Each part is scored, each outcome is the roll-up of its parts, and the two
+     together are the organisation's health index at the top of the page. No
+     separate arithmetic for the total: it is the same weighted rollup over all
+     rows, so the parts cannot add up to something the headline disagrees with.
+
+     A part with nothing under it still appears, greyed, rather than being left
+     out. Cost is that case today — no KPI is filed against it — and a missing
+     card would read as "we have that covered" rather than "nobody measures
+     this", which is the more useful thing to know.
+     ══════════════════════════════════════════════════════════ */
+  var OUTCOMES = [
+    {
+      key: "operational",
+      name: "Operational Outcomes",
+      blurb: "How well the work runs.",
+      parts: [
+        { type: "Speed",   note: "Promptness of execution." },
+        { type: "Quality", note: "Accuracy and satisfaction." },
+        { type: "Cost",    note: "Cost control and scalability." },
+      ],
+    },
+    {
+      key: "student",
+      name: "Student Outcomes",
+      blurb: "What changes for students.",
+      /* `area` rather than a note: these three already have wording, in
+         AREA_QUESTION, which the student-outcome section further down the page
+         has always used. Referenced rather than copied so the two cannot come
+         to describe the same measure differently. */
+      parts: [
+        { type: "Student Autonomy",     area: "Autonomy" },
+        { type: "Student Satisfaction", area: "Satisfaction" },
+        { type: "Completion",           area: "Completion" },
+      ],
+    },
+  ];
+
+  /* Rows are filed by `category`, but that column is not always populated, so
+     the type is the fallback — and the type is what defines a part anyway. A
+     row that matches neither is counted in the page total and in its
+     department, and simply appears under no outcome; inventing a home for it
+     would be worse than showing it is unfiled. */
+  function partRows(rows, type) {
+    var want = String(type).toLowerCase();
+    return rows.filter(function (r) { return String(r.type || "").toLowerCase() === want; });
+  }
+  function outcomeRows(rows, outcome) {
+    var byCategory = rows.filter(function (r) {
+      return String(r.category || "").toLowerCase() === outcome.name.toLowerCase();
+    });
+    if (byCategory.length) return byCategory;
+    return rows.filter(function (r) {
+      return outcome.parts.some(function (p) {
+        return String(r.type || "").toLowerCase() === p.type.toLowerCase();
+      });
+    });
+  }
+
+  /* A small ring for a part, so six of them read as one family rather than six
+     numbers. Same geometry as the department tiles use. */
+  function partCard(part, rows) {
+    var roll = rollup(rows);
+    var has = roll.tracked > 0;
+    var score = roll.health === null
+      ? '<div class="sc-part-score is-empty">—</div>'
+      : '<div class="sc-part-score">' + roll.health + "<small>/100</small></div>";
+    var meta = has
+      ? roll.tracked + " tracked · " + roll.coverage + "% coverage"
+      : "Not measured yet";
+    // A question where the organisation has phrased one, otherwise the plain
+    // description of what the part covers.
+    var question = part.area ? AREA_QUESTION[part.area] : null;
+    var caption = question
+      ? '<div class="sc-part-note sc-part-note--q">&ldquo;' + esc(question) + '&rdquo;</div>'
+      : '<div class="sc-part-note">' + esc(part.note || "") + "</div>";
+
+    return '<div class="sc-part' + (has ? "" : " is-empty") + '">' +
+      '<div class="sc-part-name">' + esc(typeLabel(part.type)) + "</div>" +
+      score +
+      '<div class="sc-part-meta">' + esc(meta) + "</div>" +
+      (has ? spectrum(roll.counts, true) : "") +
+      caption +
+    "</div>";
+  }
+
+  function outcomeCard(outcome, rows) {
+    var mine = outcomeRows(rows, outcome);
+    var roll = rollup(mine);
+    // Sorted by TYPE_ORDER rather than written in order, so the cards and the
+    // lens chips above them cannot end up in two different sequences.
+    var parts = outcome.parts.slice().sort(function (a, b) {
+      return TYPE_ORDER.indexOf(a.type) - TYPE_ORDER.indexOf(b.type);
+    }).map(function (p) {
+      return partCard(p, partRows(mine, p.type));
+    }).join("");
+
+    var score = roll.health === null
+      ? '<span class="sc-outcome-score is-empty">—</span>'
+      : '<span class="sc-outcome-score">' + roll.health + "<small>/100</small></span>";
+
+    return '<section class="sc-outcome" data-outcome="' + outcome.key + '">' +
+      '<div class="sc-outcome-head">' +
+        '<div>' +
+          '<div class="sc-outcome-name">' + esc(outcome.name) + "</div>" +
+          '<div class="sc-outcome-blurb">' + esc(outcome.blurb) + "</div>" +
+        "</div>" +
+        '<div class="sc-outcome-figures">' +
+          score +
+          '<span class="sc-outcome-cov">' + roll.coverage + "% coverage · " +
+            roll.tracked + " tracked</span>" +
+        "</div>" +
+      "</div>" +
+      spectrum(roll.counts) +
+      '<div class="sc-parts">' + parts + "</div>" +
+    "</section>";
+  }
+
+  /* The two sections, plus a line saying which arithmetic produced them —
+     because "83" means something different once priorities are filled in, and
+     a reader has no other way to tell which they are looking at. */
+  function outcomes(rows) {
+    var weighted = rollup(rows).weighted;
+    var note = weighted
+      ? "Weighted by each KPI's priority."
+      : "Every KPI counts equally — no priorities set yet.";
+    return '<div class="sc-outcomes">' +
+      '<div class="sc-outcomes-head">' +
+        '<div class="sc-outcomes-label">The scorecard</div>' +
+        '<div class="sc-outcomes-note">' + esc(note) + "</div>" +
+      "</div>" +
+      OUTCOMES.map(function (o) { return outcomeCard(o, rows); }).join("") +
+    "</div>";
   }
 
   function head(eyebrow, title, meta) {
@@ -261,6 +430,12 @@
    * is a roll-up, which empties the list and drops the section: correct, since
    * a partner is not meant to reach a single KPI at all. For a manager it
    * leaves their own reporting line and quietly omits other branches. */
+  /* `showOwner` names the person a flagged KPI belongs to. It exists so that
+     the name can be withheld, but all three callers passed a literal `true`,
+     so a partner — who cannot open the directory, and whose drill-down into a
+     person is locked two functions below — was still shown four individuals by
+     name beside their red and yellow measures. Wired to the same flag that
+     does the locking. */
   function watchlist(rows, showOwner) {
     rows = rows.filter(function (r) { return !r.restricted; });
     var flagged = rows.filter(function (r) { return r.status === "Red" || r.status === "Yellow"; })
@@ -390,7 +565,7 @@
       runwayHtml + bands + bandNote +
       '<div class="sc-meta-grid">' +
         '<div class="sc-meta"><b>Owner</b><span>' + esc(r.employee) + (r.role ? " — " + esc(r.role) : "") + "</span></div>" +
-        '<div class="sc-meta"><b>Category</b><span>' + esc(r.category || "—") + (r.type ? " · " + esc(r.type) : "") + "</span></div>" +
+        '<div class="sc-meta"><b>Category</b><span>' + esc(r.category || "—") + (r.type ? " · " + esc(typeLabel(r.type)) : "") + "</span></div>" +
         '<div class="sc-meta"><b>Direction</b><span>' +
           (r.direction === "higher" ? "Higher is better ↑"
             : r.direction === "lower" ? "Lower is better ↓" : "—") + "</span></div>" +
@@ -537,11 +712,26 @@
       });
     }).join("");
 
+    /* Departments are the second half of this page now, not the first, and a
+       partner does not get them at all.
+
+       The outcome sections above already answer what a partner is here for —
+       is the organisation delivering — and they answer it across the whole of
+       Student Services rather than one department at a time. A grid of
+       locked-open department tiles underneath added no fact they could act on,
+       only the shape of an internal structure and an invitation to click into
+       eight doors that do not open. */
+    var showDepts = canOpenBelowDept();
+
     return head("Student Services", "The whole organization",
         roll.tracked + " tracked KPIs across " + depts.length + " departments") +
       lensBar(rows) + gauges(roll) + spectrum(roll.counts) + legend(roll.counts) +
-      '<div class="sc-kids">' + kids + "</div>" +
-      watchlist(rows, true);
+      outcomes(rows) +
+      (showDepts
+        ? '<div class="sc-kids-head">By department</div>' +
+          '<div class="sc-kids">' + kids + "</div>"
+        : "") +
+      watchlist(rows, canOpenPeople());
   }
 
   function renderDept(deptSlug) {
@@ -569,7 +759,7 @@
         roll.tracked + " tracked KPIs · " + subs.length + " sub-departments") +
       lensBar(rows) + gauges(roll) + spectrum(roll.counts) + legend(roll.counts) +
       (kids ? '<div class="sc-kids">' + kids + "</div>" : '<div class="sc-empty">No KPIs match this lens.</div>') +
-      watchlist(rows, true);
+      watchlist(rows, canOpenPeople());
   }
 
   function renderSub(deptSlug, subSlug) {
@@ -594,7 +784,7 @@
         roll.tracked + " tracked KPIs · " + people.length + " stakeholder" + (people.length === 1 ? "" : "s")) +
       lensBar(rows) + gauges(roll) + spectrum(roll.counts) + legend(roll.counts) +
       (kids ? '<div class="sc-kids">' + kids + "</div>" : '<div class="sc-empty">No KPIs match this lens.</div>') +
-      watchlist(rows, true);
+      watchlist(rows, canOpenPeople());
   }
 
   function renderPerson(deptSlug, subSlug, personSlug) {
@@ -627,50 +817,11 @@
 
   /* ── student-outcome cards (root only) ────────────────────────────────── */
 
-  function renderAreas() {
-    var panel = document.getElementById("scAreasPanel");
-    if (state.path.length) { panel.hidden = true; return; }
-    panel.hidden = false;
-
-    var C = 2 * Math.PI * 26;
-    var totalArea = KPIS.filter(function (r) { return r.area; }).length;
-    document.getElementById("scAreaCount").textContent =
-      totalArea + " of " + KPIS.length + " tracked KPIs are student-outcome measures";
-
-    document.getElementById("scAreas").innerHTML = AREAS.map(function (a) {
-      var rows = KPIS.filter(function (r) { return r.area === a; });
-      var roll = rollup(rows);
-      var depts = unique(rows.map(function (r) { return r.dept; })).length;
-      var dash = (C * (roll.health || 0)) / 100;
-      var chips = SPECTRUM_ORDER.filter(function (s) { return roll.counts[s]; }).map(function (s) {
-        return statusChip(s, roll.counts[s] + " " + (s === "No Data" ? "Silent" : STATUS[s].label));
-      }).join("");
-
-      return '<button type="button" class="sc-area" data-goto="#/area/' + a.toLowerCase() + '">' +
-        '<span class="sc-kid-arrow" aria-hidden="true">›</span>' +
-        '<div class="sc-area-top">' +
-          '<svg width="66" height="66" viewBox="0 0 66 66" role="img" aria-label="' + a + " health " +
-            (roll.health === null ? "not yet reported" : roll.health + " of 100") + '">' +
-            '<circle class="sc-ring-track" cx="33" cy="33" r="26" fill="none" stroke-width="7"/>' +
-            '<circle class="sc-ring-health" cx="33" cy="33" r="26" fill="none" stroke-width="7" stroke-linecap="round" ' +
-            'stroke-dasharray="' + dash.toFixed(1) + " " + C.toFixed(1) + '" transform="rotate(-90 33 33)"/>' +
-            '<text class="sc-ring-val" x="33" y="40" text-anchor="middle" font-size="19">' +
-              (roll.health === null ? "—" : roll.health) + "</text>" +
-          "</svg>" +
-          "<div>" +
-            '<div class="sc-head-eyebrow">Student outcome</div>' +
-            '<div class="sc-area-name">' + a + "</div>" +
-          "</div>" +
-        "</div>" +
-        '<p class="sc-area-q">“' + esc(AREA_QUESTION[a]) + "”</p>" +
-        spectrum(roll.counts, true) +
-        '<div class="sc-area-meta"><span><b>' + roll.tracked + "</b> tracked KPIs</span>" +
-          "<span>Coverage <b>" + roll.coverage + "%</b></span>" +
-          "<span><b>" + depts + "</b> department" + (depts === 1 ? "" : "s") + "</span></div>" +
-        '<div class="sc-area-chips">' + chips + "</div>" +
-        "</button>";
-    }).join("");
-  }
+  /* renderAreas() filled the "Sort by student outcome" panel that stood
+     below the departments. Both are gone: those three areas are half of
+     the scorecard at the top of the page now. renderArea() below is kept —
+     #/area/<name> is still a valid address, and the breadcrumb still names
+     it, so an existing link lands somewhere real. */
 
   /* ── breadcrumb ──────────────────────────────────────────────────────── */
 
@@ -753,7 +904,6 @@
 
     document.getElementById("scView").innerHTML = html;
     document.getElementById("scCrumbs").innerHTML = crumbs();
-    renderAreas();
 
     var excluded = typeof META.excludedNotTracking === "number"
       ? META.excludedNotTracking + " measures marked “Not Tracking” are excluded. "

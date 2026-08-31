@@ -2,7 +2,7 @@
    TILES / EMPLOYEE CARDS
    ══════════════════════════════════════════════════════════ */
 .tile {
-  width: 220px;
+  width: var(--card-w);
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -16,6 +16,12 @@
   transition:
     border-color var(--hover-duration) var(--smooth),
     box-shadow var(--hover-duration) var(--smooth);
+}
+
+/* Every collapsed card is the same box. `height`, not `min-height`: the point
+   is that content cannot change it in either direction. */
+.tile:not(.expanded) {
+  height: var(--card-h);
 }
 
 /* Tiles waiting for entrance animation start invisible */
@@ -48,16 +54,16 @@
 }
 
 .tile-header {
-  padding: 16px 14px 10px;
+  padding: 11px 14px 6px;
   text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 5px;
 }
 
 .avatar {
-  width: 72px; height: 72px;
+  width: 60px; height: 60px;
   border-radius: 50%;
   border: 2px solid rgba(var(--tile-color-r, var(--gold-r)), 0.3);
   display: flex;
@@ -94,14 +100,18 @@
   text-rendering: optimizeLegibility;
 }
 
-/* Keep collapsed cards a consistent height: long names (e.g. four-part
-   names) wrap to at most two balanced lines instead of growing the card. */
+/* Two lines of room, always — occupied or not. Clamping alone kept a long
+   name from growing the card but still let a short one shrink it, which is
+   half the problem: "Ben Packer" and "Victor Lamoni Calado Ferreira" have to
+   reserve the same space for the row to line up. `height` rather than
+   `min-height` so neither direction can move. */
 .tile:not(.expanded) .tile-name {
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   overflow: hidden;
   text-wrap: balance;
+  height: 2.4em;              /* 2 x line-height 1.2 */
 }
 
 .tile-title {
@@ -111,6 +121,17 @@
   color: var(--tile-color, var(--gold));
   opacity: 0.9;
   line-height: 1.3;
+}
+
+/* The other half of the fixed height. The longest title in the data is 59
+   characters ("Enrollment Counseling Development & Performance Coordinator"),
+   which is two lines at this width; the shortest is one word. Both get two. */
+.tile:not(.expanded) .tile-title {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  height: 2.6em;              /* 2 x line-height 1.3 */
 }
 
 .tile-level-badge {
@@ -123,9 +144,16 @@
   border: 1px solid var(--border);
   padding: 2px 8px;
   border-radius: 10px;
-  margin-top: 2px;
   white-space: nowrap;
 }
+
+/* Gone from the collapsed card. The strip along the bottom is the handle's
+   now, and there is one row of space there, not two — in flow the hint sat
+   under the handle, and floated out of flow it sat on the FTE badge instead.
+   The card still opens its detail body on click; that is carried by the
+   pointer cursor, the hover lift, and the card's title attribute rather than
+   by a line of text competing for the only free row. */
+.tile:not(.expanded) .tile-expand-indicator { display: none; }
 
 .tile-expand-indicator {
   font-size: 0.55rem;
@@ -140,6 +168,63 @@
 }
 
 .tile:hover .tile-expand-indicator { opacity: 1; }
+
+/* ── the +/- handle ──
+   Bottom centre, where an org chart's line leaves the box, so it reads as
+   "open what is under this" rather than as another button on the card. It sits
+   inside the card because .tile clips its overflow; the card's fixed height
+   reserves the room for it.
+
+   Always visible, not hover-only: it is the page's main control now that the
+   view modes are gone, and on a touch screen there is no hover to reveal it
+   with. The card's own detail body is still a click on the card — the handler
+   in expand.js stops this button's click from reaching it. */
+.tile-toggle {
+  position: absolute;
+  bottom: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(var(--tile-color-r, var(--gold-r)), 0.45);
+  background: var(--bg-card);
+  color: var(--tile-color, var(--gold));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 3;
+  transition: transform 0.2s var(--spring), background 0.2s var(--smooth),
+              border-color 0.2s var(--smooth), box-shadow 0.2s var(--smooth);
+}
+
+.tile-toggle:hover {
+  transform: translateX(-50%) scale(1.15);
+  background: rgba(var(--tile-color-r, var(--gold-r)), 0.12);
+  border-color: var(--tile-color, var(--gold));
+  box-shadow: 0 0 10px rgba(var(--tile-color-r, var(--gold-r)), 0.25);
+}
+
+.tile-toggle:focus-visible {
+  outline: 2px solid var(--tile-color, var(--gold));
+  outline-offset: 2px;
+}
+
+.tile-toggle svg { width: 11px; height: 11px; }
+
+/* One glyph at a time: + while closed, - while open. */
+.tile-toggle .tile-toggle-minus { display: none; }
+.tile-toggle[aria-expanded="true"] .tile-toggle-plus { display: none; }
+.tile-toggle[aria-expanded="true"] .tile-toggle-minus { display: block; }
+
+/* The handle would sit on top of the detail body once the card opens. */
+.tile.expanded .tile-toggle { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .tile-toggle, .tile-toggle:hover { transition: none; transform: translateX(-50%); }
+}
 
 /* ── EXPANDED TILE BODY ── */
 .tile-body {

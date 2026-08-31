@@ -83,11 +83,18 @@
     }).join("");
   }
 
-  /** A department page, for a partner: the mission stays, the workforce goes. */
+  /** A department page, for a partner: the mission and the chart stay, the
+      workforce breakdown goes.
+
+      The org chart is deliberately not hidden any more. It was, along with the
+      whole team section — but the org chart page itself has always been open
+      to partners, so hiding the same tree here was protecting nothing and only
+      made the two pages disagree about whether a partner may look at the shape
+      of a department. The headcount and employment-type cards still go: those
+      are workforce composition rather than structure, and they are the part
+      the directory withholds too. */
   function scopeDepartmentPage() {
     hide(document.getElementById("deptDashboard"));   // headcount / type cards
-    hide(document.getElementById("deptChart"));       // workforce chart
-    hide(document.getElementById("team"));            // the people section
   }
 
   function escapeHtml(s) {

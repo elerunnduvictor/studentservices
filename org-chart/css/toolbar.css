@@ -1,9 +1,30 @@
 /* ══════════════════════════════════════════════════════════
    TOOLBAR
    ══════════════════════════════════════════════════════════ */
+
+/* Room for the hub navbar, which is position:fixed in css/main.css and so is
+   out of flow — without this it lies on top of the page. 56px is its height
+   there, constant across breakpoints (only its padding changes). The reset
+   puts everything in border-box, so this comes out of the 100vh rather than
+   adding to it. */
+body { padding-top: 56px; }
+
+/* ── the navbar's own alignment ──
+   css/main.css pushes .nav-links right with `margin-left: auto`, which parks
+   them against the account chip: at 1440 they ran x380-1220, a centre of 800
+   against the window's 720. The pages that carry a hero (the scorecard, the
+   OKR page) already correct this in their own sheets by spreading the three
+   groups instead, and this does the same thing the same way — brand left,
+   links centre, chip and theme right. */
+.navbar { justify-content: space-between; }
+.nav-links { margin-left: 0; }
+
 .toolbar {
   position: sticky;
-  top: 0;
+  /* Below the navbar, not under it. Both were at top:0 with z-index:100 and
+     this one is later in the document, so it won the overlap and the navbar
+     was invisible. */
+  top: 56px;
   z-index: 100;
   background: rgba(var(--toolbar-bg-r, 255,255,255), 0.92);
   backdrop-filter: blur(20px);
@@ -126,46 +147,34 @@
   user-select: none;
 }
 
-/* ── the "more tools" menu ── */
-.tool-menu { position: relative; }
-#toolMenuBtn[aria-expanded="true"] {
-  color: var(--page-accent);
-  border-color: var(--page-accent);
-  background: rgba(var(--page-accent-r), 0.10);
+/* ── labelled tool buttons ──
+   These four came out of the overflow menu when the department chips left the
+   bar. Wider than the icon-only zoom buttons because they carry their word. */
+.tool-btn--labelled {
+  width: auto;
+  gap: 7px;
+  padding: 0 12px;
+  font-family: 'Jost', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
-.tool-menu-panel {
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
-  min-width: 176px;
-  z-index: 150;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  box-shadow: var(--shadow-hover);
-  padding: 6px;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+.tool-sep {
+  width: 1px;
+  height: 20px;
+  background: var(--border);
+  margin: 0 4px;
+  flex-shrink: 0;
 }
-.tool-menu-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  padding: 9px 10px;
-  background: none;
-  border: none;
-  border-radius: 7px;
-  font: inherit;
-  font-size: 0.76rem;
-  color: var(--text);
-  text-align: left;
-  cursor: pointer;
-  transition: background var(--transition), color var(--transition);
+
+@media (max-width: 900px) {
+  /* Back to icons when the words stop fitting; the title attribute carries
+     the label. */
+  .tool-btn--labelled span { display: none; }
+  .tool-btn--labelled { width: 34px; padding: 0; }
 }
-.tool-menu-item svg { width: 15px; height: 15px; flex-shrink: 0; color: var(--text-muted); }
-.tool-menu-item:hover { background: var(--ice-gray); color: var(--page-accent); }
-.tool-menu-item:hover svg { color: var(--page-accent); }
 
 /* ── Hamburger Menu Toggle ── */
 .menu-toggle {

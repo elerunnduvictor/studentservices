@@ -84,7 +84,10 @@
       var rows = byOkr[okr];
       var c = okrPal(okr, OKR_COLORS);
       var krCount = uniq(rows.map(function (r) { return r.keyResult; })).length;
-      var avg = Math.round(rows.reduce(function (s, r) { return s + (r.progress || 0); }, 0) / rows.length * 100);
+      // Mean attainment — see shared/js/okr-math.js for why averaging raw
+      // `progress` produced figures above 100%.
+      var avg = window.SS.okr.averagePercent(rows);
+      if (avg === null) avg = 0;
 
       /* Status bucket counts for the segment strip + legend. Sorted by
          STATUS_ORDER so each card reads left→right in the canonical order. */

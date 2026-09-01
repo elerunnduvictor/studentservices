@@ -96,7 +96,15 @@ function formatDate(iso) {
 function progressBarInfo(r) {
   if (r.progress == null) return null;
   const isDecrease = r.type && /Decrease/i.test(r.type);
-  const progressPct = pct(r.progress);
+  /* For a count row `progress * 100` is not a percentage of anything, so the
+     bar reads its attainment instead. No such row exists today — both count
+     rows are decreases, which take the ratio branch below — but a
+     "KPI # - Increase" would otherwise fill the bar to 100% whatever it stood
+     at, and that is a silent wrong answer rather than a visible one. */
+  const attain = window.SS.okr.attainment(r);
+  const progressPct = window.SS.okr.isCount(r)
+    ? (attain === null ? 0 : Math.round(attain * 100))
+    : pct(r.progress);
   const goalPct = r.goal != null ? pct(r.goal) : null;
   const progressDisplay = formatValue(r.progress, r);
   const goalDisplay = goalPct != null ? formatValue(r.goal, r) : null;
@@ -209,8 +217,12 @@ function renderKpis(filtered) {
   const onTrack = filtered.filter(r => effectiveStatus(r) === "On Track").length;
   const atRisk = filtered.filter(r => effectiveStatus(r) === "At Risk").length;
   const completed = filtered.filter(r => effectiveStatus(r) === "Completed").length;
+  /* Mean attainment, not mean `progress`. Averaging progress directly treats a
+     "KPI # - Decrease" row's raw count as a percentage — live data stores that
+     one as 8 against a goal of 5 — so one row could contribute 800% and the
+     card claimed 158% average progress. See shared/js/okr-math.js. */
   const avgProgress = total
-    ? Math.round(filtered.reduce((s, r) => s + (r.progress || 0), 0) / total * 100)
+    ? (window.SS.okr.averagePercent(filtered) ?? 0)
     : 0;
 
   document.getElementById("okrpKpis").innerHTML = `
@@ -507,7 +519,7 @@ function renderSpotlight() {
         const c = okrPalette(o.name);
         const idx = flat.length;
         flat.push({ kind: "okr", key: o.name });
-        const avg = Math.round(o.rows.reduce((s,r)=> s + (r.progress||0), 0) / o.rows.length * 100);
+        const avg = window.SS.okr.averagePercent(o.rows) ?? 0;
         return `
           <div class="sd-item" data-flat="${idx}" style="--sd-color:${c.bg}; --sd-color-pale:${c.pale};">
             <div class="sd-item-icon">OKR</div>
@@ -527,7 +539,7 @@ function renderSpotlight() {
         const c = okrPalette(k.okr);
         const idx = flat.length;
         flat.push({ kind: "kr", key: `${k.okr}||${k.name}` });
-        const avg = Math.round(k.rows.reduce((s,r)=> s + (r.progress||0), 0) / k.rows.length * 100);
+        const avg = window.SS.okr.averagePercent(k.rows) ?? 0;
         return `
           <div class="sd-item" data-flat="${idx}" style="--sd-color:${c.bg}; --sd-color-pale:${c.pale};">
             <div class="sd-item-icon">KR</div>
@@ -556,7 +568,7 @@ function renderSpotlight() {
               <div class="sd-item-title">${highlight(r.subKeyResult, q)}</div>
               <div class="sd-item-meta">
                 <span>${escapeHtml(r.okr)}</span>
-                <span><b>${pct(r.progress)}%</b></span>
+                <span><b>${formatValue(r.progress, r)}</b></span>
                 <span style="color:${sc.bg}; font-weight:600;">${escapeHtml(s)}</span>
               </div>
             </div>
@@ -700,9 +712,21 @@ function renderSkrDetail(r) {
   const skr = skrPalette(r);
   const s = effectiveStatus(r);
   const sc = statusPalette(s);
-  const p = pct(r.progress);
-  const pp = pct(r.goal);
-  const delta = (r.progress != null && r.goal != null) ? p - pp : null;
+  /* The gap between where this row stands and where it was meant to be, in
+     the units the row is measured in.
+
+     It was pct(progress) - pct(goal), which multiplied a count by 100 like
+     everything else: a decrease metric at 8 against a goal of 5 reported
+     300 pts over. It is 3 over, not 300 — and on a decrease metric being
+     over is the bad direction, so the arrow pointed the wrong way too. */
+  const rowIsCount = window.SS.okr.isCount(r);
+  const delta = (r.progress != null && r.goal != null)
+    ? (rowIsCount ? Math.round((r.progress - r.goal) * 100) / 100
+                  : pct(r.progress) - pct(r.goal))
+    : null;
+  const deltaGood = delta == null ? 0
+    : (/decrease/i.test(String(r.type || "")) ? -delta : delta);
+  const deltaUnit = rowIsCount ? "" : " pts";
   const info = progressBarInfo(r);
 
   const bannerCss = `--mc-color: ${c.bg}; --mc-color-light: ${c.light}; --mc-color-dark: ${darken(c.bg, 0.25)}; --mc-color-pale: ${c.pale}; --mc-status-color: ${sc.bg}; --mc-status-pale: ${sc.pale}; --mc-skr-color: ${skr.bg}; --mc-skr-pale: ${skr.pale};`;
@@ -722,7 +746,7 @@ function renderSkrDetail(r) {
               <div class="mc-related-skr">${escapeHtml(rr.subKeyResult)}</div>
               <div class="mc-related-meta">
                 <span class="status-pill" style="background:${ssc.pale}; color:${ssc.bg};"><span class="status-dot" style="background:${ssc.bg};"></span>${escapeHtml(ss)}</span>
-                <span class="mc-related-progress">${pct(rr.progress)}%</span>
+                <span class="mc-related-progress">${formatValue(rr.progress, rr)}</span>
               </div>
             </div>
           `;
@@ -804,8 +828,8 @@ function renderSkrDetail(r) {
               <div class="mc-comp-block">
                 <div class="mc-comp-label">Delta</div>
                 <div class="mc-comp-value">
-                  <span class="mc-delta ${delta > 0 ? "positive" : delta < 0 ? "negative" : "neutral"}">
-                    ${delta > 0 ? "▲" : delta < 0 ? "▼" : "■"} ${Math.abs(delta)} pts
+                  <span class="mc-delta ${deltaGood > 0 ? "positive" : deltaGood < 0 ? "negative" : "neutral"}">
+                    ${deltaGood > 0 ? "▲" : deltaGood < 0 ? "▼" : "■"} ${Math.abs(delta)}${deltaUnit}
                   </span>
                 </div>
               </div>
@@ -902,9 +926,15 @@ function renderSkrDetail(r) {
 
 function renderAggregateDetail({ kind, okr, title, rows }) {
   const c = okrPalette(okr);
-  const avg = Math.round(rows.reduce((s,r)=> s + (r.progress||0), 0) / rows.length * 100);
-  const avgPlan = Math.round(rows.reduce((s,r)=> s + (r.goal||0), 0) / rows.length * 100);
-  const delta = avg - avgPlan;
+  const avg = window.SS.okr.averagePercent(rows) ?? 0;
+  /* `avg` is mean attainment — how close these rows are to their own goals,
+     where 100% means every goal met. Comparing that against the average goal,
+     as this card used to, asks the question attainment has already answered:
+     the goal is the denominator. Replaced with how many goals are actually
+     met, which an average hides — three rows at 100% and three at 0% average
+     the same as six rows at 50%. */
+  const measured = rows.filter(r => window.SS.okr.attainment(r) !== null);
+  const metCount = measured.filter(r => window.SS.okr.attainment(r) >= 1).length;
 
   const bannerCss = `--mc-color: ${c.bg}; --mc-color-light: ${c.light}; --mc-color-dark: ${darken(c.bg, 0.25)}; --mc-color-pale: ${c.pale};`;
 
@@ -956,25 +986,20 @@ function renderAggregateDetail({ kind, okr, title, rows }) {
           <h4>Aggregate Performance</h4>
           <div class="mc-comparison">
             <div class="mc-comp-block">
-              <div class="mc-comp-label">Avg Progress</div>
+              <div class="mc-comp-label">Avg Attainment</div>
               <div class="mc-comp-value">${avg}%</div>
             </div>
             <div class="mc-comp-block">
-              <div class="mc-comp-label">Avg Goal</div>
-              <div class="mc-comp-value">${avgPlan}%</div>
+              <div class="mc-comp-label">Goals Met</div>
+              <div class="mc-comp-value">${metCount} of ${measured.length}</div>
             </div>
             <div class="mc-comp-block">
-              <div class="mc-comp-label">Delta</div>
-              <div class="mc-comp-value">
-                <span class="mc-delta ${delta > 0 ? "positive" : delta < 0 ? "negative" : "neutral"}">
-                  ${delta > 0 ? "▲" : delta < 0 ? "▼" : "■"} ${Math.abs(delta)} pts
-                </span>
-              </div>
+              <div class="mc-comp-label">Not Measured</div>
+              <div class="mc-comp-value">${rows.length - measured.length}</div>
             </div>
           </div>
           <div class="mc-progress-bar-wrap">
             <div class="mc-progress-bar-actual" style="width:${avg}%;"></div>
-            <div class="mc-progress-bar-planned" style="left:${avgPlan}%;"></div>
           </div>
           <div class="mc-progress-scale-note">Averaged across ${rows.length} Sub-KR${rows.length !== 1 ? "s" : ""} on a 0–100% scale.</div>
         </div>
@@ -1042,7 +1067,7 @@ function renderAggregateDetail({ kind, okr, title, rows }) {
                 <div class="mc-related-skr">${escapeHtml(rr.subKeyResult)}</div>
                 <div class="mc-related-meta">
                   <span class="status-pill" style="background:${ssc.pale}; color:${ssc.bg};"><span class="status-dot" style="background:${ssc.bg};"></span>${escapeHtml(ss)}</span>
-                  <span class="mc-related-progress">${pct(rr.progress)}%</span>
+                  <span class="mc-related-progress">${formatValue(rr.progress, rr)}</span>
                 </div>
               </div>
             `;

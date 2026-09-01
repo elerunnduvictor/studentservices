@@ -285,15 +285,10 @@
    * Clamped to 0..1, which is what the OKR Progress page does with its own
    * bars — beating a goal is good news, not 155% of an objective.
    */
-  function attainment(r) {
-    var p = r.progress, g = r.goal;
-    if (typeof p !== "number" || typeof g !== "number" || g === 0) return null;
-    var ratio = /decrease/i.test(String(r.type || ""))
-      ? (p === 0 ? 1 : g / p)
-      : (p / g);
-    if (!isFinite(ratio)) return null;
-    return Math.max(0, Math.min(1, ratio));
-  }
+  /* This panel had the right definition first; it now lives in
+     shared/js/okr-math.js so the OKR page and the department pages compute the
+     same figure rather than three near-copies of it. */
+  function attainment(r) { return window.SS.okr.attainment(r); }
 
   function panelOkrs() {
     return Promise.all([dataset("okrs"), ready()]).then(function () {
@@ -403,16 +398,48 @@
               return x.pct - y.pct;
             })
             .map(function (kr) {
-              var atRisk = kr.rows.some(function (r) { return /risk|behind/i.test(String(r.status || "")); });
-              var allDone = kr.rows.every(function (r) { return /complet/i.test(String(r.status || "")); });
-              var tone = allDone ? "is-good" : atRisk ? "is-risk"
-                       : (kr.pct !== null && kr.pct >= 80 ? "is-good" : "is-mid");
               var n = kr.rows.length;
+              /* How many rows this key result averages, shown by the bar
+                 rather than by a number beside the name.
+
+                 It used to be a digit appended straight to the label — no
+                 space, no style — so it read as part of the sentence
+                 ("...professional development plans2") and, sitting inside a
+                 two-line clamp, could be truncated away with the words. Moving
+                 it into a chip fixed the collision but was still a number
+                 stuck next to a sentence, saying nothing you could act on.
+
+                 One segment per tracked row says the same thing without a
+                 numeral, and says more: the segments carry each row's status,
+                 so a key result at 82% made of one finished row and three
+                 stalled ones no longer looks like four rows all at 82%. The
+                 average stays on the right, where it always was.
+
+                 Solid blocks rather than little part-filled bars. Filling each
+                 segment to its own percentage worked at two or three rows and
+                 turned to noise at twelve, where a partial fill inside an 8px
+                 block reads as a smudge. A solid status colour is legible at
+                 any count; the exact figure for a row is in its tooltip, and
+                 the average is already on the right. */
+              var segs = kr.rows.map(function (r) {
+                var v = attainment(r);
+                var st = String(r.status || "");
+                var t = /complet/i.test(st) ? "is-good"
+                      : /risk|behind|trouble/i.test(st) ? "is-risk"
+                      : (v !== null && v >= 0.8 ? "is-good" : "is-mid");
+                return '<span class="ht-kr-seg ' + t + '" title="' +
+                  esc(r.subKeyResult || r.keyResult || "") +
+                  " — " + (v === null ? "no progress recorded" : Math.round(v * 100) + "%") +
+                  (st ? ", " + esc(st) : "") + '"></span>';
+              }).join("");
+
               return '<div class="ht-kr">' +
-                '<div class="ht-kr-name" title="' + esc(kr.name) + '">' + esc(kr.name) +
-                  (n > 1 ? '<span class="ht-kr-n">' + n + "</span>" : "") + "</div>" +
-                '<div class="ht-kr-bar"><div class="ht-kr-fill ' + tone + '" style="width:' +
-                  (kr.pct === null ? 0 : kr.pct) + '%"></div></div>' +
+                '<div class="ht-kr-name">' +
+                  '<span class="ht-kr-text" title="' + esc(kr.name) + '">' + esc(kr.name) + "</span>" +
+                "</div>" +
+                '<div class="ht-kr-bar" title="' + n + " tracked row" + (n === 1 ? "" : "s") +
+                  '" aria-label="' + n + " tracked row" + (n === 1 ? "" : "s") +
+                  (kr.pct === null ? "" : ", averaging " + kr.pct + "%") + '">' + segs + "</div>" +
                 '<div class="ht-kr-pct' + (kr.pct === null ? " is-none" : "") + '">' +
                   (kr.pct === null ? "&mdash;" : kr.pct + "%") + "</div>" +
                 "</div>";

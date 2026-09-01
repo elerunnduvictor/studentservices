@@ -1067,19 +1067,38 @@ body.home-single .hero-compact h1 span {
    of forty full sentences is a document, not a summary. */
 .ht-krs { display: grid; gap: 7px; margin-top: 12px; }
 .ht-kr {
-  display: grid; grid-template-columns: minmax(0, 1fr) 96px 42px;
+  /* The bar column grew from 96px: it holds up to nine segments now, and at
+     96px they were 8px each. */
+  display: grid; grid-template-columns: minmax(0, 1fr) 124px 42px;
   gap: 10px; align-items: center;
 }
-.ht-kr-name {
+/* The name is the only thing clamped. The count that used to sit inside this
+   element is now carried by the bar. */
+.ht-kr-name { min-width: 0; }
+.ht-kr-text {
   font-size: .74rem; color: rgba(255,255,255,.8); line-height: 1.35;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
   overflow: hidden;
 }
-.ht-kr-bar { height: 6px; border-radius: 3px; background: rgba(255,255,255,.10); overflow: hidden; }
-.ht-kr-fill { height: 100%; border-radius: 3px; }
-.ht-kr-fill.is-good { background: linear-gradient(90deg,#2E9E5C,#57C083); }
-.ht-kr-fill.is-mid  { background: linear-gradient(90deg,#28738A,#4FA8D8); }
-.ht-kr-fill.is-risk { background: linear-gradient(90deg,#C9762E,#E8A33D); }
+/* One segment per tracked row. The number of segments is the count — no
+   numeral needed — and each carries its own progress and status, so the shape
+   of a key result is visible rather than flattened into its average. */
+.ht-kr-bar {
+  display: flex;
+  gap: 2px;
+  height: 6px;
+  align-items: stretch;
+}
+.ht-kr-seg {
+  flex: 1 1 0;
+  min-width: 4px;              /* twelve rows still read as twelve blocks */
+  border-radius: 3px;
+  background: rgba(255,255,255,.14);
+  cursor: default;
+}
+.ht-kr-seg.is-good { background: #3EA96B; }
+.ht-kr-seg.is-mid  { background: #3D8FB5; }
+.ht-kr-seg.is-risk { background: #D98B2E; }
 .ht-kr-pct {
   font-size: .7rem; font-weight: 700; color: rgba(255,255,255,.92);
   text-align: right; white-space: nowrap;

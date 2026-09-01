@@ -243,9 +243,11 @@
   }
 
   /* ── OKR section: a card per objective ── */
-  function isCount(r) { return !!(r.type && /#/.test(r.type)); }
+  /* The PM hub's own display rule — see shared/js/okr-math.js. This used to
+     multiply a count by 100 as well as a fraction, so a row reading 8 in the
+     PM hub read 800 here. */
   function okrPct(v) { return Math.round((v || 0) * 100); }
-  function okrValue(r, v) { return v == null ? "—" : okrPct(v) + (isCount(r) ? "" : "%"); }
+  function okrValue(r, v) { return window.SS.okr.formatValue(r, v); }
 
   function renderOkrCards(rows, deptColor) {
     var groups = {}, order = [];
@@ -256,12 +258,12 @@
 
     return order.map(function (okr) {
       var krs = groups[okr];
-      // Average over the percentage-style rows only: a count row's "progress"
-      // is 8 bugs, not 8%, and averaging it with percentages is meaningless.
-      var pctRows = krs.filter(function (r) { return !isCount(r) && r.progress != null; });
-      var avg = pctRows.length
-        ? Math.round(pctRows.reduce(function (s, r) { return s + okrPct(r.progress); }, 0) / pctRows.length)
-        : null;
+      /* Mean attainment. This used to drop the count rows from the average
+         rather than measure them — safe, but it meant an objective's headline
+         quietly ignored some of its own work. Attainment asks each row how
+         close it is to its own goal, which is answerable for every type, so
+         nothing has to be excluded. shared/js/okr-math.js. */
+      var avg = window.SS.okr.averagePercent(krs);
 
       var counts = {};
       krs.forEach(function (r) { var s = r.status || "Not Started"; counts[s] = (counts[s] || 0) + 1; });
@@ -280,7 +282,8 @@
       var detail = krs.map(function (r) {
         var p = okrPct(r.progress);
         var goal = r.goal == null ? null : okrPct(r.goal);
-        var fill = isCount(r) ? (goal && p ? Math.min(100, (goal / p) * 100) : 0) : Math.min(100, p);
+        var att = window.SS.okr.attainment(r);
+        var fill = att === null ? 0 : Math.round(att * 100);
         return '<li class="dg-kr">' +
           '<div class="dg-kr-head">' +
             '<span class="dg-kr-name">' + esc(r.subKeyResult || r.keyResult) + "</span>" +

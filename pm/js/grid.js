@@ -28,7 +28,7 @@ export class Grid {
    *   rows      — array of plain row objects (mutated only through the grid)
    *   idKey     — primary key field, default "id"
    *   onSave    — async ({ updates, inserts, deletes }) => void
-   *   onDirty   — (count) => void
+   *   onDirty   — (count, deleteCount) => void
    */
   constructor(opts) {
     this.mount = opts.mount;
@@ -44,7 +44,9 @@ export class Grid {
     this.active = { r: 0, c: 0 };
     this.editing = null;
     this.baseline = new Map();   // rowKey -> row as the database last gave it
-    this.inserted = new Set();   // rowKeys created in this session
+    this.inserted = new Set();   // row objects created in this session (by
+                                  // identity, not by key — the key can be a
+                                  // column the PM edits, e.g. hub_access.email)
     this.deleted = [];           // full row objects removed
     this.undoStack = [];
     this.redoStack = [];
@@ -250,12 +252,12 @@ export class Grid {
   get dirtyCount() {
     let n = 0;
     this.rows.forEach((r) => {
-      if (!this.inserted.has(this.rowKey(r))) n += this.changedCells(r).length;
+      if (!this.inserted.has(r)) n += this.changedCells(r).length;
     });
     return n + this.inserted.size + this.deleted.length;
   }
 
-  _emitDirty() { this.onDirty(this.dirtyCount); }
+  _emitDirty() { this.onDirty(this.dirtyCount, this.deleted.length); }
 
   /* ── editing ──────────────────────────────────────────────────────────── */
 
@@ -287,9 +289,9 @@ export class Grid {
     } else if (op.type === "bulk") {
       op.cells.forEach((c) => { this.rows[c.rowIdx][c.colKey] = c.before; });
     } else if (op.type === "insert") {
-      const i = this.rows.findIndex((r) => this.rowKey(r) === op.key);
-      if (i >= 0) { op.row = this.rows[i]; op.at = i; this.rows.splice(i, 1); }
-      this.inserted.delete(op.key);
+      const i = this.rows.indexOf(op.row);
+      if (i >= 0) { op.at = i; this.rows.splice(i, 1); }
+      this.inserted.delete(op.row);
     }
     this._applyFilter();
     this.render();
@@ -306,7 +308,7 @@ export class Grid {
       op.cells.forEach((c) => { this.rows[c.rowIdx][c.colKey] = c.after; });
     } else if (op.type === "insert" && op.row) {
       this.rows.splice(Math.min(op.at, this.rows.length), 0, op.row);
-      this.inserted.add(op.key);
+      this.inserted.add(op.row);
     }
     this._applyFilter();
     this.render();
@@ -319,8 +321,8 @@ export class Grid {
     this.columns.forEach((c) => { row[c.key] = seed[c.key] ?? null; });
     const at = afterViewIdx === null ? this.rows.length : (this.view[afterViewIdx] ?? this.rows.length - 1) + 1;
     this.rows.splice(at, 0, row);
-    this.inserted.add(key);
-    this.undoStack.push({ type: "insert", key });
+    this.inserted.add(row);
+    this.undoStack.push({ type: "insert", row });
     this._applyFilter();
     this.render();
     this._emitDirty();
@@ -333,14 +335,37 @@ export class Grid {
     const idxs = [...viewIdxs].map((v) => this.view[v]).filter((i) => i != null).sort((a, b) => b - a);
     idxs.forEach((i) => {
       const row = this.rows[i];
-      const key = this.rowKey(row);
-      if (this.inserted.has(key)) this.inserted.delete(key);
+      if (this.inserted.has(row)) this.inserted.delete(row);
       else this.deleted.push(row);
       this.rows.splice(i, 1);
     });
     this._applyFilter();
     this.render();
     this._emitDirty();
+  }
+
+  /** A human-readable name for a row, for the delete confirm and nothing else. */
+  _rowLabel(row, vi) {
+    if (!row) return `row ${vi + 1}`;
+    const label = row.full_name || row.name || row.employee_name || row.employee ||
+                  row.sub_key_result || row.kpi_measure || row.email || `row ${vi + 1}`;
+    return String(label).slice(0, 60);
+  }
+
+  /**
+   * The one place a row delete is confirmed. Right-click and the toolbar
+   * button both call this rather than `deleteRows()` directly, so the
+   * warning that Save is still required — and Ctrl+Z will not undo it after
+   * that — can never be skipped by going through the other entry point.
+   */
+  confirmDelete(viewIdxs) {
+    const idxs = [...viewIdxs];
+    if (!idxs.length) return;
+    const labels = idxs.map((vi) => this._rowLabel(this.rows[this.view[vi]], vi));
+    const summary = labels.length === 1 ? `"${labels[0]}"` : `${labels.length} rows`;
+    if (!confirm(`Delete ${summary}?\n\n` +
+                 `It is removed from the database when you press Save, and Ctrl+Z will not bring it back.`)) return;
+    this.deleteRows(idxs);
   }
 
   /**
@@ -357,21 +382,18 @@ export class Grid {
   pendingChanges() {
     const updates = [];
     this.rows.forEach((row) => {
-      const key = this.rowKey(row);
-      if (this.inserted.has(key)) return;
+      if (this.inserted.has(row)) return;
       const cols = this.changedCells(row);
       if (!cols.length) return;
-      const patch = { [this.idKey]: key };
+      const patch = { [this.idKey]: this.rowKey(row) };
       cols.forEach((c) => { patch[c] = row[c] ?? null; });
       updates.push(patch);
     });
-    const inserts = [...this.inserted].map((key) => {
-      const row = this.rows.find((r) => this.rowKey(r) === key);
-      if (!row) return null;
+    const inserts = [...this.inserted].map((row) => {
       const rec = {};
       this.columns.forEach((c) => { if (!c.virtual) rec[c.key] = row[c.key] ?? null; });
       return rec;
-    }).filter(Boolean);
+    });
     return { updates, inserts, deletes: this.deleted.map((r) => this.rowKey(r)) };
   }
 
@@ -512,7 +534,7 @@ export class Grid {
       const key = this.rowKey(row);
       const tr2 = document.createElement("tr");
       tr2.dataset.v = vi;
-      if (this.inserted.has(key)) tr2.classList.add("is-new");
+      if (this.inserted.has(row)) tr2.classList.add("is-new");
       if (vi === this.active.r) tr2.classList.add("is-current");
 
       const g = document.createElement("td");
@@ -532,7 +554,7 @@ export class Grid {
       const h = this.rowHeights.get(String(key));
       if (h) tr2.classList.add("is-sized"), tr2.style.height = h + "px";
 
-      const dirtyCols = new Set(this.inserted.has(key) ? [] : this.changedCells(row));
+      const dirtyCols = new Set(this.inserted.has(row) ? [] : this.changedCells(row));
       this.visibleColumns.forEach((col, ci) => {
         const td = document.createElement("td");
         td.dataset.c = ci;
@@ -1137,7 +1159,7 @@ export class Grid {
     const row = { [this.idKey]: key };
     this.columns.forEach((c) => { row[c.key] = seed[c.key] ?? null; });
     this.rows.push(row);
-    this.inserted.add(key);
+    this.inserted.add(row);
     return row;
   }
 
@@ -1220,7 +1242,7 @@ export class Grid {
       this.addRow(vi, seed);
     });
     const sep = document.createElement("div"); sep.className = "sep"; menu.append(sep);
-    item("Delete row", "", () => this.deleteRows([vi]), true);
+    item("Delete row", "", () => this.confirmDelete([vi]), true);
 
     menu.style.left = Math.min(e.clientX, window.innerWidth - 210) + "px";
     menu.style.top = Math.min(e.clientY, window.innerHeight - 140) + "px";

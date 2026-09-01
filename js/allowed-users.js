@@ -271,4 +271,6 @@ window.ALLOWED_USERS = [
 
   // ── Added July 28 2026 ──
   "austin@hirespringboard.com",
+  // -- Added August 31 2026
+  "tashagriffith@churchofjesuschrist.org",
 ];

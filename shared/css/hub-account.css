@@ -16,8 +16,25 @@
    toggle sits in a static-positioned navbar row (every page but the home
    hero), the chip itself stays position:static too — so the menu skips
    past it and anchors to the next positioned ancestor up the tree (the
-   fixed navbar), landing in the wrong spot and reading as cut off. */
-.hub-account { position: relative; display: flex; align-items: center; z-index: 3; }
+   fixed navbar), landing in the wrong spot and reading as cut off.
+
+   `z-index` here is what the menu's own z-index:950 actually depends on,
+   which is easy to miss: `position:relative` + a set `z-index` makes this
+   element its own stacking context, and the menu's 950 is scoped *inside*
+   that context — it cannot outrank a SIBLING of .hub-account that has a
+   higher z-index of its own, no matter how high 950 looks. On the home
+   page specifically, hub-account.js's "absolute, beside the toggle" branch
+   (used only when the toggle isn't in a normal flex navbar row — today
+   just the hero) appends this chip as a sibling of the hero's other
+   absolutely-positioned children, including .ei-alert at z-index:4. At the
+   old z-index:3 the whole chip — dropdown included — painted underneath
+   that card: Sign out was there in the DOM and in the accessibility tree,
+   genuinely unreachable by mouse or touch. This has to stay above whatever
+   the highest sibling z-index in that context is; 5 clears .ei-alert's 4
+   with room. On every other page the chip either joins a navbar row
+   in-flow (no competing sibling z-index) or gets .is-floating's z-index:900
+   below, so this number does not do anything there. */
+.hub-account { position: relative; display: flex; align-items: center; z-index: 5; }
 .hub-account.is-floating { position: fixed; top: 14px; right: 16px; z-index: 900; }
 
 .hub-account-btn {
@@ -84,9 +101,22 @@
 
 /* Glass card, matching the frosted-panel recipe used by the navbar and the
    login card elsewhere in the hub (translucent fill + blur + saturate, plus
-   an inset highlight to sell the glass edge) rather than a flat opaque menu. */
+   an inset highlight to sell the glass edge) rather than a flat opaque menu.
+
+   Moved to <body> by hub-account.js when it opens, so it can never again be
+   clipped by an ancestor's overflow (see the note there) — which makes it,
+   inescapably, a direct child of <body>. On the home page specifically,
+   `body.home-single > * { position: relative; z-index: 1; }` (main.css) is
+   a page-wide default meant for the hero's own sections, not for this — but
+   `body.home-single > *`'s specificity, (0,0,1,1), beats plain
+   `.hub-account-menu`'s (0,0,1,0), so it silently won and downgraded this
+   to z-index:1. It happened to still paint on top only because it's the
+   *last* child appended to body — true today, not guaranteed by anything.
+   !important makes the win the actual rule rather than an accident of
+   insertion order. */
 .hub-account-menu {
-  position: absolute; top: calc(100% + 8px); right: 0; min-width: 238px; z-index: 950;
+  position: absolute; top: calc(100% + 8px); right: 0; min-width: 238px;
+  z-index: 950 !important;
   background: rgba(255,255,255,.72); color: #16202B;
   border: 1px solid rgba(0,0,0,.12);
   border-radius: 12px;

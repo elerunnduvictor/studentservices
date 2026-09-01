@@ -235,6 +235,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .save-state .pip { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); }
 .save-state.is-dirty { color: var(--warn); font-weight: 600; }
 .save-state.is-dirty .pip { background: var(--warn); }
+.save-state.has-deletes { color: var(--bad); font-weight: 600; }
+.save-state.has-deletes .pip { background: var(--bad); }
 .save-state.is-saving { color: var(--accent); }
 .save-state.is-saving .pip { background: var(--accent); animation: pulse 1s ease-in-out infinite; }
 @keyframes pulse { 50% { opacity: .3; } }

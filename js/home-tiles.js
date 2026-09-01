@@ -229,8 +229,28 @@
         });
         return { map: g, order: ord };
       }
-      var grouped = groupBy("subDept");
-      if (grouped.order.length < 2) grouped = groupBy("dept");
+      /* Group by the level immediately below whatever the reader is looking at.
+
+         Somebody scoped to one department is already inside it, so the useful
+         next cut is sub-department — four or five bars.
+
+         Somebody looking at the whole organisation — the VP, an admin, a
+         partner — gets one bar per department. Grouping those readers by
+         sub-department drew fourteen bars in a tile meant to be read at a
+         glance, and it answered a question they had not asked yet: from the
+         top the useful first question is which department is carrying the
+         reds, and the sub-department underneath it is a second click, not a
+         second look. The scorecard page is where that click leads. */
+      var scopedToDept = !!dept && rows !== everything;
+      var primary = scopedToDept ? "subDept" : "dept";
+      var grouped = groupBy(primary);
+      // One group is not a comparison. If the chosen cut collapses to a single
+      // bar, the other one at least says something.
+      if (grouped.order.length < 2) {
+        grouped = groupBy(scopedToDept ? "dept" : "subDept");
+        primary = scopedToDept ? "dept" : "subDept";
+      }
+      var groupNoun = primary === "dept" ? "department" : "team";
       var groups = grouped.map, order = grouped.order;
       var bars = order.map(function (k) { return groups[k]; })
         .sort(function (a, b) {
@@ -253,12 +273,12 @@
       var head = '<div class="ht-kpi-head">' +
           '<div><div class="ht-col-title">' + esc(scopeLabel) + "</div>" +
             '<div class="ht-sub">' + rows.length + " tracked measure" +
-              (rows.length === 1 ? "" : "s") + " across " + order.length +
-              " team" + (order.length === 1 ? "" : "s") + "</div></div>" +
+              (rows.length === 1 ? "" : "s") + " across " + order.length + " " +
+              groupNoun + (order.length === 1 ? "" : "s") + "</div></div>" +
         "</div>";
 
       return head + '<div class="ht-two">' +
-        '<div class="ht-col"><div class="ht-col-title">By team</div>' + bars + "</div>" +
+        '<div class="ht-col"><div class="ht-col-title">By ' + groupNoun + "</div>" + bars + "</div>" +
         ring + "</div>";
     });
   }

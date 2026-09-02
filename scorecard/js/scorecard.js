@@ -171,6 +171,21 @@
       total + ' KPIs by status">' + parts + "</div>";
   }
 
+  /* The row every view opens with: the two rings on the left, and the mix of
+     colours with its key on the right.
+
+     They used to stack — rings, then a full-width bar, then the key under it —
+     which pushed the outcomes and the departments further down the page for no
+     gain: the bar is a summary of the same rows the rings count, so the two
+     belong side by side and read as one statement. Every view composes this the
+     same way, so it is written once. */
+  function summaryRow(roll) {
+    return '<div class="sc-topline">' +
+      gauges(roll) +
+      '<div class="sc-mix">' + spectrum(roll.counts) + legend(roll.counts) + "</div>" +
+    "</div>";
+  }
+
   function legend(counts) {
     var items = SPECTRUM_ORDER.filter(function (s) { return counts[s]; }).map(function (s) {
       var st = STATUS[s];
@@ -351,8 +366,11 @@
       ? '<span class="sc-outcome-score is-empty">—</span>'
       : '<span class="sc-outcome-score">' + roll.health + "<small>/100</small></span>";
 
-    return '<section class="sc-outcome' + (outcome.lead ? " is-lead" : "") +
-      '" data-outcome="' + outcome.key + '">' +
+    /* Both sections are drawn with the same weight. Student Outcomes still
+       leads by position — it is what the work is for — but "less pronounced"
+       was never the point of putting Operational second, and the two are
+       scored identically. `lead` now only decides which comes first. */
+    return '<section class="sc-outcome is-lead" data-outcome="' + outcome.key + '">' +
       '<div class="sc-outcome-head">' +
         '<div>' +
           '<div class="sc-outcome-name">' + esc(outcome.name) + "</div>" +
@@ -372,23 +390,22 @@
   /* The two sections, plus a line saying which arithmetic produced them —
      because "83" means something different once priorities are filled in, and
      a reader has no other way to tell which they are looking at. */
+  /* No heading over these two.
+
+     There was a "The scorecard" label and a line saying whether the figures
+     were priority-weighted. The label named the page you are already on, and
+     the note answered a question nobody had asked yet — it will matter once
+     priorities are filled in, and the sections can say so then. Two sections
+     that carry their own titles do not need a title above them. */
   function outcomes(rows) {
-    var weighted = rollup(rows).weighted;
-    var note = weighted
-      ? "Weighted by each KPI's priority."
-      : "Every KPI counts equally — no priorities set yet.";
     return '<div class="sc-outcomes">' +
-      '<div class="sc-outcomes-head">' +
-        '<div class="sc-outcomes-label">The scorecard</div>' +
-        '<div class="sc-outcomes-note">' + esc(note) + "</div>" +
-      "</div>" +
       OUTCOMES.map(function (o) { return outcomeCard(o, rows); }).join("") +
     "</div>";
   }
 
   function head(eyebrow, title, meta) {
     return '<div class="sc-head">' +
-      '<div class="sc-head-eyebrow">' + esc(eyebrow) + "</div>" +
+      (eyebrow ? '<div class="sc-head-eyebrow">' + esc(eyebrow) + "</div>" : "") +
       '<h2 class="sc-head-title">' + esc(title) + "</h2>" +
       (meta ? '<div class="sc-head-meta">' + esc(meta) + "</div>" : "") +
       "</div>";
@@ -730,9 +747,13 @@
        eight doors that do not open. */
     var showDepts = canOpenBelowDept();
 
-    return head("Student Services", "The whole organization",
+    /* No eyebrow here. It read "Student Services" directly under a breadcrumb
+       that already says Student Services — the same words twice, three lines
+       apart. The eyebrow still earns its place on the views below, where it
+       says "Department" or "Student outcome" and the breadcrumb does not. */
+    return head("", "The whole organization",
         roll.tracked + " tracked KPIs across " + depts.length + " departments") +
-      lensBar(rows) + gauges(roll) + spectrum(roll.counts) + legend(roll.counts) +
+      lensBar(rows) + summaryRow(roll) +
       outcomes(rows) +
       (showDepts
         ? '<div class="sc-kids-head">By department</div>' +
@@ -764,7 +785,7 @@
 
     return head("Department", deptName,
         roll.tracked + " tracked KPIs · " + subs.length + " sub-departments") +
-      lensBar(rows) + gauges(roll) + spectrum(roll.counts) + legend(roll.counts) +
+      lensBar(rows) + summaryRow(roll) +
       (kids ? '<div class="sc-kids">' + kids + "</div>" : '<div class="sc-empty">No KPIs match this lens.</div>') +
       watchlist(rows, canOpenPeople());
   }
@@ -789,7 +810,7 @@
 
     return head(all[0].dept, all[0].subDept,
         roll.tracked + " tracked KPIs · " + people.length + " stakeholder" + (people.length === 1 ? "" : "s")) +
-      lensBar(rows) + gauges(roll) + spectrum(roll.counts) + legend(roll.counts) +
+      lensBar(rows) + summaryRow(roll) +
       (kids ? '<div class="sc-kids">' + kids + "</div>" : '<div class="sc-empty">No KPIs match this lens.</div>') +
       watchlist(rows, canOpenPeople());
   }
@@ -804,7 +825,7 @@
 
     return head(all[0].subDept, all[0].employee,
         (all[0].role || "") + " · " + roll.tracked + " tracked KPI" + (roll.tracked === 1 ? "" : "s")) +
-      lensBar(rows) + gauges(roll) + spectrum(roll.counts) + legend(roll.counts) +
+      lensBar(rows) + summaryRow(roll) +
       kpiList(rows, false);
   }
 
@@ -818,7 +839,7 @@
     return head("Student outcome", area,
         roll.tracked + " tracked KPIs across " + depts + " department" + (depts === 1 ? "" : "s")) +
       '<p class="sc-area-q">“' + esc(AREA_QUESTION[area]) + "”</p>" +
-      lensBar(rows) + gauges(roll) + spectrum(roll.counts) + legend(roll.counts) +
+      lensBar(rows) + summaryRow(roll) +
       kpiList(rows, true);
   }
 

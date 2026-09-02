@@ -481,14 +481,12 @@
 }
 
 /* ══════════════ TABLE ══════════════ */
-.okrp-table-card { padding: 0; overflow: hidden; }
-/* The table carries 11 columns, more than the 1720px reading column can hold.
-   Past that width, let it break out to the full section width so it uses the
-   empty page margins instead of scrolling. 908px = half the inner column
-   (860px) + the section's 48px gutter, which is where padding caps out. */
-@media (min-width: 1820px) {
-  .okrp-table-card { margin-inline: calc(908px - 50vw); }
-}
+/* The eleven-column table used to break out of the 1720px column above 1820px,
+   because eleven columns did not fit in it. That left the charts one width and
+   the list under them another, which is what made the page look misaligned.
+   The list is cards now and fits the column, so it stays inside it — and
+   everything on the page shares one left and right edge. */
+.okrp-groups-card { padding: 0; overflow: hidden; }
 .okrp-table-header {
   padding: 20px 24px 16px;
   border-bottom: 1px solid var(--border-subtle);
@@ -1284,3 +1282,179 @@
 
 /* Body-locked scroll when modal open */
 body.modal-open { overflow: hidden; }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   SUB-KEY RESULTS — collapsible, by objective
+
+   Replaces the eleven-column table. The objective is the unit people think in,
+   so it is the unit the list is built from: a card per objective, opened one
+   at a time, each row inside carrying the fields the columns used to.
+   ══════════════════════════════════════════════════════════════════════════ */
+.okrp-groups { display: flex; flex-direction: column; }
+
+.okrp-group { border-top: 1px solid var(--border); }
+.okrp-group:first-child { border-top: none; }
+
+/* The whole header is the control — a title you have to hit a chevron beside
+   is a smaller target for no reason. */
+.okrp-group-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 18px 24px;
+  background: none;
+  border: none;
+  border-left: 4px solid transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background .18s, border-color .18s;
+}
+.okrp-group-head:hover { background: var(--okr-pale); }
+.okrp-group.is-open > .okrp-group-head {
+  background: var(--okr-pale);
+  border-left-color: var(--okr-color);
+}
+.okrp-group-head:focus-visible {
+  outline: 2px solid var(--okr-color);
+  outline-offset: -2px;
+}
+
+.okrp-group-chev {
+  flex: none;
+  width: 22px; height: 22px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--okr-color);
+  transition: transform .22s var(--smooth, ease);
+}
+.okrp-group-chev svg { width: 16px; height: 16px; }
+.okrp-group.is-open .okrp-group-chev { transform: rotate(180deg); }
+
+.okrp-group-text { min-width: 0; }
+.okrp-group-name {
+  display: block;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.24rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--text);
+}
+.okrp-group-meta {
+  display: block;
+  margin-top: 3px;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+.okrp-group-meta b { color: var(--text); font-weight: 600; }
+.okrp-group-meta .is-risk { color: #C9762E; }
+
+.okrp-group-body {
+  padding: 4px 24px 20px 42px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+/* Setting `display` on an element defeats the `hidden` attribute — [hidden] is
+   only `display: none` at the lowest specificity, and the rule above outranks
+   it. Without this line every closed card still showed all of its rows, which
+   is the whole thing this list exists to avoid. */
+.okrp-group-body[hidden] { display: none; }
+
+/* ── one sub-key result ── */
+.okrp-skr {
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--skr-color);
+  border-radius: 10px;
+  padding: 14px 16px;
+  background: var(--bg);
+  cursor: pointer;
+  transition: border-color .18s, box-shadow .18s, transform .18s;
+}
+.okrp-skr:hover {
+  box-shadow: var(--shadow);
+  transform: translateY(-1px);
+}
+.okrp-skr:focus-visible {
+  outline: 2px solid var(--skr-color);
+  outline-offset: 2px;
+}
+
+.okrp-skr-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+.okrp-skr-head { min-width: 0; flex: 1; }
+.okrp-skr-title {
+  font-size: 0.92rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--text);
+}
+.okrp-skr-child {
+  display: inline-block;
+  margin-top: 5px;
+  padding: 2px 9px;
+  border-radius: 20px;
+  background: var(--skr-pale);
+  color: var(--skr-color);
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+.okrp-skr-kr {
+  margin-top: 6px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+/* The label needs a gap of its own. The tag pills get theirs from the flex
+   `gap` on .okrp-tag; this one sits in a plain block, where a gap property
+   does nothing, so "KEY RESULT" ran straight into the sentence after it. */
+.okrp-skr-kr .okrp-tag-k { margin-right: 7px; }
+
+.okrp-skr-right {
+  flex: none;
+  width: 190px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+/* The label on a tag, so a name is never left to be guessed at. The table said
+   which column a value was in; a card has to say it inline. */
+.okrp-skr-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  margin-top: 12px;
+  padding-top: 11px;
+  border-top: 1px dashed var(--border);
+}
+.okrp-tag {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  font-size: 0.76rem;
+  color: var(--text);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 3px 10px;
+}
+.okrp-tag-k {
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+@media (max-width: 760px) {
+  .okrp-group-head { padding: 15px 16px; }
+  .okrp-group-body { padding: 4px 16px 16px 16px; }
+  .okrp-skr-top { flex-direction: column; gap: 10px; }
+  .okrp-skr-right { width: 100%; align-items: flex-start; flex-direction: row; align-items: center; }
+}

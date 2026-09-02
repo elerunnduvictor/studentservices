@@ -280,7 +280,10 @@
 }
 .sc-head-meta { font-size: 0.85rem; color: var(--text-muted); margin-top: 5px; }
 
+/* Right-aligned. The lens is a control, not content: on the left it was the
+   first thing read on every view, ahead of the figures it filters. */
 .sc-lens {
+  justify-content: flex-end;
   display: flex; gap: 8px; flex-wrap: wrap;
   margin-bottom: 24px; align-items: center;
 }
@@ -303,6 +306,25 @@
 }
 
 /* ══════════════ GAUGES ══════════════ */
+/* Rings on the left, the colour mix and its key on the right — one row rather
+   than three stacked bands. The bar summarises the same rows the rings count,
+   so reading them together says more than reading them in sequence, and the
+   outcomes below start a screenful higher up. */
+.sc-topline {
+  display: grid;
+  grid-template-columns: auto minmax(280px, 1fr);
+  gap: clamp(24px, 4vw, 56px);
+  align-items: center;
+}
+.sc-mix { display: flex; flex-direction: column; gap: 12px; }
+.sc-mix .sc-spectrum { margin: 0; }
+.sc-mix .sc-legend { justify-content: flex-end; }
+@media (max-width: 900px) {
+  .sc-topline { grid-template-columns: 1fr; gap: 20px; }
+  .sc-mix .sc-legend { justify-content: flex-start; }
+  .sc-lens { justify-content: flex-start; }
+}
+
 .sc-gauges { display: flex; gap: clamp(24px, 5vw, 56px); align-items: center; flex-wrap: wrap; }
 .sc-gauge { display: flex; gap: 18px; align-items: center; }
 .sc-ring-track { stroke: var(--border-subtle); }
@@ -709,28 +731,7 @@
    ══════════════════════════════════════════════════════════════════════════ */
 .sc-outcomes { margin: 30px 0 8px; }
 
-.sc-outcomes-head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-  margin-bottom: 14px;
-}
-.sc-outcomes-label {
-  font-size: 0.8rem;
-  font-weight: 600;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-/* Which arithmetic produced these numbers. Quiet, but never absent: "83" means
-   a different thing once priorities are filled in. */
-.sc-outcomes-note {
-  font-size: 0.78rem;
-  color: var(--text-dim);
-  font-style: italic;
-}
+
 
 .sc-outcome {
   border: 1px solid var(--border);
@@ -769,6 +770,7 @@
   line-height: 1.15;
   letter-spacing: 0.01em;
 }
+/* Both sections carry this now — see the note in scorecard.js. */
 .sc-outcome.is-lead .sc-outcome-name { font-size: clamp(1.75rem, 3.1vw, 2.4rem); }
 .sc-outcome-blurb {
   font-size: 0.92rem;

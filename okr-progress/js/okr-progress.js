@@ -25,6 +25,10 @@ const state = {
   spotlight: "",
   spotlightIdx: -1,
   spotlightOpen: false,
+  /* Which objective cards are open in the list below. Kept here rather than
+     read back from the DOM because renderAll() rebuilds that list on every
+     filter change and every search keystroke. */
+  openGroups: new Set(),
 };
 
 /* ═══════════════ HELPERS (shared via window.SS) ═══════════════ */
@@ -373,73 +377,166 @@ function renderStakeholderBars(filtered) {
 }
 
 /* ═══════════════ RENDER: TABLE ═══════════════ */
-function renderTable(filtered) {
-  const body = document.getElementById("okrpTableBody");
+/* ═══════════════ RENDER: SUB-KEY RESULTS, BY OBJECTIVE ═══════════════
+
+   One collapsible card per objective in view. This replaced a flat table of
+   every sub-key result with eleven columns — accurate, and unreadable at fifty
+   rows. Nothing is hidden that was not hidden before: the same rows carry the
+   same fields, and each still opens the same detail modal.
+
+   Which cards are open is kept in `state.openGroups`, not in the DOM, because
+   renderAll() rebuilds this list from scratch on every filter change, search
+   keystroke and texture toggle. Left in the DOM, a card you opened would slam
+   shut the moment you typed in the search box.
+
+   When the view narrows to a single objective — which is what clicking an
+   objective card above does — that one opens itself. Filtering to one thing and
+   then being asked to click it again is a step that answers nothing. */
+function groupRows(filtered) {
+  const map = new Map();
+  filtered.forEach((r) => {
+    if (!map.has(r.okr)) map.set(r.okr, []);
+    map.get(r.okr).push(r);
+  });
+  // Objective order follows the data, not the alphabet, so these cards keep the
+  // same sequence as the overview cards above them.
+  return [...map.entries()].map(([okr, rows]) => ({ okr, rows }));
+}
+
+function skrItem(r) {
+  const c = okrPalette(r.okr);
+  const skr = skrPalette(r);
+  const s = effectiveStatus(r);
+  const sc = statusPalette(s);
+  const info = progressBarInfo(r);
+  const showGoal = info && info.goalDisplay != null && info.mode !== "completion";
+
+  const progressHtml = !info
+    ? `<span class="cell-dash">—</span>`
+    : `<div class="mini-progress is-${info.mode} ${info.exceeded ? "is-exceeded" : ""}" title="${info.tooltip}">
+         <div class="mini-progress-actual" style="width:${info.barFill}%; --mp-color: ${c.bg}; --mp-color-light: ${c.light};"></div>
+         <div class="mini-progress-label">${info.progressDisplay}${showGoal ? ` <span class="mp-goal">/ ${info.goalDisplay}</span>` : ""}</div>
+       </div>`;
+
+  /* Every column the table carried, as a labelled tag. Labelled because a bare
+     name among other names says nothing about whether it is the stakeholder, a
+     lead or the project manager — the table answered that in a header the
+     reader had to look back up at. */
+  const tag = (label, value) =>
+    value ? `<span class="okrp-tag"><span class="okrp-tag-k">${escapeHtml(label)}</span>${escapeHtml(value)}</span>` : "";
+
+  const leads = secondaryList(r.secondaryStakeholders);
+  const tags = [
+    tag("Stakeholder", r.stakeholder),
+    leads.length
+      ? `<span class="okrp-tag"><span class="okrp-tag-k">Leads</span>${leads.map(escapeHtml).join(", ")}</span>`
+      : "",
+    tag("PM", r.projectManager),
+    tag("Period", r.period),
+    hasStretch(r)
+      ? `<span class="okrp-tag"><span class="okrp-tag-k">Stretch</span>${escapeHtml(formatValue(r.stretchGoal, r))}</span>`
+      : "",
+  ].filter(Boolean).join("");
+
+  return `
+    <article class="okrp-skr" data-id="${r.id}" tabindex="0" role="button"
+             aria-label="Open ${escapeHtml(r.subKeyResult)}"
+             style="--skr-color:${skr.bg}; --skr-pale:${skr.pale};">
+      <div class="okrp-skr-top">
+        <div class="okrp-skr-head">
+          <div class="okrp-skr-title">${escapeHtml(r.subKeyResult)}</div>
+          ${r.subKeyResultChild ? `<div class="okrp-skr-child">${escapeHtml(r.subKeyResultChild)}</div>` : ""}
+          <div class="okrp-skr-kr"><span class="okrp-tag-k">Key result</span>${escapeHtml(r.keyResult)}</div>
+        </div>
+        <div class="okrp-skr-right">
+          ${progressHtml}
+          <span class="status-pill" style="background:${sc.pale}; color:${sc.bg};"><span class="status-dot" style="background:${sc.bg};"></span>${escapeHtml(s)}</span>
+        </div>
+      </div>
+      ${tags ? `<div class="okrp-skr-tags">${tags}</div>` : ""}
+    </article>`;
+}
+
+function renderGroups(filtered) {
+  const host = document.getElementById("okrpGroups");
   const count = document.getElementById("okrpCount");
-  count.textContent = `Showing ${filtered.length} of ${ROWS.length}`;
+  if (!host) return;
+  if (count) count.textContent = `Showing ${filtered.length} of ${ROWS.length}`;
 
   if (!filtered.length) {
-    body.innerHTML = `<tr><td colspan="11"><div class="okrp-empty">No sub-key results match your filters.</div></td></tr>`;
+    host.innerHTML = `<div class="okrp-empty">No sub-key results match your filters.</div>`;
     return;
   }
-  const sorted = filtered.slice().sort((a,b) => {
-    if (a.okr !== b.okr) return a.okr.localeCompare(b.okr);
-    if (a.keyResult !== b.keyResult) return a.keyResult.localeCompare(b.keyResult);
-    if (a.subKeyResult !== b.subKeyResult) return a.subKeyResult.localeCompare(b.subKeyResult);
-    // Keep Q1 → Q2 → Q3 → Q4 ordering when multiple Children share a Parent.
-    return (a.subKeyResultChild || "").localeCompare(b.subKeyResultChild || "");
-  });
 
-  body.innerHTML = sorted.map(r => {
-    const c = okrPalette(r.okr);
-    const skr = skrPalette(r);
-    const s = effectiveStatus(r);
-    const sc = statusPalette(s);
-    const info = progressBarInfo(r);
-    const showGoal = info && info.goalDisplay != null && info.mode !== "completion";
-    const progressHtml = !info
-      ? `<span style="color: var(--text-dim); font-size: 0.74rem;">—</span>`
-      : `
-        <div class="mini-progress is-${info.mode} ${info.exceeded ? "is-exceeded" : ""}" title="${info.tooltip}">
-          <div class="mini-progress-actual" style="width:${info.barFill}%; --mp-color: ${c.bg}; --mp-color-light: ${c.light};"></div>
-          <div class="mini-progress-label">${info.progressDisplay}${showGoal ? ` <span class="mp-goal">/ ${info.goalDisplay}</span>` : ""}</div>
-        </div>
-      `;
-    const childHtml = r.subKeyResultChild
-      ? `<span class="cell-skr-child-text">${escapeHtml(r.subKeyResultChild)}</span>`
-      : `<span class="cell-dash">—</span>`;
-    const stretchHtml = hasStretch(r)
-      ? `<span class="cell-stretch-val">${formatValue(r.stretchGoal, r)}</span>`
-      : `<span class="cell-dash">—</span>`;
+  const groups = groupRows(filtered);
+
+  // Narrowed to one objective: open it rather than making the reader ask twice.
+  if (groups.length === 1) state.openGroups.add(groups[0].okr);
+
+  host.innerHTML = groups.map((g) => {
+    const c = okrPalette(g.okr);
+    const open = state.openGroups.has(g.okr);
+    const avg = window.SS.okr.averagePercent(g.rows);
+    const atRisk = g.rows.filter((r) => /risk|trouble|behind/i.test(effectiveStatus(r))).length;
+    const done = g.rows.filter((r) => /complet/i.test(effectiveStatus(r))).length;
+
+    const sorted = g.rows.slice().sort((a, b) => {
+      if (a.keyResult !== b.keyResult) return a.keyResult.localeCompare(b.keyResult);
+      if (a.subKeyResult !== b.subKeyResult) return a.subKeyResult.localeCompare(b.subKeyResult);
+      // Q1 → Q2 → Q3 → Q4 where several children share one parent.
+      return (a.subKeyResultChild || "").localeCompare(b.subKeyResultChild || "");
+    });
+
     return `
-      <tr data-id="${r.id}">
-        <td class="cell-okr" data-label="OKR"><span class="okr-badge" style="background:${c.pale}; color:${c.bg};">${escapeHtml(r.okr)}</span></td>
-        <td class="cell-kr" data-label="Key Result">${escapeHtml(r.keyResult)}</td>
-        <td class="cell-skr" data-label="Sub-Key Result">
-          <div class="skr-wrap" style="background:${skr.pale}; border-left-color:${skr.bg};">
-            <span class="skr-dot" style="background:${skr.bg};"></span>
-            <span class="skr-text">${escapeHtml(r.subKeyResult)}</span>
-          </div>
-        </td>
-        <td class="cell-skr-child" data-label="Quarter">${childHtml}</td>
-        <td class="cell-person" data-label="Stakeholder">${escapeHtml(r.stakeholder)}</td>
-        <td class="cell-person cell-person-secondary" data-label="Secondary">${
-          secondaryList(r.secondaryStakeholders).length
-            ? secondaryList(r.secondaryStakeholders).map(p => `<span class="person-tag">${escapeHtml(p)}</span>`).join("")
-            : `<span class="cell-dash">—</span>`
-        }</td>
-        <td class="cell-person" data-label="Project Manager">${escapeHtml(r.projectManager)}</td>
-        <td class="cell-period" data-label="Period">${escapeHtml(r.period)}</td>
-        <td data-label="Progress">${progressHtml}</td>
-        <td class="cell-stretch" data-label="Stretch Goal">${stretchHtml}</td>
-        <td data-label="Status"><span class="status-pill" style="background:${sc.pale}; color:${sc.bg};"><span class="status-dot" style="background:${sc.bg};"></span>${escapeHtml(s)}</span></td>
-      </tr>
-    `;
+      <section class="okrp-group${open ? " is-open" : ""}" data-okr="${escapeHtml(g.okr)}"
+               style="--okr-color:${c.bg}; --okr-pale:${c.pale};">
+        <button type="button" class="okrp-group-head" aria-expanded="${open}">
+          <span class="okrp-group-chev" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </span>
+          <span class="okrp-group-text">
+            <span class="okrp-group-name">${escapeHtml(g.okr)}</span>
+            <span class="okrp-group-meta"><b>${g.rows.length}</b> sub-key result${g.rows.length === 1 ? "" : "s"}${avg === null ? "" : ` · <b>${avg}%</b> avg`}${done ? ` · ${done} complete` : ""}${atRisk ? ` · <b class="is-risk">${atRisk} at risk</b>` : ""}</span>
+          </span>
+        </button>
+        <div class="okrp-group-body"${open ? "" : " hidden"}>
+          ${sorted.map(skrItem).join("")}
+        </div>
+      </section>`;
   }).join("");
 
-  body.querySelectorAll("tr[data-id]").forEach(tr => {
-    tr.addEventListener("click", () => openDetailById(parseInt(tr.dataset.id, 10)));
-  });
+  /* One listener on the container rather than one per card: this list is
+     rebuilt on every keystroke in the search box, and re-binding fifty
+     listeners each time is work nobody asked for. */
+  if (!host.dataset.wired) {
+    host.dataset.wired = "1";
+    host.addEventListener("click", (e) => {
+      const head = e.target.closest(".okrp-group-head");
+      if (head) {
+        const sec = head.closest(".okrp-group");
+        const okr = sec.dataset.okr;
+        if (state.openGroups.has(okr)) state.openGroups.delete(okr);
+        else state.openGroups.add(okr);
+        const nowOpen = state.openGroups.has(okr);
+        sec.classList.toggle("is-open", nowOpen);
+        head.setAttribute("aria-expanded", String(nowOpen));
+        sec.querySelector(".okrp-group-body").hidden = !nowOpen;
+        return;
+      }
+      const item = e.target.closest(".okrp-skr");
+      if (item) openDetailById(parseInt(item.dataset.id, 10));
+    });
+    // A card that behaves like a button has to answer the keyboard like one.
+    host.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      const item = e.target.closest(".okrp-skr");
+      if (!item) return;
+      e.preventDefault();
+      openDetailById(parseInt(item.dataset.id, 10));
+    });
+  }
 }
 
 /* ═══════════════ RENDER: ALL ═══════════════ */
@@ -450,7 +547,7 @@ function renderAll() {
   renderOkrCards(filtered);
   renderStatusDonut(filtered);
   renderStakeholderBars(filtered);
-  renderTable(filtered);
+  renderGroups(filtered);
 }
 
 /* ═══════════════ SPOTLIGHT SEARCH ═══════════════ */
@@ -798,7 +895,7 @@ function renderSkrDetail(r) {
       <div class="mc-progress-card">
         <div class="mc-ring">
           <svg width="${ringSize}" height="${ringSize}" viewBox="0 0 ${ringSize} ${ringSize}">
-            ${ringSvg(ringCx, ringCy, ringR, ringSw, p, c.bg)}
+            ${ringSvg(ringCx, ringCy, ringR, ringSw, info ? info.barFill : 0, c.bg)}
           </svg>
           <div class="mc-ring-center">
             <div>

@@ -126,32 +126,24 @@
         </div>
       </div>
 
-      <!-- Table -->
-      <div class="okrp-card okrp-table-card" data-reveal>
+      <!-- ═══════════════ SUB-KEY RESULTS ═══════════════
+           One collapsible card per objective, rather than every sub-key result
+           in a single eleven-column table.
+
+           The table put all fifty rows on screen at once with eleven columns
+           each — five hundred cells to read past before finding the one you
+           came for. The objective is the unit people think in, so it is the
+           unit the list is built from: a few cards, opened one at a time.
+
+           Opening a card is not a different view. The rows inside carry the
+           same fields the table's columns did, and each still opens the same
+           detail modal it always did. -->
+      <div class="okrp-card okrp-groups-card" data-reveal>
         <div class="okrp-table-header">
           <div class="okrp-card-title">Sub-Key Results</div>
           <div id="okrpCount" class="okrp-table-count"></div>
         </div>
-        <div class="okrp-table-wrap">
-          <table class="okrp-table">
-            <thead>
-              <tr>
-                <th>OKR</th>
-                <th>Key Result</th>
-                <th>Sub-Key Result (Parent)</th>
-                <th>Sub-Key Result (Child)</th>
-                <th>Stakeholders</th>
-                <th class="okrp-th-secondary okrp-th-wrap">Leads</th>
-                <th class="okrp-th-wrap">Project Manager</th>
-                <th>Period</th>
-                <th class="okrp-th-progress">Progress</th>
-                <th class="okrp-th-wrap">Stretch Goal</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody id="okrpTableBody"></tbody>
-          </table>
-        </div>
+        <div class="okrp-groups" id="okrpGroups"></div>
       </div>
 
     </div>

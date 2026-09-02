@@ -36,6 +36,10 @@ const state = {
      opening one automatically does not fight a reader who then closes it:
      without it the next keystroke in the search box would open it again. */
   openGroup: null,
+  /* And which sub-key result is open inside it — the same accordion, one level
+     in. Separate from openGroup because they nest: closing an objective should
+     not forget which of its sub-groups you had open. */
+  openSub: null,
   autoOpenedFor: null,
 };
 
@@ -387,19 +391,32 @@ function renderStakeholderBars(filtered) {
 /* ═══════════════ RENDER: TABLE ═══════════════ */
 /* ═══════════════ RENDER: SUB-KEY RESULTS, BY OBJECTIVE ═══════════════
 
-   One collapsible card per objective in view. This replaced a flat table of
-   every sub-key result with eleven columns — accurate, and unreadable at fifty
-   rows. Nothing is hidden that was not hidden before: the same rows carry the
-   same fields, and each still opens the same detail modal.
+   Two levels of collapsing, both working the same way.
 
-   One card is open at a time, and which one is kept in `state.openGroup`, not
-   in the DOM: renderAll() rebuilds this list from scratch on every filter
-   change, search keystroke and texture toggle, so a card left open only in the
-   DOM would slam shut the moment you typed in the search box.
+   The outer level is the objective — one card per objective in view. That
+   replaced a flat table of every sub-key result with eleven columns: accurate,
+   and unreadable at fifty rows.
 
-   When the view narrows to a single objective — which is what clicking an
-   objective card above does — that one opens itself. Filtering to one thing and
-   then being asked to click it again is a step that answers nothing. */
+   The inner level is the sub-key result itself, where it has more than one row
+   under it. "Complete Admissions ITD roadmap of essential features for scale"
+   is four quarters; listing all four as siblings of everything else made the
+   objective card long again, and repeated that same sentence four times to do
+   it. Four parents in the data have several rows (7, 5, 4 and 4); the other
+   thirty have exactly one and are drawn as a plain row, because a card you
+   have to open to find a single item inside is a step that answers nothing.
+
+   Nothing is hidden that was not hidden before: the same rows carry the same
+   fields, and each still opens the same detail modal.
+
+   ── What is open ──
+
+   One objective at a time, and one sub-group at a time, like an accordion —
+   two open at once is most of the way back to the wall of rows this replaced.
+   Both are held in `state`, not in the DOM, because renderAll() rebuilds this
+   list on every filter change and every search keystroke; left in the DOM, a
+   card you opened would slam shut the moment you typed in the search box.
+   `autoOpenedFor` stops the automatic opening from fighting a reader who has
+   deliberately closed something. */
 function groupRows(filtered) {
   const map = new Map();
   filtered.forEach((r) => {
@@ -411,7 +428,22 @@ function groupRows(filtered) {
   return [...map.entries()].map(([okr, rows]) => ({ okr, rows }));
 }
 
-function skrItem(r) {
+/* The rows of one objective, gathered under the sub-key result they belong to.
+   Insertion order is kept, so a parent appears where its first row did. */
+function groupByParent(rows) {
+  const map = new Map();
+  rows.forEach((r) => {
+    const key = r.subKeyResult || "";
+    if (!map.has(key)) map.set(key, []);
+    map.get(key).push(r);
+  });
+  return [...map.entries()].map(([parent, kids]) => ({ parent, rows: kids }));
+}
+
+function subKey(okr, parent) { return okr + "||" + parent; }
+
+function skrItem(r, opts) {
+  const nested = !!(opts && opts.nested);
   const c = okrPalette(r.okr);
   const skr = skrPalette(r);
   const s = effectiveStatus(r);
@@ -446,20 +478,30 @@ function skrItem(r) {
       : "",
   ].filter(Boolean).join("");
 
+  /* Inside a sub-group the parent is already the heading above, so a row is
+     identified by its quarter alone — repeating the parent on all four would
+     be the same sentence four times.
+
+     Except where there is no quarter. One row in the data ("Achieve 75% PC New
+     yield…") sits under a multi-row parent with no child of its own, and
+     dropping the parent there would leave a card with no heading at all. It
+     falls back to the parent, which is the only name it has. */
+  const heading = nested
+    ? (r.subKeyResultChild || r.subKeyResult)
+    : r.subKeyResult;
+  const chip = (!nested && r.subKeyResultChild)
+    ? `<div class="okrp-skr-child">${escapeHtml(r.subKeyResultChild)}</div>`
+    : "";
+
   return `
     <article class="okrp-skr" data-id="${r.id}" tabindex="0" role="button"
-             aria-label="Open ${escapeHtml(r.subKeyResult)}"
+             aria-label="Open ${escapeHtml(heading)}"
              style="--skr-color:${skr.bg}; --skr-pale:${skr.pale};">
       <div class="okrp-skr-top">
         <div class="okrp-skr-head">
-          <!-- The quarter first, the parent under it. A row reads
-               "Q2 Admissions ITD roadmap" over "Complete Admissions ITD roadmap
-               of essential features for scale" — the specific thing above the
-               objective it belongs to, rather than the other way round. Both keep
-               the styling they already had. -->
-          ${r.subKeyResultChild ? `<div class="okrp-skr-child">${escapeHtml(r.subKeyResultChild)}</div>` : ""}
-          <div class="okrp-skr-title">${escapeHtml(r.subKeyResult)}</div>
-          <div class="okrp-skr-kr"><span class="okrp-tag-k">Key result</span>${escapeHtml(r.keyResult)}</div>
+          ${chip}
+          <div class="okrp-skr-title">${escapeHtml(heading)}</div>
+          ${nested ? "" : `<div class="okrp-skr-kr"><span class="okrp-tag-k">Key result</span>${escapeHtml(r.keyResult)}</div>`}
         </div>
         <div class="okrp-skr-right">
           ${progressHtml}
@@ -468,6 +510,50 @@ function skrItem(r) {
       </div>
       ${tags ? `<div class="okrp-skr-tags">${tags}</div>` : ""}
     </article>`;
+}
+
+/* A sub-key result with several rows under it.
+
+   Built to the same shape as a plain row — name, key result, a row of tags,
+   and a right-hand column — so the two sit at the same height and the list
+   reads as one set of cards rather than two. The alternative was padding this
+   one out to match, which would have bought the same height with empty space.
+
+   The tags are the fields its rows agree on. Three of the four groups agree on
+   every one; the fourth shares its key result and period but spreads across
+   several people, and says "Various" rather than picking one of them. A header
+   that claimed a single stakeholder for seven rows owned by different people
+   would be worse than saying nothing.
+
+/* A sub-key result with several rows under it: a header that summarises them,
+   and the rows themselves behind it. Same shape as the objective card above,
+   one level in. */
+function subGroup(okr, entry) {
+  const key = subKey(okr, entry.parent);
+  const open = state.openSub === key;
+  const skr = skrPalette(entry.rows[0]);
+  const avg = window.SS.okr.averagePercent(entry.rows);
+  const atRisk = entry.rows.filter((r) => /risk|trouble|behind/i.test(effectiveStatus(r))).length;
+  const done = entry.rows.filter((r) => /complet/i.test(effectiveStatus(r))).length;
+
+  return `
+    <section class="okrp-sub${open ? " is-open" : ""}" data-sub="${escapeHtml(key)}"
+             style="--skr-color:${skr.bg}; --skr-pale:${skr.pale};">
+      <button type="button" class="okrp-sub-head" aria-expanded="${open}">
+        <span class="okrp-sub-chev" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </span>
+        <span class="okrp-sub-text">
+          <span class="okrp-sub-name">${escapeHtml(entry.parent)}</span>
+          <span class="okrp-sub-meta"><b>${entry.rows.length}</b> item${entry.rows.length === 1 ? "" : "s"}${avg === null ? "" : ` · <b>${avg}%</b> avg`}${done ? ` · ${done} complete` : ""}${atRisk ? ` · <b class="is-risk">${atRisk} at risk</b>` : ""}</span>
+        </span>
+      </button>
+      <div class="okrp-sub-body"${open ? "" : " hidden"}>
+        ${entry.rows.map((r) => skrItem(r, { nested: true })).join("")}
+      </div>
+    </section>`;
 }
 
 function renderGroups(filtered) {
@@ -482,9 +568,9 @@ function renderGroups(filtered) {
   const groups = groupRows(filtered);
 
   /* Narrowed to one objective — by a filter, or by clicking a card above —
-     open it rather than making the reader ask twice. Only when it differs
-     from the one we last opened this way, so a card the reader has
-     deliberately closed stays closed. */
+     open it rather than making the reader ask twice. Only when it differs from
+     the one we last opened this way, so a card the reader has deliberately
+     closed stays closed. */
   if (groups.length === 1 && state.autoOpenedFor !== groups[0].okr) {
     state.openGroup = groups[0].okr;
     state.autoOpenedFor = groups[0].okr;
@@ -498,12 +584,34 @@ function renderGroups(filtered) {
     const atRisk = g.rows.filter((r) => /risk|trouble|behind/i.test(effectiveStatus(r))).length;
     const done = g.rows.filter((r) => /complet/i.test(effectiveStatus(r))).length;
 
-    const sorted = g.rows.slice().sort((a, b) => {
-      if (a.keyResult !== b.keyResult) return a.keyResult.localeCompare(b.keyResult);
-      if (a.subKeyResult !== b.subKeyResult) return a.subKeyResult.localeCompare(b.subKeyResult);
-      // Q1 → Q2 → Q3 → Q4 where several children share one parent.
-      return (a.subKeyResultChild || "").localeCompare(b.subKeyResultChild || "");
-    });
+    /* A parent with several rows becomes a group of its own; one with a single
+       row is drawn as that row. A collapsible holding one item asks to be
+       opened to show what it already said.
+
+       Ordered alphabetically by what the reader sees — the parent's name —
+       whether it ends up a group or a single row, so the two kinds interleave
+       rather than the groups clumping at one end. Sorting used to key off the
+       key result first, which is invisible here: it put "Achieve 75% PC New
+       yield" after three parents beginning with "Complete" for a reason
+       nothing on screen explained.
+
+       `numeric` so a tenth item sorts after the ninth rather than after the
+       first. */
+    const byName = (a, b) =>
+      String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: "base" });
+
+    const entries = groupByParent(g.rows)
+      .map((entry) => ({
+        parent: entry.parent,
+        // Q1 → Q2 → Q3 → Q4 where several children share one parent.
+        rows: entry.rows.slice().sort((a, b) =>
+          byName(a.subKeyResultChild || a.subKeyResult, b.subKeyResultChild || b.subKeyResult)),
+      }))
+      .sort((a, b) => byName(a.parent, b.parent));
+
+    const body = entries.map((entry) =>
+      entry.rows.length > 1 ? subGroup(g.okr, entry) : skrItem(entry.rows[0])
+    ).join("");
 
     return `
       <section class="okrp-group${open ? " is-open" : ""}" data-okr="${escapeHtml(g.okr)}"
@@ -520,7 +628,7 @@ function renderGroups(filtered) {
           </span>
         </button>
         <div class="okrp-group-body"${open ? "" : " hidden"}>
-          ${sorted.map(skrItem).join("")}
+          ${body}
         </div>
       </section>`;
   }).join("");
@@ -531,6 +639,23 @@ function renderGroups(filtered) {
   if (!host.dataset.wired) {
     host.dataset.wired = "1";
     host.addEventListener("click", (e) => {
+      // Innermost first: a sub-group header sits inside an objective's body, so
+      // testing the objective first would swallow every click on a sub.
+      const subHead = e.target.closest(".okrp-sub-head");
+      if (subHead) {
+        const sec = subHead.closest(".okrp-sub");
+        const key = sec.dataset.sub;
+        const nowOpen = state.openSub !== key;
+        state.openSub = nowOpen ? key : null;
+        host.querySelectorAll(".okrp-sub").forEach((s2) => {
+          const isIt = s2 === sec && nowOpen;
+          s2.classList.toggle("is-open", isIt);
+          s2.querySelector(".okrp-sub-head").setAttribute("aria-expanded", String(isIt));
+          s2.querySelector(".okrp-sub-body").hidden = !isIt;
+        });
+        return;
+      }
+
       const head = e.target.closest(".okrp-group-head");
       if (head) {
         const sec = head.closest(".okrp-group");
@@ -539,14 +664,15 @@ function renderGroups(filtered) {
         state.openGroup = nowOpen ? okr : null;
         // Opening one closes the others, without a redraw: the rows are already
         // in the DOM, so this only moves the flags that hide them.
-        host.querySelectorAll(".okrp-group").forEach(function (s2) {
-          var isIt = s2 === sec && nowOpen;
+        host.querySelectorAll(".okrp-group").forEach((s2) => {
+          const isIt = s2 === sec && nowOpen;
           s2.classList.toggle("is-open", isIt);
           s2.querySelector(".okrp-group-head").setAttribute("aria-expanded", String(isIt));
           s2.querySelector(".okrp-group-body").hidden = !isIt;
         });
         return;
       }
+
       const item = e.target.closest(".okrp-skr");
       if (item) openDetailById(parseInt(item.dataset.id, 10));
     });
@@ -1226,7 +1352,8 @@ function initFilters() {
        reason to still be showing. */
     Object.assign(state, { okr: "All", status: "All", stakeholder: "All",
                            secondaryStakeholder: "All", pm: "All", period: "All",
-                           search: "", openGroup: null, autoOpenedFor: null });
+                           search: "", openGroup: null, openSub: null,
+                           autoOpenedFor: null });
     document.getElementById("filterSearch").value = "";
     renderAll();
   });

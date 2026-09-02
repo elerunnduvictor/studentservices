@@ -1289,7 +1289,16 @@ body.modal-open { overflow: hidden; }
    so it is the unit the list is built from: a card per objective, opened one
    at a time, each row inside carrying the fields the columns used to.
    ══════════════════════════════════════════════════════════════════════════ */
-.okrp-groups { display: flex; flex-direction: column; }
+.okrp-groups {
+  display: flex;
+  flex-direction: column;
+
+  /* What one plain sub-key result row stands at: 14px of padding either side
+     of a title, a key result line and a row of tags. Measured, not guessed —
+     every row on the page is this tall at 1100px and up. A collapsed group
+     borrows it below so the two kinds of card line up. */
+  --okrp-row-h: 135px;
+}
 
 .okrp-group { border-top: 1px solid var(--border); }
 .okrp-group:first-child { border-top: none; }
@@ -1458,4 +1467,86 @@ body.modal-open { overflow: hidden; }
   .okrp-group-body { padding: 4px 16px 16px 16px; }
   .okrp-skr-top { flex-direction: column; gap: 10px; }
   .okrp-skr-right { width: 100%; align-items: flex-start; flex-direction: row; align-items: center; }
+}
+
+/* ── a sub-key result with several rows under it ──
+   The same collapsing card as the objective above it, one level in and quieter:
+   an objective is a heading, this is a grouping of rows. */
+.okrp-sub {
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--skr-color);
+  border-radius: 10px;
+  background: var(--bg);
+  overflow: hidden;
+}
+.okrp-sub-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 13px 15px;
+  background: none;
+  border: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background .18s;
+}
+/* Closed, a group is one card among the plain rows either side of it, and its
+   two lines of text left it half their height — the list read as two sizes of
+   card rather than one. It takes a row's height while closed, and drops back to
+   its own once opened, where a 135px band above the rows would just be a gap.
+
+   Rows grow past this where a long title wraps, which is below about 1000px.
+   A min-height follows them up rather than clipping. */
+.okrp-sub:not(.is-open) > .okrp-sub-head { min-height: calc(var(--okrp-row-h) - 2px); }
+
+.okrp-sub-head:hover { background: var(--skr-pale); }
+.okrp-sub.is-open > .okrp-sub-head { background: var(--skr-pale); }
+.okrp-sub-head:focus-visible { outline: 2px solid var(--skr-color); outline-offset: -2px; }
+
+.okrp-sub-chev {
+  flex: none;
+  width: 18px; height: 18px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--skr-color);
+  transition: transform .22s var(--smooth, ease);
+}
+.okrp-sub-chev svg { width: 14px; height: 14px; }
+.okrp-sub.is-open .okrp-sub-chev { transform: rotate(180deg); }
+
+.okrp-sub-text { min-width: 0; }
+.okrp-sub-name {
+  display: block;
+  font-size: 0.92rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--text);
+}
+.okrp-sub-meta {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.76rem;
+  color: var(--text-muted);
+}
+.okrp-sub-meta b { color: var(--text); font-weight: 600; }
+.okrp-sub-meta .is-risk { color: #C9762E; }
+
+.okrp-sub-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 2px 12px 12px 30px;
+}
+/* Setting `display` defeats the `hidden` attribute — [hidden] is only
+   `display: none` at the lowest specificity, and the rule above outranks it.
+   The objective bodies needed exactly this line for the same reason. */
+.okrp-sub-body[hidden] { display: none; }
+
+/* Rows inside a sub-group sit on the card, not on the page, so they need a
+   ground of their own to stay distinct from it. */
+.okrp-sub-body .okrp-skr { background: var(--bg-card); }
+
+@media (max-width: 760px) {
+  .okrp-sub-body { padding: 2px 10px 10px 14px; }
 }

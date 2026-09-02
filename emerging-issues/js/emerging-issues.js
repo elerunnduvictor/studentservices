@@ -59,6 +59,21 @@
     { id: "backlog", label: "Backlog",      max: Infinity,
       blurb: "Raised more than a fortnight ago and still open." },
   ];
+  /* What kind of issue this is — a different question from how severe it is or
+     which department owns it. A system fault and a grievance can both be
+     Critical and both belong to Records; what to do about them is not the same,
+     and severity alone never said which was which.
+
+     Kept here beside SEVERITY and STATUS so the raise form and the register's
+     filter are built from one list. If a category_check constraint is added to
+     the table, these four strings are what it has to allow. */
+  const CATEGORIES = [
+    "System Issues",
+    "High Profile Grievances",
+    "Operational Issues",
+    "General Concerns",
+  ];
+
   const DEPARTMENTS = [
     "Student Records, Registration, and Support",
     "Enrollment & Retention",
@@ -79,7 +94,7 @@
      Data Enaluator"; offering those as choices would spread the typos. */
   let SUBS = {};
   let OPEN_ID = null;                       // which issue is expanded
-  const filters = { dept: "", severity: "", status: "", resolved: false };
+  const filters = { dept: "", severity: "", status: "", category: "" };
   let TAB = "current";                      // which of the three is showing
 
   /* ── why an issue is where it is ────────────────────────────────────────
@@ -192,10 +207,20 @@
      would report the number showing on the tab you are already looking at. */
   function afterFilters() {
     return ISSUES.filter((i) => {
-      if (!filters.resolved && i.status === "Resolved") return false;
+      /* Resolved issues stay out of the way unless you ask for them, and
+         the way you ask is the Status filter.
+      
+         This used to be a separate "Include resolved" checkbox, which
+         contradicted the dropdown beside it: choosing Status "Resolved"
+         while the box was unticked filtered every one of them straight
+         back out and showed an empty list. Two controls answering one
+         question, each able to overrule the other silently. The dropdown
+         does the whole job now. */
+      if (filters.status !== "Resolved" && i.status === "Resolved") return false;
       if (filters.dept && i.department !== filters.dept) return false;
       if (filters.severity && i.severity !== filters.severity) return false;
       if (filters.status && i.status !== filters.status) return false;
+      if (filters.category && i.category !== filters.category) return false;
       return true;
     });
   }
@@ -232,6 +257,11 @@
     ].filter(Boolean).join(" &nbsp;·&nbsp; ");
 
     const links = [
+      /* Only when it is there. Every issue raised before the category existed
+         has none, and inventing "General Concerns" for those would be putting
+         words in their author's mouth — a blank means nobody said, which is a
+         different thing from somebody saying "general". */
+      i.category ? `<span class="ei-link-tag ei-cat-tag">${esc(i.category)}</span>` : "",
       i.linked_kpi ? `<span class="ei-link-tag">KPI: ${esc(i.linked_kpi)}</span>` : "",
       i.linked_okr ? `<span class="ei-link-tag">OKR: ${esc(i.linked_okr)}</span>` : "",
     ].join("");
@@ -326,7 +356,29 @@
       // from the signed-in session, which is the only account of who and when
       // that cannot be typed wrong.
     };
-    await SS.db.insert("emerging_issues", [body]);
+
+    const category = (f.get("category") || "").toString().trim();
+    if (category) body.category = category;
+
+    /* The category column may not exist yet.
+
+       It is added by supabase/emerging-issue-categories.sql, and this file
+       ships whether or not that has been run. PostgREST answers an unknown
+       column with PGRST204 and refuses the whole row — which would mean nobody
+       could raise an issue at all until the migration landed. Losing the
+       category is a far smaller failure than losing the issue, so on that one
+       error the row goes again without it and the caller is told what was
+       dropped, rather than the person assuming it saved. */
+    try {
+      await SS.db.insert("emerging_issues", [body]);
+    } catch (err) {
+      const text = String((err && err.message) || err);
+      if (!body.category || !/PGRST204|category/i.test(text)) throw err;
+      delete body.category;
+      await SS.db.insert("emerging_issues", [body]);
+      return { droppedCategory: true };
+    }
+    return {};
   }
 
   function say(msg, bad) {
@@ -391,8 +443,12 @@
     const opts = (arr) => arr.map((v) => `<option value="${esc(v)}">${esc(v)}</option>`).join("");
     el("fDept").innerHTML = `<option value="">All departments</option>` + opts(DEPARTMENTS);
     el("fSeverity").innerHTML = `<option value="">Any severity</option>` + opts(SEVERITY);
+    el("fCategory").innerHTML = `<option value="">Any category</option>` + opts(CATEGORIES);
     el("fStatus").innerHTML = `<option value="">Any status</option>` + opts(STATUS);
     el("nDepartment").innerHTML = `<option value="">—</option>` + opts(DEPARTMENTS);
+    // No default: the four are not ranked, so pre-selecting one would file
+    // every issue nobody thought about under whichever happened to be first.
+    el("nCategory").innerHTML = `<option value="">—</option>` + opts(CATEGORIES);
     el("nSeverity").innerHTML = opts(SEVERITY);
     el("nStatus").innerHTML = opts(STATUS);
     el("nSeverity").value = "Moderate";
@@ -447,17 +503,14 @@
     });
 
     // Filters
-    ["fDept", "fSeverity", "fStatus"].forEach((id) => {
+    ["fDept", "fSeverity", "fStatus", "fCategory"].forEach((id) => {
       el(id).addEventListener("change", () => {
         filters.dept = el("fDept").value;
         filters.severity = el("fSeverity").value;
         filters.status = el("fStatus").value;
+        filters.category = el("fCategory").value;
         renderList();
       });
-    });
-    el("fResolved").addEventListener("change", (e) => {
-      filters.resolved = e.target.checked;
-      renderList();
     });
 
     // Open and close an issue. Delegated, because the list is redrawn often.
@@ -498,18 +551,23 @@
       const btn = el("eiSubmit");
       btn.disabled = true;
       try {
-        await raiseIssue(e.target);
+        const outcome = await raiseIssue(e.target);
         dlg.close();
         e.target.reset();
         el("nSeverity").value = "Moderate";
         el("nStatus").value = "Exploring";
+        el("nCategory").value = "";
         fillSubDepartments("");
         watchSeverity(document);
         // A new issue is by definition in Current Week; showing the reader a
         // different tab would look like it had not saved.
         TAB = BUCKETS[0].id;
         await load();
-        say("Issue raised.");
+        // Say so plainly if the category could not be stored, rather than
+        // reporting a clean save for a row that quietly lost a field.
+        say(outcome && outcome.droppedCategory
+          ? "Issue raised — but the category was not saved: the database has no category column yet."
+          : "Issue raised.", !!(outcome && outcome.droppedCategory));
       } catch (err) {
         /* Two different constraints can reject a value, and each needs its own
            wording — a single "check constraint" catch-all used to answer both,

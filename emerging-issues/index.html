@@ -102,9 +102,7 @@
         <select id="fDept" aria-label="Filter by department"></select>
         <select id="fSeverity" aria-label="Filter by severity"></select>
         <select id="fStatus" aria-label="Filter by status"></select>
-        <label class="ei-check">
-          <input type="checkbox" id="fResolved"> Include resolved
-        </label>
+        <select id="fCategory" aria-label="Filter by category"></select>
       </div>
       <div class="ei-count" id="eiCount"></div>
     </section>
@@ -126,13 +124,25 @@
            A title first — name the problem in a line, the way the register
            lists it — then the detail box asks only what that line doesn't
            already say: who or what it affects. Splitting them stopped the
-           title being a compressed rehash of the paragraph beneath it. No
-           placeholder text inside either: the label is the question. -->
-      <label class="ei-label" for="nTitle">What is the problem</label>
+           title being a compressed rehash of the paragraph beneath it.
+
+           Each label names the field and then asks the question, so the form
+           reads the same way the register does: someone who knows they are
+           looking for "the title" finds it without reading the question, and
+           someone who does not still gets asked. No placeholder text inside
+           either box — the label is the question. -->
+      <label class="ei-label" for="nTitle">Title &mdash; what is the problem</label>
       <input id="nTitle" name="title" type="text" maxlength="140" required>
 
-      <label class="ei-label" for="nSummary">Who or what it affects</label>
+      <label class="ei-label" for="nSummary">Description &mdash; who or what it affects</label>
       <textarea id="nSummary" name="summary" rows="5" required></textarea>
+
+      <!-- What kind of issue this is, which is a different question from how bad
+           it is or which department owns it. Filled from CATEGORIES in
+           emerging-issues.js so the register's filter and this form cannot
+           offer different lists. -->
+      <label class="ei-label" for="nCategory">Category</label>
+      <select id="nCategory" name="category"></select>
 
       <div class="ei-dialog-row">
         <div>

@@ -255,19 +255,15 @@
      card would read as "we have that covered" rather than "nobody measures
      this", which is the more useful thing to know.
      ══════════════════════════════════════════════════════════ */
+  /* Student Outcomes first. Both are scored the same way, but they are not of
+     equal standing: the operational three are how the work runs, the student
+     three are what the work is for. Leading with Speed and Quality put the
+     means above the end, on the page that defines what the organisation
+     measures. The leading section carries `lead: true` and is drawn heavier. */
   var OUTCOMES = [
     {
-      key: "operational",
-      name: "Operational Outcomes",
-      blurb: "How well the work runs.",
-      parts: [
-        { type: "Speed",   note: "Promptness of execution." },
-        { type: "Quality", note: "Accuracy and satisfaction." },
-        { type: "Cost",    note: "Cost control and scalability." },
-      ],
-    },
-    {
       key: "student",
+      lead: true,
       name: "Student Outcomes",
       blurb: "What changes for students.",
       /* `area` rather than a note: these three already have wording, in
@@ -278,6 +274,16 @@
         { type: "Student Autonomy",     area: "Autonomy" },
         { type: "Student Satisfaction", area: "Satisfaction" },
         { type: "Completion",           area: "Completion" },
+      ],
+    },
+    {
+      key: "operational",
+      name: "Operational Outcomes",
+      blurb: "How well the work runs.",
+      parts: [
+        { type: "Speed",   note: "Promptness of execution." },
+        { type: "Quality", note: "Accuracy and satisfaction." },
+        { type: "Cost",    note: "Cost control and scalability." },
       ],
     },
   ];
@@ -345,7 +351,8 @@
       ? '<span class="sc-outcome-score is-empty">—</span>'
       : '<span class="sc-outcome-score">' + roll.health + "<small>/100</small></span>";
 
-    return '<section class="sc-outcome" data-outcome="' + outcome.key + '">' +
+    return '<section class="sc-outcome' + (outcome.lead ? " is-lead" : "") +
+      '" data-outcome="' + outcome.key + '">' +
       '<div class="sc-outcome-head">' +
         '<div>' +
           '<div class="sc-outcome-name">' + esc(outcome.name) + "</div>" +

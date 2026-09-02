@@ -18,6 +18,10 @@
    ══════════════════════════════════════════════════════════ */
 :root {
   --sc-accent: #1E6E8C;
+  /* The same colour as rgb components, for rules that need it at an opacity.
+     Several already asked for it and were falling through to a hardcoded
+     fallback — which meant they kept the light-theme blue in dark mode. */
+  --sc-accent-r: 30,110,140;
   --sc-accent-deep: #0C3547;
   --sc-accent-mid: #2E8FB0;
   --sc-accent-light: #5FC0E2;
@@ -60,6 +64,7 @@
 }
 [data-theme="dark"] {
   --sc-accent: #5FB4D4;
+  --sc-accent-r: 95,180,212;
   --sc-accent-light: #8AD3EE;
   --ring-health: #4FA8C9;
   --ring-cov: #C29433;
@@ -713,10 +718,11 @@
   margin-bottom: 14px;
 }
 .sc-outcomes-label {
-  font-size: 0.72rem;
+  font-size: 0.8rem;
+  font-weight: 600;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--text-dim);
+  color: var(--text-muted);
 }
 /* Which arithmetic produced these numbers. Quiet, but never absent: "83" means
    a different thing once priorities are filled in. */
@@ -727,13 +733,25 @@
 }
 
 .sc-outcome {
-  border: 1px solid var(--border-subtle, var(--border));
+  border: 1px solid var(--border);
   border-radius: 16px;
-  padding: clamp(18px, 2.2vw, 26px);
+  padding: clamp(20px, 2.4vw, 30px);
   background: var(--bg-card);
-  margin-bottom: 18px;
+  margin-bottom: 22px;
 }
 .sc-outcome:last-child { margin-bottom: 0; }
+
+/* Student Outcomes leads, and is drawn as the lead: a band of the page's own
+   accent down its edge and a little more room inside. The two sections used to
+   be identical boxes, which said they were of equal standing — they are not.
+   The operational three are how the work runs; these three are what it is
+   for. */
+.sc-outcome.is-lead {
+  border-color: rgba(var(--sc-accent-r, 30,110,140), .38);
+  border-left: 4px solid var(--sc-accent);
+  padding: clamp(24px, 2.8vw, 34px);
+  box-shadow: 0 2px 18px rgba(var(--sc-accent-r, 30,110,140), .07);
+}
 
 .sc-outcome-head {
   display: flex;
@@ -745,25 +763,28 @@
 }
 .sc-outcome-name {
   font-family: 'Cormorant Garamond', serif;
-  font-size: clamp(1.3rem, 2.2vw, 1.7rem);
-  font-weight: 600;
+  font-size: clamp(1.5rem, 2.6vw, 2rem);
+  font-weight: 700;
   color: var(--text);
-  line-height: 1.2;
+  line-height: 1.15;
+  letter-spacing: 0.01em;
 }
+.sc-outcome.is-lead .sc-outcome-name { font-size: clamp(1.75rem, 3.1vw, 2.4rem); }
 .sc-outcome-blurb {
-  font-size: 0.86rem;
-  color: var(--text-dim);
-  margin-top: 3px;
+  font-size: 0.92rem;
+  color: var(--text-muted);
+  margin-top: 5px;
 }
 .sc-outcome-figures { text-align: right; }
 .sc-outcome-score {
   display: block;
   font-family: 'Cormorant Garamond', serif;
-  font-size: clamp(2rem, 3.6vw, 2.9rem);
-  font-weight: 600;
+  font-size: clamp(2.3rem, 4vw, 3.3rem);
+  font-weight: 700;
   line-height: 1;
   color: var(--sc-accent);
 }
+.sc-outcome.is-lead .sc-outcome-score { font-size: clamp(2.7rem, 4.8vw, 3.9rem); }
 .sc-outcome-score small {
   font-size: 0.36em;
   color: var(--text-dim);
@@ -772,24 +793,44 @@
 .sc-outcome-score.is-empty { color: var(--text-dim); }
 .sc-outcome-cov {
   display: block;
-  font-size: 0.78rem;
-  color: var(--text-dim);
-  margin-top: 4px;
+  font-size: 0.84rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-top: 5px;
 }
 
 /* ── the three parts ── */
 .sc-parts {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: clamp(12px, 1.4vw, 18px);
-  margin-top: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: clamp(14px, 1.6vw, 22px);
+  margin-top: 20px;
 }
+/* Each of the six is its own card, and has to read as one.
+
+   They were a hairline box on the page's own background — which meant that at
+   a glance the row looked like one panel with six columns of small grey text
+   in it, not six things each carrying a score. A card now sits on its own
+   ground, holds a real border, and lifts on hover; the name above it is set in
+   the page's text colour rather than a muted grey. */
 .sc-part {
-  border: 1px solid var(--border-subtle, var(--border));
+  /* 2px, not 1.5: the browser snaps a border to whole device pixels, so at a
+     standard display 1.5px rendered as 1px and bought nothing. */
+  border: 2px solid var(--border);
   border-radius: 12px;
-  padding: 14px 15px 13px;
-  background: var(--bg);
+  padding: 18px 18px 16px;
+  background: var(--bg-card);
+  box-shadow: 0 1px 3px rgba(0,0,0,.04);
+  transition: border-color .2s, box-shadow .2s, transform .2s;
 }
+.sc-part:hover {
+  border-color: rgba(var(--sc-accent-r, 30,110,140), .5);
+  box-shadow: 0 4px 16px rgba(0,0,0,.08);
+  transform: translateY(-1px);
+}
+/* The leading section's cards carry its accent along the top, so the six are
+   visibly two sets of three rather than one row of six. */
+.sc-outcome.is-lead .sc-part { border-top: 3px solid var(--sc-accent); }
 /* A part nobody measures is shown, not omitted: a missing card would read as
    "covered", which is the opposite of the truth. */
 .sc-part.is-empty {
@@ -799,29 +840,37 @@
 .sc-part.is-empty .sc-part-name,
 .sc-part.is-empty .sc-part-note { opacity: 0.6; }
 
+/* The name of the thing being measured, in the page's text colour and at a
+   size you can read across a desk. It was 0.7rem muted grey — the smallest,
+   faintest thing on a card whose whole job is to say which of the six this is. */
 .sc-part-name {
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.1em;
+  font-size: 0.86rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
   text-transform: uppercase;
-  color: var(--text-muted);
+  color: var(--text);
 }
 .sc-part-score {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 1.9rem;
-  font-weight: 600;
-  line-height: 1.1;
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1.05;
   color: var(--text);
-  margin: 6px 0 2px;
+  margin: 8px 0 3px;
 }
-.sc-part-score small { font-size: 0.42em; color: var(--text-dim); font-weight: 400; }
+.sc-part-score small { font-size: 0.36em; color: var(--text-dim); font-weight: 400; }
 .sc-part-score.is-empty { color: var(--text-dim); }
-.sc-part-meta { font-size: 0.74rem; color: var(--text-dim); margin-bottom: 9px; }
+.sc-part-meta {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-bottom: 11px;
+}
 .sc-part-note {
-  font-size: 0.72rem;
-  color: var(--text-dim);
-  line-height: 1.45;
-  margin-top: 9px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-top: 11px;
 }
 
 /* ── the departments, now clearly the second half of the page ── */
@@ -845,8 +894,10 @@
 .sc-part-note--q {
   font-family: 'Cormorant Garamond', serif;
   font-style: italic;
-  font-size: 1rem;
+  font-size: 1.08rem;
   line-height: 1.45;
   color: var(--text-muted);
-  margin-top: 12px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
 }

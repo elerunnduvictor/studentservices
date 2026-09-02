@@ -157,10 +157,6 @@
   border: 1px solid var(--border); border-radius: 8px;
   background: var(--bg-card); color: var(--text);
 }
-.ei-check {
-  display: inline-flex; align-items: center; gap: 7px;
-  font-size: .8rem; color: var(--text-muted); cursor: pointer;
-}
 .ei-count { font-size: .8rem; color: var(--text-dim); }
 
 /* ── cards ──────────────────────────────────────────────────────────────── */
@@ -474,7 +470,6 @@
   outline-offset: 1px;
   border-color: var(--bp-teal-light, #C93A3A);
 }
-.ei-check input { accent-color: var(--bp-teal, #A32222); }
 
 /* ── the form ────────────────────────────────────────────────────────────── */
 /* It was pinned to the top-left corner. A modal <dialog> centres itself with
@@ -546,3 +541,16 @@ select.is-sev-low option { color: var(--text); font-weight: 400; background: var
 /* The "Other" box sits under the select it belongs to. */
 #nSubDeptOther { margin-top: 8px; }
 .ei-dialog select:disabled { opacity: .6; cursor: not-allowed; }
+
+/* The category tag. Set apart from the KPI/OKR link tags beside it: those point
+   at another page, this one only says what kind of issue this is. */
+.ei-cat-tag {
+  background: rgba(var(--alert-red-r, 163,34,34), .10);
+  border-color: rgba(var(--alert-red-r, 163,34,34), .28);
+  color: var(--alert-red, #A32222);
+  font-weight: 500;
+}
+[data-theme="dark"] .ei-cat-tag {
+  background: rgba(var(--alert-red-r, 163,34,34), .18);
+  color: #E58A8A;
+}

@@ -1,17 +1,23 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    PROCESS DOCUMENTATION — SHARED FORM
 
-   One modal, four ways in:
+   One modal, five ways in:
      PROC.form.openCreate()            steward, blank
      PROC.form.openCreateForSteward()  reviewer — pick a steward in their own
                                         scoped department first, then the same
                                         blank form with department locked
-     PROC.form.openEdit(row)           steward, their own row — full fields
-                                        while unlocked (Draft / Submitted), a
-                                        plain read-only view once it isn't
-     PROC.form.openReview(row)         reviewer — every field read-only, plus
-                                        the one field that's actually theirs
-                                        to set: Status
+     PROC.form.openEdit(row)           steward, their own row — full fields,
+                                        editable at ANY status (widened
+                                        2026-09-02); Draft still offers Save
+                                        as Draft + Save & Submit, every other
+                                        status offers a single Save that
+                                        leaves status untouched
+     PROC.form.openReview(row)         reviewer — full fields, editable, plus
+                                        Status; a content-only save leaves
+                                        status (and reviewed_by/at) untouched
+     PROC.form.openView(row)           director (2026-09-02) — every field,
+                                        read-only, Close only; no edit rights
+                                        accompany their read access
 
    Status and the reviewed-by/at stamp never appear as inputs on the
    steward's own form — not because the database would refuse them (it would,
@@ -28,7 +34,6 @@
 
   const IMPACT_OPTIONS = ["Students", "Internal Teams", "BYU-Pathway Partners", "External Partners"];
   const FREQUENCY_OPTIONS = ["Daily", "Weekly", "Monthly", "Per Term", "Annual", "As Needed"];
-  const UNLOCKED_STATUSES = ["Draft", "Submitted"];
 
   let root = null;      // modal DOM, built once
   let els = {};
@@ -396,6 +401,20 @@
    * matching processes_insert's own `scope_department IS NULL` branch — and
    * the department comes from whichever one they pick, not from any scope of
    * their own (they have none).
+   *
+   * This is also the single entry point for someone who is BOTH a steward
+   * and a reviewer (Jess, Gilles — 2026-09-02): "+ New Process" in My
+   * Processes and "+ New Process for Steward" in Review both call this same
+   * function, and when PROC.isSteward is true it prepends a "Me" entry (the
+   * caller's own process_stewards row, filtered out of the fetched list so
+   * they don't also appear a second time under their own name). Picking "Me"
+   * runs through beginCreateForSteward() exactly like picking anyone else —
+   * same pre-fill, same locked department — which is deliberate: an org-wide
+   * admin's own processes belong to their own steward department, not a
+   * department they get to pick per-form. A steward with no reviewer rights
+   * never reaches the isSteward branch here at all, since they're routed to
+   * openCreate() instead; a reviewer with no steward row of their own simply
+   * has nothing to prepend.
    */
   async function openCreateForSteward() {
     buildModal();
@@ -417,21 +436,31 @@
     }
     if (!session || session.mode !== "pick-steward") return; // closed while loading
 
-    if (!stewards.length) {
+    const meEmail = String((PROC.steward && PROC.steward.email) || "").toLowerCase();
+    const options = [];
+    if (PROC.steward) options.push({ steward: PROC.steward, label: "Me" });
+    stewards
+      .filter((s) => String(s.email || "").toLowerCase() !== meEmail)
+      .forEach((s) => options.push({
+        steward: s,
+        label: s.full_name + (s.job_title ? " — " + s.job_title : "") + (scopeDept ? "" : " (" + s.department + ")"),
+      }));
+
+    if (!options.length) {
       els.body.innerHTML = `<div class="proc-hint">No active stewards are set up${scopeDept ? " in " + escapeHtml(scopeDept) : ""} yet.</div>`;
       return;
     }
 
     els.body.innerHTML = field("Whose process are you creating?", `
       <select class="proc-select" id="pfStewardPick">
-        ${stewards.map((s, i) => `<option value="${i}">${escapeHtml(s.full_name)}${s.job_title ? " — " + escapeHtml(s.job_title) : ""}${scopeDept ? "" : " (" + escapeHtml(s.department) + ")"}</option>`).join("")}
+        ${options.map((o, i) => `<option value="${i}">${escapeHtml(o.label)}</option>`).join("")}
       </select>`);
     els.actions.innerHTML = `
       <button type="button" class="proc-btn proc-btn-secondary" id="pfCancel">Cancel</button>
       <button type="button" class="proc-btn proc-btn-primary" id="pfPickNext">Next</button>`;
     document.getElementById("pfCancel").addEventListener("click", close);
     document.getElementById("pfPickNext").addEventListener("click", () => {
-      const steward = stewards[Number(document.getElementById("pfStewardPick").value)];
+      const steward = options[Number(document.getElementById("pfStewardPick").value)].steward;
       beginCreateForSteward(steward);
     });
   }
@@ -460,32 +489,23 @@
 
   function openEdit(row) {
     buildModal();
-    const unlocked = UNLOCKED_STATUSES.indexOf(row.status) !== -1;
-    newSession(unlocked ? "edit" : "view", row);
+    newSession("edit", row);
     els.title.textContent = row.process_name || "Process";
     els.error.textContent = "";
-
-    if (!unlocked) {
-      els.body.innerHTML =
-        `<div class="proc-lock-note">This process is <strong>${escapeHtml(row.status)}</strong> and can't be
-         edited anymore.</div>` +
-        renderReadonlyFields(row);
-      els.actions.innerHTML = `<button type="button" class="proc-btn proc-btn-secondary" id="pfCancel">Close</button>`;
-      document.getElementById("pfCancel").addEventListener("click", close);
-      root.hidden = false;
-      return;
-    }
 
     renderEditable();
     // process_guard() (a BEFORE UPDATE trigger) lets a steward's own row move
     // to exactly one status: Submitted — a jump straight to Reviewed or
-    // Archived is refused with a raised exception. Draft and Submitted are
-    // both unlocked, so a steward can keep editing after submitting, right
-    // up until a reviewer acts on it.
+    // Archived is refused with a raised exception. Leaving status unchanged
+    // is always allowed regardless of the row's current status (widened
+    // 2026-09-02, alongside RLS dropping its own Draft/Submitted
+    // restriction), which is what makes editing a Reviewed or Archived row
+    // possible: only Draft gets the Submit option, everything else gets a
+    // single Save that resubmits with the same status it already had.
     els.actions.innerHTML = `
       <button type="button" class="proc-btn proc-btn-secondary" id="pfCancel">Cancel</button>
-      <button type="button" class="proc-btn proc-btn-primary" id="pfSave">Save${row.status === "Submitted" ? "" : " as Draft"}</button>
-      ${row.status === "Submitted" ? "" : `<button type="button" class="proc-btn proc-btn-primary" id="pfSubmit">Save &amp; Submit</button>`}
+      <button type="button" class="proc-btn proc-btn-primary" id="pfSave">Save${row.status === "Draft" ? " as Draft" : ""}</button>
+      ${row.status === "Draft" ? `<button type="button" class="proc-btn proc-btn-primary" id="pfSubmit">Save &amp; Submit</button>` : ""}
     `;
     document.getElementById("pfCancel").addEventListener("click", close);
     document.getElementById("pfSave").addEventListener("click", () => submitEdit(row.id, row.status));
@@ -520,6 +540,26 @@
   // way the old Needs Changes status used to.
   const SETTABLE_STATUSES = ["Submitted", "Reviewed", "Archived"];
 
+  /**
+   * Plain read-only view — every field, no editable controls at all, just a
+   * Close button. Used by the director's "My Department" panel (read-only
+   * by RLS design, 2026-09-02: no write policy accompanies their SELECT
+   * grant, so there's genuinely nothing here for them to act on) and as the
+   * fallback inside openReview() for a status it can't otherwise act on.
+   */
+  function openView(row) {
+    buildModal();
+    newSession("view", row);
+    els.title.textContent = row.process_name || "Process";
+    els.error.textContent = "";
+    els.body.innerHTML = renderReadonlyFields(row) +
+      field("Status", readonlyValue(row.status), null, true) +
+      (row.reviewed_by ? field("Reviewed By", readonlyValue(row.reviewed_by + (row.reviewed_at ? " — " + PROC.formatDate(row.reviewed_at) : "")), null, true) : "");
+    els.actions.innerHTML = `<button type="button" class="proc-btn proc-btn-secondary" id="pfCancel">Close</button>`;
+    document.getElementById("pfCancel").addEventListener("click", close);
+    root.hidden = false;
+  }
+
   function openReview(row) {
     buildModal();
     newSession("review", row);
@@ -528,28 +568,36 @@
 
     if (SETTABLE_STATUSES.indexOf(row.status) === -1) {
       // Draft never reaches this form, but guard the case anyway.
-      els.body.innerHTML = renderReadonlyFields(row) +
-        field("Status", readonlyValue(row.status), null, true);
-      els.actions.innerHTML = `<button type="button" class="proc-btn proc-btn-secondary" id="pfCancel">Close</button>`;
-      document.getElementById("pfCancel").addEventListener("click", close);
-      root.hidden = false;
+      openView(row);
       return;
     }
 
-    els.body.innerHTML = renderReadonlyFields(row) + `
+    // Full editable content, same fields/session as the steward's own form —
+    // a reviewer can now genuinely edit a process, not just its status.
+    // Status is appended below it rather than baked into renderEditable(),
+    // since only a reviewer's form has it.
+    renderEditable();
+    els.body.insertAdjacentHTML("beforeend", `
       ${field("Status", `<select class="proc-select" id="pfStatus">
           ${STATUS_OPTIONS.map((s) => `<option value="${s}"${row.status === s ? " selected" : ""}>${s}</option>`).join("")}
         </select>`, null, true)}
       ${row.reviewed_by ? field("Reviewed By", readonlyValue(row.reviewed_by + (row.reviewed_at ? " — " + PROC.formatDate(row.reviewed_at) : "")), null, true) : ""}
-    `;
+    `);
     els.actions.innerHTML = `
       <button type="button" class="proc-btn proc-btn-secondary" id="pfCancel">Cancel</button>
       <button type="button" class="proc-btn proc-btn-primary" id="pfSaveReview">Save Review</button>`;
     document.getElementById("pfCancel").addEventListener("click", close);
     document.getElementById("pfSaveReview").addEventListener("click", async () => {
       els.error.textContent = "";
+      const payload = collectEditablePayload();
+      const problem = validateRequired(payload);
+      if (problem) { els.error.textContent = problem; return; }
+      // Status change (if any) rides along with the same content save —
+      // process_guard() only re-stamps reviewed_by/reviewed_at when this
+      // actually differs from the row's current status.
+      payload.status = document.getElementById("pfStatus").value;
       try {
-        await PROC.review(row.id, { status: document.getElementById("pfStatus").value });
+        await PROC.review(row.id, payload);
         close();
       } catch (err) {
         els.error.textContent = err.message || "Could not save the review.";
@@ -558,5 +606,5 @@
     root.hidden = false;
   }
 
-  PROC.form = { openCreate, openCreateForSteward, openEdit, openReview, close };
+  PROC.form = { openCreate, openCreateForSteward, openEdit, openReview, openView, close };
 })();

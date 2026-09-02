@@ -25,7 +25,7 @@
      SS.access.isStudentServices  inside the organisation: staff, director, admin
      SS.access.canSeePeople whether individuals may be drilled into at all
      SS.access.scope        { department, person } for staff and directors
-     SS.access.canUseProcesses()  steward or reviewer, for the Processes page
+     SS.access.canUseProcesses()  steward, reviewer, or director, for the Processes page
      SS.access.track(page)  records a page hit
 
    None of it is a security boundary. The boundary is in Postgres; this only
@@ -371,9 +371,12 @@
     /**
      * May this person do anything on the Process Documentation page?
      *
-     * Two ways in: a process steward (a row in process_stewards, a separate
-     * allow-list deliberately not derived from hub_access.role), or a reviewer
-     * (role 'admin'; directors are not reviewers of process documentation).
+     * Three ways in: a process steward (a row in process_stewards, a separate
+     * allow-list deliberately not derived from hub_access.role), a reviewer
+     * (role 'admin'; directors are not reviewers of process documentation),
+     * or a director (role 'director', 2026-09-02 — read-only visibility into
+     * their own scope_department, via a SELECT-only RLS policy with no write
+     * rights alongside it).
      *
      * It lives here rather than beside the navbar that first needed it because
      * the home page needs the same answer and does not load that file. One rule
@@ -390,6 +393,7 @@
       state.procAccess = (async () => {
         try { await SS.access.ready; } catch { return false; }
         if (state.role === "admin") return true;                 // reviewer
+        if (state.role === "director") return true;              // read-only, own department
         if (!SS.db || !state.email) return false;
         try {
           // process_stewards is world-readable; there is no process_me() RPC.

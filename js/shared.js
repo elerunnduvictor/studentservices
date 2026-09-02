@@ -193,7 +193,11 @@
       // Absolute: this link is injected into the navbar of every page, at every
       // folder depth, so it cannot be written relative to any one of them.
       a.href = "/processes/index.html";
-      a.className = "nav-link";
+      // Marked current on the page it points at, the way every other nav link
+      // is. This one is created here rather than written into the markup, so
+      // it is the only one that could not be marked by hand.
+      var here = /\/processes(\/|$)/.test(location.pathname);
+      a.className = "nav-link" + (here ? " is-current" : "");
       a.textContent = "Processes";
       links.appendChild(a);
     }).catch(function () { /* nav stays as it was */ });

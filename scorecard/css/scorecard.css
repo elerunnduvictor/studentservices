@@ -313,7 +313,12 @@
 .sc-topline {
   display: grid;
   grid-template-columns: auto minmax(280px, 1fr);
-  gap: clamp(24px, 4vw, 56px);
+  /* A wide gutter, deliberately. The coverage figure and the colour bar are
+     two different readings of the same rows, and at the 56px this inherited
+     from the old gauge row they crowded each other — the eye ran from "63 of
+     76 tracked reporting" straight into the green block as though the one
+     labelled the other. Roughly double that, so the two read as two. */
+  gap: clamp(40px, 7vw, 120px);
   align-items: center;
 }
 .sc-mix { display: flex; flex-direction: column; gap: 12px; }

@@ -8,7 +8,6 @@
   const SS = window.SS;
   const PROC = window.PROC;
   const escapeHtml = SS.escapeHtml;
-  const UNLOCKED = ["Draft", "Submitted"];
 
   function render() {
     const panel = document.getElementById("procMine");
@@ -17,13 +16,16 @@
     if (!PROC.isSteward) { panel.hidden = true; return; }
     panel.hidden = false;
 
-    // created_by alone misses a process a PM created on this steward's
-    // behalf — that row's created_by is the PM, not them. steward_email is
-    // what actually ties it back to the person it's for.
+    // steward_email exclusively — it's who the row is actually for, always.
+    // created_by is who wrote the row, which for a PM-created-on-behalf-of
+    // row is the PM, not the steward: OR'ing it in here would wrongly also
+    // list that row under the PM's own "mine" (2026-09-02 fix). For a
+    // self-created row created_by and steward_email are always the same
+    // person (create() defaults steward_email to the caller), so this is a
+    // no-op for steward-only users.
     const email = String(SS.access.email || "").toLowerCase();
     const mine = PROC.rows.filter(
-      (r) => String(r.created_by || "").toLowerCase() === email ||
-             String(r.steward_email || "").toLowerCase() === email
+      (r) => String(r.steward_email || "").toLowerCase() === email
     );
 
     const body = document.getElementById("procMineBody");
@@ -35,21 +37,18 @@
       return;
     }
 
-    body.innerHTML = mine.map((r) => {
-      const editable = UNLOCKED.indexOf(r.status) !== -1;
-      return `
+    // A steward's own row is editable at any status now (widened 2026-09-02),
+    // so this is always "Edit" — never a locked "View".
+    body.innerHTML = mine.map((r) => `
         <tr>
           <td class="proc-cell-name">${escapeHtml(r.process_name)}</td>
           <td>${escapeHtml(r.department || "—")}</td>
           <td><span class="proc-pill proc-pill-${PROC.statusTone(r.status)}">${escapeHtml(r.status)}</span></td>
           <td class="proc-cell-dim">${PROC.formatDate(r.updated_at)}</td>
           <td>
-            <button type="button" class="proc-btn proc-btn-small" data-open="${r.id}">
-              ${editable ? "Edit" : "View"}
-            </button>
+            <button type="button" class="proc-btn proc-btn-small" data-open="${r.id}">Edit</button>
           </td>
-        </tr>`;
-    }).join("");
+        </tr>`).join("");
 
     body.querySelectorAll("[data-open]").forEach((btn) => {
       btn.addEventListener("click", () => {
@@ -61,8 +60,16 @@
 
   document.addEventListener("proc:data", render);
 
+  // Someone who is also a reviewer (Jess, Gilles — 2026-09-02) gets the same
+  // unified "Whose process are you creating?" picker Review's own button
+  // opens, with a "Me" entry folded in — one modal, not two overlapping
+  // create flows. A steward with no reviewer rights is untouched: straight
+  // to the form for themself, no picker, exactly as before.
   const newBtn = document.getElementById("procNewBtn");
-  if (newBtn) newBtn.addEventListener("click", () => PROC.form.openCreate());
+  if (newBtn) newBtn.addEventListener("click", () => {
+    if (PROC.isReviewer) PROC.form.openCreateForSteward();
+    else PROC.form.openCreate();
+  });
 
   PROC.ready.then(render);
 })();

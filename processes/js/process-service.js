@@ -35,7 +35,13 @@
      select   own rows (created_by = caller OR steward_email = caller), OR
               hub_access.role = 'admin' (directors are NOT reviewers here)
               with active=true and scope_department is null or equals
-              processes.department.
+              processes.department, OR (2026-09-02, a separate policy)
+              hub_access.role = 'director' with active=true and
+              scope_department = processes.department (exact match only —
+              unlike the admin branch, there's no null/org-wide case, since
+              a director always carries a department scope). Read-only: this
+              new policy has no accompanying insert/update/delete grant, so
+              a director's extra visibility never becomes extra capability.
      insert   created_by must be the caller, and either the caller has an
               active process_stewards row (a steward creating their own row —
               steward_email = created_by = the steward's own email), or the
@@ -47,22 +53,29 @@
               an org-wide admin (Jess Swinburne, Elie Gilles Ravel Mambou) can
               create for any steward anywhere (2026-08-26 — deliberately
               widened from an earlier, exact-match version of this branch).
-     update   ONE combined policy, own-row-while-unlocked (created_by =
-              caller OR steward_email = caller, status Draft or Submitted) OR
-              admin-in-scope. A BEFORE UPDATE trigger,
-              process_guard(), is the actual enforcement for who may touch
-              status/reviewed_by/reviewed_at:
+     update   ONE combined policy, own row at ANY status (created_by =
+              caller OR steward_email = caller — widened 2026-09-02, no
+              longer restricted to Draft/Submitted) OR admin-in-scope. A
+              BEFORE UPDATE trigger, process_guard(), is the actual
+              enforcement for who may touch status/reviewed_by/reviewed_at:
                 reviewer   any status change auto-stamps reviewed_by/
                            reviewed_at server-side; a client-sent value for
-                           either is discarded, never trusted.
+                           either is discarded, never trusted. A content-only
+                           edit (status unchanged) leaves both alone, at any
+                           status — the stamp only happens on an actual
+                           status change.
                 steward    reviewed_by/reviewed_at are never theirs — any
                            change raises an exception. status may move to
                            exactly one place, Submitted; any other new status
                            (jumping straight to Reviewed or Archived) also
-                           raises. RLS's own USING clause is what already
-                           limits which rows a steward can reach at all
-                           (status in Draft/Submitted), so the trigger only
-                           has to police where they can move TO.
+                           raises — but leaving status unchanged never hits
+                           that check, at any current status, which is what
+                           makes a same-status content edit on a Reviewed or
+                           Archived row work. RLS no longer restricts which
+                           rows a steward can reach by status at all (widened
+                           2026-09-02 alongside the update policy), so the
+                           trigger is now the only thing policing a steward's
+                           status transitions.
               This is why save() below only ever sends the steward-editable
               columns plus status — a defensive whitelist mirroring the
               trigger, so a client bug fails with a normal validation
@@ -209,14 +222,18 @@
   }
 
   /**
-   * Reviewer action: status only. reviewed_by/reviewed_at are NOT sent —
-   * process_guard() stamps both server-side from the caller's own JWT and the
-   * clock whenever a reviewer changes status, and ignores whatever a client
+   * Reviewer action: full content (same whitelist as a steward's own save())
+   * plus status. reviewed_by/reviewed_at are NOT sent — process_guard()
+   * stamps both server-side from the caller's own JWT and the clock whenever
+   * a reviewer's edit actually changes status, and ignores whatever a client
    * sends for either column. Sending them here would just be a value the
-   * trigger throws away; one source of truth beats two that could drift.
+   * trigger throws away; one source of truth beats two that could drift. A
+   * content-only edit (status unchanged) leaves reviewed_by/reviewed_at as
+   * they were, at any status.
    */
-  async function review(id, patch) {
-    const rows = await SS.db.update("processes", id, { status: patch.status });
+  async function review(id, payload) {
+    const patch = pickStewardFields(payload);
+    const rows = await SS.db.update("processes", id, patch);
     await refresh();
     return rows[0];
   }
@@ -243,6 +260,13 @@
     // Directors are not reviewers here — the live RLS policy checks
     // hub_access.role = 'admin' only.
     isReviewer:   { get: () => SS.access.role === "admin" },
+    // Read-only visibility into their own department (2026-09-02) — a
+    // separate grant from isReviewer, never both true for one person since
+    // 'admin' and 'director' are mutually exclusive values of the same
+    // hub_access.role column. Can be true alongside isSteward, though (all
+    // four directors are also stewards of their own department) — that's
+    // fine, since this view has no actionable buttons to duplicate.
+    isDirector:   { get: () => SS.access.role === "director" },
     reviewScopeDepartment: { get: () => (SS.access.scope && SS.access.scope.department) || null },
     rows:         { get: () => state.rows },
     departments:  { get: () => state.departments },

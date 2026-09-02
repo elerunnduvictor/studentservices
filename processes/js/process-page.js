@@ -28,7 +28,7 @@
     }
     errorBox.hidden = true;
 
-    if (!PROC.isSteward && !PROC.isReviewer) {
+    if (!PROC.isSteward && !PROC.isReviewer && !PROC.isDirector) {
       noAccess.hidden = false;
       return;
     }

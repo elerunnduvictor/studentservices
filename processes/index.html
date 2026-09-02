@@ -118,6 +118,31 @@
         </div>
       </section>
 
+      <!-- My Department (director only, read-only) -->
+      <section id="procDirectorView" class="proc-card" hidden data-reveal>
+        <div class="proc-card-header">
+          <div>
+            <div class="proc-card-title">My Department</div>
+            <div id="procDirectorCount" class="proc-card-count"></div>
+          </div>
+        </div>
+        <div id="procDirectorScope" class="proc-hint proc-review-scope"></div>
+        <div class="proc-table-wrap">
+          <table class="proc-table">
+            <thead>
+              <tr>
+                <th>Process Name</th>
+                <th>Steward</th>
+                <th>Status</th>
+                <th>Updated</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="procDirectorBody"></tbody>
+          </table>
+        </div>
+      </section>
+
       <!-- Review (admin only) -->
       <section id="procReview" class="proc-card" hidden data-reveal>
         <div class="proc-card-header">
@@ -188,6 +213,7 @@
   <script src="/processes/js/process-form.js"></script>
   <script src="/processes/js/process-list.js"></script>
   <script src="/processes/js/process-review.js"></script>
+  <script src="/processes/js/process-director.js"></script>
   <script src="/processes/js/process-page.js"></script>
 </body>
 

@@ -25,10 +25,18 @@ const state = {
   spotlight: "",
   spotlightIdx: -1,
   spotlightOpen: false,
-  /* Which objective cards are open in the list below. Kept here rather than
-     read back from the DOM because renderAll() rebuilds that list on every
-     filter change and every search keystroke. */
-  openGroups: new Set(),
+  /* Which objective card is open below — one at a time, like an accordion.
+     Two open at once is most of the way back to the wall of rows this list
+     replaced.
+  
+     Kept here rather than read back from the DOM because renderAll()
+     rebuilds that list on every filter change and every search keystroke.
+  
+     `autoOpenedFor` remembers which objective the filter opened for us, so
+     opening one automatically does not fight a reader who then closes it:
+     without it the next keystroke in the search box would open it again. */
+  openGroup: null,
+  autoOpenedFor: null,
 };
 
 /* ═══════════════ HELPERS (shared via window.SS) ═══════════════ */
@@ -384,10 +392,10 @@ function renderStakeholderBars(filtered) {
    rows. Nothing is hidden that was not hidden before: the same rows carry the
    same fields, and each still opens the same detail modal.
 
-   Which cards are open is kept in `state.openGroups`, not in the DOM, because
-   renderAll() rebuilds this list from scratch on every filter change, search
-   keystroke and texture toggle. Left in the DOM, a card you opened would slam
-   shut the moment you typed in the search box.
+   One card is open at a time, and which one is kept in `state.openGroup`, not
+   in the DOM: renderAll() rebuilds this list from scratch on every filter
+   change, search keystroke and texture toggle, so a card left open only in the
+   DOM would slam shut the moment you typed in the search box.
 
    When the view narrows to a single objective — which is what clicking an
    objective card above does — that one opens itself. Filtering to one thing and
@@ -459,9 +467,7 @@ function skrItem(r) {
 
 function renderGroups(filtered) {
   const host = document.getElementById("okrpGroups");
-  const count = document.getElementById("okrpCount");
   if (!host) return;
-  if (count) count.textContent = `Showing ${filtered.length} of ${ROWS.length}`;
 
   if (!filtered.length) {
     host.innerHTML = `<div class="okrp-empty">No sub-key results match your filters.</div>`;
@@ -470,12 +476,19 @@ function renderGroups(filtered) {
 
   const groups = groupRows(filtered);
 
-  // Narrowed to one objective: open it rather than making the reader ask twice.
-  if (groups.length === 1) state.openGroups.add(groups[0].okr);
+  /* Narrowed to one objective — by a filter, or by clicking a card above —
+     open it rather than making the reader ask twice. Only when it differs
+     from the one we last opened this way, so a card the reader has
+     deliberately closed stays closed. */
+  if (groups.length === 1 && state.autoOpenedFor !== groups[0].okr) {
+    state.openGroup = groups[0].okr;
+    state.autoOpenedFor = groups[0].okr;
+  }
+  if (groups.length !== 1) state.autoOpenedFor = null;
 
   host.innerHTML = groups.map((g) => {
     const c = okrPalette(g.okr);
-    const open = state.openGroups.has(g.okr);
+    const open = state.openGroup === g.okr;
     const avg = window.SS.okr.averagePercent(g.rows);
     const atRisk = g.rows.filter((r) => /risk|trouble|behind/i.test(effectiveStatus(r))).length;
     const done = g.rows.filter((r) => /complet/i.test(effectiveStatus(r))).length;
@@ -517,12 +530,16 @@ function renderGroups(filtered) {
       if (head) {
         const sec = head.closest(".okrp-group");
         const okr = sec.dataset.okr;
-        if (state.openGroups.has(okr)) state.openGroups.delete(okr);
-        else state.openGroups.add(okr);
-        const nowOpen = state.openGroups.has(okr);
-        sec.classList.toggle("is-open", nowOpen);
-        head.setAttribute("aria-expanded", String(nowOpen));
-        sec.querySelector(".okrp-group-body").hidden = !nowOpen;
+        const nowOpen = state.openGroup !== okr;
+        state.openGroup = nowOpen ? okr : null;
+        // Opening one closes the others, without a redraw: the rows are already
+        // in the DOM, so this only moves the flags that hide them.
+        host.querySelectorAll(".okrp-group").forEach(function (s2) {
+          var isIt = s2 === sec && nowOpen;
+          s2.classList.toggle("is-open", isIt);
+          s2.querySelector(".okrp-group-head").setAttribute("aria-expanded", String(isIt));
+          s2.querySelector(".okrp-group-body").hidden = !isIt;
+        });
         return;
       }
       const item = e.target.closest(".okrp-skr");
@@ -1198,7 +1215,13 @@ function initFilters() {
   document.getElementById("filterPeriod").addEventListener("change", e => { state.period = e.target.value; renderAll(); });
   document.getElementById("filterSearch").addEventListener("input", e => { state.search = e.target.value; renderAll(); });
   document.getElementById("filterClear").addEventListener("click", () => {
-    Object.assign(state, { okr: "All", status: "All", stakeholder: "All", secondaryStakeholder: "All", pm: "All", period: "All", search: "" });
+    /* openGroup and autoOpenedFor go too. Clearing put every objective back in
+       the list while leaving the one the filter had opened standing open
+       underneath — the filter that opened it was gone, so the card had no
+       reason to still be showing. */
+    Object.assign(state, { okr: "All", status: "All", stakeholder: "All",
+                           secondaryStakeholder: "All", pm: "All", period: "All",
+                           search: "", openGroup: null, autoOpenedFor: null });
     document.getElementById("filterSearch").value = "";
     renderAll();
   });

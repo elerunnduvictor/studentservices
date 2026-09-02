@@ -627,10 +627,6 @@
 }
 
 /* ══════════════ FOOTER NOTE ══════════════ */
-.sc-note {
-  margin-top: 22px; font-size: 0.76rem; color: var(--text-dim);
-  text-align: center; line-height: 1.7;
-}
 
 /* ══════════════ REVEAL ══════════════ */
 [data-reveal] {

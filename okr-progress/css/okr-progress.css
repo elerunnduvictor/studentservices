@@ -493,7 +493,6 @@
   display: flex; justify-content: space-between; align-items: center;
 }
 .okrp-table-header .okrp-card-title { margin-bottom: 0; }
-.okrp-table-count { font-size: 0.78rem; color: var(--text-dim); }
 /* Below ~1600px the 11 columns can't all fit, so the wrap scrolls. The paired
    gradients are the standard scroll-shadow: the solid halves ride with the
    content (`local`) and uncover a soft edge shadow (`scroll`) only while there

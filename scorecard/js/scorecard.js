@@ -933,13 +933,11 @@
     document.getElementById("scView").innerHTML = html;
     document.getElementById("scCrumbs").innerHTML = crumbs();
 
-    var excluded = typeof META.excludedNotTracking === "number"
-      ? META.excludedNotTracking + " measures marked “Not Tracking” are excluded. "
-      : "Measures marked “Not Tracking” are excluded. ";
-    document.getElementById("scNote").textContent =
-      "Showing the " + META.tracked + " KPIs marked “Tracking”. " + excluded +
-      (META.live ? "Read live from " : "Last built " + META.generated + " from ") +
-      META.source + ".";
+    /* A footnote used to sit here reciting how many KPIs were tracked, how many
+       were excluded, and where the data was read from. That is provenance for
+       the page's own build rather than a reading anyone came for — and the
+       figures it quoted are already on the page, in the coverage ring and the
+       tracked counts. META still carries all of it for anything that wants it. */
 
     window.scrollTo({ top: p.length ? document.querySelector(".sc-section").offsetTop - 80 : 0, behavior: "smooth" });
   }

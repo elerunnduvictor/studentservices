@@ -37,6 +37,10 @@
     try { if (window.SS && SS.data && SS.data.clearCache) SS.data.clearCache(); }
     catch { /* nothing cached, or storage refused */ }
 
+    // And the cookie middleware.js reads, or the next request would still be
+    // let past the gate on the way out.
+    try { window.SS_CONFIG.clearSessionCookie(); } catch { /* no cookies */ }
+
     // Both the hub's own marker and the database session, or the next visit
     // would sign straight back in as whoever just left.
     ["ss_user_session", "ss_last_activity", "ss_hub_supabase"].forEach((k) => {

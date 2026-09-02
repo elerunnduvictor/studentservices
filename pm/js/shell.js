@@ -87,6 +87,12 @@
 
   function saveSession(s) {
     localStorage.setItem(SESSION_KEY, JSON.stringify(s));
+    // And where the server can see it. middleware.js refuses any request
+    // without a valid session, and the edge cannot read localStorage — this is
+    // the only place the PM Hub stores one, so it is the only place that has
+    // to mirror it.
+    try { window.SS_CONFIG.setSessionCookie(s.access_token, s.expires_at); }
+    catch (e) { /* no cookies; the gate will send them to sign in */ }
     SS.session = s;
   }
 
@@ -146,6 +152,7 @@
         // comes back to the tab.
         window.onbeforeunload = null;
         localStorage.removeItem(SESSION_KEY);
+        dropGateCookie();
         SS.session = null;
         location.replace("signin.html?expired=1");
         return;
@@ -161,6 +168,7 @@
       if (!fresh) {
         window.onbeforeunload = null;
         localStorage.removeItem(SESSION_KEY);
+        dropGateCookie();
         SS.session = null;
         location.replace("signin.html?expired=1");
       }
@@ -185,6 +193,7 @@
 
   function signOut() {
     localStorage.removeItem(SESSION_KEY);
+    dropGateCookie();
     SS.session = null;
     location.href = "signin.html";
   }
@@ -192,6 +201,12 @@
   /** Drop the session without navigating — used when refusing a non-editor. */
   function signOutQuietly() {
     localStorage.removeItem(SESSION_KEY);
+    dropGateCookie();
+  }
+
+  /** The cookie middleware.js reads. Cleared wherever the session is. */
+  function dropGateCookie() {
+    try { window.SS_CONFIG.clearSessionCookie(); } catch (e) { /* no cookies */ }
   }
 
   function escapeHtml(s) {

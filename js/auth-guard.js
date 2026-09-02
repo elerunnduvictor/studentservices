@@ -25,6 +25,15 @@
       doomed.forEach((k) => localStorage.removeItem(k));
     } catch (e) { /* private mode, or storage blocked */ }
 
+    /* The gate cookie too. Written by hand rather than through
+       SS_CONFIG.clearSessionCookie() for the same reason as the cache above:
+       this is the first script on every page and config.js does not exist yet.
+       The name is the contract — see shared/js/config.js and middleware.js. */
+    try {
+      document.cookie = 'ss_gate=;Path=/;Max-Age=0;SameSite=Lax' +
+        (location.protocol === 'https:' ? ';Secure' : '');
+    } catch (e) { /* no cookies */ }
+
     localStorage.removeItem('ss_user_session');
     localStorage.removeItem('ss_last_activity');
     window.location.replace(loginPath);

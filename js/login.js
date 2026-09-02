@@ -123,6 +123,9 @@
     } catch (err) {
       if (err.message === "needs-password" || err.message === "wrong-password") {
         localStorage.removeItem("ss_user_session");
+        // A cookie left by whoever used this browser last would still
+        // satisfy the gate, so a refused sign-in drops it too.
+        try { window.SS_CONFIG.clearSessionCookie(); } catch (e) { /* no cookies */ }
         return revealPassword(err.message === "wrong-password"
           ? "That password was not right — it is the one you set for the PM Hub."
           // No promise about how often this appears. Signing out, a new device
@@ -133,6 +136,9 @@
       if (err.message === "not-provisioned") {
         // The database is the authority on who may be here, and it has said no.
         localStorage.removeItem("ss_user_session");
+        // A cookie left by whoever used this browser last would still
+        // satisfy the gate, so a refused sign-in drops it too.
+        try { window.SS_CONFIG.clearSessionCookie(); } catch (e) { /* no cookies */ }
         return fail(DENIED);
       }
       /* Reaching here means the database could not be asked, not that it
@@ -150,6 +156,9 @@
          on. Say so plainly rather than opening an empty room. */
       console.warn("[login] sign-in could not be completed:", err.message);
       localStorage.removeItem("ss_user_session");
+        // A cookie left by whoever used this browser last would still
+        // satisfy the gate, so a refused sign-in drops it too.
+        try { window.SS_CONFIG.clearSessionCookie(); } catch (e) { /* no cookies */ }
       return fail(
         "Could not reach the sign-in service. Check your connection and try " +
         "again — if it keeps failing, the database may be down.");

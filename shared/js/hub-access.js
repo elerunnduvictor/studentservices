@@ -97,6 +97,10 @@
       email: email,
     };
     try { localStorage.setItem(SESSION_KEY, JSON.stringify(session)); } catch { /* private mode */ }
+    // And where the server can see it. Every sign-in and every refresh passes
+    // through here, so this is the one place that keeps middleware.js's view of
+    // the session in step with the browser's.
+    try { cfg.setSessionCookie(session.access_token, session.expires_at); } catch { /* no cookies */ }
     state.session = session;
     return session;
   }

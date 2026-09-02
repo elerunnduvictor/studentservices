@@ -43,7 +43,10 @@ OKR_XLSX = find_workbook("Profit.co Monthly Reports.xlsx")
 DIR_XLSX = find_workbook("Student Services Org Directory.xlsx")
 KPI_XLSX = find_workbook("Student Services KPIs.xlsx")
 
-PM_EDITORS_JS = REPO / "pm" / "js" / "pm-editors.js"
+# Moved out of pm/js/, where it was a public file on a public site.
+# .vercelignore keeps supabase/ out of the deployment, so this is a
+# build-time input only — the browser no longer reads it at all.
+PM_EDITORS_JS = REPO / "supabase" / "pm-editors.js"
 
 
 # ── helpers ────────────────────────────────────────────────────────────────
@@ -227,10 +230,11 @@ def load_kpis():
 # ── editors ────────────────────────────────────────────────────────────────
 def load_editors():
     """
-    Who may write, read from pm/js/pm-editors.js — the one list a person edits.
+    Who may write, read from supabase/pm-editors.js — the one list a person edits.
 
-    That file is also what the console's sign-in screen checks, so the message a
-    blocked user sees and the rule the database enforces can never drift apart.
+    The console no longer reads it: the sign-in screen lets the signup trigger
+    refuse an unprovisioned address, and the editor check asks allowed_editors,
+    which this fills. One source of truth, and it is not on the web.
     Any trailing // comment on a line is kept as the note, which is where each
     editor's role is recorded.
     """

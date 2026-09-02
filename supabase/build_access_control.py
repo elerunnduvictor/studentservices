@@ -26,6 +26,7 @@ not belong in a policy.
     python supabase/build_access_control.py
 """
 import json
+import os
 import pathlib
 import re
 import sys
@@ -100,6 +101,12 @@ def load_employees():
     tail = cfg.split("SUPABASE_ANON_KEY:", 1)[1]
     tail = tail.split("\n}", 1)[0].split(",\n", 1)[0]
     key = "".join(re.findall(r'"([^"]*)"', tail))
+    # The anon key can no longer read `employees` — supabase/rls-lockdown.sql
+    # sees to that, and that is the whole point of it. This script is an admin
+    # tool, so it takes an admin key: set SUPABASE_SERVICE_ROLE_KEY in the
+    # environment before running it. Falling back to the anon key keeps the
+    # error message below reachable rather than failing on a missing variable.
+    key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or key
     req = urllib.request.Request(
         url.rstrip("/") + "/rest/v1/employees?select=name,email,department,primary_stakeholder",
         headers={"apikey": key, "Authorization": "Bearer " + key})
@@ -133,7 +140,21 @@ def load_employees():
             capture_output=True, text=True, encoding="utf-8")
         if out.returncode != 0 or not out.stdout.strip():
             sys.exit("Could not read the bundled directory:\n" + (out.stderr or ""))
-        return json.loads(out.stdout)
+        rows = json.loads(out.stdout)
+        # The snapshot is empty now: it held 190 people and was a public file on
+        # a public site, so the rows went when the anon grants did. An empty
+        # list here is the same trap the API path already guards against — it
+        # would build an access-control file with no employees in it and
+        # silently unscope all 41 staff. Stop instead.
+        if not rows:
+            sys.exit(
+                "Could not read the directory.\n"
+                "  The anon key is refused by row-level security, as intended,\n"
+                "  and directory/js/employees.js no longer carries the rows —\n"
+                "  it was a public file serving the whole roster.\n\n"
+                "  Run it with an admin key:\n"
+                "    SUPABASE_SERVICE_ROLE_KEY=... python supabase/build_access_control.py")
+        return rows
 
 
 def main():

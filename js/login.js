@@ -6,13 +6,24 @@
    asking and returns only the rows that person may see.
 
    Who may sign in is decided by the database — `hub_access` plus the signup
-   trigger — not by the list in js/allowed-users.js. That list drifted 75 names
-   behind the moment access moved into Postgres, and every one of those people
-   was refused at the door by a file nobody had thought to update.
+   trigger. Nothing else, now.
 
-   It survives as a fallback for one case only: the database being unreachable.
-   Then it is better to admit the people it does know than to lock out the whole
-   organisation over an outage.
+   There used to be a second answer: js/allowed-users.js, a shipped list of 258
+   addresses, consulted when the sign-in call could not be completed so that an
+   outage did not lock out the organisation. Two things killed it.
+
+   It was a public file on a public site — every work email address in Student
+   Services, fetchable by anyone who guessed the path, which is a spam and
+   phishing list handed over for free.
+
+   And it had stopped buying anything. It admitted people as readers with no
+   role, which was worth something when the hub still served rows to a caller
+   with no session. Since supabase/rls-lockdown.sql it is worth nothing: every
+   dataset refuses a request without one, so that branch let people in to a hub
+   with no data in it.
+
+   So the database is asked, and if it cannot be reached, sign-in fails and says
+   so. A door that opens onto an empty room is not kinder than a locked one.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 (function () {
@@ -31,11 +42,6 @@
     errorEl.textContent = message;
     errorEl.style.display = "block";
     if (button) { button.disabled = false; button.textContent = "Sign In"; }
-  }
-
-  function onAllowList(email) {
-    return !!(window.ALLOWED_USERS &&
-      window.ALLOWED_USERS.some((u) => String(u).toLowerCase() === email));
   }
 
   /**
@@ -129,26 +135,24 @@
         localStorage.removeItem("ss_user_session");
         return fail(DENIED);
       }
-      // Deliberately fail open — but only when the database could not answer.
-      //
-      // The allow-list above has already said this person may be here. If the
-      // database sign-in cannot be completed — the access tables not yet
-      // created, an account left over from an earlier scheme, the project
-      // asleep, no network — the right outcome is a reader with no role, who
-      // sees whatever is public, not a locked door.
-      //
-      // Failing closed here would have been severe: until access-control.sql is
-      // applied, the signup trigger admits only the seven PM editors, so every
-      // other person on the hub would have been refused entry by a change that
-      // was supposed to be invisible to them.
-      // Reaching here means the database could not be asked, not that it
-      // refused. Fall back to the shipped list so an outage does not lock out
-      // the whole organisation — and refuse anyone not on it either.
-      console.warn("[login] continuing without a database session:", err.message);
-      if (!onAllowList(email)) {
-        localStorage.removeItem("ss_user_session");
-        return fail(DENIED);
-      }
+      /* Reaching here means the database could not be asked, not that it
+         refused — a refusal is "not-provisioned" above.
+
+         This used to fail open: anyone on the shipped allow-list was let in as
+         a reader with no role. That made sense while the hub still answered a
+         caller with no session, and it stopped making sense the moment it
+         didn't. Every dataset now refuses a request without one, so the branch
+         admitted people to a hub with nothing in it — and the price was
+         publishing all 258 addresses to anyone who asked for the file.
+
+         Failing closed costs nothing it did not already cost: without the
+         database there is no data to read, whichever side of the door you are
+         on. Say so plainly rather than opening an empty room. */
+      console.warn("[login] sign-in could not be completed:", err.message);
+      localStorage.removeItem("ss_user_session");
+      return fail(
+        "Could not reach the sign-in service. Check your connection and try " +
+        "again — if it keeps failing, the database may be down.");
     }
 
     window.location.replace("/index.html");

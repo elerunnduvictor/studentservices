@@ -75,7 +75,6 @@
 
 <script src="../shared/js/config.js"></script>
 <script src="../shared/js/data-service.js"></script>
-<script src="js/pm-editors.js"></script>
 <script src="js/shell.js"></script>
 <script>
   (function () {
@@ -162,15 +161,17 @@
         return show("Please enter a valid email address.", "err");
       }
 
-      /* Same check, same wording as the hub's front door — so someone who
-         isn't provisioned is told immediately rather than after a round trip
-         to the server. The database enforces the same list again on every
-         write, so this check is a courtesy, not the security boundary. */
-      if (!window.isProvisionedEditor(email)) {
-        return show(
-          "Access denied. Your email is not provisioned to edit. " +
-          "Contact Ben Packer and Jess Swinburne for Provisioning Access.", "err");
-      }
+      /* There used to be a check here against a shipped list of the seven
+         provisioned addresses, so an unprovisioned person was told before the
+         round trip rather than after it. The list was a public file — seven
+         work email addresses served to anyone who asked for the path — and it
+         was never the boundary; the comment here said as much.
+
+         The server gives the same answer and better wording. The signup
+         trigger refuses an unprovisioned address with "This address is not
+         provisioned for Student Services. Contact Ben Packer or Jess
+         Swinburne.", and the catch below shows exactly that. One round trip,
+         no published list. */
 
       if (creating) {
         if (password.length < MIN_PASSWORD) {

@@ -299,16 +299,37 @@ $$;
 -- ═══════════════════════════════════════════════════════════════════════════
 --  ROW LEVEL SECURITY
 --
---  Read: anyone with the anon key — the hub is a static site and fetches with
---        it. This is the same exposure the hub has today (its data ships as
---        plain .js files), so nothing gets less private by moving to Postgres.
+--  Read: a provisioned, signed-in account. NOT defined here — see below.
 --  Write: signed-in users whose email is in allowed_editors.
+--
+--  This block used to read "anyone with the anon key", and created
+--  `for select using (true)` on all five tables to match. That was true when
+--  it was written: the hub had no accounts, and the same rows shipped as plain
+--  .js files anyway. It stopped being true when access-control.sql introduced
+--  roles and replaced the SELECT policy on kpis, employees and
+--  student_employees with a real one.
+--
+--  The danger was not the old rule, it was this file re-imposing it. The loop
+--  below dropped EVERY policy on those five tables and recreated the permissive
+--  one, so running schema.sql after access-control.sql — a rebuild, a
+--  migration, restoring an environment — silently reopened the scorecard and
+--  the directory to the entire internet, with nothing to say it had happened.
+--  Nothing in either file stated a required order.
+--
+--  So this block no longer writes a SELECT policy at all. RLS is enabled with
+--  no read policy, which denies everyone, and the real rules are applied by:
+--
+--      access-control.sql   kpis, employees, student_employees
+--      rls-lockdown.sql     okrs, org_chart_nodes, and the rest
+--
+--  Fail-closed, and order no longer matters: this file can be re-run at any
+--  time and cannot widen access. On a fresh database, run all three.
 -- ═══════════════════════════════════════════════════════════════════════════
 do $$
 declare
   t     text;
-  nm    text;
-  names text[];
+  -- `nm` and `names` used to collect the policies this block dropped. It no
+  -- longer drops any it did not create, so they are gone with the loop.
   -- "the signed-in caller is on the editor list".
   --
   -- The auth call sits in a scalar sub-select of its own for two reasons.
@@ -326,20 +347,22 @@ begin
   foreach t in array array['okrs', 'employees', 'student_employees', 'org_chart_nodes', 'kpis']
   loop
     -- Exactly one policy per action. Two permissive policies covering the same
-    -- action get ORed together and both run on every access. Names are collected
-    -- before dropping rather than dropped inside a cursor over pg_policies.
-    select coalesce(array_agg(policyname), '{}') into names
-      from pg_policies where schemaname = 'public' and tablename = t;
-    foreach nm in array names loop
-      execute format('drop policy if exists %I on public.%I', nm, t);
-    end loop;
-
+    -- action get ORed together and both run on every access — which is why
+    -- each is dropped by name before being recreated.
+    --
+    -- By name, and only the three this block owns. It used to collect every
+    -- policy on the table and drop the lot, which took the read rules from
+    -- access-control.sql with them and put `using (true)` back in their place.
     execute format('alter table public.%I enable row level security;', t);
 
-    execute format('create policy "%1$s_select" on public.%1$s
-        for select using (true);', t);
+    -- No SELECT policy here, deliberately. RLS with no read policy denies
+    -- everyone, so a database built from this file alone is closed rather than
+    -- open, and re-running it can never widen what another file has narrowed.
 
     -- `to authenticated` means anon never evaluates these at all.
+    execute format('drop policy if exists %I on public.%I', t || '_insert', t);
+    execute format('drop policy if exists %I on public.%I', t || '_update', t);
+    execute format('drop policy if exists %I on public.%I', t || '_delete', t);
     execute format('create policy "%1$s_insert" on public.%1$s
         for insert to authenticated with check (%2$s);', t, chk);
 
@@ -433,7 +456,11 @@ alter view public.v_hub_kpis      set (security_invoker = on);
 --   grant select on ... v_hub_directory ... to anon, authenticated;
 -- which meant a rebuild from this file silently handed anon the view back.
 grant select on public.v_hub_directory to authenticated;
-grant select on public.v_hub_okrs, public.v_hub_kpis to anon, authenticated;
+-- Not to anon. v_hub_kpis was already refused, but only because its policy
+-- calls hub_role() and anon cannot execute it — an error, not a decision.
+-- v_hub_okrs had no such policy and so returned all 50 rows to anyone holding
+-- the key from shared/js/config.js.
+grant select on public.v_hub_okrs, public.v_hub_kpis to authenticated;
 
 revoke all on function public.touch_row()     from public, anon, authenticated;
 revoke all on function public.record_change() from public, anon, authenticated;

@@ -189,6 +189,23 @@ OC.renderSubtree = function(parentId) {
 
 OC.renderChart = function() {
   var vp = OC.employees.find(function(e) { return e.level === 1; });
+
+  /* No root means no chart. That used to be impossible: org-chart/js/data.js
+     shipped all 53 people, so there was always someone at level 1 whatever the
+     database did. The rows come only from v_hub_org_chart now — the snapshot
+     was a public file serving the whole chart — so a reader whose session has
+     expired, or an outage, arrives here with an empty list. Without this the
+     next line read `.id` off undefined and the page died with a blank frame
+     and a console error. The department pages have always guarded it; this one
+     never had to. */
+  if (!vp) {
+    document.getElementById('chartContainer').innerHTML =
+      '<p class="chart-empty">The org chart could not be loaded. ' +
+      'If you have just signed in, reload the page; otherwise the database ' +
+      'is unreachable.</p>';
+    return;
+  }
+
   // No `leadership-view` class any more. That was a whole-tree mode that hid
   // everything below level 3 with `display:none !important`, which is exactly
   // the thing per-card collapsing has to be able to override. The same opening

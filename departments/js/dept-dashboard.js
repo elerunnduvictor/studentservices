@@ -1,6 +1,8 @@
 /* ═══════════════ PER-DEPT MINI DASHBOARD ═══════════════
-   Requires window.EMPLOYEES, window.DEPT_COLORS, window.TYPE_COLORS,
-   window.STUDENT_CONTRACTORS (loaded from directory/js/employees.js),
+   Requires window.DEPT_COLORS and window.TYPE_COLORS (shared/js/hub-palette.js),
+   window.EMPLOYEES and window.STUDENT_CONTRACTORS (filled from the database by
+   shared/js/data-service.js — they used to come from directory/js/employees.js,
+   which was a public file serving the whole roster and no longer carries it),
    and window.DEPT_NAME set inline on the dept page. */
 (function() {
   var DEPT = window.DEPT_NAME;

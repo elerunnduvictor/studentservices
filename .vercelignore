@@ -1,0 +1,53 @@
+# ═══════════════════════════════════════════════════════════════════════════
+#  WHAT DOES NOT GET DEPLOYED
+#
+#  The repository is the site: Vercel serves every file in it, at its path,
+#  to anyone. That is fine for HTML, CSS, JS and photos. It was not fine for
+#  everything else that happens to live here.
+#
+#  Before this file, all of these answered 200 to a stranger:
+#
+#      supabase/access-control.sql   47KB — 261 email addresses, each with the
+#                                    person's role and which department they
+#                                    are scoped to. The access list itself.
+#      supabase/seed.sql             170KB — employees, KPIs, OKRs, the org
+#                                    chart. Every row the hub renders.
+#      supabase/schema.sql           25KB — table definitions, views, and the
+#                                    row-level security policies, which is a
+#                                    map of exactly where the doors are.
+#      supabase/*.py                 the provisioning scripts.
+#
+#  So the row-level security in supabase/rls-lockdown.sql was being handed
+#  back in full by the deploy. Locking the database while publishing the seed
+#  file is not locking anything.
+#
+#  These stay in git — they are how the database is built and reviewed. They
+#  simply stop being part of what the web server can hand out.
+#
+#  ── After deploying, check it ──
+#
+#      curl -o /dev/null -w '%{http_code}\n' https://<site>/supabase/seed.sql
+#
+#  Expect 404. A 200 means this file is not being applied and the SQL is still
+#  public.
+# ═══════════════════════════════════════════════════════════════════════════
+
+# Everything that builds or describes the database. None of it is ever fetched
+# by a page.
+supabase/
+
+# Documentation and editor state.
+README.md
+docs/
+.vscode/
+.claude/
+
+# Spreadsheets the provisioning scripts read. Kept out by pattern as well as by
+# name: "Hub Access List.xlsx" is the access list in its original form, and the
+# next one to land here should not have to be remembered.
+*.xlsx
+*.xls
+*.csv
+
+# Screenshots kept for reference rather than served by any page.
+dashboard-screenshots/

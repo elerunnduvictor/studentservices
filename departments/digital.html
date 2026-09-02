@@ -298,8 +298,7 @@
 
   <!-- ═══════════════ JAVASCRIPT ═══════════════ -->
   <script>window.DEPT_NAME = "Digital Operations";</script>
-  <!-- Bundled snapshot, used only if the database is unreachable. -->
-  <script src="/directory/js/employees.js"></script>
+  <script>window.DEPT_KEY = "digital";</script>
   <script src="/shared/js/hub-palette.js"></script>
 <script src="/shared/js/config.js"></script>
 <script src="/shared/js/hub-access.js"></script>
@@ -317,48 +316,12 @@
   <script src="/shared/js/data-service.js"></script>
   <script src="/shared/js/hub-boot.js"
           data-datasets="directory,orgchart,kpis,okrs"
-          data-then="departments/js/dept-dashboard.js,departments/js/dept-goals.js"></script>
+          data-then="departments/js/dept-dashboard.js,departments/js/dept-goals.js,departments/js/dept-chart.js"></script>
   <script src="/org-chart/js/data.js"></script>
   <script src="/org-chart/js/helpers.js"></script>
   <script src="/org-chart/js/renderer.js"></script>
   <script src="/org-chart/js/expand.js"></script>
   <script src="/org-chart/js/modal.js"></script>
-  <script>
-    /* Render department subtree + wire interactions */
-    (function () {
-      var director = OC.employees.find(function (e) { return e.dept === 'digital' && e.level === 2 && e.role !== 'pm'; });
-      if (!director) return;
-      var html = '<div class="tree">';
-      html += OC.renderTileWithAssistants(director);
-      html += OC.renderSubtree(director.id);
-      html += '</div>';
-      var container = document.getElementById('deptChart');
-      container.innerHTML = html;
-
-      /* renderer.js puts a +/- handle on every card with reports; expand.js is
-         what listens for them. Same opening state as the org chart page — the
-         director, their senior managers, and everything below behind a +. It
-         opened fully expanded at first, which put the entire department on
-         screen at once and left nothing for the handles to do. */
-      OC.initExpand('leadership', container);
-
-      container.addEventListener('click', function (e) {
-        if (e.target.closest('[data-view-more]')) {
-          e.stopPropagation();
-          return;
-        }
-        /* The +/- handle belongs to expand.js. Both listeners sit on this same
-           element, and stopPropagation in the other one does not stop a
-           listener on the element it fired from — only stopImmediatePropagation
-           would, and that would depend on which of the two was registered
-           first. Checking here is the version that cannot break: pressing +
-           was expanding the node and opening the card's detail body at once. */
-        if (e.target.closest('.tile-toggle')) return;
-        var tile = e.target.closest('.tile:not(.spacer-tile)');
-        if (tile) tile.classList.toggle('expanded');
-      });
-    })();
-  </script>
   <script src="/js/shared.js"></script>
 </body>
 

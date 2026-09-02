@@ -306,23 +306,29 @@
   /**
    * Is this signed-in person allowed to edit?
    *
-   * Two independent gates, and BOTH must pass:
+   * The `allowed_editors` table decides, because it is what row-level security
+   * consults on every write. Agreeing with it here means the UI shows what the
+   * database will actually accept.
    *
-   *   1. the provisioned list in pm-editors.js — the seven project managers,
-   *      checked exactly the way the hub checks its own front door;
-   *   2. the `allowed_editors` table, which is also what row-level security
-   *      consults on every write.
+   * There used to be a second gate in front of it: a shipped list of the seven
+   * provisioned addresses in pm/js/pm-editors.js, on the grounds that requiring
+   * both meant neither a database mistake nor a stale copy of this app could
+   * let a non-PM through. Half of that was true. A stale copy of the app cannot
+   * grant anything — RLS refuses the write regardless — so the list gated the
+   * UI, never the data. And it was a public file: seven work email addresses
+   * served to anyone who guessed the path. It has moved to
+   * supabase/pm-editors.js, which is not deployed, and is now a build-time
+   * input for import_sheets.py alone.
    *
-   * Requiring both means neither a mistake in the database nor a stale copy of
-   * this app can let a non-PM through. If the list itself failed to load we
-   * refuse rather than assume — an absent gate is not an open one.
+   * The catch used to return true — the person was on the list, so let them
+   * look. With no list to have passed, that would let anyone look, so it
+   * refuses instead. They see the read-only view until the database answers,
+   * which is the same thing a failed write would have told them.
    */
   async function checkEditor() {
     if (!SS.session) return false;
     const email = (SS.session.email || "").toLowerCase();
-
-    if (typeof window.isProvisionedEditor !== "function") return false;
-    if (!window.isProvisionedEditor(email)) return false;
+    if (!email) return false;
 
     try {
       const rows = await SS.db.select("allowed_editors", {
@@ -332,9 +338,7 @@
       });
       return rows.length > 0;
     } catch {
-      // The database could not confirm. The person is on the provisioned list,
-      // so let them look; any write they attempt is still checked server-side.
-      return true;
+      return false;
     }
   }
 

@@ -12,7 +12,9 @@
    spectrum, drillable children — so reading one teaches you all of them.
    `?lens=Speed` narrows any altitude to one category type.
 
-   Data comes from scorecard-data.js (built by scripts/build-scorecard-data.py).
+   Data comes from v_hub_kpis, loaded by shared/js/data-service.js. It used to
+   come from scorecard-data.js as well, as an offline fallback; that file was
+   public and served all 76 KPIs with their owners, so it no longer holds any.
    ═══════════════════════════════════════════════════════════════════════ */
 (function () {
   "use strict";

@@ -144,7 +144,6 @@
   const DATASETS = {
     directory: {
       global: "EMPLOYEES",
-      fallbackSrc: "/directory/js/employees.js",
       view: "v_hub_directory",
       order: "dept.asc,subDept.asc,name.asc",
       map: (r) => ({
@@ -181,7 +180,6 @@
     },
     okrs: {
       global: "OKR_PROGRESS_ROWS",
-      fallbackSrc: "/okr-progress/js/okr-progress-data.js",
       view: "v_hub_okrs",
       order: "id.asc",
       map: (r) => ({
@@ -273,7 +271,6 @@
 
     kpis: {
       global: "SCORECARD_KPIS",
-      fallbackSrc: "/scorecard/js/scorecard-data.js",
       view: "v_hub_kpis",
       order: "id.asc",
       // The scorecard needs derived fields (slugs, computed colour, outcome
@@ -365,41 +362,26 @@
    * Load a dataset into the global the hub expects.
    * Resolves to { source: "database" | "bundled", rows, error? }.
    */
-  /** Pull in a snapshot file on demand. Resolves to null if there isn't one. */
-  const fallbackLoaded = {};
-  function loadFallback(def) {
-    if (!def.fallbackSrc) return Promise.resolve(def.bundled ? def.bundled() : window[def.global]);
-    if (fallbackLoaded[def.fallbackSrc]) return fallbackLoaded[def.fallbackSrc];
-    fallbackLoaded[def.fallbackSrc] = new Promise((resolve) => {
-      const s = document.createElement("script");
-      // Absolute, because the snapshot lives in one place and is loaded from
-      // many. These used to be page-relative ("js/employees.js"), which
-      // resolved only on the single page sitting in the matching folder: from
-      // /directory/ it found /directory/js/employees.js, but from the home
-      // page it asked for /js/employees.js and from a department page for
-      // /departments/js/employees.js — neither of which exists. The request
-      // 404ed, onerror resolved null, and the page rendered empty.
-      //
-      // That is the opposite of what this whole mechanism is for. The fallback
-      // exists so an unreachable database shows yesterday's numbers rather than
-      // an error, and it was silently broken on every page but one — failing in
-      // exactly the situation it was written for.
-      s.src = def.fallbackSrc;
-      s.onload = () => resolve(def.bundled ? def.bundled() : window[def.global]);
-      s.onerror = () => resolve(null);
-      document.head.append(s);
-    });
-    return fallbackLoaded[def.fallbackSrc];
-  }
-
   async function loadDataset(name) {
     const def = DATASETS[name];
     if (!def) throw new Error(`Unknown dataset "${name}"`);
-    // Most pages keep their snapshot in a plain global; the org chart keeps it
-    // on OC.employees, so a dataset may say where to look instead.
-    const bundled = def.bundled ? def.bundled() : window[def.global];
 
+    /* The global a page renders from has to exist before anything can go
+       wrong, not only after a load succeeds.
+
+       It used to be defined by the bundled snapshot, which every page loaded,
+       so it was always an array no matter what happened next. With the
+       snapshots gone the only thing that assigns it is a successful fetch —
+       and a page whose fetch failed then reached for `.filter` on undefined
+       and died. Three did: the scorecard, the OKR page and the org chart.
+       An empty array renders an empty page, which is the honest answer and
+       the one the empty states were written for. */
+    if (!Array.isArray(window[def.global])) window[def.global] = [];
+    // With no Supabase configured there is nothing to read. `bundled` is
+    // whatever the page had already put in the global — empty everywhere now
+    // that the snapshots are gone, except OC.DEPARTMENTS-style constants.
     if (!cfg.isConfigured) {
+      const bundled = def.bundled ? def.bundled() : window[def.global];
       return finish("bundled", bundled || [], "Supabase is not configured yet");
     }
     try {
@@ -409,23 +391,29 @@
       if (def.after) await def.after(rows);
       return finish("database", rows);
     } catch (err) {
-      if (!cfg.ALLOW_STATIC_FALLBACK) throw err;
+      /* No snapshot to fall back to, on purpose.
 
-      // Fetch the snapshot only now, once the database has actually failed.
-      //
-      // These files used to load on every page as ordinary <script> tags, and
-      // that quietly defeated the access control: the directory snapshot is 190
-      // people with roles and reporting lines, the scorecard one 76 KPIs with
-      // owners and values. A partner is refused all of it by row-level security
-      // and was then handed it in the page payload, readable from the network
-      // tab. Loading on demand means it reaches only the people who were about
-      // to be served it anyway — and saves everyone else 155KB.
-      const late = (await loadFallback(def)) || bundled;
-      if (Array.isArray(late) && late.length) {
-        window[def.global] = late;
-        console.warn(`[data] ${name}: falling back to bundled snapshot —`, err.message);
-        return finish("bundled", late, err.message);
-      }
+         There used to be four: directory/js/employees.js (190 people with
+         roles and reporting lines), scorecard/js/scorecard-data.js (76 KPIs
+         with owners and values), okr-progress-data.js and the org chart's.
+         They were loaded on demand rather than on every page, which kept them
+         out of the payload — but they were still static files on a public
+         site, fetchable by URL with no sign-in at all. So the row-level
+         security that refuses a partner the directory was handed straight back
+         to anyone who knew the path.
+
+         They are gone. The database is the only source, and a request that
+         cannot reach it says so: loadAll turns this into {source: "failed"},
+         hub-boot shows "Live data unavailable", and the page renders its empty
+         state. Stale data nobody can date is not obviously better than an
+         honest blank, and it is not worth publishing the roster for.
+
+         What is lost is the offline read: a signed-in reader during a Supabase
+         outage now sees nothing rather than yesterday's numbers. If that
+         matters, the answer is a per-user cache of the last successful load —
+         it holds only what that reader was already allowed to see — not a file
+         on the public internet. */
+      console.warn(`[data] ${name}: ${err.message}`);
       throw err;
     }
 

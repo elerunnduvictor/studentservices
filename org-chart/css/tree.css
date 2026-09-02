@@ -278,3 +278,13 @@
 }
 
 /* Assistant tiles share base tile sizing; only color accent differs */
+
+/* Shown in place of the chart when no rows arrived — see OC.renderChart. */
+.chart-empty {
+  margin: 60px auto;
+  max-width: 30rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}

@@ -362,6 +362,79 @@
    * Load a dataset into the global the hub expects.
    * Resolves to { source: "database" | "bundled", rows, error? }.
    */
+  /* ══ THE OFFLINE READ ══
+
+     What the bundled snapshots used to provide, without publishing anything.
+
+     They were four static files on a public site, so anyone who knew a path
+     had the roster, the scorecard and the org chart. This keeps the same
+     convenience — a reader whose database is briefly unreachable still sees
+     the numbers — by remembering what *this* reader was served rather than
+     shipping a copy for everybody.
+
+     Three properties make that a different thing from a snapshot:
+
+       · it holds only rows the database already handed this person, so
+         row-level security decided its contents, not us;
+       · it lives in their browser, so there is nothing to fetch and nothing
+         to leak from the server;
+       · it is keyed by the signed-in address and cleared on sign-out, so a
+         shared machine does not show one person's data to the next.
+
+     It is still data at rest on a device that may not be theirs alone, which
+     is why it is scoped, capped and wiped rather than simply written. */
+
+  const CACHE_PREFIX = "ss_cache:";
+
+  /* Old enough that showing it would mislead rather than help. A database out
+     for a week is an outage somebody knows about; a page quietly rendering
+     month-old KPIs as though they were current is worse than an empty one. */
+  const CACHE_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
+
+  function cacheWho() {
+    try { return (localStorage.getItem("ss_user_session") || "").toLowerCase(); }
+    catch { return ""; }                      // private mode, or storage blocked
+  }
+
+  function cacheKey(name) { return CACHE_PREFIX + cacheWho() + ":" + name; }
+
+  function cacheWrite(name, rows) {
+    if (!cacheWho() || !Array.isArray(rows) || !rows.length) return;
+    try {
+      localStorage.setItem(cacheKey(name), JSON.stringify({ at: Date.now(), rows }));
+    } catch {
+      /* No room, or storage refused. Drop whatever was there rather than leave
+         an older copy behind a newer read: a half-updated cache is the one
+         thing worse than none. */
+      try { localStorage.removeItem(cacheKey(name)); } catch { /* nothing to do */ }
+    }
+  }
+
+  function cacheRead(name) {
+    if (!cacheWho()) return null;
+    try {
+      const raw = localStorage.getItem(cacheKey(name));
+      if (!raw) return null;
+      const v = JSON.parse(raw);
+      if (!v || !Array.isArray(v.rows) || !v.rows.length) return null;
+      if (!(typeof v.at === "number") || Date.now() - v.at > CACHE_MAX_AGE) return null;
+      return v;
+    } catch { return null; }
+  }
+
+  /** Every cached dataset, for every address that has signed in here. */
+  function clearCache() {
+    try {
+      const doomed = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.indexOf(CACHE_PREFIX) === 0) doomed.push(k);
+      }
+      doomed.forEach((k) => localStorage.removeItem(k));
+      return doomed.length;
+    } catch { return 0; }
+  }
+
   async function loadDataset(name) {
     const def = DATASETS[name];
     if (!def) throw new Error(`Unknown dataset "${name}"`);
@@ -389,6 +462,7 @@
       const rows = raw.map(def.map);
       window[def.global] = rows;
       if (def.after) await def.after(rows);
+      cacheWrite(name, rows);
       return finish("database", rows);
     } catch (err) {
       /* No snapshot to fall back to, on purpose.
@@ -413,14 +487,37 @@
          matters, the answer is a per-user cache of the last successful load —
          it holds only what that reader was already allowed to see — not a file
          on the public internet. */
+      /* The reader's own copy, if there is a recent one. This is what the
+         bundled snapshot used to do, minus the publishing: it holds only rows
+         the database already handed this person, and only in their browser.
+
+         `after` has to run again — for the org chart it is what assigns
+         OC.employees, so skipping it would render nothing — but it makes its
+         own requests, and those will fail for whatever reason this one did.
+         Its failure is not the cache's failure, so it is caught separately. */
+      const cached = cacheRead(name);
+      if (cached) {
+        window[def.global] = cached.rows;
+        if (def.after) {
+          try { await def.after(cached.rows); }
+          catch { /* the rollups it fetches are unreachable too; the rows stand */ }
+        }
+        console.warn(`[data] ${name}: ${err.message} — showing this device's copy`);
+        return finish("cache", cached.rows, err.message, cached.at);
+      }
+
       console.warn(`[data] ${name}: ${err.message}`);
       throw err;
     }
 
-    function finish(source, rows, error) {
+    // `at` is when the rows were read from the database, which for a cached
+    // read is not now — the notice says how old they are, so it has to be the
+    // original time rather than the moment they came back off disk.
+    function finish(source, rows, error, at) {
       SS.dataSource = SS.dataSource || {};
-      SS.dataSource[name] = { source, error, count: rows.length, at: new Date() };
-      return { source, rows, error };
+      const when = at ? new Date(at) : new Date();
+      SS.dataSource[name] = { source, error, count: rows.length, at: when };
+      return { source, rows, error, at: when };
     }
   }
 
@@ -435,5 +532,5 @@
   }
 
   SS.db = { select, insert, update, remove, rpc, endpoint, headers };
-  SS.data = { load: loadDataset, loadAll, DATASETS };
+  SS.data = { load: loadDataset, loadAll, DATASETS, clearCache };
 })();

@@ -45,6 +45,7 @@
     const sources = Object.values(results).map((r) => r.source);
     const live = sources.every((s) => s === "database");
     const failed = sources.some((s) => s === "failed");
+    // A cached read is not a failure — it is data, with an age.
     if (live) return;                       // the normal case needs no notice
 
     const note = document.createElement("div");
@@ -59,12 +60,34 @@
       note.style.color = "#E8CE8A";
       note.style.borderColor = "#5A4A20";
     }
+    /* How old, in words. "3 hours ago" is something a reader can act on;
+       an ISO timestamp is something they have to work out. */
+    const ago = (at) => {
+      const mins = Math.max(0, Math.round((Date.now() - new Date(at).getTime()) / 60000));
+      if (mins < 2) return "just now";
+      if (mins < 60) return `${mins} minutes ago`;
+      const hrs = Math.round(mins / 60);
+      if (hrs < 24) return hrs === 1 ? "an hour ago" : `${hrs} hours ago`;
+      const days = Math.round(hrs / 24);
+      return days === 1 ? "yesterday" : `${days} days ago`;
+    };
+
+    const cached = sources.some((s) => s === "cache");
     const detail = Object.entries(results)
       .filter(([, r]) => r.source !== "database")
-      .map(([k, r]) => `${k}: ${r.error || r.source}`)
+      .map(([k, r]) => (r.source === "cache" ? `${k}: read ${ago(r.at)}` : `${k}: ${r.error || r.source}`))
       .join(" · ");
+
+    /* Three different things, and saying so matters. "Failed" means the page
+       has nothing. "Cache" means it has this reader's own last successful read
+       and is telling them when that was — the offline read that replaced the
+       bundled snapshots, which were public files serving everyone the same
+       copy. */
+    const heading = cached && !failed ? "Showing your last saved copy"
+                  : failed            ? "Live data unavailable"
+                  :                     "Showing the bundled snapshot";
     note.innerHTML =
-      `<strong>${failed ? "Live data unavailable" : "Showing the bundled snapshot"}</strong><br>` +
+      `<strong>${heading}</strong><br>` +
       `<span style="opacity:.85">${detail}</span>`;
     document.body.append(note);
     setTimeout(() => {

@@ -30,6 +30,13 @@
   const PARTNER = "Partner";
 
   function signOut() {
+    // The offline read goes too, and first — it holds the rows this person was
+    // served, and the next person at this machine must not find them. Before
+    // the markers below, because the cache is keyed by the address in
+    // ss_user_session and removing that first would orphan it.
+    try { if (window.SS && SS.data && SS.data.clearCache) SS.data.clearCache(); }
+    catch { /* nothing cached, or storage refused */ }
+
     // Both the hub's own marker and the database session, or the next visit
     // would sign straight back in as whoever just left.
     ["ss_user_session", "ss_last_activity", "ss_hub_supabase"].forEach((k) => {

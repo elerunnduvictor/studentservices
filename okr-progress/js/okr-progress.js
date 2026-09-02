@@ -452,8 +452,13 @@ function skrItem(r) {
              style="--skr-color:${skr.bg}; --skr-pale:${skr.pale};">
       <div class="okrp-skr-top">
         <div class="okrp-skr-head">
-          <div class="okrp-skr-title">${escapeHtml(r.subKeyResult)}</div>
+          <!-- The quarter first, the parent under it. A row reads
+               "Q2 Admissions ITD roadmap" over "Complete Admissions ITD roadmap
+               of essential features for scale" — the specific thing above the
+               objective it belongs to, rather than the other way round. Both keep
+               the styling they already had. -->
           ${r.subKeyResultChild ? `<div class="okrp-skr-child">${escapeHtml(r.subKeyResultChild)}</div>` : ""}
+          <div class="okrp-skr-title">${escapeHtml(r.subKeyResult)}</div>
           <div class="okrp-skr-kr"><span class="okrp-tag-k">Key result</span>${escapeHtml(r.keyResult)}</div>
         </div>
         <div class="okrp-skr-right">

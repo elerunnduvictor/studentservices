@@ -40,8 +40,17 @@
   'use strict';
 
   /* The element that owns a card's children: its <li>, or `.tree` for the VP,
-     whose card is not wrapped in one. */
+     whose card is not wrapped in one.
+
+     A card inside an .assistant-group has neither. It is a PM flanking someone
+     else, and its own PMs come out with it when that someone is opened, so it
+     owns nothing to toggle. Saying so explicitly matters: `closest('li')`
+     returns null from inside a flanking group, and the `|| closest('.tree')`
+     below then handed back the VP's scope — so a handle there did not do
+     nothing, it collapsed the entire chart. The renderer no longer puts one
+     there; this makes it harmless if it ever does again. */
   function scopeOf(tile) {
+    if (tile.closest('.assistant-group')) return null;
     return tile.closest('li') || tile.closest('.tree');
   }
 

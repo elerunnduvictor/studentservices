@@ -1394,7 +1394,9 @@ body.modal-open { overflow: hidden; }
 }
 .okrp-skr-child {
   display: inline-block;
-  margin-top: 5px;
+  /* Below the title this needed space above it; it sits first now, so the
+     space goes under it instead. Same look, other side. */
+  margin-bottom: 6px;
   padding: 2px 9px;
   border-radius: 20px;
   background: var(--skr-pale);

@@ -98,24 +98,32 @@
   let TAB = "current";                      // which of the three is showing
 
   /* ── why an issue is where it is ────────────────────────────────────────
-     Returns a score and the reasons behind it. The reasons are what get shown;
-     the score only orders them. Kept together so the two can never disagree. */
+     Returns a score and the reasons behind it.
+
+     Most of what pushes an issue up the list is already visible on the card:
+     the severity chip says Critical, the status chip says Exploring, and the
+     meta line says when it was raised. Those rules therefore only score — a
+     card that says "Critical" beside a chip reading Critical is not twice as
+     urgent, it is the same fact twice.
+
+     What is left in `why` is the one thing no chip shows: that an issue has
+     been sitting there a long time. Kept in one function so the ordering and
+     the wording can never disagree about it. */
   function triage(i) {
     const why = [];
     let score = 0;
 
-    if (i.severity === "Critical") { score += 100; why.push("Critical"); }
+    if (i.severity === "Critical") { score += 100; }
     if (i.severity === "Moderate") { score += 40; }
 
     /* Nobody has picked this up yet.
-       This replaces the old "escalated" rule, and replaces the target-date
-       arithmetic that came after it. Both are gone for the same reason: they
-       measured a promise somebody had to remember to make. An issue still
-       sitting in Exploring after a week made no promise and needs no date to
-       be obviously stuck - the register already knows how old it is. */
+       This replaced the old "escalated" rule and the target-date arithmetic
+       that came after it. Both went for the same reason: they measured a
+       promise somebody had to remember to make. An issue still sitting in
+       Exploring after a week made no promise and needs no date to be obviously
+       stuck — the register already knows how old it is. */
     if (i.status === "Exploring" && i.age_days >= 7) {
       score += 45;
-      why.push(`still exploring after ${i.age_days} days`);
     }
     /* Age, not silence.
        This used to say "no update in 25 days", which was fair when an issue

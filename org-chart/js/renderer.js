@@ -37,10 +37,18 @@ OC.renderTile = function(emp) {
 
   var deptHtml = '<div class="tile-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>' + dept.name + '</div>';
 
-  // The +/- handle. Present only where there is something under the card, so
-  // its absence is meaningful: a card with no handle is a leaf. Counts PMs as
-  // reports, because they are — they just sit beside rather than below.
-  var hasReports = OC.getChildren(emp.id).length > 0;
+  /* The +/- handle. Present only where there is something under the card, so
+     its absence is meaningful: a card with no handle is a leaf. Counts PMs as
+     reports, because they are — they just sit beside rather than below.
+
+     Never on a PM's own card. A PM is only ever drawn inside an
+     .assistant-group, flanking whoever they report to, and that parent's
+     handle already reveals the whole chain: pressing Ben's + brings out Jess
+     *and* Gilles together. A second handle on Jess offered to do something
+     that had already happened — and, because her card sits outside the <li>
+     the scope rules walk up to, it fell through to the tree and collapsed
+     Ben's entire chart instead. */
+  var hasReports = !isPM && OC.getChildren(emp.id).length > 0;
   var toggleHtml = hasReports
     ? '<button class="tile-toggle" type="button" data-toggle="' + emp.id + '"' +
       ' aria-expanded="false" title="Show who reports to ' + emp.name + '"' +

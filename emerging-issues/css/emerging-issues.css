@@ -152,6 +152,11 @@
   gap: 16px; flex-wrap: wrap; margin-bottom: 16px;
 }
 .ei-filters { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+/* Setting `display` defeats the `hidden` attribute — [hidden] is only
+   `display: none` at the lowest specificity, and the line above outranks it.
+   Without this the four selects stayed on screen on the Top 10 tab, where
+   none of them does anything to the list below. */
+.ei-filters[hidden] { display: none; }
 .ei-filters select {
   font: inherit; font-size: .8rem; padding: 7px 11px;
   border: 1px solid var(--border); border-radius: 8px;
@@ -232,6 +237,22 @@
 .ei-chip-sev-moderate { background: rgba(224,138,30,.18); color: #B4700F; }
 .ei-chip-sev-low      { background: rgba(46,158,92,.16);  color: #2E9E5C; }
 .ei-chip-status    { background: rgba(127,137,138,.16); color: var(--text-muted); font-weight: 500; }
+
+/* The tech support tab. A product name where an issue card carries a severity,
+   and a bug number where it carries a status — the tracker records neither of
+   the two the register does, and inventing a severity for each row would be
+   putting a judgement in the TS team's mouth. */
+.ei-chip-ts  { background: rgba(6,85,119,.14); color: #065577; }
+.ei-chip-bug { background: rgba(127,137,138,.14); color: var(--text-muted); font-weight: 500; }
+[data-theme="dark"] .ei-chip-ts { background: rgba(120,190,225,.18); color: #8FC9E8; }
+
+/* Where the ten came from and when, above the list. */
+.ei-ts-note {
+  margin: 0 0 16px;
+  font-size: 0.86rem;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
 
 .ei-label {
   display: block; font-size: .68rem; font-weight: 600; letter-spacing: .12em;

@@ -59,6 +59,29 @@
     { id: "backlog", label: "Backlog",      max: Infinity,
       blurb: "Raised more than a fortnight ago and still open." },
   ];
+
+  /* ── the fourth tab ──────────────────────────────────────────────────────
+     Not a fourth window onto the register: a different register entirely. The
+     three above bucket the issues people raise here by age; this one is the
+     top open issue for each of the ten products Technical Support tracks,
+     read from a spreadsheet their team keeps.
+
+     Deliberately kept out of BUCKETS. Those three partition every row by how
+     old it is, `bucketOf` must always land on one of them, and adding a fourth
+     that no issue can ever fall into would have made the counts wrong the
+     moment anybody looked. */
+  const TS_TAB = {
+    id: "ts",
+    label: "Top 10 Tech Support",
+    blurb: "The highest-priority open issue for each product Technical Support tracks.",
+  };
+
+  /** The ten, or none if the file has not been refreshed onto the page. */
+  function tsIssues() {
+    const d = window.TECH_SUPPORT_TOP10;
+    return (d && Array.isArray(d.issues)) ? d.issues : [];
+  }
+
   /* What kind of issue this is — a different question from how severe it is or
      which department owns it. A system fault and a grievance can both be
      Critical and both belong to Records; what to do about them is not the same,
@@ -237,15 +260,22 @@
     const host = el("eiTabs");
     if (!host) return;
     const pool = afterFilters();
-    host.innerHTML = BUCKETS.map((b) => {
-      const n = pool.filter((i) => bucketOf(i) === b.id).length;
-      const on = TAB === b.id;
+    const tab = (id, label, blurb, n) => {
+      const on = TAB === id;
       return `<button type="button" class="ei-tab${on ? " is-on" : ""}"
-                role="tab" aria-selected="${on}" data-tab="${b.id}" title="${esc(b.blurb)}">
-                <span class="ei-tab-l">${esc(b.label)}</span>
+                role="tab" aria-selected="${on}" data-tab="${id}" title="${esc(blurb)}">
+                <span class="ei-tab-l">${esc(label)}</span>
                 <span class="ei-tab-n${n ? "" : " is-quiet"}">${n}</span>
               </button>`;
-    }).join("");
+    };
+    host.innerHTML =
+      BUCKETS.map((b) =>
+        tab(b.id, b.label, b.blurb, pool.filter((i) => bucketOf(i) === b.id).length)
+      ).join("") +
+      // Its count comes from the file, not from the filters — the filters ask
+      // about severity, department, status and category, and none of those is
+      // a thing the product tracker records.
+      tab(TS_TAB.id, TS_TAB.label, TS_TAB.blurb, tsIssues().length);
   }
 
   /* ── one issue ─────────────────────────────────────────────────────────── */
@@ -314,11 +344,72 @@
     });
   }
 
+  /* One product's top issue. Same shape as an issue card so the tab does not
+     look like a different website, but the marks are what the tracker actually
+     records: the product it belongs to and its bug number. There is no
+     severity or status to show — the tracker has neither. */
+  function tsCard(t, n) {
+    const id = "ts-" + n;
+    const open = OPEN_ID === id;
+    const meta = [
+      t.scope ? "Scope: " + esc(t.scope) : null,
+      t.eta ? "ETA: " + esc(t.eta) : null,
+    ].filter(Boolean).join(" &nbsp;·&nbsp; ");
+
+    return `
+      <article class="ei-card ei-card-ts${open ? " is-open" : ""}" data-id="${id}">
+        <button type="button" class="ei-card-head" aria-expanded="${open}">
+          <div class="ei-card-marks">
+            <span class="ei-chip ei-chip-ts">${esc(t.product)}</span>
+            ${t.bug ? `<span class="ei-chip ei-chip-bug">${esc(t.bug)}</span>` : ""}
+          </div>
+          <div class="ei-card-main">
+            <h3 class="ei-card-title">${esc(t.issue)}</h3>
+            ${meta ? `<p class="ei-meta">${meta}</p>` : ""}
+          </div>
+          <svg class="ei-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="ei-card-body" ${open ? "" : "hidden"}>
+          ${t.summary ? `<p class="ei-para">${esc(t.summary)}</p>` : ""}
+          ${t.impact ? `<p class="ei-para"><strong>Who it affects.</strong> ${esc(t.impact)}</p>` : ""}
+          ${t.status ? `<p class="ei-para"><strong>Latest.</strong> ${esc(t.status)}</p>` : ""}
+        </div>
+      </article>`;
+  }
+
+  function renderTechSupport(host) {
+    const rows = tsIssues();
+    el("eiCount").textContent =
+      rows.length + (rows.length === 1 ? " issue" : " issues");
+    if (!rows.length) {
+      host.innerHTML =
+        `<div class="ei-empty"><strong>No tech support list loaded.</strong>
+           <p>emerging-issues/js/tech-support-top10.js is missing or empty.
+              It is regenerated from the TS Product Tracker workbook.</p></div>`;
+      return;
+    }
+    const d = window.TECH_SUPPORT_TOP10 || {};
+    host.innerHTML =
+      `<p class="ei-ts-note">The highest-priority open issue for each of the ten
+         products Technical Support tracks, from the ${esc(d.source || "product tracker")}.
+         ${d.capturedLabel ? "Updated " + esc(d.capturedLabel) + "." : ""}</p>` +
+      rows.map(tsCard).join("");
+  }
+
   function renderList() {
     const host = el("eiList");
     // Tabs first: their counts come from the filters, so they have to be
     // redrawn whenever the filters move, not only when the tab changes.
     renderTabs();
+
+    /* The filters ask about severity, department, status and category. The
+       product tracker records none of them, so on this tab they are hidden
+       rather than left sitting there doing nothing to the list below. */
+    const filterBar = document.querySelector(".ei-filters");
+    if (filterBar) filterBar.hidden = TAB === TS_TAB.id;
+    if (TAB === TS_TAB.id) return renderTechSupport(host);
+
     const rows = visible();
     el("eiCount").textContent =
       rows.length + (rows.length === 1 ? " issue" : " issues");
@@ -526,7 +617,11 @@
       const head = e.target.closest(".ei-card-head");
       if (!head) return;
       const card = head.closest(".ei-card");
-      const id = Number(card.dataset.id);
+      /* Database issues carry a numeric id; the tech support rows come from a
+         spreadsheet and carry "ts-0". Number() on that is NaN, and NaN never
+         equals itself, so the card could be clicked forever without opening. */
+      const raw = card.dataset.id;
+      const id = raw.startsWith("ts-") ? raw : Number(raw);
       OPEN_ID = OPEN_ID === id ? null : id;
       renderList();
     });

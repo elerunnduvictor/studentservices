@@ -36,6 +36,11 @@
 # by a page.
 supabase/
 
+# Build scripts. tools/build-ts-top10.py reads a workbook and writes a page
+# data file; the browser never fetches it, and a .py sitting at a public URL is
+# how the last set of problems here started.
+tools/
+
 # Documentation and editor state.
 README.md
 docs/

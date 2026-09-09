@@ -238,6 +238,37 @@
 .ei-chip-sev-low      { background: rgba(46,158,92,.16);  color: #2E9E5C; }
 .ei-chip-status    { background: rgba(127,137,138,.16); color: var(--text-muted); font-weight: 500; }
 
+/* ── the backlog's two halves ──
+   A quieter strip than the tabs above it, because it is a choice inside one
+   of them rather than a peer of them: pills on the page rather than another
+   underlined row, which read as a second, competing tab bar. */
+.ei-subtabs {
+  display: flex; gap: 8px; flex-wrap: wrap;
+  margin: -10px 0 clamp(16px, 2vw, 22px);
+}
+.ei-subtabs[hidden] { display: none; }
+.ei-subtab {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: 'Jost', sans-serif;
+  font-size: .8rem; font-weight: 500;
+  color: var(--text-muted);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: color .15s, border-color .15s, background .15s;
+}
+.ei-subtab:hover { color: var(--text); border-color: var(--text-dim); }
+.ei-subtab.is-on {
+  color: var(--bp-teal);
+  border-color: currentColor;
+  background: rgba(163,34,34,.08);
+}
+.ei-subtab-n { font-size: .74rem; font-weight: 600; }
+.ei-subtab-n.is-quiet { color: var(--text-dim); font-weight: 400; }
+[data-theme="dark"] .ei-subtab.is-on { background: rgba(232,108,108,.14); color: #E86C6C; }
+
 /* The tech support tab. A product name where an issue card carries a severity,
    and a bug number where it carries a status — the tracker records neither of
    the two the register does, and inventing a severity for each row would be

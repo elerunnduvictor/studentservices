@@ -12,9 +12,19 @@
    product happens to have the most bugs open at the moment. The order is the
    workbook's own sheet order.
 
-   ── Refreshing it ──
+   ── Refreshing it, and what happens to what falls off ──
 
-   Send a fresh copy of the tracker and this file is regenerated from it.
+   Send a fresh copy of the tracker and tools/build-ts-top10.py regenerates
+   this file from it. The list does not expire on its own: it stands until a
+   newer tracker replaces it.
+
+   When one arrives, the two lists are compared. Anything still on the top ten
+   stays where it is. Anything no longer on it moves to `retired`, which is
+   what Backlog's tech support tab shows, with the date it dropped off. An
+   issue that returns to the ten leaves `retired` again.
+
+   Identity is product plus issue title — bug numbers are missing on some rows
+   and change on others, so they cannot be the key.
 
    Deliberately a plain list rather than a database table: the source of truth
    is the workbook the TS team already keeps, and a second copy in Postgres
@@ -32,6 +42,9 @@ window.TECH_SUPPORT_TOP10 = {
   // page would have claimed the list was a day older than it is.
   capturedLabel: "4 September 2026",
   source: "TS Product Tracker",
+  /* Off the ten, still worth being able to find. Empty until a second tracker
+     has been imported: there is nothing to have dropped off a first one. */
+  retired: [],
   issues: [
     {"product": "Admissions EE", "issue": "Applications are being submitted without completing app process", "bug": "935748", "summary": "Applications are being submitted, but not completing the full application process or receiving a decision.", "scope": "27", "impact": "Student applications get stuck and have to be manually fixed to move forward.", "eta": "20 Aug 2026", "status": "Closed on 8/25. Update was added to application to ensure process complete before an application is marked as Submitted."},
     {"product": "Finance", "issue": "Cybersource Integration Change Request-Secure Acceptance to Unified Check Out", "bug": "ADO 90976", "summary": "Moving to a new platform called Unified Check Out. Secure Acceptance will be retired by September.", "scope": "All BYU-Pathway students", "impact": "No payments will be able to be made if this is not updated before September."},

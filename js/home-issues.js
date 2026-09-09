@@ -37,6 +37,16 @@
        it. "3 critical issues · 2 raised this week." truncated to "…2 raised
        this …", which loses the number — the one part worth reading. Dropping
        the nouns keeps every figure visible: "3 critical · 2 this week". */
+    /* Both figures are the register's current week — `age_days < 7`, Resolved
+       hidden — so the line says what the page shows when you click it.
+
+       It used to say "7 critical · 13 this week" over a page showing 5 and 10.
+       red_open counted unresolved criticals of every age, and raised_7d
+       counted a rolling 168 hours while the page buckets on whole days, which
+       put three seven-day-old rows in "this week" here and "Last Week" there.
+       supabase/emerging-issues-brief-window.sql moved both onto the page's own
+       age_days. The column names are unchanged — a view's columns cannot be
+       renamed in place — so `red_open` now means critical *this week*. */
     const bits = [];
     if (b.red_open)  bits.push(b.red_open + " critical");
     if (b.raised_7d) bits.push(b.raised_7d + " this week");

@@ -135,6 +135,11 @@
     SS.db.select("v_emerging_issues_brief", { limit: 1 })
       .then(function (rows) {
         var brief = (rows || [])[0];
+        /* Critical *this week*, not critical in total. red_open was rescoped
+           to the register's current week so the home tile would stop promising
+           a figure the page does not show; the bell reads the same column and
+           followed it. One consequence worth knowing: a critical issue older
+           than seven days and still unresolved no longer rings this. */
         var critical = brief ? Number(brief.red_open) || 0 : 0;
         if (critical <= 0) return;              // nothing critical: no bell
 

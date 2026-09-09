@@ -40,11 +40,17 @@
    than a day of the exposure this closes.
    ═══════════════════════════════════════════════════════════════════════════ */
 
-export const config = {
-  // Everything except Vercel's own internals. Static assets are the point:
-  // /photos/… is exactly what must not be fetchable.
-  matcher: ["/((?!_vercel|_next/static).*)"],
-};
+/* No `config.matcher`, deliberately.
+
+   It was ["/((?!_vercel|_next/static).*)"] — a negative-lookahead pattern,
+   which is a Next.js convention. This is not a Next.js project, and after two
+   deploys with HUB_GATE=on the site was still answering every request, with no
+   way from outside to tell whether the matcher was excluding everything or the
+   middleware was not running at all.
+
+   With no matcher, every request reaches the function and the exclusions are
+   made below in code, where they are plain to read and cannot be silently
+   misparsed. */
 
 /* What the two sign-in pages need to render and run. Anything not here
    requires a session — including every other page, script and photograph.
@@ -127,6 +133,25 @@ function wantsHtml(request) {
 }
 
 export default async function middleware(request) {
+  const url = new URL(request.url);
+  const path = url.pathname;
+
+  // Vercel's own internals, which the matcher used to exclude.
+  if (path.startsWith("/_vercel") || path.startsWith("/_next/")) return;
+
+  /* A probe, so "is the gate running?" is answerable from outside.
+     Reports the switch and whether the secret is present — never its value,
+     and nothing about any person. Answering before the HUB_GATE check is the
+     point: it has to speak while the gate is off, because "off" is one of the
+     answers it exists to give. */
+  if (path === "/__gate") {
+    return new Response(
+      "gate=" + (process.env.HUB_GATE === "on" ? "on" : "off") +
+      " secret=" + (process.env.SUPABASE_JWT_SECRET ? "present" : "missing"),
+      { status: 200, headers: { "content-type": "text/plain; charset=utf-8",
+                                "cache-control": "no-store" } });
+  }
+
   if (process.env.HUB_GATE !== "on") return;              // inert until switched on
 
   const secret = process.env.SUPABASE_JWT_SECRET;
@@ -137,8 +162,6 @@ export default async function middleware(request) {
     return;
   }
 
-  const url = new URL(request.url);
-  const path = url.pathname;
   if (OPEN.has(path)) return;
 
   const token = request.cookies.get(COOKIE)?.value;

@@ -89,6 +89,27 @@ const OPEN = new Set([
 /** The cookie the browser sets alongside its own copy of the session. */
 const COOKIE = "ss_gate";
 
+/* Read it out of the Cookie header by hand.
+
+   This used to be `request.cookies.get(COOKIE)?.value`, which threw on every
+   gated request and turned the whole site into 500s the moment the gate was
+   switched on. `cookies` belongs to Next.js's NextRequest; what arrives here
+   is a standard Request, and a standard Request has no such property.
+
+   The test did not catch it because the test invented the request — it passed
+   an object with a `cookies.get` stub, so it was checking a shape that does
+   not exist in production. It builds a real Request now. */
+function cookieFrom(request, name) {
+  const header = request.headers.get("cookie");
+  if (!header) return null;
+  for (const part of header.split(";")) {
+    const eq = part.indexOf("=");
+    if (eq < 0) continue;
+    if (part.slice(0, eq).trim() === name) return part.slice(eq + 1).trim();
+  }
+  return null;
+}
+
 function b64urlToBytes(s) {
   const pad = s.length % 4 ? "=".repeat(4 - (s.length % 4)) : "";
   const bin = atob(s.replace(/-/g, "+").replace(/_/g, "/") + pad);
@@ -185,7 +206,7 @@ export default async function middleware(request) {
 
   if (OPEN.has(path)) return;
 
-  const token = request.cookies.get(COOKIE)?.value;
+  const token = cookieFrom(request, COOKIE);
   if (await validSession(token, secret)) return;
 
   /* A page gets sent to sign in, with where it was headed so it can be

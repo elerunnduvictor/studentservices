@@ -127,6 +127,20 @@ async function validSession(token, secret) {
   }
 }
 
+/* Is the gate switched on?
+
+   Forgiving about how it is written. It used to be a strict === "on", and a
+   deploy went out reading `gate=off` with the variable apparently set — a
+   capital or a trailing space is indistinguishable from unset at that point,
+   and each guess costs a deploy cycle. Any of on/true/yes/1, in any case, with
+   whitespace either side, means on. Anything else, including unset, means off,
+   which is the safe direction: the site keeps working and nothing is hidden. */
+function gateIsOn() {
+  const v = String(process.env.HUB_GATE == null ? "" : process.env.HUB_GATE)
+    .trim().toLowerCase();
+  return v === "on" || v === "true" || v === "yes" || v === "1";
+}
+
 function wantsHtml(request) {
   const accept = request.headers.get("accept") || "";
   return accept.includes("text/html");
@@ -145,20 +159,27 @@ export default async function middleware(request) {
      point: it has to speak while the gate is off, because "off" is one of the
      answers it exists to give. */
   if (path === "/__gate") {
+    /* When it reads off, say why: a variable that is absent and one set to
+       something unrecognised are the same word from outside, and they are
+       fixed in different places. The value is printed because it is not a
+       secret; the JWT secret is only ever reported as present or missing. */
+    const raw = process.env.HUB_GATE;
     return new Response(
-      "gate=" + (process.env.HUB_GATE === "on" ? "on" : "off") +
-      " secret=" + (process.env.SUPABASE_JWT_SECRET ? "present" : "missing"),
+      "gate=" + (gateIsOn() ? "on" : "off") +
+      " secret=" + (process.env.SUPABASE_JWT_SECRET ? "present" : "missing") +
+      (gateIsOn() ? "" :
+        " HUB_GATE=" + (raw == null ? "unset" : "[" + raw + "]")),
       { status: 200, headers: { "content-type": "text/plain; charset=utf-8",
                                 "cache-control": "no-store" } });
   }
 
-  if (process.env.HUB_GATE !== "on") return;              // inert until switched on
+  if (!gateIsOn()) return;                                // inert until switched on
 
   const secret = process.env.SUPABASE_JWT_SECRET;
   if (!secret) {
     // Fail open, loudly. See the header: refusing everyone because a variable
     // is missing locks out the people who would fix it.
-    console.error("[gate] HUB_GATE=on but SUPABASE_JWT_SECRET is not set — passing everything through");
+    console.error("[gate] the switch is on but SUPABASE_JWT_SECRET is not set — passing everything through");
     return;
   }
 

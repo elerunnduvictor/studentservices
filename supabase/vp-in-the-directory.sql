@@ -41,26 +41,32 @@
 -- ═══════════════════════════════════════════════════════════════════════════
 
 -- ── STEP 1: put the VP in the directory ────────────────────────────────────
--- Details taken from org_chart_nodes rather than typed in, so the two agree on
--- his title and address. sub_department matches the four directors', which is
--- what puts him on the same footing as them in every grouping.
+-- Written as literals, not selected out of org_chart_nodes.
+--
+-- The first version of this read his title and address from that table and
+-- would not run: org_chart_nodes has a numeric `id`, a `role` column rather
+-- than `title`, and no email column at all. The slug "vp", `title` and `email`
+-- are v_hub_org_chart's shape — the view derives them — and I wrote the insert
+-- against what the page reads instead of what the table holds.
+--
+-- Three literals cannot fail on a column name, and the check at the foot of
+-- this file compares them against the org chart, so if they ever disagree it
+-- is reported rather than left to be believed.
 insert into public.employees
        (name, role, department, employment_type,
         primary_stakeholder, sub_department, email, active, sort_order)
-select  n.name,
-        n.title,
-        'VP - Student Services',
-        'Full-Time Employee',
-        null,                       -- nobody above him
-        'Department Leadership',
-        n.email,
-        true,
-        0
-  from public.org_chart_nodes n
- where n.id = 'vp'
-   and not exists (
-     select 1 from public.employees e where lower(e.name) = lower(n.name)
-   );
+select 'Ben Packer',
+       'Vice President of Student Services',
+       'VP - Student Services',
+       'Full-Time Employee',
+       null,                        -- nobody above him
+       'Department Leadership',
+       'bpacker@byupw.edu',
+       true,
+       0
+ where not exists (
+   select 1 from public.employees e where lower(e.name) = 'ben packer'
+ );
 
 
 -- ── STEP 2: the directors report to a person ───────────────────────────────
@@ -90,3 +96,14 @@ select 'now reporting to Ben Packer' as check_name,
   from public.employees
  where primary_stakeholder = 'Ben Packer'
  order by department;
+
+-- Does the directory row agree with the org chart? Expect no rows. Anything
+-- here means the two now tell different stories about the same person, which
+-- is what selecting his details from the chart was meant to prevent.
+select 'directory and org chart disagree (expect 0 rows)' as check_name,
+       e.name, e.role as directory_says, v.title as org_chart_says,
+       e.email as directory_email, v.email as org_chart_email
+  from public.employees e
+  join public.v_hub_org_chart v on v.id = 'vp'
+ where lower(e.name) = 'ben packer'
+   and (e.role is distinct from v.title or lower(e.email) is distinct from lower(v.email));

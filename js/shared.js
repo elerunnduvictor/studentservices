@@ -105,7 +105,10 @@
     }
 
     Promise.resolve(SS.access.ready).then(function () {
-      if (!SS.access.isStudentServices) { link.remove(); return; }
+      // Wider than Student Services now: partners on a byupw.edu address see
+      // the register too. One rule, in hub-access.js, so this link and the
+      // page it points at can never disagree about who may open it.
+      if (!SS.access.canSeeEmergingIssues) { link.remove(); return; }
       link.hidden = false;
       addCriticalBell(link);
     })["catch"](function () {

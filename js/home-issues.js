@@ -64,7 +64,7 @@
        this is, then ask for the counts — three round trips in series, and the
        alert did not appear for about two seconds on a real connection. Nothing
        about the query needs the role: the view withholds its row from anyone
-       outside Student Services, so the answer is safe whoever asks.
+       the register is not for, so the answer is safe whoever asks.
        The role is still checked, because it is what protects the alert on a
        database where the guard has not been applied yet — but it is checked
        *alongside* the query rather than in front of it, so the wait is now the
@@ -75,7 +75,10 @@
     const [role, brief] = await Promise.all([
       (async () => {
         try { await (access && access.ready); } catch { /* unknown */ }
-        return access ? access.isStudentServices : false;
+        // Whoever the register is for, which is wider than Student Services:
+        // BYU-Pathway's own partners and the leadership read it too. One rule,
+        // in hub-access.js, shared with the nav link and the page itself.
+        return access ? access.canSeeEmergingIssues : false;
       })(),
       (async () => {
         try {

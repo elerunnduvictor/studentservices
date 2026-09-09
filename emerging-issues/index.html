@@ -62,7 +62,18 @@
     </div>
   </section>
 
-  <div class="ei-page" id="eiMain">
+  <!-- Hidden until the reader's role is known.
+
+       It used to render immediately and be hidden afterwards if the reader
+       turned out to be a partner. That was survivable while everything on the
+       page came from the database — a partner saw an empty shell for a moment.
+       It stopped being survivable when the Top 10 Tech Support list arrived:
+       that reads a local file, so it painted instantly and in full, and a
+       partner saw ten internal issues with their bug numbers and impact before
+       the wall came up.
+
+       Deciding first and drawing second is the only order that cannot leak. -->
+  <div class="ei-page" id="eiMain" hidden>
 
     <!-- The same teal band every other hub page opens with, so this reads as
          part of the site rather than as a form bolted onto it. -->

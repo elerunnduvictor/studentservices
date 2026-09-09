@@ -311,6 +311,10 @@
 .ei-btn-primary:hover { background: #08688f; border-color: #08688f; }
 .ei-btn-small { padding: 8px 14px; font-size: .78rem; }
 .ei-btn:disabled { opacity: .55; cursor: default; transform: none; }
+/* `display: inline-flex` above outranks the hidden attribute, so setting
+   .hidden on a button left it on screen. That is how a partner kept being
+   offered "Raise an issue" on a register they can only read. */
+.ei-btn[hidden] { display: none !important; }
 
 /* ── states ─────────────────────────────────────────────────────────────── */
 .ei-empty {
@@ -606,3 +610,9 @@ select.is-sev-low option { color: var(--text); font-weight: 400; background: var
   background: rgba(var(--alert-red-r, 163,34,34), .18);
   color: #E58A8A;
 }
+
+/* Nothing sets `display` on .ei-page today, so [hidden] already works. Stated
+   anyway: this page has been bitten three times by a display rule quietly
+   outranking the hidden attribute, and here it would mean showing a partner
+   the register. */
+.ei-page[hidden] { display: none !important; }

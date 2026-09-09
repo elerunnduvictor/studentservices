@@ -632,14 +632,28 @@
   async function start() {
     try { await (window.SS.access && window.SS.access.ready); } catch { /* carry on */ }
 
-    // Anyone not inside Student Services gets the wall — partners, and equally a
-    // session whose role never resolved. The database refuses both; saying so
-    // plainly beats an empty list that looks like a page which failed to load.
-    if (!window.SS.access || !window.SS.access.isStudentServices) {
+    /* The wall, for anyone the register is not for — and equally for a session
+       whose role never resolved. The database refuses both; saying so plainly
+       beats an empty list that looks like a page which failed to load.
+
+       Not simply "outside Student Services" any more: partners on a byupw.edu
+       address read the register too. The rule lives in hub-access.js and the
+       database enforces its own copy on `emerging_issues`; this only decides
+       whether the page draws itself. */
+    if (!window.SS.access || !window.SS.access.canSeeEmergingIssues) {
       el("eiGate").hidden = false;
       el("eiMain").hidden = true;
       return;
     }
+
+    // Cleared to render only now that the role is known and allowed.
+    el("eiMain").hidden = false;
+
+    /* Reading is not raising. A partner sees the register; the button that
+       writes to it belongs to the people who own the work. Hidden rather than
+       disabled — a partner has no use for knowing it exists — and the database
+       refuses the insert regardless, so this is tidiness, not the boundary. */
+    if (window.SS.access.isPartner) el("eiRaise").hidden = true;
 
     fillFilters();
     await loadSubDepartments();

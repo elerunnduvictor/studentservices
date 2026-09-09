@@ -92,7 +92,20 @@ create or replace view public.v_emerging_issues_brief as
         ) as raised_prev7
       from public.v_emerging_issues v
     ) b
-   where public.hub_role() = any (array['staff', 'director', 'admin']);
+   /* Whoever the register is for — the same rule emerging_issues_select
+      carries, so the counts on the home page and the bell on the nav link can
+      never disagree with the page they lead to.
+
+      Widened from staff/director/admin when BYU-Pathway's own partners and the
+      leadership were given the register. Leaving it narrow would have handed
+      them a link with no bell and a home page with no alert, for a page they
+      can read perfectly well. */
+   where public.hub_role() = any (array['staff', 'director', 'admin'])
+      or (
+        public.hub_role() = 'partner'
+        and (select m.category from public.hub_me() m)
+              = any (array['Partner - General', 'Partner - Leadership'])
+      );
 
 
 -- The original ran with security_invoker on and was granted to authenticated

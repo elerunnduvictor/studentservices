@@ -372,6 +372,35 @@
      */
     get isStudentServices() { return ["staff", "director", "admin"].indexOf(state.role) !== -1; },
 
+    /* Emerging Issues, which is wider than Student Services.
+
+       Everyone inside Student Services, plus two kinds of partner:
+
+         Partner - General      BYU-Pathway's own people — 93 of them, all on
+                                byupw.edu. Partners to this hub, colleagues to
+                                the work it describes.
+         Partner - Leadership   Three: the President and two others, whose
+                                addresses are not all byupw.edu.
+
+       Partner - BYU-I, Partner - Ensign and Partner - S&I do not see it.
+
+       Categorised, not matched on the email domain. The first version of this
+       tested for "@byupw.edu", which admitted the right 93 and shut out Brian
+       Ashton, the President, on a churchofjesuschrist.org address. Bolting his
+       address on as an exception would have made the rule a list of people to
+       remember; the category is the organisation's own answer to the same
+       question, already maintained, and it puts him in for the right reason.
+
+       This is the client's copy. The database enforces the same rule on
+       `emerging_issues` and that is the boundary — this only decides whether a
+       door is advertised and whether the page draws itself. */
+    get canSeeEmergingIssues() {
+      if (["staff", "director", "admin"].indexOf(state.role) !== -1) return true;
+      if (state.role !== "partner") return false;
+      return ["Partner - General", "Partner - Leadership"]
+        .indexOf(String(state.category || "").trim()) !== -1;
+    },
+
     /**
      * May this person do anything on the Process Documentation page?
      *

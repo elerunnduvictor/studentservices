@@ -28,8 +28,24 @@
 --
 --  Both figures are now scoped to the same week the register opens on, and
 --  expressed with the register's own `age_days` so the two cannot drift apart
---  again. Resolved rows are excluded on `status`, which is what the page
---  filters on, rather than on `resolved_at`.
+--  again.
+--
+--  ── Resolved issues, since 2026-09-10 ──
+--
+--  The register used to hide Resolved issues unless its Status filter asked
+--  for them, and these counts excluded them to match. It now shows them by
+--  default, so "this week" and "last week" count them too — otherwise the
+--  tile would say 10 this week over a Current Week tab reading 12.
+--
+--  red_open counts them too: every Critical raised this week, whatever its
+--  status, so the tile's "critical" figure equals what the register shows
+--  when it is filtered to Critical on Current Week. It briefly excluded
+--  Resolved, on the grounds that a closed issue is not an alarm, and that left
+--  the tile one short of the page in any week with a resolved Critical in it —
+--  the same kind of mismatch this file exists to remove.
+--
+--  red_open is also what rings the nav bell and turns the home card red, so a
+--  resolved Critical does both until it is seven days old.
 --
 --  The other seven columns are untouched. They still mean "open, any age",
 --  and nothing on the site reads them.
@@ -62,11 +78,11 @@ create or replace view public.v_emerging_issues_brief as
       select
         count(*) filter (where v.resolved_at is null) as open_total,
 
-        -- Critical, raised this week, still open — the five the register shows
-        -- on the tab it opens on. Was: every unresolved Critical, any age.
+        -- Critical, raised this week, any status — exactly the Critical cards
+        -- on the register's Current Week tab. Was: every unresolved Critical,
+        -- any age.
         count(*) filter (
           where v.age_days < 7
-            and v.status is distinct from 'Resolved'
             and v.severity = 'Critical'
         ) as red_open,
 
@@ -76,19 +92,18 @@ create or replace view public.v_emerging_issues_brief as
         count(*) filter (where v.resolved_at is null and v.days_since_update >= 14) as going_stale,
         count(*) filter (where v.resolved_at >= (now() - interval '30 days')) as resolved_30d,
 
-        -- The register's Current Week, exactly: age_days < 7, Resolved hidden.
+        -- The register's Current Week, exactly: age_days < 7, every status —
+        -- the page shows Resolved issues by default now, so this counts them.
         -- Was: created_at >= now() - interval '7 days', which is a rolling 168
         -- hours and caught rows the page had already moved to Last Week.
         count(*) filter (
           where v.age_days < 7
-            and v.status is distinct from 'Resolved'
         ) as raised_7d,
 
         -- And its Last Week, on the same footing.
         count(*) filter (
           where v.age_days >= 7
             and v.age_days < 14
-            and v.status is distinct from 'Resolved'
         ) as raised_prev7
       from public.v_emerging_issues v
     ) b
@@ -111,15 +126,17 @@ grant select on public.v_emerging_issues_brief to authenticated;
 
 
 -- ── check it ───────────────────────────────────────────────────────────────
--- The first two figures are what the home tile will print. They should now
--- equal the second two, which are what the register counts on the tab it opens
--- on. If a row differs, the two are still using different clocks.
-select b.red_open   as tile_critical,
-       b.raised_7d  as tile_this_week,
+-- Each tile_ figure is what the home tile prints; each must equal the page_
+-- figure beside it, Resolved included. A difference means the two are
+-- counting different things again.
+select b.raised_7d    as tile_this_week,
        (select count(*) from public.v_emerging_issues
-         where age_days < 7 and status is distinct from 'Resolved'
-           and severity = 'Critical')          as page_critical_this_week,
+         where age_days < 7)                   as page_current_week_tab,
+       b.raised_prev7 as tile_last_week,
        (select count(*) from public.v_emerging_issues
-         where age_days < 7 and status is distinct from 'Resolved')
-                                               as page_this_week
+         where age_days >= 7 and age_days < 14) as page_last_week_tab,
+       b.red_open     as tile_critical,
+       (select count(*) from public.v_emerging_issues
+         where age_days < 7 and severity = 'Critical')
+                                               as page_critical_this_week
   from public.v_emerging_issues_brief b;

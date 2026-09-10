@@ -141,8 +141,10 @@
         /* Critical *this week*, not critical in total. red_open was rescoped
            to the register's current week so the home tile would stop promising
            a figure the page does not show; the bell reads the same column and
-           followed it. One consequence worth knowing: a critical issue older
-           than seven days and still unresolved no longer rings this. */
+           followed it. Two consequences worth knowing: a critical issue older
+           than seven days no longer rings this, even if still unresolved; and
+           one raised this week rings it even once resolved, because the page
+           shows it on Current Week and the count has to agree. */
         var critical = brief ? Number(brief.red_open) || 0 : 0;
         if (critical <= 0) return;              // nothing critical: no bell
 

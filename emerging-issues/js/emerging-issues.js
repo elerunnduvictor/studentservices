@@ -170,6 +170,14 @@
     if (i.severity === "Critical") { score += 100; }
     if (i.severity === "Moderate") { score += 40; }
 
+    /* Resolved means dealt with. It is on the page so it can be found, not
+       because it wants anyone's attention. It keeps its severity, so resolved
+       issues fall in the same order among themselves as open ones do, and
+       nothing else: no points for sitting in Exploring or for age, and no
+       reason line — "raised 20 days ago" on a closed issue reads like a
+       warning. visible() puts them all after the open ones. */
+    if (i.status === "Resolved") return { score, why };
+
     /* Nobody has picked this up yet.
        This replaced the old "escalated" rule and the target-date arithmetic
        that came after it. Both went for the same reason: they measured a
@@ -269,16 +277,13 @@
      would report the number showing on the tab you are already looking at. */
   function afterFilters() {
     return ISSUES.filter((i) => {
-      /* Resolved issues stay out of the way unless you ask for them, and
-         the way you ask is the Status filter.
-      
-         This used to be a separate "Include resolved" checkbox, which
-         contradicted the dropdown beside it: choosing Status "Resolved"
-         while the box was unticked filtered every one of them straight
-         back out and showed an empty list. Two controls answering one
-         question, each able to overrule the other silently. The dropdown
-         does the whole job now. */
-      if (filters.status !== "Resolved" && i.status === "Resolved") return false;
+      /* Resolved issues are shown with everything else. They used to be
+         hidden unless the Status filter asked for "Resolved", which meant
+         an issue raised as already resolved vanished the moment it was
+         saved — the person who raised it looked for it and found nothing.
+         The Status filter still narrows to one status, Resolved included;
+         "Any status" now means any. They are ordered after the open ones
+         — see visible(). */
       if (filters.dept && i.department !== filters.dept) return false;
       if (filters.severity && i.severity !== filters.severity) return false;
       if (filters.status && i.status !== filters.status) return false;
@@ -390,6 +395,11 @@
 
   function visible() {
     return afterFilters().filter((i) => bucketOf(i) === TAB).sort((a, b) => {
+      /* Everything still open comes first, ranked as before; resolved issues
+         follow. Without this a resolved Critical would outrank an open
+         Moderate, and the top of the list is meant to be what needs doing. */
+      const r = (a.status === "Resolved") - (b.status === "Resolved");
+      if (r) return r;
       const d = triage(b).score - triage(a).score;
       if (d) return d;
       return (b.age_days || 0) - (a.age_days || 0);

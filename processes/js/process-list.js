@@ -41,11 +41,11 @@
     // so this is always "Edit" — never a locked "View".
     body.innerHTML = mine.map((r) => `
         <tr>
-          <td class="proc-cell-name">${escapeHtml(r.process_name)}</td>
-          <td>${escapeHtml(r.department || "—")}</td>
-          <td><span class="proc-pill proc-pill-${PROC.statusTone(r.status)}">${escapeHtml(r.status)}</span></td>
-          <td class="proc-cell-dim">${PROC.formatDate(r.updated_at)}</td>
-          <td>
+          <td class="proc-cell-name" data-label="Process">${escapeHtml(r.process_name)}</td>
+          <td data-label="Department">${escapeHtml(r.department || "—")}</td>
+          <td data-label="Status"><span class="proc-pill proc-pill-${PROC.statusTone(r.status)}">${escapeHtml(r.status)}</span></td>
+          <td class="proc-cell-dim" data-label="Updated">${PROC.formatDate(r.updated_at)}</td>
+          <td class="proc-cell-action">
             <button type="button" class="proc-btn proc-btn-small" data-open="${r.id}">Edit</button>
           </td>
         </tr>`).join("");

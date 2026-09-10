@@ -55,11 +55,11 @@
 
     body.innerHTML = rows.map((r) => `
       <tr>
-        <td class="proc-cell-name">${escapeHtml(r.process_name)}</td>
-        <td>${escapeHtml(r.steward_name || r.created_by || "—")}</td>
-        <td><span class="proc-pill proc-pill-${PROC.statusTone(r.status)}">${escapeHtml(r.status)}</span></td>
-        <td class="proc-cell-dim">${PROC.formatDate(r.updated_at)}</td>
-        <td><button type="button" class="proc-btn proc-btn-small" data-view="${r.id}">View</button></td>
+        <td class="proc-cell-name" data-label="Process">${escapeHtml(r.process_name)}</td>
+        <td data-label="Steward">${escapeHtml(r.steward_name || r.created_by || "—")}</td>
+        <td data-label="Status"><span class="proc-pill proc-pill-${PROC.statusTone(r.status)}">${escapeHtml(r.status)}</span></td>
+        <td class="proc-cell-dim" data-label="Updated">${PROC.formatDate(r.updated_at)}</td>
+        <td class="proc-cell-action"><button type="button" class="proc-btn proc-btn-small" data-view="${r.id}">View</button></td>
       </tr>`).join("");
 
     body.querySelectorAll("[data-view]").forEach((btn) => {

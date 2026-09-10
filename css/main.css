@@ -67,6 +67,22 @@
 [data-reveal="left"] { transform: translateX(-40px) translateY(0); }
 [data-reveal="right"] { transform: translateX(40px) translateY(0); }
 [data-reveal="scale"] { transform: scale(0.92); }
+
+/* ── reveals do not move sideways on a narrow screen ──
+   [data-reveal="left"/"right"] start the card translated horizontally and
+   slide it into place. On a wide layout the section's padding absorbs that.
+   On a phone the card already spans the full width, so a 30–40px offset hangs
+   off the right edge and the whole page scrolls sideways — the reader gets a
+   document 15px wider than their screen and a nav button clipped at the edge,
+   with nothing visible out there to explain why.
+
+   The reveal is worth keeping; the direction is not. Below the width where the
+   layout goes single-column, they rise instead. */
+@media (max-width: 1000px) {
+  [data-reveal="left"],
+  [data-reveal="right"] { transform: translateY(24px); }
+}
+
 [data-reveal].revealed {
   opacity: 1;
   transform: translateY(0) translateX(0) scale(1);
@@ -2179,4 +2195,11 @@ body.home-single .tool-desc {
     transition-duration: 0.01ms !important;
   }
   [data-reveal] { opacity: 1; transform: none; filter: none; }
+}
+
+/* The hero's theme toggle, at a size a thumb can find. It sits in the top
+   corner of the hero, which is the hardest place on a phone to hit accurately,
+   and it was 36×36. */
+@media (max-width: 1000px) {
+  .hero-theme-btn { width: 44px; height: 44px; }
 }

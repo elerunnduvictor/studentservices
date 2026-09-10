@@ -292,8 +292,12 @@
   margin-bottom: 10px;
 }
 .bar-row:last-child { margin-bottom: 0; }
+/* 250px, not 180. "Student Records, Registration, and Support" sets at 238px,
+   so at 180 the two longest department names both truncated to "Student
+   Records, Re..." and "Enrollment & Rete..." — at every width, desktop
+   included. The bar gives up 70px it was not short of. */
 .bar-label {
-  width: 180px; font-size: 0.78rem; font-weight: 500;
+  width: 250px; font-size: 0.78rem; font-weight: 500;
   color: var(--text-muted); text-align: right;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
@@ -316,9 +320,21 @@
   color: #fff;
   text-shadow: 0 1px 2px rgba(0,0,0,0.2);
 }
+/* On a phone the label went to 120px, which is not enough for the names it
+   holds: "Student Records, Registration, and Support" arrived as "Student
+   Records, Re...", and the two longest departments truncated to the same
+   dozen characters. Squeezing a 220px name into 120px and then squeezing the
+   bar beside it means neither can be read.
+
+   So the label takes the line above the bar, at full width and left-aligned
+   with everything else on the page, and the bar takes the whole of the next
+   one. Same two facts, one under the other, both legible. */
 @media (max-width: 600px) {
-  .bar-label { width: 120px; font-size: 0.72rem; }
+  .bar-row { flex-wrap: wrap; gap: 4px; margin-bottom: 16px; }
+  .bar-label { width: 100%; text-align: left; font-size: 0.78rem; }
+  .bar-track { flex: 1 1 100%; }
 }
+
 
 .donut-wrap {
   display: flex; align-items: center; gap: 24px;
@@ -469,3 +485,99 @@
   font-size: .85rem; font-weight: 600;
 }
 .dir-gate-inner .dir-btn:hover { background: var(--bp-teal-light); }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   THE DIRECTORY TABLE, AS CARDS
+
+   Six columns — name, role, department, sub-department, employment type,
+   reports to — come to 921px. In a 356px phone that is 39% of a row visible at
+   a time, read by panning sideways with the header scrolled off the top, so by
+   the third column you are looking at a value with no idea which column it
+   belongs to.
+
+   Below 700px each row becomes a card and each cell becomes a labelled line,
+   with the label taken from the `data-label` the renderer now writes on every
+   cell. Nothing is dropped: all six values are still there, one under the
+   other, each one saying what it is.
+
+   The header row is hidden because the cards carry the labels themselves. It
+   is hidden with `display: none` on `thead` and not with the `hidden`
+   attribute — nothing in this page toggles it, so there is no attribute to
+   fight with.
+   ══════════════════════════════════════════════════════════════════════════ */
+/* Tablet: the table still fits as a table, but only just — 921px of columns in
+   a 752px panel meant 169px of sideways scrolling for the last column. Tighter
+   cells and slightly smaller type close that without dropping a column or
+   giving up the table, which is more scannable than cards at this width. */
+@media (min-width: 701px) and (max-width: 1000px) {
+  .dir-table { font-size: 0.76rem; }
+  .dir-table th { padding: 10px 7px; font-size: 0.6rem; letter-spacing: 0.08em; }
+  .dir-table td { padding: 10px 7px; }
+  .dept-badge { padding: 3px 9px; font-size: 0.66rem; }
+  .cell-sub, .cell-stakeholder { font-size: 0.72rem; }
+}
+
+@media (max-width: 700px) {
+  /* Nothing is scrolling sideways any more, so the wrap stops offering to. */
+  .dir-table-wrap { overflow-x: visible; padding: 12px 14px 4px; }
+
+  .dir-table,
+  .dir-table tbody,
+  .dir-table tr,
+  .dir-table td { display: block; width: 100%; }
+
+  .dir-table thead { display: none; }
+
+  .dir-table tr {
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius, 10px);
+    padding: 12px 14px;
+    margin-bottom: 10px;
+    background: var(--bg-card);
+  }
+  .dir-table tbody tr:hover { background: var(--bg-card); }
+
+  .dir-table td {
+    display: grid;
+    grid-template-columns: 104px minmax(0, 1fr);
+    gap: 10px;
+    align-items: baseline;
+    padding: 5px 0;
+    border-bottom: none;
+  }
+  .dir-table td::before {
+    content: attr(data-label);
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  /* The name is the card's heading rather than another labelled line. */
+  .dir-table td.cell-name {
+    display: block;
+    font-size: 1rem;
+    padding-bottom: 8px;
+    margin-bottom: 4px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .dir-table td.cell-name::before { content: none; }
+
+  .dir-table .cell-sub,
+  .dir-table .cell-stakeholder { font-size: 0.8rem; }
+
+  /* `white-space: nowrap` keeps a badge on one line, which is right in a table
+     cell 200px wide and wrong in a card column 184px wide holding "Student
+     Records, Registration, and Support" — it ran 232px and was cut off at the
+     card's edge. In a card it wraps. */
+  .dir-table .dept-badge {
+    white-space: normal;
+    border-radius: 10px;
+    line-height: 1.35;
+  }
+  .dir-table .type-indicator { flex-wrap: wrap; }
+
+  /* The empty state spans the card rather than pretending to be a cell. */
+  .dir-table td[colspan] { display: block; }
+  .dir-table td[colspan]::before { content: none; }
+}

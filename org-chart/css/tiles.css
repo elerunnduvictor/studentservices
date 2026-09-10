@@ -456,3 +456,33 @@
   border-color: rgba(var(--tile-color-r, 255,195,40), 0.2);
   background: linear-gradient(135deg, rgba(var(--tile-color-r, 255,195,40),0.05), var(--bg-card));
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   THE TILE'S OWN CONTROLS, ON A TOUCH SCREEN
+
+   Three of them, and all three were under the 44px a finger needs: the
+   expand handle at 22×22, the email link at 33px tall and "view more" at 27.
+
+   The handle is grown with a pseudo-element rather than with width and height.
+   It is a 22px disc sitting on the bottom edge of the card, drawn to that size
+   deliberately; at 44 it would be a button with a card attached. `inset: -11px`
+   puts 11px of invisible target on each side of it — 44×44 to a thumb, 22×22
+   to the eye. The two links have room to grow properly, so they do.
+
+   This file is loaded by the org chart and by all four department pages, so
+   this is one rule for five pages.
+   ══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 1000px) {
+  .tile-toggle::after {
+    content: "";
+    position: absolute;
+    inset: -11px;
+  }
+
+  .tile-email,
+  .tile-view-more {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+}

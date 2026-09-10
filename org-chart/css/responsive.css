@@ -45,18 +45,28 @@
     padding: 12px 12px 60px;
   }
 
-  /* Smaller cards */
-  .tile { width: 120px; }
-  .tree li { padding: 14px 3px 0; }
+  /* ── Smaller cards, but not smaller than reading ──
+     These were 120px wide with the name at 0.58rem, the job title at 0.42rem
+     and the level badge at 0.32rem — 9.3px, 6.7px and 5.1px. Set against the
+     desktop's 15.2 / 10.9 / 8, the title had lost 60% of its size, and 5px
+     type is not small type, it is a grey line where a word should be.
+
+     It was shrunk to make the chart fit, and it did not: at that size the
+     chart is still 776px inside a 390px phone, so it was panned across
+     anyway — unreadably. The viewport scrolls, which is the same gesture for
+     a chart you can actually read, so the cards keep a legible size and the
+     chart is as wide as it needs to be. */
+  .tile { width: 150px; }
+  .tree li { padding: 14px 4px 0; }
   .tree ul { padding-top: 14px; }
   .tree ul::before { height: 14px; }
   .tree li::before { height: 14px; }
 
-  .avatar { width: 40px; height: 40px; font-size: 0.8rem; }
-  .tile-header { padding: 8px 6px 5px; gap: 3px; }
-  .tile-name { font-size: 0.58rem; }
-  .tile-title { font-size: 0.42rem; }
-  .tile-level-badge { font-size: 0.32rem; padding: 1px 4px; letter-spacing: 0.08em; }
+  .avatar { width: 44px; height: 44px; font-size: 0.85rem; }
+  .tile-header { padding: 9px 7px 6px; gap: 3px; }
+  .tile-name { font-size: 0.8rem; }
+  .tile-title { font-size: 0.64rem; }
+  .tile-level-badge { font-size: 0.5rem; padding: 1px 5px; letter-spacing: 0.08em; }
   .tile-accent { height: 2px; }
   .tile-expand-indicator { display: none; }
 
@@ -66,22 +76,29 @@
   .assistant-slot:not(:last-child) { margin-right: 14px; }
   .assistant-slot:not(:last-child)::after { right: -14px; width: 14px; }
 
-  /* Expanded cards on mobile */
-  .tile.expanded { width: 220px; }
-  .tile.expanded .tile-name { font-size: 0.75rem; }
-  .tile.expanded .tile-title { font-size: 0.55rem; }
-  .tile.expanded .tile-list li { font-size: 0.55rem; margin-bottom: 2px; line-height: 1.3; }
-  .tile.expanded .tile-section-title { font-size: 0.45rem; }
-  .tile.expanded .tile-meta-item { font-size: 0.45rem; }
-  .tile.expanded .tile-body-inner { padding: 0 8px 8px; }
+  /* Expanded cards on mobile. An opened card is the one being read, so it is
+     the last place to save space.
+
+     The width is the screen rather than a number. At desktop the opened card
+     is 680px and its contents — the reports list, with the connector lines
+     drawn beside it — fit exactly. Pinned to 250px they did not: the last
+     entry in the list sat 7px past the card's edge and was clipped by it.
+     Whatever room the screen has, up to the 680 the contents were built for. */
+  .tile.expanded { width: min(680px, calc(100vw - 48px)); }
+  .tile.expanded .tile-name { font-size: 0.88rem; }
+  .tile.expanded .tile-title { font-size: 0.66rem; }
+  .tile.expanded .tile-list li { font-size: 0.68rem; margin-bottom: 3px; line-height: 1.35; }
+  .tile.expanded .tile-section-title { font-size: 0.56rem; }
+  .tile.expanded .tile-meta-item { font-size: 0.58rem; }
+  .tile.expanded .tile-body-inner { padding: 0 10px 10px; }
 
   /* Override inline padding from PM positioning */
   .tree li[style*="padding-left"] { padding-left: 3px !important; }
   .tree li[style*="padding-right"] { padding-right: 3px !important; }
 
-  /* Legend */
-  .legend { padding: 8px 12px; gap: 4px 12px; }
-  .legend-item { font-size: 0.45rem; }
+  /* Legend. 0.45rem is 7.2px, and it holds department names. */
+  .legend { padding: 10px 12px; gap: 6px 14px; }
+  .legend-item { font-size: 0.66rem; }
 
   /* Reduce animation complexity */
   .tile { animation-duration: 0.3s !important; }
@@ -92,17 +109,19 @@
 @media (max-width: 480px) {
   .chart-viewport { padding: 8px 4px 40px; }
 
-  .tile { width: 90px; }
-  .tree li { padding: 10px 2px 0; }
+  /* 90px cards put the job title at 0.35rem — 5.6px — and the badge at
+     4.5px. Same trade as above, taken further; same answer. */
+  .tile { width: 134px; }
+  .tree li { padding: 10px 3px 0; }
   .tree ul { padding-top: 10px; }
   .tree ul::before { height: 10px; }
   .tree li::before { height: 10px; }
 
-  .avatar { width: 32px; height: 32px; font-size: 0.65rem; }
-  .tile-header { padding: 6px 4px 4px; gap: 2px; }
-  .tile-name { font-size: 0.48rem; }
-  .tile-title { font-size: 0.35rem; }
-  .tile-level-badge { font-size: 0.28rem; padding: 1px 3px; }
+  .avatar { width: 38px; height: 38px; font-size: 0.75rem; }
+  .tile-header { padding: 7px 5px 5px; gap: 2px; }
+  .tile-name { font-size: 0.76rem; }
+  .tile-title { font-size: 0.6rem; }
+  .tile-level-badge { font-size: 0.48rem; padding: 1px 4px; }
 
   /* PM connectors tiny */
   .assistant-group-right::before,
@@ -111,13 +130,13 @@
   .assistant-slot:not(:last-child)::after { right: -8px; width: 8px; }
 
   /* Expanded cards */
-  .tile.expanded { width: 180px; }
-  .tile.expanded .tile-name { font-size: 0.62rem; }
-  .tile.expanded .tile-title { font-size: 0.48rem; }
-  .tile.expanded .tile-list li { font-size: 0.48rem; }
-  .tile.expanded .tile-section-title { font-size: 0.4rem; }
-  .tile.expanded .tile-meta-item { font-size: 0.4rem; }
-  .tile.expanded .tile-body-inner { padding: 0 6px 6px; }
+  .tile.expanded { width: min(680px, calc(100vw - 24px)); }
+  .tile.expanded .tile-name { font-size: 0.84rem; }
+  .tile.expanded .tile-title { font-size: 0.64rem; }
+  .tile.expanded .tile-list li { font-size: 0.66rem; }
+  .tile.expanded .tile-section-title { font-size: 0.54rem; }
+  .tile.expanded .tile-meta-item { font-size: 0.56rem; }
+  .tile.expanded .tile-body-inner { padding: 0 8px 8px; }
 
   .page-header { padding: 28px 8px 4px; }
   .page-header h1 { font-size: 1.2rem; letter-spacing: 0.08em; }

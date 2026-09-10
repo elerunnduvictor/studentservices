@@ -655,3 +655,70 @@
   font-size: .85rem; font-weight: 600;
 }
 .proc-gate-inner .proc-btn:hover { background: var(--bp-teal-light); }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   THE PROCESS TABLES, AS CARDS
+
+   Three of them on this page — the steward's own list, the director's view and
+   the review queue — with four, five and seven columns. The widest came to
+   620px in a 308px phone, read by panning sideways with the header gone.
+
+   Below 700px each row becomes a card and each cell a labelled line, from the
+   `data-label` the three renderers now write. The same treatment the directory
+   table gets, and for the same reason.
+
+   The action button — Edit, View, Review — keeps the bottom of the card to
+   itself, full width and 44px tall, because it is the thing the row exists to
+   be tapped for.
+   ══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 700px) {
+  .proc-table-wrap { overflow-x: visible; padding: 12px 14px 4px; }
+
+  .proc-table,
+  .proc-table tbody,
+  .proc-table tr,
+  .proc-table td { display: block; width: 100%; }
+
+  .proc-table thead { display: none; }
+
+  .proc-table tr {
+    border: 1px solid var(--border-subtle, var(--border));
+    border-radius: var(--radius, 10px);
+    padding: 12px 14px;
+    margin-bottom: 10px;
+    background: var(--bg-card);
+  }
+
+  .proc-table td {
+    display: grid;
+    grid-template-columns: 92px minmax(0, 1fr);
+    gap: 10px;
+    align-items: baseline;
+    padding: 5px 0;
+    border-bottom: none;
+  }
+  .proc-table td::before {
+    content: attr(data-label);
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  .proc-table td.proc-cell-name {
+    display: block;
+    font-size: 0.98rem;
+    font-weight: 600;
+    padding-bottom: 8px;
+    margin-bottom: 4px;
+    border-bottom: 1px solid var(--border-subtle, var(--border));
+  }
+  .proc-table td.proc-cell-name::before { content: none; }
+
+  .proc-table td.proc-cell-action { display: block; padding-top: 10px; }
+  .proc-table td.proc-cell-action::before { content: none; }
+  .proc-table td.proc-cell-action .proc-btn { width: 100%; min-height: 44px; }
+
+  .proc-table td[colspan] { display: block; }
+  .proc-table td[colspan]::before { content: none; }
+}

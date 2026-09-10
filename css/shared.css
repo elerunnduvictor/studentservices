@@ -37,9 +37,18 @@ img { max-width: 100%; }
   background-size: 40px 40px;
   animation: patternDrift 20s linear infinite;
 }
+/* Drifted with `transform: translate(40px, 40px)` until now, which moved the
+   whole layer diagonally off its own box — so on every page with a hero the
+   texture stuck 4px past the right edge for most of each 20-second cycle. It
+   never showed, because the hero clips it, but it is what made five pages
+   report content wider than the screen and it would have shown the moment one
+   of those heroes stopped clipping.
+
+   Moving the background inside a layer that stays put draws exactly the same
+   drift and stays within the box. */
 @keyframes patternDrift {
-  0%   { transform: translate(0, 0); }
-  100% { transform: translate(40px, 40px); }
+  0%   { background-position: 0 0; }
+  100% { background-position: 40px 40px; }
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -106,3 +115,265 @@ img { max-width: 100%; }
 /* `--alert-red` is defined in css/home.css, which only the home page loads, so
    every other page needs its own copy. Same value; stated once here. */
 :root { --alert-red: #A32222; }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   THE NAV BAR ON A PHONE AND A TABLET
+
+   The bar is declared in nine stylesheets — this file's header says so, and
+   calls the variants small. They are, at desktop width. At tablet width they
+   disagreed, and the disagreement was visible:
+
+     • The links collapsed into the hamburger at 768px on the department pages,
+       the directory and Processes, and at 900px on the scorecard, the OKRs,
+       Emerging Issues, Performance Standards and the org chart. So an iPad in
+       portrait — 820px — got the drawer on five pages and the full horizontal
+       row on three. On Processes, whose row is eight links long, that row
+       overflowed the bar by 136px: the wordmark wrapped onto two lines, every
+       link wrapped onto two lines, the theme button was crushed from 36px to
+       20px and the account chip was cut off the right-hand edge.
+
+     • The hamburger was `padding: 4px` around a 22px icon — a 30×33 target
+       where the guidance everybody uses asks for 44, and the one control on a
+       phone that has to work.
+
+   So the responsive half of the bar is written once, here, and the widths
+   below are the same on every page in the hub.
+
+   ── Why `nav.navbar` and not `.navbar` ──
+
+   shared.css is loaded BEFORE each page's own CSS, deliberately, so a page can
+   still override it. A media query adds no specificity, so a plain
+   `@media { .navbar { … } }` here would lose to the unguarded `.navbar` rule
+   that comes later in every page file. Naming the element as well as the class
+   wins on specificity instead of on order, which is what lets one block reach
+   eight files without editing eight files.
+
+   The markup is `<nav class="navbar">` on all of them — checked, not assumed.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── 1001–1439px: the links stay, but they are made to fit ──
+   Landscape tablet and the smaller laptops. At the desktop sizing the row of
+   links is 681–925px wide depending on the page, and beside a wordmark, a
+   theme button and an account chip that does not fit under about 1280px — or
+   under 1440px on Performance Standards, which carries nine links. What it did
+   instead of not fitting was wrap, so the bar became two crooked lines with a
+   30px-tall theme button squeezed between them.
+
+   Measured, page by page: single-line on every page from 1001px up with this
+   sizing. Nothing is hidden here — the links are all present, only smaller.
+   `nowrap` is the load-bearing one; the rest is finding the room for it.
+
+   The top of the band is 1439px because that is the last width at which any
+   page still wrapped. Above it the bar has room at its own sizing. */
+@media (min-width: 1001px) and (max-width: 1439px) {
+  nav.navbar { padding-left: 16px; padding-right: 16px; }
+  /* Ellipsis rather than only `nowrap`: a wordmark that cannot be shortened
+     cannot give the links their last few pixels, which is what left
+     Performance Standards overflowing its bar by exactly 1px at 901px,
+     back when this band started there. */
+  nav.navbar .nav-brand {
+    font-size: 1rem; letter-spacing: 0.06em;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    flex-shrink: 1; min-width: 0;
+  }
+  /* The org chart's bar sets `gap: 16px` between the four things in it, which
+     at this width is 64px spent on air while the links are being cut. */
+  nav.navbar { gap: 6px; }
+  nav.navbar .nav-links { gap: 2px; flex-wrap: nowrap; }
+  nav.navbar .nav-link {
+    padding: 6px 9px;
+    font-size: 0.74rem;
+    /* The org chart sets its links in spaced-out capitals, which is why its row
+       is 747px where the same eight links are 602px elsewhere. The spacing is
+       what makes it a wordmark rather than a menu; at this width it is 40-odd
+       pixels the menu needs. */
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+  /* Neither control may be shrunk to pay for the row. This is what crushed the
+     theme button from 36px wide to 20px. */
+  nav.navbar .nav-theme-btn,
+  nav.navbar .nav-hamburger,
+  nav.navbar .hub-account-btn { flex-shrink: 0; }
+}
+
+/* ── 1000px and below: the drawer, everywhere ──
+   Phone, portrait tablet, and the narrow end of a resized window.
+
+   1000 rather than 900 because of what the sweep found between them: the row
+   fitted, but only by eating the wordmark. On the org chart and Performance
+   Standards — the two longest rows — "Student Services" was ellipsised to 0px
+   at 920 and to 20px at 940. A bar that fits because its name has been deleted
+   has not fitted. Below 1000 the links go in the drawer, where there is room
+   for all of them and for the wordmark too. */
+@media (max-width: 1000px) {
+  nav.navbar {
+    padding-left: 12px; padding-right: 12px;
+    gap: 4px;
+  }
+
+  /* Left, and allowed to give way. It was `flex-shrink: 0` on the home page
+     and un-truncatable everywhere else, which is what made an overflow
+     inevitable rather than merely possible on a narrow phone. `margin-right:
+     auto` gathers the three controls together at the right instead of letting
+     `space-between` strew them across the bar. */
+  nav.navbar .nav-brand {
+    font-size: 0.95rem;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+    flex-shrink: 1;
+    margin-right: auto;
+  }
+
+  nav.navbar .nav-hamburger,
+  nav.navbar .nav-theme-btn {
+    width: 44px; height: 44px;
+    padding: 0;
+    display: grid; place-items: center;
+    flex: 0 0 auto;
+  }
+  nav.navbar .nav-hamburger svg { width: 22px; height: 22px; }
+  nav.navbar .nav-theme-btn svg { width: 18px; height: 18px; }
+
+  /* The drawer.
+
+     `top: 100%` rather than `var(--nav-height)`: the bar is 56px on the home
+     page and org chart and 60px everywhere else, and the page files spell
+     whichever one they mean. 100% is the bar's own height, whichever it is.
+
+     It is capped and scrollable because a drawer of eight links on a short
+     phone in landscape is taller than the screen, and a menu you cannot reach
+     the bottom of is worse than a menu that scrolls. */
+  nav.navbar .nav-links {
+    display: none;
+    position: absolute;
+    top: 100%; left: 0; right: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+    margin: 0;
+    padding: 10px 12px 14px;
+    background: var(--bg-card, #fff);
+    border-bottom: 1px solid var(--border);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.12);
+    max-height: calc(100vh - 60px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  /* `.nav-links.open` in the page files is two classes; `nav.navbar
+     .nav-links` above is two classes and an element, so it outranks the open
+     state and the drawer would never appear. This is the same selector plus
+     `.open`, which puts the open state back on top. */
+  nav.navbar .nav-links.open { display: flex; }
+
+  /* A row in a drawer is a row, not a pill in a strip: full width, and tall
+     enough to hit. */
+  nav.navbar .nav-links .nav-link {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 0.92rem;
+  }
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════════
+   FILTER CONTROLS ON A TOUCH SCREEN
+
+   Every page with a filter bar builds it from the same three controls under a
+   different prefix — .dir-, .okrp-, .proc-, .ps- — and the rules are
+   byte-identical between them, down to `padding: 9px 18px` on the clear
+   button. That padding gives a 33px button and a 39–42px select, against the
+   44 that touch guidance asks for and that the nav bar above now keeps to.
+
+   Two changes, and only below 1000px:
+
+     • 44px minimum on all of them.
+     • Below 600px each one takes the full width of the bar. They were laid out
+       by `flex-wrap` against a `min-width` of 180–240px, which on a phone
+       produced a ragged staircase — a 316px select, then a 235px search, then
+       a 69px button, each on its own line at a different width. One column of
+       equal rows reads as a form; the staircase read as a mistake.
+
+   The `min-width: 0` is what allows the second: without it the declared
+   min-widths keep the controls from ever reaching the full width of a narrow
+   screen.
+   ══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 1000px) {
+  .dir-select, .dir-search, .dir-clear,
+  .okrp-select, .okrp-search, .okrp-clear,
+  .proc-select, .proc-search, .proc-clear,
+  .ps-select, .ps-search, .ps-clear,
+  .ei-filters select, .ei-filters input, .ei-filters textarea {
+    min-height: 44px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    /* 16px is the size below which iOS Safari zooms the page on focus, which
+       leaves the reader looking at a magnified fragment of a form they did not
+       ask to magnify. Only the typed-into controls need it. */
+    font-size: 0.9rem;
+  }
+  .dir-search, .okrp-search, .proc-search, .ps-search,
+  .ei-filters input, .ei-filters textarea { font-size: 16px; }
+
+  /* Buttons, wherever the page draws them. */
+  .ei-btn, .proc-btn, .sc-chip-btn { min-height: 44px; }
+}
+
+@media (max-width: 600px) {
+  .dir-select, .dir-search, .dir-clear,
+  .okrp-select, .okrp-search, .okrp-clear,
+  .proc-select, .proc-search, .proc-clear,
+  .ps-select, .ps-search, .ps-clear {
+    flex: 1 1 100%;
+    width: 100%;
+    min-width: 0;
+  }
+  /* The label that introduces the row — "Filter by", and the like — sits on
+     its own line above them rather than being the odd one out in the column. */
+  .dir-filters-label, .okrp-filters-label,
+  .proc-filters-label, .ps-filters-label { flex: 1 1 100%; margin-bottom: 2px; }
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════════
+   THE SMALL STAT CARDS, TWO TO A ROW
+
+   Every page opens with a row of them — Total Workforce, Full Time, Submitted,
+   Reviewed — and every page builds it the same way:
+
+       grid-template-columns: repeat(auto-fit, minmax(160-200px, 1fr));
+
+   On a phone `auto-fit` can place exactly one, so a strip of four numbers
+   became four full-width cards and most of a screen of scrolling to read
+   figures that are three characters long. Each card is mostly empty space with
+   a label at the top and a number underneath.
+
+   Two to a row below 600px. The floor is dropped to 0 so the columns take
+   whatever half the row is rather than refusing at 160.
+
+   ── Why the class is written twice ──
+
+   shared.css is loaded first so that pages can override it, which means a
+   plain `.dir-kpis` here loses to the `.dir-kpis` in directory.css whatever
+   the media query says. `.dir-kpis.dir-kpis` is the same element and one more
+   class of specificity — the same job `nav.navbar` does above, where there was
+   an element name to use and here there is not.
+   ══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 600px) {
+  .dir-kpis.dir-kpis,
+  .okrp-kpis.okrp-kpis,
+  .proc-kpis.proc-kpis,
+  .ps-kpis.ps-kpis,
+  .dd-kpis.dd-kpis,
+  .stats-row.stats-row,
+  .sc-meta-grid.sc-meta-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+}

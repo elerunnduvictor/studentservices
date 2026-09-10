@@ -455,3 +455,32 @@ body[data-book="analytics"] {
 
 /* A drawn sheet fills the same space a grid would. */
 .sheet-canvas { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: auto; }
+
+/* ── the sign-in form on a phone or a tablet ──
+   The two fields and the button were 40px and 32px tall. This is the one form
+   in the PM Hub a person meets before they are signed in, on whatever device
+   they happen to be holding, so it is the last place to be economical with a
+   tap target. 16px on the inputs because below that iOS Safari zooms the page
+   when a field takes focus.
+
+   Scoped to the sign-in card: the toolbars inside the app pack a lot of small
+   buttons into a row and are a separate piece of work. */
+@media (max-width: 1000px) {
+  .signin .field input,
+  .signin-card .field input {
+    height: 44px;
+    font-size: 16px;
+  }
+  .signin .btn,
+  .signin-card .btn {
+    height: 44px;
+    padding: 0 18px;
+  }
+  /* "First time here? Set your password" — the only other thing on this card
+     that can be pressed, and it was a 20px line of text. */
+  .signin-switch a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+}

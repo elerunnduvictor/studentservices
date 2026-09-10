@@ -904,3 +904,17 @@
   padding-top: 12px;
   border-top: 1px solid var(--border);
 }
+
+/* ── the search box on a touch screen ──
+   The wrap is a 46px pill, but the input inside it was 22px tall: the outer
+   padding is not part of the field, so half of what looks like the search box
+   did nothing when tapped. The padding moves off the wrap and onto the input,
+   which leaves the pill the same size and makes all of it live.
+
+   16px because below that iOS Safari zooms the page when the field takes
+   focus, and a reader who tapped a search box does not expect the page to
+   jump. */
+@media (max-width: 1000px) {
+  .sc-spotlight-wrap { padding: 4px 18px; }
+  .sc-spotlight-input { min-height: 44px; font-size: 16px; }
+}

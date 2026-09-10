@@ -264,3 +264,9 @@ button[type="submit"] svg { width: 16px; height: 16px; }
   background: rgba(255,255,255,0.08);
   border-color: rgba(255,255,255,0.20);
 }
+
+/* The theme toggle is fixed in the top corner of the screen — the least
+   accurate place for a thumb — and was 38×38. */
+@media (max-width: 1000px) {
+  .login-theme-btn { width: 44px; height: 44px; }
+}

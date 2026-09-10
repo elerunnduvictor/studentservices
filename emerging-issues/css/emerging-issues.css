@@ -616,3 +616,16 @@ select.is-sev-low option { color: var(--text); font-weight: 400; background: var
    outranking the hidden attribute, and here it would mean showing a partner
    the register. */
 .ei-page[hidden] { display: none !important; }
+
+/* ── the filter row on a phone ──
+   Four selects sized by their own content wrapped into a staircase: one full
+   width, two side by side, then a lone half-width one on a row of its own.
+   Two even columns instead, which is what the row looks like it is meant to
+   be. `min-width: 0` is what lets a select narrower than its longest option
+   exist at all — without it "All departments" keeps claiming the whole row. */
+@media (max-width: 600px) {
+  .ei-filters select {
+    flex: 1 1 calc(50% - 5px);
+    min-width: 0;
+  }
+}

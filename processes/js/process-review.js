@@ -215,13 +215,13 @@
         : `<span class="proc-waiting${waiting >= WAITING_DAYS_WARN ? " proc-waiting-danger" : ""}">${waiting} ${waiting === 1 ? "day" : "days"}</span>`;
       return `
       <tr>
-        <td class="proc-cell-name">${escapeHtml(r.process_name)}</td>
-        <td>${escapeHtml(r.steward_name || r.created_by || "—")}</td>
-        <td>${escapeHtml(r.department || "—")}</td>
-        <td><span class="proc-pill proc-pill-${PROC.statusTone(r.status)}">${escapeHtml(r.status)}</span></td>
-        <td>${waitingCell}</td>
-        <td class="proc-cell-dim">${PROC.formatDate(r.updated_at)}</td>
-        <td><button type="button" class="proc-btn proc-btn-small" data-review="${r.id}">${EDITABLE.indexOf(r.status) !== -1 ? "Review" : "View"}</button></td>
+        <td class="proc-cell-name" data-label="Process">${escapeHtml(r.process_name)}</td>
+        <td data-label="Steward">${escapeHtml(r.steward_name || r.created_by || "—")}</td>
+        <td data-label="Department">${escapeHtml(r.department || "—")}</td>
+        <td data-label="Status"><span class="proc-pill proc-pill-${PROC.statusTone(r.status)}">${escapeHtml(r.status)}</span></td>
+        <td data-label="Waiting">${waitingCell}</td>
+        <td class="proc-cell-dim" data-label="Updated">${PROC.formatDate(r.updated_at)}</td>
+        <td class="proc-cell-action"><button type="button" class="proc-btn proc-btn-small" data-review="${r.id}">${EDITABLE.indexOf(r.status) !== -1 ? "Review" : "View"}</button></td>
       </tr>`;
     }).join("");
 

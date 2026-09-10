@@ -173,3 +173,14 @@
 }
 [data-theme="dark"] .hub-account-tex[aria-pressed="true"] .hub-account-tex-state { color: #5FB7C4; }
 [data-theme="dark"] .hub-account-tex:hover { background: rgba(255,255,255,.08); }
+
+
+/* ── the account chip on a touch screen ──
+   It sits at the very right edge of the bar, the least accurate place on the
+   screen for a thumb, and it was 34–36px tall against the 44 everybody's
+   guidance asks for. Height only — the rule at 760px above already drops the
+   email and tightens the padding, so the width is handled. */
+@media (max-width: 900px) {
+  .hub-account-btn { min-height: 44px; }
+  .hub-account-avatar { width: 34px; height: 34px; }
+}

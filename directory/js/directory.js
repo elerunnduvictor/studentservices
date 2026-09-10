@@ -252,17 +252,17 @@ function renderTable(filtered) {
     const tc = TYPE_COLORS[e.type] || "#7F898A";
     return `
       <tr>
-        <td class="cell-name">${escapeHtml(e.name)}</td>
-        <td class="cell-role">${escapeHtml(e.role)}</td>
-        <td><span class="dept-badge" style="background: ${c.pale}; color: ${c.bg};">${escapeHtml(e.dept)}</span></td>
-        <td class="cell-sub">${escapeHtml(e.subDept)}</td>
-        <td>
+        <td class="cell-name" data-label="Name">${escapeHtml(e.name)}</td>
+        <td class="cell-role" data-label="Role">${escapeHtml(e.role)}</td>
+        <td data-label="Department"><span class="dept-badge" style="background: ${c.pale}; color: ${c.bg};">${escapeHtml(e.dept)}</span></td>
+        <td class="cell-sub" data-label="Sub-Department">${escapeHtml(e.subDept)}</td>
+        <td data-label="Employment Type">
           <span class="type-indicator" style="color: ${tc};">
             <span class="type-dot" style="background: ${tc};"></span>
             ${escapeHtml(e.type)}
           </span>
         </td>
-        <td class="cell-stakeholder">${escapeHtml(e.stakeholder)}</td>
+        <td class="cell-stakeholder" data-label="Reports To">${escapeHtml(e.stakeholder)}</td>
       </tr>
     `;
   }).join("");

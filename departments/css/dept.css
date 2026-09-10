@@ -321,8 +321,10 @@
   margin-bottom: 10px;
 }
 .dd-bar-row:last-child { margin-bottom: 0; }
+/* 250px for the same reason as the directory's: at 180 the longer department
+   names truncated at every width. */
 .dd-bar-label {
-  width: 180px; font-size: 0.78rem; font-weight: 500;
+  width: 250px; font-size: 0.78rem; font-weight: 500;
   color: var(--text-muted); text-align: right;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
@@ -757,6 +759,22 @@
 [data-reveal="left"] { transform: translateX(-30px); }
 [data-reveal="right"] { transform: translateX(30px); }
 [data-reveal="scale"] { transform: scale(0.92); }
+
+/* ── reveals do not move sideways on a narrow screen ──
+   [data-reveal="left"/"right"] start the card translated horizontally and
+   slide it into place. On a wide layout the section's padding absorbs that.
+   On a phone the card already spans the full width, so a 30–40px offset hangs
+   off the right edge and the whole page scrolls sideways — the reader gets a
+   document 15px wider than their screen and a nav button clipped at the edge,
+   with nothing visible out there to explain why.
+
+   The reveal is worth keeping; the direction is not. Below the width where the
+   layout goes single-column, they rise instead. */
+@media (max-width: 1000px) {
+  [data-reveal="left"],
+  [data-reveal="right"] { transform: translateY(24px); }
+}
+
 [data-reveal].revealed {
   opacity: 1; transform: none;
 }
@@ -1002,3 +1020,37 @@
   padding: 20px 0;
 }
 .dg-empty .dg-more { margin-top: 0; margin-left: 6px; }
+
+/* "Open the full scorecard →" and its twin were 18px tall — a line of 0.72rem
+   text with nothing around it. The link is the way off this page and into the
+   detail, so on a touch screen it gets a row of its own to be tapped in.
+
+   The breadcrumb's "Home" is the same problem in the hero: 34×19, and the only
+   way back up from a department page. The pill it sits in grows with it. */
+@media (max-width: 1000px) {
+  .dg-more {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+
+  .hero-breadcrumb { padding: 4px 16px; }
+  .hero-breadcrumb a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    min-width: 44px;
+    padding: 0 6px;
+  }
+}
+
+/* The department dashboard's bars, stacked on a phone for the same reason as
+   the directory's: a 110px label column truncated every name it held. Label on
+   its own line, bar on the next, both full width. */
+@media (max-width: 600px) {
+  .dd-bar-row { flex-wrap: wrap; gap: 4px; margin-bottom: 16px; }
+  .dd-bar-label { width: 100%; text-align: left; font-size: 0.78rem; }
+  .dd-bar-track { flex: 1 1 100%; }
+}
+

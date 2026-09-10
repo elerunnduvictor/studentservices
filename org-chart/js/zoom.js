@@ -32,6 +32,21 @@
     var container = getContainer();
     var vw = viewport.clientWidth;
     var cw = container.scrollWidth;
+
+    /* Not on a phone or a portrait tablet.
+
+       The chart is about 1550px wide. Fitting it into 390px asks for a zoom of
+       0.22, which is below zoomMin, so it landed on 0.5 — and at 0.5 a job
+       title is set in 5.6px and the level badge in 4.5px, which is not small
+       type, it is a grey smudge. It did not even buy what it was for: at 0.5
+       the chart is still 776px in a 390px viewport, so the reader was panning
+       across it anyway, just unable to read it while they did.
+
+       Left at 1 the chart is legible and the viewport scrolls, which is the
+       same gesture for a better picture. Above this width the fit still
+       does what it always did. */
+    if (window.matchMedia && window.matchMedia('(max-width: 1000px)').matches) return;
+
     if (cw > vw) {
       zoomLevel = Math.max(zoomMin, (vw - 48) / cw);
       OC.applyZoom();

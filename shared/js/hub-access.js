@@ -374,13 +374,17 @@
 
     /* Emerging Issues, which is wider than Student Services.
 
-       Everyone inside Student Services, plus two kinds of partner:
+       Everyone inside Student Services, plus three kinds of partner:
 
          Partner - General      BYU-Pathway's own people — 93 of them, all on
                                 byupw.edu. Partners to this hub, colleagues to
                                 the work it describes.
          Partner - Leadership   Three: the President and two others, whose
                                 addresses are not all byupw.edu.
+         Student Services -     Two: the Springboard contractors. Partners by
+           Springboard          category because they sit outside Student
+                                Services, and doing the work the register is
+                                about, which is why they read it.
 
        Partner - BYU-I, Partner - Ensign and Partner - S&I do not see it.
 
@@ -391,13 +395,17 @@
        remember; the category is the organisation's own answer to the same
        question, already maintained, and it puts him in for the right reason.
 
-       This is the client's copy. The database enforces the same rule on
-       `emerging_issues` and that is the boundary — this only decides whether a
-       door is advertised and whether the page draws itself. */
+       This is the client's copy. The database's lives in one place too —
+       public.hub_sees_emerging_issues(), used by both the row-level security
+       policy and the view behind the bell — and that is the boundary. This only
+       decides whether a door is advertised and whether the page draws itself.
+       If the two ever drift, the page shows an empty register rather than
+       letting anybody read a row they should not. */
     get canSeeEmergingIssues() {
       if (["staff", "director", "admin"].indexOf(state.role) !== -1) return true;
       if (state.role !== "partner") return false;
-      return ["Partner - General", "Partner - Leadership"]
+      return ["Partner - General", "Partner - Leadership",
+              "Student Services - Springboard"]
         .indexOf(String(state.category || "").trim()) !== -1;
     },
 

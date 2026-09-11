@@ -377,3 +377,22 @@ img { max-width: 100%; }
     gap: 10px;
   }
 }
+
+/* ── the dot on the menu button ──
+   Below 1000px the Emerging Issues link, and its bell, are folded into the
+   menu. js/shared.js adds `has-alert` to the button when something critical
+   is still open, so the one control you can see says there is something
+   behind it. Red, and ringed in the bar's own colour so it reads as a mark
+   on the icon rather than part of its three lines. Static — the bell inside
+   already rings, and two things moving for one fact is one too many. */
+.nav-hamburger.has-alert { position: relative; }
+.nav-hamburger.has-alert::after {
+  content: "";
+  position: absolute;
+  top: 8px; right: 7px;
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  background: var(--alert-red, #A32222);
+  box-shadow: 0 0 0 2px var(--bg-card, #fff);
+  pointer-events: none;
+}

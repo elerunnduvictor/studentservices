@@ -138,14 +138,21 @@
     SS.db.select("v_emerging_issues_brief", { limit: 1 })
       .then(function (rows) {
         var brief = (rows || [])[0];
-        /* Critical *this week*, not critical in total. red_open was rescoped
-           to the register's current week so the home tile would stop promising
-           a figure the page does not show; the bell reads the same column and
-           followed it. Two consequences worth knowing: a critical issue older
-           than seven days no longer rings this, even if still unresolved; and
-           one raised this week rings it even once resolved, because the page
-           shows it on Current Week and the count has to agree. */
-        var critical = brief ? Number(brief.red_open) || 0 : 0;
+        /* Every Critical issue not marked Resolved, whatever its age.
+
+           This read red_open for a while, which the home tile rescoped to
+           criticals raised *this week*. The bell followed it, and the result
+           was a bell that went silent on an unresolved Critical's seventh day
+           and vanished altogether once the week's criticals aged out — with
+           the issues themselves still open. critical_open is the bell's own
+           column in supabase/emerging-issues-brief-window.sql.
+
+           red_open is the fallback for a database where that file has not
+           been re-run yet: the column is simply absent there, and a bell
+           counting this week's criticals is better than no bell. */
+        if (!brief) return;
+        var raw = brief.critical_open != null ? brief.critical_open : brief.red_open;
+        var critical = Number(raw) || 0;
         if (critical <= 0) return;              // nothing critical: no bell
 
         var bell = document.createElement("span");
@@ -160,10 +167,26 @@
         link.appendChild(bell);
         link.classList.add("has-critical");
         // The badge is aria-hidden, so the count is put where a screen reader
-        // will actually reach it.
-        link.setAttribute("aria-label",
-          "Emerging Issues — " + critical +
-          (critical === 1 ? " critical issue" : " critical issues"));
+        // will actually reach it. The same words on hover, because the number
+        // can be larger than the Criticals on the tab the page opens on —
+        // older ones still open sit on Last Week and Backlog — and "still open"
+        // is what explains the difference.
+        var words = critical + (critical === 1 ? " critical issue" : " critical issues") +
+                    " still open";
+        link.setAttribute("aria-label", "Emerging Issues — " + words);
+        link.title = words;
+
+        /* Below 1000px the links are folded into the menu, and the bell with
+           them — so on a phone or a tablet there was nothing to see unless you
+           happened to open the menu. A dot on the menu button says there is
+           something inside worth opening it for. The button is hidden above
+           1000px, and the dot with it, so on a desktop only the bell shows. */
+        var nav = link.closest(".navbar");
+        var burger = nav && nav.querySelector(".nav-hamburger");
+        if (burger) {
+          burger.classList.add("has-alert");
+          burger.setAttribute("aria-label", "Menu — " + words);
+        }
       })["catch"](function () { /* no bell; the link still works */ });
   }
 

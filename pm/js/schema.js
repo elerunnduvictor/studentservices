@@ -753,6 +753,15 @@ window.SS.WORKBOOKS = {
         table: "v_hub_usage_daily",
         order: "day_sort.desc",
         readOnly: true,
+        // Drawn by js/usage-daily.js, grouped into months: one row per day per
+        // event, newest first, forever, was ninety rows a month of the same
+        // dates repeated. Looked up when opened, as the Dashboard is, so a page
+        // sharing this schema without that script loaded is not broken by it.
+        render: (host) => window.renderUsageByDay(host),
+        // The columns below are no longer drawn — they are the CSV's header,
+        // and exportRows hands the view's rows back to the Export button so
+        // the downloaded file is unchanged.
+        exportRows: () => window.usageByDayRows(),
         columns: [
           { key: "day",   label: "Day",   type: "text",   width: 145, readOnly: true },
           { key: "event", label: "Event", type: "select", width: 150, readOnly: true,

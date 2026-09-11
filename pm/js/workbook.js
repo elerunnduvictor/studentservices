@@ -232,9 +232,10 @@ export async function mountWorkbook(bookKey) {
       host.className = "sheet-canvas";
       els.gridHost.innerHTML = "";
       els.gridHost.append(host);
-      // Nothing to save, add, export or search on a drawn sheet.
+      // Nothing to save, add or search on a drawn sheet — and nothing to
+      // export either, unless it says what its rows are.
       els.addBtn.disabled = true;
-      els.exportBtn.disabled = true;
+      els.exportBtn.disabled = typeof sheet.exportRows !== "function";
       els.search.disabled = true;
       setDirtyUI(0);
       try {
@@ -367,16 +368,26 @@ export async function mountWorkbook(bookKey) {
   /* ── export ───────────────────────────────────────────────────────────── */
   function exportCsv() {
     const sheet = state.sheet;
-    const grid = state.grids.get(sheet.key);
-    if (!grid) return;
-    grid.commitOpenEditor();
-    const cols = sheet.columns.filter((c) => !c.virtual);
+    const cols = (sheet.columns || []).filter((c) => !c.virtual);
+    /* A drawn sheet has no grid to read. One that declares `exportRows` hands
+       its rows over instead, and they go out under its `columns` — the same
+       header and the same file the sheet produced when it was a grid. */
+    let rows;
+    if (typeof sheet.render === "function") {
+      if (typeof sheet.exportRows !== "function") return;
+      rows = sheet.exportRows() || [];
+    } else {
+      const grid = state.grids.get(sheet.key);
+      if (!grid) return;
+      grid.commitOpenEditor();
+      rows = grid.view.map((i) => grid.rows[i]);
+    }
     const esc = (v) => {
       const s = v === null || v === undefined ? "" : String(v);
       return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
     };
     const lines = [cols.map((c) => esc(c.label)).join(",")];
-    grid.view.forEach((i) => lines.push(cols.map((c) => esc(grid.rows[i][c.key])).join(",")));
+    rows.forEach((r) => lines.push(cols.map((c) => esc(r[c.key])).join(",")));
     const blob = new Blob(["﻿" + lines.join("\n")], { type: "text/csv;charset=utf-8" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);

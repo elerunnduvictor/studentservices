@@ -45,34 +45,34 @@
 --  the same kind of mismatch this file exists to remove.
 --
 --  red_open also turns the home card red and puts the count on its badge, so
---  a resolved Critical does that until it is seven days old. It no longer
---  rings the nav bell — see the next section.
+--  a resolved Critical does that until it is seven days old.
 --
---  ── The nav bell, since 2026-09-10: critical_open ──
+--  ── The nav bell, since 2026-09-11: raised_7d ──
 --
---  Scoping red_open to the week meant a Critical issue went quiet on its
---  seventh day whether or not anybody had dealt with it, and the bell on the
---  nav link disappeared entirely once the week's criticals aged out. The bell
---  now reads its own column, critical_open: every Critical not marked
---  Resolved, whatever its age. It rings for as long as one is still open.
+--  The bell on the Emerging Issues nav link counts every issue raised this
+--  week — raised_7d, the same figure as the home tile's "N this week" and the
+--  Current Week tab. The number on the bell is the number of cards on the tab
+--  the link opens. It turns the link red only when red_open says one of them
+--  is Critical.
 --
---  So the bell and the home tile answer different questions, deliberately:
---  the tile says what this week brought ("2 critical · 9 this week"), the
---  bell says whether anything critical is still unresolved. A bell reading 3
---  over a Current Week tab with one Critical on it means two older ones are
---  still open, on Last Week or Backlog.
+--  It counted two other things first, and each read as wrong:
+--    · red_open, critical this week — on a week with no new critical the bell
+--      vanished outright, while issues were still being raised;
+--    · critical_open, every Critical not yet Resolved at any age — it read 7
+--      over a Current Week tab holding 3.
 --
---  critical_open is added at the END of the column list because that is the
---  only change `create or replace view` allows to an existing view's columns.
+--  critical_open is still in the view: `create or replace view` cannot drop a
+--  column, and nothing is harmed by it staying. It was added at the END of the
+--  column list, the only change `create or replace view` allows.
 --
 --  The other seven columns are untouched. They still mean "open, any age",
 --  and nothing on the site reads them.
 --
 --  ── Worth knowing before you run it ──
 --
---  The nav bell (js/shared.js) reads critical_open when it exists and falls
---  back to red_open when it does not, so the page can be deployed before or
---  after this file is run without the bell going missing in between.
+--  The nav bell (js/shared.js) reads raised_7d and red_open, both of which
+--  predate critical_open, so the page does not depend on this file's latest
+--  change having been run.
 --
 --  Safe to re-run. `create or replace view` cannot rename or drop a column, so
 --  if this file's column list has drifted from the live one Postgres refuses
@@ -122,9 +122,10 @@ create or replace view public.v_emerging_issues_brief as
             and v.age_days < 14
         ) as raised_prev7,
 
-        -- What rings the nav bell: every Critical not marked Resolved, any
-        -- age. On `status`, not `resolved_at`, because the status chip is what
-        -- a reader sees on the card, and the bell has to agree with it.
+        -- Every Critical not marked Resolved, any age. The nav bell read this
+        -- from 2026-09-10 to 09-11 and reads raised_7d now — see the header.
+        -- On `status`, not `resolved_at`, because the status chip is what a
+        -- reader sees on the card.
         count(*) filter (
           where v.severity = 'Critical'
             and v.status is distinct from 'Resolved'
@@ -151,10 +152,9 @@ grant select on public.v_emerging_issues_brief to authenticated;
 
 -- ── check it ───────────────────────────────────────────────────────────────
 -- Each tile_ figure is what the home tile prints; each must equal the page_
--- figure beside it, Resolved included. `bell` is the nav bell's number and
--- must equal page_critical_not_resolved — every tab, Status filter left on
--- "Any status", Severity on Critical, minus the cards marked Resolved. A
--- difference means two things are counting differently again.
+-- figure beside it, Resolved included. The nav bell prints tile_this_week, so
+-- it must equal page_current_week_tab too. A difference means two things are
+-- counting differently again.
 select b.raised_7d    as tile_this_week,
        (select count(*) from public.v_emerging_issues
          where age_days < 7)                   as page_current_week_tab,
@@ -164,10 +164,5 @@ select b.raised_7d    as tile_this_week,
        b.red_open     as tile_critical,
        (select count(*) from public.v_emerging_issues
          where age_days < 7 and severity = 'Critical')
-                                               as page_critical_this_week,
-       b.critical_open as bell,
-       (select count(*) from public.v_emerging_issues
-         where severity = 'Critical'
-           and status is distinct from 'Resolved')
-                                               as page_critical_not_resolved
+                                               as page_critical_this_week
   from public.v_emerging_issues_brief b;

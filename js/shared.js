@@ -120,40 +120,38 @@
   }
 
   /**
-   * A bell on the Emerging Issues nav link, but only when something is critical.
+   * A bell on the Emerging Issues nav link, counting what was raised this week.
    *
    * At zero this does nothing at all — no bell, no badge, no "0". The link
-   * stays an ordinary nav link. That is the point: the bell's presence is the
-   * message, so it has to be absent most of the time to mean anything when it
-   * appears.
+   * stays an ordinary nav link.
    *
    * Reads the same view the home page's alert reads, so the two can never
-   * disagree about how many criticals there are. Fails silently: a nav link
-   * without a bell is the normal state, so an unreachable database is
-   * indistinguishable from good news — which is the safe way round for
-   * something decorative, and the register itself is one click away regardless.
+   * disagree. Fails silently: a nav link without a bell is the normal state,
+   * so an unreachable database is indistinguishable from a quiet week — which
+   * is the safe way round for something decorative, and the register itself
+   * is one click away regardless.
    */
   function addCriticalBell(link) {
     if (!SS.db || !SS.db.select || link.querySelector(".nav-bell")) return;
     SS.db.select("v_emerging_issues_brief", { limit: 1 })
       .then(function (rows) {
         var brief = (rows || [])[0];
-        /* Every Critical issue not marked Resolved, whatever its age.
+        /* Every issue raised this week, whatever its severity or status —
+           raised_7d, which is the register's Current Week tab exactly and the
+           "N this week" on the home tile. The number on the bell is the number
+           of cards on the tab the link opens.
 
-           This read red_open for a while, which the home tile rescoped to
-           criticals raised *this week*. The bell followed it, and the result
-           was a bell that went silent on an unresolved Critical's seventh day
-           and vanished altogether once the week's criticals aged out — with
-           the issues themselves still open. critical_open is the bell's own
-           column in supabase/emerging-issues-brief-window.sql.
-
-           red_open is the fallback for a database where that file has not
-           been re-run yet: the column is simply absent there, and a bell
-           counting this week's criticals is better than no bell. */
+           It has counted two other things, and each read as wrong:
+             · critical this week (red_open) — the bell vanished outright on a
+               week with no new critical, while issues were still coming in;
+             · every Critical not yet Resolved, any age (critical_open) — it
+               read 7 over a Current Week tab holding 3.
+           Both columns are still in the view. The home card's red badge reads
+           red_open, and critical_open is kept for anything that wants it. */
         if (!brief) return;
-        var raw = brief.critical_open != null ? brief.critical_open : brief.red_open;
-        var critical = Number(raw) || 0;
-        if (critical <= 0) return;              // nothing critical: no bell
+        var week = Number(brief.raised_7d) || 0;
+        if (week <= 0) return;                  // nothing raised this week: no bell
+        var critical = Number(brief.red_open) || 0;
 
         var bell = document.createElement("span");
         bell.className = "nav-bell is-ringing";
@@ -163,16 +161,17 @@
             '<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>' +
             '<path d="M13.73 21a2 2 0 0 1-3.46 0"/>' +
           "</svg>" +
-          '<span class="nav-bell-badge">' + (critical > 99 ? "99+" : critical) + "</span>";
+          '<span class="nav-bell-badge">' + (week > 99 ? "99+" : week) + "</span>";
         link.appendChild(bell);
-        link.classList.add("has-critical");
+        /* The link itself turns to the alert colour only when one of this
+           week's issues is Critical. The bell and its count say "there is
+           something new"; red text on the whole link says "and some of it is
+           serious", which three routine reports are not. */
+        link.classList.toggle("has-critical", critical > 0);
         // The badge is aria-hidden, so the count is put where a screen reader
-        // will actually reach it. The same words on hover, because the number
-        // can be larger than the Criticals on the tab the page opens on —
-        // older ones still open sit on Last Week and Backlog — and "still open"
-        // is what explains the difference.
-        var words = critical + (critical === 1 ? " critical issue" : " critical issues") +
-                    " still open";
+        // will actually reach it, and the same words appear on hover.
+        var words = week + (week === 1 ? " issue" : " issues") + " raised this week" +
+                    (critical > 0 ? ", " + critical + " critical" : "");
         link.setAttribute("aria-label", "Emerging Issues — " + words);
         link.title = words;
 

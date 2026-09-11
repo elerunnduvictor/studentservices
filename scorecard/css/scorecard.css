@@ -526,8 +526,11 @@
 }
 .sc-kpi-row:last-child { border-bottom: none; }
 .sc-kpi-row:hover { background: var(--bg-elevated); }
-.sc-kpi-measure { font-size: 1rem; color: var(--text); line-height: 1.35; }
-.sc-kpi-cat { font-size: 0.78rem; color: var(--text-dim); margin-top: 3px; }
+/* Both are spans inside the row's first cell, so without `display: block` they
+   ran together on one line — "(primary)Student Outcomes" — and the margin
+   meant to set the category beneath the name did nothing. */
+.sc-kpi-measure { display: block; font-size: 1rem; color: var(--text); line-height: 1.35; }
+.sc-kpi-cat { display: block; font-size: 0.78rem; color: var(--text-dim); margin-top: 3px; }
 .sc-kpi-val {
   text-align: right; font-variant-numeric: tabular-nums;
   font-weight: 600; font-size: 1.15rem; color: var(--text);
@@ -918,3 +921,52 @@
   .sc-spotlight-wrap { padding: 4px 18px; }
   .sc-spotlight-input { min-height: 44px; font-size: 16px; }
 }
+
+/* ══════════════ OUTCOMES YOU CAN OPEN ══════════════
+   The outcome heading is a button to the whole outcome and each part card is a
+   button to its part, so both lose the browser's button look and keep the one
+   they had. They were already drawn to look pressable — the part cards lift
+   on hover — and now they are. */
+.sc-outcome-open {
+  width: 100%;
+  background: none; border: 0; padding: 0;
+  font: inherit; color: inherit; text-align: left;
+  cursor: pointer;
+  border-radius: 10px;
+}
+.sc-outcome-open:focus-visible { outline: 2px solid var(--sc-accent); outline-offset: 6px; }
+.sc-outcome-open:hover .sc-outcome-name { color: var(--sc-accent); }
+
+/* "See the 34 KPIs ›" under the score, so the heading says what pressing it
+   does rather than leaving it to be discovered. */
+.sc-outcome-go {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-top: 10px;
+  font-size: 0.84rem; font-weight: 600;
+  color: var(--sc-accent);
+}
+.sc-outcome-go span { transition: transform .2s; }
+.sc-outcome-open:hover .sc-outcome-go span { transform: translateX(3px); }
+
+button.sc-part {
+  position: relative;
+  width: 100%;
+  font: inherit; color: inherit; text-align: left;
+  cursor: pointer;
+}
+button.sc-part:focus-visible { outline: 2px solid var(--sc-accent); outline-offset: 2px; }
+.sc-part-arrow {
+  position: absolute; top: 14px; right: 16px;
+  color: var(--text-dim); font-size: 1rem; line-height: 1;
+  transition: color .2s, transform .2s;
+}
+button.sc-part:hover .sc-part-arrow { color: var(--sc-accent); transform: translateX(3px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-outcome-go span, .sc-part-arrow { transition: none; }
+}
+
+/* A part tile inside an opened outcome with nothing filed under it. Locked,
+   like a branch you may not enter, but it says the true reason. */
+.sc-kid.is-unmeasured { border-style: dashed; }
+.sc-kid.is-unmeasured::after { content: 'Not measured'; }

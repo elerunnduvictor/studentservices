@@ -26,7 +26,12 @@
   "use strict";
 
   const tag = document.currentScript;
-  const datasets = (tag.dataset.datasets || "").split(",").map((s) => s.trim()).filter(Boolean);
+  /* A trailing "?" marks a dataset the page can do without: it loads with the
+     others, but its failure does not raise the "Live data unavailable" notice.
+     The page is expected to notice the empty global and fall back. */
+  const wanted = (tag.dataset.datasets || "").split(",").map((s) => s.trim()).filter(Boolean);
+  const datasets = wanted.map((s) => s.replace(/\?$/, ""));
+  const optional = new Set(wanted.filter((s) => s.endsWith("?")).map((s) => s.slice(0, -1)));
   const then = (tag.dataset.then || "").split(",").map((s) => s.trim()).filter(Boolean);
   const base = tag.src.replace(/shared\/js\/hub-boot\.js.*$/, "");
 
@@ -115,7 +120,11 @@
       try { await loadScript(base + src.replace(/^\.\//, "")); }
       catch (err) { console.error("[hub-boot]", err.message); }
     }
-    try { showProvenance(results); } catch { /* cosmetic only */ }
+    try {
+      const told = {};
+      Object.keys(results).forEach((k) => { if (!optional.has(k)) told[k] = results[k]; });
+      showProvenance(told);
+    } catch { /* cosmetic only */ }
     document.dispatchEvent(new CustomEvent("ss:data-ready", { detail: results }));
   }
 

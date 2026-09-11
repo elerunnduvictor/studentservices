@@ -21,6 +21,19 @@
 
   var KPIS = window.SCORECARD_KPIS || [];
 
+  /* Every tracked KPI by name, with its owner only where this reader may see
+     one — hub_outcome_kpis(), loaded as DATASETS.outcomeKpis. The outcome
+     sections, and everything opened from them, read these.
+
+     KPIS above stays what the department drill-down reads: the reader's own
+     rows by name and a nameless roll-up for every branch they cannot open.
+
+     Empty until supabase/outcome-kpis.sql has been run. Then the outcomes fall
+     back to KPIS, which is how they behaved before: rows the reader owns open,
+     roll-ups stay locked. */
+  var OUTCOME_KPIS = (window.OUTCOME_KPIS && window.OUTCOME_KPIS.length) ? window.OUTCOME_KPIS : null;
+  function outcomeSource() { return OUTCOME_KPIS || KPIS; }
+
   /* ── what this reader is allowed to open ───────────────────────────────────
      The database already decided what they may *read* — a partner receives no
      named rows at all, a manager only their own reporting line. This decides
@@ -326,9 +339,36 @@
     });
   }
 
+  /* Addresses. A part is named by its short label — #/outcome/student/autonomy,
+     #/outcome/operational/speed — which is what people call it. */
+  function partSlug(part) { return typeLabel(part.type).toLowerCase(); }
+  function outcomeByKey(key) {
+    return OUTCOMES.filter(function (o) { return o.key === key; })[0] || null;
+  }
+  function partBySlug(outcome, slug) {
+    return outcome.parts.filter(function (p) { return partSlug(p) === slug; })[0] || null;
+  }
+  function sortedParts(outcome) {
+    return outcome.parts.slice().sort(function (a, b) {
+      return TYPE_ORDER.indexOf(a.type) - TYPE_ORDER.indexOf(b.type);
+    });
+  }
+  /** The outcome and part a KPI is filed under — for its breadcrumb. Decided by
+      the same two functions that file it on the page, so the crumb and the list
+      it came from cannot disagree. */
+  function homeOf(r) {
+    for (var i = 0; i < OUTCOMES.length; i++) {
+      var o = OUTCOMES[i];
+      if (!outcomeRows([r], o).length) continue;
+      var part = o.parts.filter(function (p) { return partRows([r], p.type).length; })[0] || null;
+      return { outcome: o, part: part };
+    }
+    return null;
+  }
+
   /* A small ring for a part, so six of them read as one family rather than six
      numbers. Same geometry as the department tiles use. */
-  function partCard(part, rows) {
+  function partCard(part, rows, outcomeKey) {
     var roll = rollup(rows);
     var has = roll.tracked > 0;
     var score = roll.health === null
@@ -344,13 +384,19 @@
       ? '<div class="sc-part-note sc-part-note--q">&ldquo;' + esc(question) + '&rdquo;</div>'
       : '<div class="sc-part-note">' + esc(part.note || "") + "</div>";
 
-    return '<div class="sc-part' + (has ? "" : " is-empty") + '">' +
+    var body =
       '<div class="sc-part-name">' + esc(typeLabel(part.type)) + "</div>" +
       score +
       '<div class="sc-part-meta">' + esc(meta) + "</div>" +
       (has ? spectrum(roll.counts, true) : "") +
-      caption +
-    "</div>";
+      caption;
+
+    // Opens to the KPIs filed under it. A part with none has nothing to open
+    // to, so it stays a card rather than becoming a door into an empty room.
+    if (!has) return '<div class="sc-part is-empty">' + body + "</div>";
+    return '<button type="button" class="sc-part" data-goto="#/outcome/' + esc(outcomeKey) +
+      "/" + esc(partSlug(part)) + '">' +
+      '<span class="sc-part-arrow" aria-hidden="true">›</span>' + body + "</button>";
   }
 
   function outcomeCard(outcome, rows) {
@@ -361,7 +407,7 @@
     var parts = outcome.parts.slice().sort(function (a, b) {
       return TYPE_ORDER.indexOf(a.type) - TYPE_ORDER.indexOf(b.type);
     }).map(function (p) {
-      return partCard(p, partRows(mine, p.type));
+      return partCard(p, partRows(mine, p.type), outcome.key);
     }).join("");
 
     var score = roll.health === null
@@ -372,8 +418,12 @@
        leads by position — it is what the work is for — but "less pronounced"
        was never the point of putting Operational second, and the two are
        scored identically. `lead` now only decides which comes first. */
+    /* The heading is the door to the whole outcome — every KPI under it — the
+       way a department tile is the door to a department. The part cards below
+       are doors to one part each. */
     return '<section class="sc-outcome is-lead" data-outcome="' + outcome.key + '">' +
-      '<div class="sc-outcome-head">' +
+      '<button type="button" class="sc-outcome-head sc-outcome-open" data-goto="#/outcome/' +
+        esc(outcome.key) + '">' +
         '<div>' +
           '<div class="sc-outcome-name">' + esc(outcome.name) + "</div>" +
           '<div class="sc-outcome-blurb">' + esc(outcome.blurb) + "</div>" +
@@ -382,8 +432,10 @@
           score +
           '<span class="sc-outcome-cov">' + roll.coverage + "% coverage · " +
             roll.tracked + " tracked</span>" +
+          (roll.tracked ? '<span class="sc-outcome-go">See the ' + roll.tracked + " KPI" +
+            (roll.tracked === 1 ? "" : "s") + ' <span aria-hidden="true">›</span></span>' : "") +
         "</div>" +
-      "</div>" +
+      "</button>" +
       spectrum(roll.counts) +
       '<div class="sc-parts">' + parts + "</div>" +
     "</section>";
@@ -439,6 +491,11 @@
       '<div class="sc-kid-role">' + esc(opts.sub) + "</div>" +
       score + cov + spectrum(roll.counts, true);
 
+    if (opts.empty) {
+      // Nothing is filed here, which is a different fact from "not yours".
+      return '<div class="sc-kid is-locked is-unmeasured" title="No KPI is filed here yet">' +
+        '<span class="sc-kid-arrow" aria-hidden="true">·</span>' + body + "</div>";
+    }
     if (opts.locked) {
       return '<div class="sc-kid is-locked" title="Summary only — you do not have access to the detail inside">' +
         '<span class="sc-kid-arrow" aria-hidden="true">·</span>' + body + "</div>";
@@ -537,8 +594,21 @@
     };
   }
 
-  function renderKpi(id) {
-    var r = KPIS.filter(function (k) { return k.id === id; })[0];
+  /* A KPI is looked for in the set the reader arrived from first. Opened from
+     an outcome, that is OUTCOME_KPIS, which holds every KPI; opened from a
+     department, KPIS. Either way the other set is the fallback — a link to a
+     KPI outside someone's own line, say, still lands on the KPI. */
+  function findKpi(id, fromOutcome) {
+    var sets = fromOutcome ? [outcomeSource(), KPIS] : [KPIS, OUTCOME_KPIS || []];
+    for (var i = 0; i < sets.length; i++) {
+      var hit = sets[i].filter(function (k) { return k.id === id; })[0];
+      if (hit) return hit;
+    }
+    return null;
+  }
+
+  function renderKpi(id, fromOutcome) {
+    var r = findKpi(id, fromOutcome);
     if (!r) return '<div class="sc-empty">That KPI is no longer in the scorecard.</div>';
 
     var v = formatValue(r);
@@ -582,15 +652,29 @@
       : r.status === "Manual Review" ? "Manual review — no thresholds set"
       : r.status;
 
-    return head("Key performance indicator", r.measure,
-        r.dept + " · " + r.subDept) +
+    // A partner sees departments whole, so no sub-department — and their rows
+    // carry none, which the status code would otherwise fill in as
+    // "Department Leadership".
+    var where = r.dept + (role() !== "partner" && r.subDept ? " · " + r.subDept : "");
+
+    /* The owner, when this reader may know it. hub_outcome_kpis() leaves the
+       name off otherwise — a partner always, a director outside their
+       department, staff outside their own line — and then there is simply no
+       Owner line, rather than a blank or a placeholder that reads like missing
+       data. */
+    var owner = r.employee
+      ? '<div class="sc-meta"><b>Owner</b><span>' + esc(r.employee) +
+        (r.role ? " — " + esc(r.role) : "") + "</span></div>"
+      : "";
+
+    return head("Key performance indicator", r.measure, where) +
       '<div class="sc-leaf-value">' +
         '<span class="sc-leaf-num' + (v ? "" : " is-empty") + '">' + esc(v || "—") + "</span>" +
         statusChip(r.status, chipText) +
       "</div>" +
       runwayHtml + bands + bandNote +
       '<div class="sc-meta-grid">' +
-        '<div class="sc-meta"><b>Owner</b><span>' + esc(r.employee) + (r.role ? " — " + esc(r.role) : "") + "</span></div>" +
+        owner +
         '<div class="sc-meta"><b>Category</b><span>' + esc(r.category || "—") + (r.type ? " · " + esc(typeLabel(r.type)) : "") + "</span></div>" +
         '<div class="sc-meta"><b>Direction</b><span>' +
           (r.direction === "higher" ? "Higher is better ↑"
@@ -658,8 +742,17 @@
     return (!showOwner && state.sort === "owner") ? "status" : state.sort;
   }
 
-  function kpiList(rows, showOwner) {
+  /* `hrefFor` says where a row leads. The department views send a KPI to
+     #/kpi/<id>; the outcome views keep it inside the outcome, so its
+     breadcrumb leads back to the list it was opened from. */
+  function kpiList(rows, showOwner, hrefFor) {
     if (!rows.length) return '<div class="sc-empty">No KPIs match this lens.</div>';
+    hrefFor = hrefFor || function (r) { return "#/kpi/" + r.id; };
+    /* A row with no name on it, under a heading. For an admin that means the
+       KPI really has no owner recorded. For anyone else it usually means the
+       owner is outside what they may see — hub_outcome_kpis() leaves the name
+       off — and "Not attributed" would say something untrue about the KPI. */
+    var noOwner = role() === "admin" ? "Not attributed" : "Owner not shown";
     // A list of rows with no names is not a list "showing owners", whatever the
     // caller believed. Deciding that here keeps the grouping, the chip and the
     // per-row byline from disagreeing with each other.
@@ -681,11 +774,11 @@
       var meta = [r.category, r.type, r.frequency].filter(Boolean).join(" · ");
       var header = "";
       if (grouped) {
-        var who = r.employee || "Not attributed";
+        var who = r.employee || noOwner;
         if (who !== seen) {
           seen = who;
           var n = sorted.filter(function (x) {
-            return (x.employee || "Not attributed") === who;
+            return (x.employee || noOwner) === who;
           }).length;
           header = '<div class="sc-kpi-group">' +
             '<span class="sc-kpi-group-name">' + esc(who) + "</span>" +
@@ -700,12 +793,12 @@
       var open = !r.restricted;
       return header +
         (open
-          ? '<button type="button" class="sc-kpi-row" data-goto="#/kpi/' + r.id + '">'
+          ? '<button type="button" class="sc-kpi-row" data-goto="' + esc(hrefFor(r)) + '">'
           : '<div class="sc-kpi-row is-locked" aria-disabled="true">') +
         "<span>" +
           '<span class="sc-kpi-measure">' + esc(r.measure) + "</span>" +
           '<span class="sc-kpi-cat">' +
-            esc(showOwner && !grouped ? r.employee + " · " + meta : meta) + "</span>" +
+            esc((showOwner && !grouped && r.employee ? r.employee + " · " : "") + meta) + "</span>" +
         "</span>" +
         statusChip(r.status) +
         '<span class="sc-kpi-val">' + esc(v || "—") + goal + "</span>" +
@@ -722,8 +815,15 @@
 
   function renderRoot() {
     var rows = inLens(KPIS);
-    var roll = rollup(rows);
+    /* The headline and the two outcome sections are read from the same rows
+       the outcomes open onto, so "Autonomy · 12 tracked" on this page is 12
+       KPIs when you open it. For a manager those rows are more complete than
+       KPIS: the roll-up there drops a whole sub-department once any of it is
+       visible by name, even the parts of it outside their line. */
+    var whole = inLens(outcomeSource());
+    var roll = rollup(whole);
     var depts = unique(rows.map(function (r) { return r.dept; })).sort();
+    var wholeDepts = unique(whole.map(function (r) { return r.dept; })).length;
 
     var kids = depts.map(function (d) {
       var dr = rows.filter(function (r) { return r.dept === d; });
@@ -754,9 +854,9 @@
        apart. The eyebrow still earns its place on the views below, where it
        says "Department" or "Student outcome" and the breadcrumb does not. */
     return head("", "The whole organization",
-        roll.tracked + " tracked KPIs across " + depts.length + " departments") +
+        roll.tracked + " tracked KPIs across " + wholeDepts + " departments") +
       lensBar(rows) + summaryRow(roll) +
-      outcomes(rows) +
+      outcomes(whole) +
       (showDepts
         ? '<div class="sc-kids-head">By department</div>' +
           '<div class="sc-kids">' + kids + "</div>"
@@ -831,27 +931,78 @@
       kpiList(rows, false);
   }
 
-  function renderArea(areaSlug) {
-    var area = AREAS.filter(function (a) { return a.toLowerCase() === areaSlug; })[0];
-    if (!area) return '<div class="sc-empty">Unknown outcome area.</div>';
-    var rows = inLens(KPIS.filter(function (r) { return r.area === area; }));
+  /* ── outcomes, opened ────────────────────────────────────────────────────
+     The same anatomy as a department: heading, the two rings and the colour
+     mix, then drillable children — here the outcome's three parts — and then
+     every KPI under it, each of which opens to its detail.
+
+     Every reader gets this, partners included. What the reader's access
+     decides is only whose name is on a KPI: hub_outcome_kpis() leaves it off
+     where they may not see it, and the list and the detail simply show none.
+     The lens is not applied here; the parts are this view's lens. */
+  function outcomeKpiHref(outcome) {
+    return function (r) { return "#/outcome/" + outcome.key + "/kpi/" + r.id; };
+  }
+
+  function renderOutcome(key) {
+    var o = outcomeByKey(key);
+    if (!o) return '<div class="sc-empty">Unknown outcome.</div>';
+    var rows = outcomeRows(outcomeSource(), o);
+    var roll = rollup(rows);
+    var parts = sortedParts(o);
+    var measured = parts.filter(function (p) { return partRows(rows, p.type).length; }).length;
+
+    var kids = parts.map(function (p) {
+      var pr = partRows(rows, p.type);
+      return kidCard({
+        name: typeLabel(p.type),
+        sub: pr.length
+          ? pr.length + " tracked KPI" + (pr.length === 1 ? "" : "s")
+          : "Not measured yet",
+        roll: rollup(pr),
+        href: "#/outcome/" + o.key + "/" + partSlug(p),
+        empty: !pr.length
+      });
+    }).join("");
+
+    return head("Outcome", o.name,
+        roll.tracked + " tracked KPI" + (roll.tracked === 1 ? "" : "s") + " · " +
+        measured + " of " + parts.length + " parts measured") +
+      '<p class="sc-area-q">' + esc(o.blurb) + "</p>" +
+      summaryRow(roll) +
+      '<div class="sc-kids">' + kids + "</div>" +
+      '<div class="sc-kids-head">Every KPI in ' + esc(o.name) + "</div>" +
+      kpiList(rows, true, outcomeKpiHref(o));
+  }
+
+  function renderPart(key, slug) {
+    var o = outcomeByKey(key);
+    var part = o && partBySlug(o, slug);
+    if (!part) return '<div class="sc-empty">Unknown outcome area.</div>';
+    var rows = partRows(outcomeRows(outcomeSource(), o), part.type);
     var roll = rollup(rows);
     var depts = unique(rows.map(function (r) { return r.dept; })).length;
+    var question = part.area ? AREA_QUESTION[part.area] : null;
 
-    return head("Student outcome", area,
-        roll.tracked + " tracked KPIs across " + depts + " department" + (depts === 1 ? "" : "s")) +
-      '<p class="sc-area-q">“' + esc(AREA_QUESTION[area]) + "”</p>" +
-      lensBar(rows) + summaryRow(roll) +
-      kpiList(rows, true);
+    return head(o.name, typeLabel(part.type),
+        roll.tracked + " tracked KPI" + (roll.tracked === 1 ? "" : "s") +
+        (depts ? " across " + depts + " department" + (depts === 1 ? "" : "s") : "")) +
+      (question
+        ? '<p class="sc-area-q">“' + esc(question) + "”</p>"
+        : '<p class="sc-area-q">' + esc(part.note || "") + "</p>") +
+      summaryRow(roll) +
+      (rows.length
+        ? kpiList(rows, true, outcomeKpiHref(o))
+        : '<div class="sc-empty">No KPI is filed under ' + esc(typeLabel(part.type)) + " yet.</div>");
   }
 
   /* ── student-outcome cards (root only) ────────────────────────────────── */
 
   /* renderAreas() filled the "Sort by student outcome" panel that stood
      below the departments. Both are gone: those three areas are half of
-     the scorecard at the top of the page now. renderArea() below is kept —
-     #/area/<name> is still a valid address, and the breadcrumb still names
-     it, so an existing link lands somewhere real. */
+     the scorecard at the top of the page now. #/area/<name> is still a valid
+     address — render() sends it to renderPart(), the same part of Student
+     Outcomes — so an existing link lands somewhere real. */
 
   /* ── breadcrumb ──────────────────────────────────────────────────────── */
 
@@ -859,7 +1010,32 @@
     var items = [{ label: "Student Services", href: "#/" }];
     var p = state.path;
 
-    if (p[0] === "kpi") {
+    /* Inside an outcome: Student Services › Student Outcomes › Autonomy › KPI.
+       Also used for a KPI reached by its bare address when its owner is not
+       shown — the department › team › person trail would lead a partner or a
+       manager into branches they cannot open, past a name they may not see. */
+    function outcomeTrail(o, part, kpi) {
+      items.push({ label: o.name, href: "#/outcome/" + o.key });
+      if (part) items.push({ label: typeLabel(part.type), href: "#/outcome/" + o.key + "/" + partSlug(part) });
+      if (kpi) items.push({ label: kpi.measure, href: null });
+    }
+    var bare = p[0] === "kpi" ? findKpi(parseInt(p[1], 10), false) : null;
+    var bareHome = bare && !bare.employee ? homeOf(bare) : null;
+
+    if (p[0] === "outcome") {
+      var oc = outcomeByKey(p[1]);
+      if (oc) {
+        if (p[2] === "kpi") {
+          var ok = findKpi(parseInt(p[3], 10), true);
+          var home = ok && homeOf(ok);
+          outcomeTrail(oc, home && home.outcome === oc ? home.part : null, ok);
+        } else {
+          outcomeTrail(oc, p[2] ? partBySlug(oc, p[2]) : null, null);
+        }
+      }
+    } else if (bareHome) {
+      outcomeTrail(bareHome.outcome, bareHome.part, bare);
+    } else if (p[0] === "kpi") {
       var r = KPIS.filter(function (k) { return k.id === parseInt(p[1], 10); })[0];
       if (r) {
         items.push({ label: r.dept, href: "#/" + r.deptSlug });
@@ -868,8 +1044,9 @@
         items.push({ label: r.measure, href: null });
       }
     } else if (p[0] === "area") {
-      var a = AREAS.filter(function (x) { return x.toLowerCase() === p[1]; })[0];
-      items.push({ label: a ? a + " (student outcome)" : "Area", href: null });
+      // The old address for a student-outcome area; it opens the part now.
+      var so = outcomeByKey("student");
+      outcomeTrail(so, partBySlug(so, p[1]), null);
     } else if (p.length) {
       var row = KPIS.filter(function (r2) { return r2.deptSlug === p[0]; })[0];
       items.push({ label: row ? row.dept : p[0], href: "#/" + p[0] });
@@ -925,8 +1102,15 @@
     var p = state.path;
     var html;
 
-    if (p[0] === "kpi") html = renderKpi(parseInt(p[1], 10));
-    else if (p[0] === "area") html = renderArea(p[1]);
+    if (p[0] === "kpi") html = renderKpi(parseInt(p[1], 10), false);
+    else if (p[0] === "outcome") {
+      if (p[2] === "kpi") html = renderKpi(parseInt(p[3], 10), true);
+      else if (p[2]) html = renderPart(p[1], p[2]);
+      else html = renderOutcome(p[1]);
+    }
+    // #/area/<name> was the student-outcome area page. Kept as an address, so
+    // an old link lands somewhere real: it is that part of Student Outcomes.
+    else if (p[0] === "area") html = renderPart("student", p[1]);
     else if (p.length === 0) html = renderRoot();
     else if (p.length === 1) html = renderDept(p[0]);
     else if (p.length === 2) html = renderSub(p[0], p[1]);
@@ -951,7 +1135,8 @@
     if (goto) {
       var target = goto.getAttribute("data-goto");
       // carry the active lens down with you
-      if (state.lens !== "All" && target.indexOf("?") < 0 && target.indexOf("/kpi/") < 0) {
+      if (state.lens !== "All" && target.indexOf("?") < 0 && target.indexOf("/kpi/") < 0 &&
+          target.indexOf("#/outcome/") !== 0) {
         target += "?lens=" + encodeURIComponent(state.lens);
       }
       location.hash = target;

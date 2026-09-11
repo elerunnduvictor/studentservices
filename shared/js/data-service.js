@@ -352,6 +352,28 @@
     },
   };
 
+  /* ── the scorecard's outcomes, every KPI named, owners only where allowed ──
+
+     The scorecard's two outcome sections open down to the single KPI for every
+     reader, partners included. `kpis` above cannot supply that: it is filtered
+     by row-level security, so anything outside the reader's own line arrives as
+     a nameless roll-up. hub_outcome_kpis() (supabase/outcome-kpis.sql) returns
+     every tracked KPI with its name and detail, and fills in the owner only
+     where kpis_select would have handed the reader the row anyway — admin
+     always, a director inside their department, staff at or below them, a
+     partner never.
+
+     A separate dataset rather than a change to `kpis`, because the department
+     pages and the home page read `kpis` too, and nothing about them was asked
+     to change. The scorecard loads it as optional ("outcomeKpis?" in its
+     hub-boot tag): until the SQL has been run the function does not exist, and
+     the page falls back to `kpis` instead of warning that live data is down. */
+  DATASETS.outcomeKpis = {
+    global: "OUTCOME_KPIS",
+    rpc: "hub_outcome_kpis",
+    map: (r) => window.SS.kpiStatus.decorate(r),
+  };
+
   function numOrNull(v) {
     if (v === null || v === undefined || v === "") return null;
     const n = Number(v);
@@ -458,7 +480,9 @@
       return finish("bundled", bundled || [], "Supabase is not configured yet");
     }
     try {
-      const raw = await select(def.view, { order: def.order });
+      // A dataset is a view by default; `rpc` names a function instead, for rows
+      // the reader is given in a shape RLS alone cannot produce.
+      const raw = def.rpc ? await rpc(def.rpc) : await select(def.view, { order: def.order });
       const rows = raw.map(def.map);
       window[def.global] = rows;
       if (def.after) await def.after(rows);

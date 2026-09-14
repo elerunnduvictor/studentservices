@@ -56,21 +56,43 @@
   const SCORE_NOTE = "(each bug is weighted based on scope [number of students affected], " +
                      "level of impact, urgency, risk, and available workaround)";
 
-  const SORTS = [
-    { id: "priority", label: "Tracker priority" },
-    { id: "score",    label: "Weighted score, highest first" },
-    { id: "newest",   label: "Discovered, newest first" },
-    { id: "oldest",   label: "Discovered, oldest first" },
-  ];
+  /* Two of these keep the compartments and three set them aside.
 
-  /* The three teams bugs are handed to. An owner reading "Ellucian & ICS"
-     belongs to both, and "ICS/Dane Bohman" to ICS, so a filter for ICS finds
-     all of them. Anything that names none of the three is offered as written. */
-  const VENDORS = ["ICS", "Ellucian", "Digital Ops"];
+     An order that ranks bugs against each other — by score, by date — has to
+     rank across trackers, or "highest first" puts Admissions' 140 above
+     Finance's 184 because Admissions is the first tab. So those three show one
+     list, every card naming its tracker. They used to sort inside each
+     compartment only, with every compartment still closed, which on screen
+     looked like nothing happening at all.
+
+     "Trackers by total score" is the compartments again, heaviest first — the
+     order the totals on their headers invite. */
+  const SORTS = [
+    { id: "priority", label: "Tracker priority",              layout: "groups" },
+    { id: "total",    label: "Trackers by total score",       layout: "groups" },
+    { id: "score",    label: "Weighted score, highest first", layout: "list",
+      heading: "highest weighted score first" },
+    { id: "newest",   label: "Discovered, newest first",      layout: "list",
+      heading: "most recently discovered first" },
+    { id: "oldest",   label: "Discovered, oldest first",      layout: "list",
+      heading: "longest-standing first" },
+  ];
+  const sortOf = (id) => SORTS.find((x) => x.id === id) || SORTS[0];
+
+  /* The teams bugs are handed to. An owner reading "Ellucian & ICS" belongs to
+     both, "ICS/Dane Bohman" to ICS, and "Ellucian (Barry Dunphy) / BYU-PW
+     (Kari Johnson)" to Ellucian and BYU-PW — so the filter offers teams, never
+     the people named in brackets after them. An owner that names no team is
+     "Other"; an empty cell is "No owner recorded". */
+  const VENDORS = ["ICS", "Ellucian", "Digital Ops", "BYU-PW"];
+  const NO_OWNER = "No owner recorded";
+  const OTHER_OWNER = "Other";
+  const VENDOR_RE = VENDORS.map((v) => new RegExp("\\b" + v.replace(/ /g, "\\s+") + "\\b", "i"));
   function ownersOf(owner) {
-    const s = String(owner || "");
-    const hit = VENDORS.filter((v) => new RegExp("\\b" + v.replace(/ /g, "\\s+") + "\\b", "i").test(s));
-    return hit.length ? hit : (s.trim() ? [s.trim()] : []);
+    const s = String(owner || "").trim();
+    if (!s) return [NO_OWNER];
+    const hit = VENDORS.filter((v, i) => VENDOR_RE[i].test(s));
+    return hit.length ? hit : [OTHER_OWNER];
   }
 
   /* "No known workaround.", "None", "N/A", "No current workaround." and an
@@ -256,13 +278,7 @@
     const opt = (v, t) => `<option value="${esc(v)}">${esc(t)}</option>`;
     el("tbProduct").innerHTML = opt("", "All trackers") + products().map((p) => opt(p.key, p.label)).join("");
 
-    const owners = [];
-    ROWS.forEach((r) => ownersOf(r.owner).forEach((o) => { if (owners.indexOf(o) < 0) owners.push(o); }));
-    owners.sort((a, b) => {
-      const ia = VENDORS.indexOf(a), ib = VENDORS.indexOf(b);
-      return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib) || a.localeCompare(b);
-    });
-    el("tbOwner").innerHTML = opt("", "Any owner") + owners.map((o) => opt(o, o)).join("");
+    fillOwners();
 
     el("tbWorkaround").innerHTML = opt("", "Any workaround") +
       opt("yes", "Has a workaround") + opt("no", "No workaround listed");
@@ -274,6 +290,21 @@
     }).join("");
     el("tbSort").innerHTML = SORTS.map((s) => opt(s.id, "Order: " + s.label)).join("");
     syncControls();
+  }
+
+  /* Only the owners of the section being read — the closed list names teams
+     the open one never does — each with how many bugs it would show, so no
+     choice leads to an empty page. Rebuilt whenever the section changes; a
+     choice that does not exist in the new section is let go. */
+  function fillOwners() {
+    const rows = ROWS.filter((r) => r.section === f.section);
+    const count = {};
+    rows.forEach((r) => ownersOf(r.owner).forEach((o) => { count[o] = (count[o] || 0) + 1; }));
+    const order = VENDORS.concat([OTHER_OWNER, NO_OWNER]).filter((o) => count[o]);
+    if (f.owner && !count[f.owner]) f.owner = "";
+    el("tbOwner").innerHTML = `<option value="">Any owner</option>` +
+      order.map((o) => `<option value="${esc(o)}">${esc(o)} (${count[o]})</option>`).join("");
+    el("tbOwner").value = f.owner;
   }
 
   function syncControls() {
@@ -313,7 +344,7 @@
   function sorter() {
     const pri = (r) => { const n = parseFloat(r.priority); return Number.isFinite(n) ? n : 9999; };
     const byTracker = (a, b) => pri(a) - pri(b) || a.row_order - b.row_order;
-    if (f.sort === "score") {
+    if (f.sort === "score" || f.sort === "total") {
       return (a, b) => ((Number.isFinite(b.score) ? b.score : -1) - (Number.isFinite(a.score) ? a.score : -1)) || byTracker(a, b);
     }
     if (f.sort === "newest" || f.sort === "oldest") {
@@ -421,7 +452,7 @@
             </div>`;
   }
 
-  function bugCard(r) {
+  function bugCard(r, withTracker) {
     const sec = sectionOf(r.section);
     const key = keyOf(r);
     const open = OPEN_BUG === key;
@@ -457,6 +488,7 @@
           </span>
           <span class="tb-bug-main">
             <span class="tb-bug-top">
+              ${withTracker ? `<span class="tb-trk">${esc(r.product_label)}</span>` : ""}
               ${r.bug_refs.length ? `<span class="tb-refs">${refsHtml(r)}</span>` : ""}
               ${r.section !== "active" ? `<span class="tb-sec">${esc(sec.label)}</span>` : ""}
               ${work ? "" : `<span class="tb-nowork"><span aria-hidden="true">⊘</span> No workaround</span>`}
@@ -529,10 +561,30 @@
     }
 
     const sort = sorter();
+    const order = sortOf(f.sort);
+
+    if (order.layout === "list") {
+      const list = shown.slice().sort(sort);
+      const trackers = new Set(list.map((r) => r.product)).size;
+      host.innerHTML = `
+        <div class="tb-list">
+          <p class="tb-list-head"><b>${plural(list.length, sec.one, sec.many)}</b>
+            ${trackers > 1 ? `across ${trackers} trackers, ` : ""}${esc(order.heading)}</p>
+          ${list.map((r) => bugCard(r, true)).join("")}
+        </div>`;
+      return;
+    }
+
     const narrowed = filtering();
     const groups = products()
       .map((p) => ({ p, rows: shown.filter((r) => r.product === p.key).sort(sort) }))
       .filter((g) => g.rows.length);
+    if (f.sort === "total") {
+      // Heaviest first; a tracker with nothing scored goes last rather than
+      // being ranked as though its bugs weighed nothing.
+      const weight = (g) => { const t = scoreTotal(g.rows); return t.scored ? t.total : -1; };
+      groups.sort((a, b) => weight(b) - weight(a) || a.p.order - b.p.order);
+    }
     // Bars are scaled to the heaviest compartment on screen, so the longest
     // one is the tracker carrying the most weight. The number is printed; the
     // bar only makes ten of them quick to compare down the page.
@@ -596,7 +648,7 @@
   function wireBugs() {
     const bind = (id, key) => el(id).addEventListener("change", () => {
       f[key] = el(id).value;
-      if (key === "section") { OPEN_GROUP = null; }
+      if (key === "section") { OPEN_GROUP = null; fillOwners(); }
       onFilterChange();
     });
     bind("tbProduct", "product");

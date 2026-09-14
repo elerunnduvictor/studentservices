@@ -67,10 +67,9 @@
        It used to render immediately and be hidden afterwards if the reader
        turned out to be a partner. That was survivable while everything on the
        page came from the database — a partner saw an empty shell for a moment.
-       It stopped being survivable when the Top 10 Tech Support list arrived:
-       that reads a local file, so it painted instantly and in full, and a
-       partner saw ten internal issues with their bug numbers and impact before
-       the wall came up.
+       It stopped being survivable when a tab arrived that painted instantly
+       from a local file: a partner saw internal issues with their bug numbers
+       and impact before the wall came up.
 
        Deciding first and drawing second is the only order that cannot leak. -->
   <div class="ei-page" id="eiMain" hidden>
@@ -80,9 +79,11 @@
     <header class="ei-hero">
       <div class="ei-hero-inner">
         <div class="ei-head-text">
-          <div class="ei-eyebrow">Live Register</div>
-          <h1 class="ei-title">Emerging <span>Issues</span></h1>
-          <p class="ei-lead">
+          <!-- Rewritten by js/tech-bugs.js on the second tab, so the band names
+               the register being read rather than always this one. -->
+          <div class="ei-eyebrow" id="eiEyebrow">Live Register</div>
+          <h1 class="ei-title" id="eiTitle">Emerging <span>Issues</span></h1>
+          <p class="ei-lead" id="eiLead">
             Issues being reported by Student Services team members.
           </p>
         </div>
@@ -98,6 +99,25 @@
 
     <main class="ei">
 
+    <!-- Two registers on one page. Emerging Issues is what people raise here;
+         the Technical Bugs Backlog is Technical Support's own tracker, read from
+         their workbook, and nothing on it is raised from this page — so the
+         "Raise an issue" button goes away while it is showing. Wired by
+         js/tech-bugs.js. #bugs in the address opens the second directly. -->
+    <nav class="ei-views" id="eiViews" role="tablist" aria-label="Which register">
+      <button type="button" class="ei-view is-on" role="tab" aria-selected="true"
+              data-view="register" id="eiViewRegister" aria-controls="eiRegister">
+        Emerging Issues
+      </button>
+      <button type="button" class="ei-view" role="tab" aria-selected="false"
+              data-view="bugs" id="eiViewBugs" aria-controls="tbView">
+        Technical Bugs Backlog
+        <span class="ei-view-n" id="tbViewCount" hidden></span>
+      </button>
+    </nav>
+
+    <div class="ei-register" id="eiRegister" role="tabpanel" aria-labelledby="eiViewRegister">
+
     <!-- Three windows onto the same register, by when the issue was raised.
          An issue is new for seven days, recent for seven more, and after that
          it is backlog: still there, still readable, but no longer competing
@@ -107,12 +127,6 @@
          escalated, 0 overdue" and left the reader to work out which rows those
          were. -->
     <nav class="ei-tabs" id="eiTabs" role="tablist" aria-label="When it was raised"></nav>
-
-    <!-- Backlog holds two different kinds of thing: issues people raised here,
-         and the tech support list once it is more than a week old. Filled and
-         shown by the register only while Backlog is the open tab. -->
-    <nav class="ei-subtabs" id="eiSubTabs" role="tablist"
-         aria-label="Which backlog" hidden></nav>
 
     <section class="ei-controls">
       <div class="ei-filters">
@@ -128,6 +142,48 @@
 
     <section class="ei-list" id="eiList">
       <div class="ei-empty"><strong>Loading the register…</strong></div>
+    </section>
+    </div>
+
+    <!-- ═══════════════ TECHNICAL BUGS BACKLOG ═══════════════
+         Read-only. Every row comes from the TS Product Tracker workbook,
+         loaded into the database by supabase/tech-bugs.sql (rebuilt with
+         tools/build-tech-bugs.py). One compartment per tracker tab, the way the
+         OKR page groups its sub-key results. -->
+    <section class="tb" id="tbView" role="tabpanel" aria-labelledby="eiViewBugs" hidden>
+      <div class="tb-intro">
+        <p class="tb-source" id="tbSource"></p>
+        <p class="tb-legend">
+          <b>Weighted Score</b> (each bug is weighted based on scope [number of students
+          affected], level of impact, urgency, risk, and available workaround)
+        </p>
+      </div>
+
+      <div class="tb-summary" id="tbSummary" aria-label="At a glance"></div>
+
+      <div class="tb-controls">
+        <label class="tb-search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input id="tbQ" type="search" placeholder="Search bug number, title, summary or status"
+                 aria-label="Search the bugs">
+        </label>
+        <div class="tb-filters">
+          <select id="tbProduct" aria-label="Tracker"></select>
+          <select id="tbOwner" aria-label="Owner"></select>
+          <select id="tbWorkaround" aria-label="Workaround"></select>
+          <select id="tbEta" aria-label="Updated ETA"></select>
+          <select id="tbSection" aria-label="Which bugs"></select>
+          <select id="tbSort" aria-label="Order"></select>
+          <button type="button" class="tb-clear" id="tbClear" hidden>Clear</button>
+        </div>
+      </div>
+
+      <div class="tb-count" id="tbCountLine" role="status"></div>
+
+      <div class="tb-groups" id="tbGroups">
+        <div class="ei-empty"><strong>Loading the bug backlog…</strong></div>
+      </div>
     </section>
     </main>
   </div>
@@ -205,10 +261,8 @@
   <script src="/shared/js/hub-texture.js"></script>
   <script src="/shared/js/hub-account.js"></script>
   <script src="/shared/js/data-service.js"></script>
-  <!-- The ten, regenerated from the TS Product Tracker workbook. Loaded
-       before the register so the tab has its count on first paint. -->
-  <script src="/emerging-issues/js/tech-support-top10.js"></script>
   <script src="/emerging-issues/js/emerging-issues.js"></script>
+  <script src="/emerging-issues/js/tech-bugs.js"></script>
 </body>
 
 </html>

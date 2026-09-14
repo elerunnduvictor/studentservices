@@ -60,59 +60,6 @@
       blurb: "Raised more than a fortnight ago and still open." },
   ];
 
-  /* ── the fourth tab ──────────────────────────────────────────────────────
-     Not a fourth window onto the register: a different register entirely. The
-     three above bucket the issues people raise here by age; this one is the
-     top open issue for each of the ten products Technical Support tracks,
-     read from a spreadsheet their team keeps.
-
-     Deliberately kept out of BUCKETS. Those three partition every row by how
-     old it is, `bucketOf` must always land on one of them, and adding a fourth
-     that no issue can ever fall into would have made the counts wrong the
-     moment anybody looked. */
-  const TS_TAB = {
-    id: "ts",
-    label: "Top 10 Tech Support",
-    blurb: "The highest-priority open issue for each product Technical Support tracks.",
-  };
-
-  /* Backlog holds two different kinds of thing once the tech support list has
-     aged out of the front tab, so it says which you are looking at rather than
-     interleaving a spreadsheet's rows with the register's. `issues` is what
-     Backlog has always shown. */
-  const BACKLOG_SUBS = [
-    { id: "issues", label: "Issues",
-      blurb: "Raised more than a fortnight ago and still open." },
-    { id: "ts", label: TS_TAB.label,
-      blurb: "The tech support list, once it is more than a week old." },
-  ];
-  let SUB = "issues";
-
-  /** The ten on the list now. */
-  function tsIssues() {
-    const d = window.TECH_SUPPORT_TOP10;
-    return (d && Array.isArray(d.issues)) ? d.issues : [];
-  }
-
-  /* The ones that have dropped off it.
-
-     A tech support issue leaves the top ten by being replaced, not by getting
-     old. The list stands as it is until a newer tracker arrives; when one
-     does, whatever is no longer on it moves here and whatever is still on it
-     stays where it is. An issue that comes back onto the ten leaves here
-     again.
-
-     This used to expire after seven days, on the reasoning that the register's
-     issues do. They are not the same thing: an issue is a report, dated, and
-     ages out of relevance on its own; this is a standing list of what is
-     broken, and it is only wrong when the TS team says something else. Seven
-     days would have emptied the tab while every one of the ten was still
-     open. */
-  function tsRetired() {
-    const d = window.TECH_SUPPORT_TOP10;
-    return (d && Array.isArray(d.retired)) ? d.retired : [];
-  }
-
   /* What kind of issue this is — a different question from how severe it is or
      which department owns it. A system fault and a grievance can both be
      Critical and both belong to Records; what to do about them is not the same,
@@ -307,32 +254,7 @@
     host.innerHTML =
       BUCKETS.map((b) =>
         tab(b.id, b.label, b.blurb, pool.filter((i) => bucketOf(i) === b.id).length)
-      ).join("") +
-      /* Its count comes from the file, not from the filters — the filters ask
-         about severity, department, status and category, and the product
-         tracker records none of them. */
-      tab(TS_TAB.id, TS_TAB.label, TS_TAB.blurb, tsIssues().length);
-  }
-
-  /** The strip under the tabs, shown only on Backlog. */
-  function renderSubTabs() {
-    const host = el("eiSubTabs");
-    if (!host) return;
-    const on = TAB === "backlog";
-    host.hidden = !on;
-    if (!on) return;
-    const counts = {
-      issues: afterFilters().filter((i) => bucketOf(i) === "backlog").length,
-      ts: tsRetired().length,
-    };
-    host.innerHTML = BACKLOG_SUBS.map((b) => {
-      const sel = SUB === b.id;
-      return `<button type="button" class="ei-subtab${sel ? " is-on" : ""}"
-                role="tab" aria-selected="${sel}" data-sub="${b.id}" title="${esc(b.blurb)}">
-                ${esc(b.label)}
-                <span class="ei-subtab-n${counts[b.id] ? "" : " is-quiet"}">${counts[b.id]}</span>
-              </button>`;
-    }).join("");
+      ).join("");
   }
 
   /* ── one issue ─────────────────────────────────────────────────────────── */
@@ -406,91 +328,11 @@
     });
   }
 
-  /* One product's top issue. Same shape as an issue card so the tab does not
-     look like a different website, but the marks are what the tracker actually
-     records: the product it belongs to and its bug number. There is no
-     severity or status to show — the tracker has neither. */
-  function tsCard(t, n) {
-    const id = "ts-" + n;
-    const open = OPEN_ID === id;
-    const meta = [
-      // Only retired rows carry this, and it is the first thing worth knowing
-      // about one: it is here because a later tracker stopped listing it.
-      t.dropped ? "Off the list since " + esc(t.dropped) : null,
-      t.scope ? "Scope: " + esc(t.scope) : null,
-      t.eta ? "ETA: " + esc(t.eta) : null,
-    ].filter(Boolean).join(" &nbsp;·&nbsp; ");
-
-    return `
-      <article class="ei-card ei-card-ts${open ? " is-open" : ""}" data-id="${id}">
-        <button type="button" class="ei-card-head" aria-expanded="${open}">
-          <div class="ei-card-marks">
-            <span class="ei-chip ei-chip-ts">${esc(t.product)}</span>
-            ${t.bug ? `<span class="ei-chip ei-chip-bug">${esc(t.bug)}</span>` : ""}
-          </div>
-          <div class="ei-card-main">
-            <h3 class="ei-card-title">${esc(t.issue)}</h3>
-            ${meta ? `<p class="ei-meta">${meta}</p>` : ""}
-          </div>
-          <svg class="ei-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-               stroke-width="2" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
-        </button>
-        <div class="ei-card-body" ${open ? "" : "hidden"}>
-          ${t.summary ? `<p class="ei-para">${esc(t.summary)}</p>` : ""}
-          ${t.impact ? `<p class="ei-para"><strong>Who it affects.</strong> ${esc(t.impact)}</p>` : ""}
-          ${t.status ? `<p class="ei-para"><strong>Latest.</strong> ${esc(t.status)}</p>` : ""}
-        </div>
-      </article>`;
-  }
-
-  /* `where` is "current" for the front tab and "backlog" for the one under
-     Backlog. The rows are the same ten either way; which tab shows them is
-     decided by the age of the list, and each says so when it has nothing. */
-  function renderTechSupport(host, where) {
-    const rows = where === "backlog" ? tsRetired() : tsIssues();
-    el("eiCount").textContent =
-      rows.length + (rows.length === 1 ? " issue" : " issues");
-
-    if (!rows.length) {
-      host.innerHTML = where === "backlog"
-        ? `<div class="ei-empty"><strong>Nothing has dropped off yet.</strong>
-             <p>An issue lands here when a newer tracker no longer lists it.
-                Everything on the current list is still under
-                ${esc(TS_TAB.label)} above.</p></div>`
-        : `<div class="ei-empty"><strong>No tech support list loaded.</strong>
-             <p>emerging-issues/js/tech-support-top10.js is missing or empty.
-                It is regenerated from the TS Product Tracker workbook.</p></div>`;
-      return;
-    }
-
-    const d = window.TECH_SUPPORT_TOP10 || {};
-    const note = where === "backlog"
-      ? `Issues that were on the top ten and are not on the current list. They
-         stay here until a tracker puts them back.`
-      : `The highest-priority open issue for each of the ten products Technical
-         Support tracks, from the ${esc(d.source || "product tracker")}.
-         ${d.capturedLabel ? "Updated " + esc(d.capturedLabel) + "." : ""}`;
-    host.innerHTML =
-      `<p class="ei-ts-note">${note}</p>` + rows.map(tsCard).join("");
-  }
-
   function renderList() {
     const host = el("eiList");
     // Tabs first: their counts come from the filters, so they have to be
     // redrawn whenever the filters move, not only when the tab changes.
     renderTabs();
-    renderSubTabs();
-
-    // Two ways to be looking at the tech support list: its own tab, or the
-    // Backlog sub-tab it moves to once it is more than a week old.
-    const onTs = TAB === TS_TAB.id || (TAB === "backlog" && SUB === "ts");
-
-    /* The filters ask about severity, department, status and category. The
-       product tracker records none of them, so on those views they are hidden
-       rather than left sitting there doing nothing to the list below. */
-    const filterBar = document.querySelector(".ei-filters");
-    if (filterBar) filterBar.hidden = onTs;
-    if (onTs) return renderTechSupport(host, TAB === "backlog" ? "backlog" : "current");
 
     const rows = visible();
     el("eiCount").textContent =
@@ -697,14 +539,6 @@
       renderList();
     });
 
-    el("eiSubTabs").addEventListener("click", (e) => {
-      const btn = e.target.closest("[data-sub]");
-      if (!btn || btn.dataset.sub === SUB) return;
-      SUB = btn.dataset.sub;
-      OPEN_ID = null;
-      renderList();
-    });
-
     // Filters
     ["fDept", "fSeverity", "fStatus", "fCategory"].forEach((id) => {
       el(id).addEventListener("change", () => {
@@ -721,11 +555,7 @@
       const head = e.target.closest(".ei-card-head");
       if (!head) return;
       const card = head.closest(".ei-card");
-      /* Database issues carry a numeric id; the tech support rows come from a
-         spreadsheet and carry "ts-0". Number() on that is NaN, and NaN never
-         equals itself, so the card could be clicked forever without opening. */
-      const raw = card.dataset.id;
-      const id = raw.startsWith("ts-") ? raw : Number(raw);
+      const id = Number(card.dataset.id);
       OPEN_ID = OPEN_ID === id ? null : id;
       renderList();
     });

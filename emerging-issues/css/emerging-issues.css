@@ -70,10 +70,18 @@
   --shadow-hover: 0 8px 30px rgba(0,0,0,0.4);
 }
 
+/* How wide the page runs, shared by the band at the top and everything under
+   it so their edges line up. It was 1180px, which on a laptop left 150-odd
+   pixels of empty margin either side; the content now takes the width a
+   laptop has and stops at 1640px, past which a row would only get emptier.
+   Paragraphs inside cards keep their own measure, so lines of text do not
+   grow with the page — see .ei-para and .tb-fields. */
+:root { --ei-max: 1640px; --ei-pad: clamp(18px, 3vw, 40px); }
+
 .ei {
-  max-width: 1180px;
+  max-width: var(--ei-max);
   margin: 0 auto;
-  padding: 0 clamp(18px, 3vw, 40px) 80px;
+  padding: 0 var(--ei-pad) 80px;
 }
 
 /* ── header ─────────────────────────────────────────────────────────────── */
@@ -222,7 +230,7 @@
 .ei-card.is-open .ei-caret { transform: rotate(180deg); }
 
 .ei-card-body { padding: 0 18px 18px 18px; border-top: 1px solid var(--border); }
-.ei-para { margin: 14px 0 0; font-size: .84rem; line-height: 1.65; color: var(--text-muted); }
+.ei-para { margin: 14px 0 0; max-width: 92ch; font-size: .84rem; line-height: 1.65; color: var(--text-muted); }
 .ei-para strong { color: var(--text); font-weight: 600; }
 
 /* ── chips ──────────────────────────────────────────────────────────────── */
@@ -237,53 +245,6 @@
 .ei-chip-sev-moderate { background: rgba(224,138,30,.18); color: #B4700F; }
 .ei-chip-sev-low      { background: rgba(46,158,92,.16);  color: #2E9E5C; }
 .ei-chip-status    { background: rgba(127,137,138,.16); color: var(--text-muted); font-weight: 500; }
-
-/* ── the backlog's two halves ──
-   A quieter strip than the tabs above it, because it is a choice inside one
-   of them rather than a peer of them: pills on the page rather than another
-   underlined row, which read as a second, competing tab bar. */
-.ei-subtabs {
-  display: flex; gap: 8px; flex-wrap: wrap;
-  margin: -10px 0 clamp(16px, 2vw, 22px);
-}
-.ei-subtabs[hidden] { display: none; }
-.ei-subtab {
-  display: inline-flex; align-items: center; gap: 8px;
-  font-family: 'Jost', sans-serif;
-  font-size: .8rem; font-weight: 500;
-  color: var(--text-muted);
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  padding: 6px 14px;
-  cursor: pointer;
-  transition: color .15s, border-color .15s, background .15s;
-}
-.ei-subtab:hover { color: var(--text); border-color: var(--text-dim); }
-.ei-subtab.is-on {
-  color: var(--bp-teal);
-  border-color: currentColor;
-  background: rgba(163,34,34,.08);
-}
-.ei-subtab-n { font-size: .74rem; font-weight: 600; }
-.ei-subtab-n.is-quiet { color: var(--text-dim); font-weight: 400; }
-[data-theme="dark"] .ei-subtab.is-on { background: rgba(232,108,108,.14); color: #E86C6C; }
-
-/* The tech support tab. A product name where an issue card carries a severity,
-   and a bug number where it carries a status — the tracker records neither of
-   the two the register does, and inventing a severity for each row would be
-   putting a judgement in the TS team's mouth. */
-.ei-chip-ts  { background: rgba(6,85,119,.14); color: #065577; }
-.ei-chip-bug { background: rgba(127,137,138,.14); color: var(--text-muted); font-weight: 500; }
-[data-theme="dark"] .ei-chip-ts { background: rgba(120,190,225,.18); color: #8FC9E8; }
-
-/* Where the ten came from and when, above the list. */
-.ei-ts-note {
-  margin: 0 0 16px;
-  font-size: 0.86rem;
-  line-height: 1.6;
-  color: var(--text-muted);
-}
 
 .ei-label {
   display: block; font-size: .68rem; font-weight: 600; letter-spacing: .12em;
@@ -453,7 +414,7 @@
 /* ── the band every hub page opens with ──────────────────────────────────── */
 .ei-hero {
   position: relative;
-  padding: calc(var(--nav-height) + 46px) clamp(18px, 3vw, 40px) 108px;
+  padding: calc(var(--nav-height) + 46px) var(--ei-pad) 108px;
   background: linear-gradient(135deg,
     var(--bp-teal-dark, #6E1414) 0%, var(--bp-teal, #A32222) 52%,
     var(--bp-teal-light, #C93A3A) 100%);
@@ -477,7 +438,7 @@
 }
 .ei-hero-inner {
   position: relative; z-index: 1;
-  max-width: 1180px; margin: 0 auto;
+  max-width: calc(var(--ei-max) - 2 * var(--ei-pad)); margin: 0 auto;
   display: flex; align-items: flex-end; justify-content: space-between;
   gap: 28px; flex-wrap: wrap;
 }
@@ -629,3 +590,495 @@ select.is-sev-low option { color: var(--text); font-weight: 400; background: var
     min-width: 0;
   }
 }
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TWO REGISTERS ON ONE PAGE
+   Emerging Issues, and Technical Support's own bug tracker. The switch is a
+   level above the Current Week / Last Week / Backlog tabs, so it is drawn as a
+   segmented control rather than as another underlined row that would read as
+   their peer.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.ei-views {
+  display: inline-flex; flex-wrap: wrap; gap: 4px;
+  padding: 4px;
+  margin: 0 0 clamp(20px, 2.4vw, 28px);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+}
+.ei-view {
+  display: inline-flex; align-items: center; gap: 9px;
+  font-family: 'Jost', sans-serif; font-size: .9rem; font-weight: 500;
+  color: var(--text-muted);
+  background: none; border: 0; border-radius: 999px;
+  padding: 10px 20px;
+  min-height: 44px;
+  cursor: pointer;
+  transition: color .15s, background .15s, box-shadow .15s;
+}
+.ei-view:hover { color: var(--text); }
+.ei-view.is-on {
+  color: #fff;
+  background: var(--bp-teal);
+  box-shadow: 0 2px 10px rgba(163,34,34,.25);
+  font-weight: 600;
+}
+.ei-view:focus-visible { outline: 2px solid var(--bp-teal); outline-offset: 2px; }
+.ei-view-n {
+  font-size: .7rem; font-weight: 600; line-height: 1;
+  min-width: 20px; padding: 4px 6px; border-radius: 999px; text-align: center;
+  background: rgba(163,34,34,.12); color: var(--bp-teal);
+}
+.ei-view.is-on .ei-view-n { background: rgba(255,255,255,.22); color: #fff; }
+/* Every element here that sets `display` also has to lose to `hidden` — the
+   attribute is only display:none at the lowest specificity. */
+.ei-view-n[hidden],
+.ei-register[hidden],
+.tb[hidden] { display: none !important; }
+[data-theme="dark"] .ei-view.is-on { background: #B83232; }
+
+/* Nothing on the bugs tab is raised from this page. Hidden by the view, not by
+   the button's own `hidden`, which the register uses to hide it from
+   partners — switching tabs must not undo that. */
+.ei-page[data-view="bugs"] #eiRaise { display: none !important; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TECHNICAL BUGS BACKLOG
+   ═══════════════════════════════════════════════════════════════════════════ */
+.tb { display: block; }
+
+.tb-intro {
+  display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between;
+  gap: 8px 24px;
+  margin-bottom: 18px;
+}
+.tb-source { margin: 0; font-size: .88rem; color: var(--text-muted); }
+.tb-source b { color: var(--text); font-weight: 600; }
+.tb-legend {
+  margin: 0; max-width: 62ch;
+  font-size: .78rem; line-height: 1.55; color: var(--text-dim);
+}
+.tb-legend b { color: var(--text-muted); font-weight: 600; }
+
+/* ── at a glance ── */
+.tb-summary {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px;
+  padding: 16px 20px;
+  margin-bottom: 18px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+.tb-total { font-size: .95rem; color: var(--text-muted); }
+.tb-total b {
+  font-family: 'Jost', sans-serif;
+  font-size: 1.55rem; font-weight: 600; line-height: 1;
+  font-variant-numeric: lining-nums;
+  color: var(--text); margin-right: 2px;
+}
+.tb-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.tb-chips-sep { width: 1px; height: 22px; background: var(--border); margin: 0 4px; }
+.tb-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  min-height: 36px;
+  font-family: 'Jost', sans-serif; font-size: .8rem; color: var(--text-muted);
+  background: var(--bg); border: 1px solid var(--border); border-radius: 999px;
+  padding: 6px 13px;
+  cursor: pointer;
+  transition: border-color .15s, color .15s, background .15s;
+}
+.tb-chip b { color: var(--text); font-weight: 600; }
+.tb-chip:hover { border-color: var(--text-dim); color: var(--text); }
+.tb-chip.is-on {
+  border-color: var(--bp-teal); color: var(--bp-teal);
+  background: rgba(163,34,34,.07);
+}
+.tb-chip.is-on b { color: var(--bp-teal); }
+.tb-chip:focus-visible { outline: 2px solid var(--bp-teal); outline-offset: 2px; }
+.tb-ico { font-size: .9rem; line-height: 1; opacity: .8; }
+
+/* The total weighted score of everything in the section, first in the strip
+   and the largest figure in it, set off from the counts beside it. */
+.tb-grand {
+  display: flex; align-items: center; gap: 12px;
+  padding-right: 20px;
+  border-right: 1px solid var(--border);
+}
+.tb-grand-n {
+  font-family: 'Jost', sans-serif;
+  font-size: 2.1rem; font-weight: 600; line-height: 1;
+  font-variant-numeric: lining-nums tabular-nums;
+  color: var(--text);
+}
+.tb-grand-l {
+  display: flex; flex-direction: column;
+  font-size: .8rem; font-weight: 600; line-height: 1.3; color: var(--text);
+}
+.tb-grand-l small { font-size: .72rem; font-weight: 400; color: var(--text-dim); }
+
+/* ── the filters ── */
+.tb-controls { display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
+.tb-search {
+  display: flex; align-items: center; gap: 10px;
+  padding: 0 14px;
+  min-height: 44px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.tb-search:focus-within { border-color: var(--bp-teal); }
+.tb-search svg { width: 17px; height: 17px; color: var(--text-dim); flex: none; }
+.tb-search input {
+  flex: 1; min-width: 0;
+  font: inherit; font-size: .9rem; color: var(--text);
+  background: none; border: 0; outline: none; padding: 10px 0;
+}
+/* An even grid rather than a wrapping row: six selects of six different
+   natural widths wrapped into a ragged edge with the last one alone below. */
+.tb-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
+  gap: 8px;
+  align-items: center;
+}
+.tb-filters select {
+  font: inherit; font-size: .8rem;
+  min-height: 38px; padding: 7px 11px;
+  border: 1px solid var(--border); border-radius: 8px;
+  background: var(--bg-card); color: var(--text);
+  max-width: 100%;
+}
+.tb-clear {
+  font: inherit; font-size: .8rem; font-weight: 600;
+  min-height: 38px; padding: 7px 14px;
+  border: 1px solid var(--border); border-radius: 8px;
+  background: none; color: var(--bp-teal); cursor: pointer;
+}
+.tb-clear[hidden] { display: none; }
+.tb-count { min-height: 1.2em; margin: 6px 0 12px; font-size: .8rem; color: var(--text-dim); }
+.tb-link {
+  font: inherit; color: var(--bp-teal); background: none; border: 0; padding: 0;
+  text-decoration: underline; cursor: pointer;
+}
+
+/* ── the compartments — the OKR page's accordion, in this page's colour ── */
+.tb-groups {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.tb-groups > .ei-empty { border: 0; border-radius: 0; margin: 0; }
+.tb-group { border-top: 1px solid var(--border); }
+.tb-group:first-child { border-top: none; }
+.tb-group-head {
+  display: flex; align-items: center; gap: 14px;
+  width: 100%;
+  padding: 18px 22px;
+  background: none; border: 0; border-left: 4px solid transparent;
+  font: inherit; text-align: left; cursor: pointer;
+  transition: background .18s, border-color .18s;
+}
+.tb-group-head:hover { background: rgba(163,34,34,.04); }
+.tb-group.is-open > .tb-group-head {
+  background: rgba(163,34,34,.05);
+  border-left-color: var(--bp-teal);
+}
+.tb-group-head:focus-visible { outline: 2px solid var(--bp-teal); outline-offset: -2px; }
+.tb-group-chev {
+  flex: none; width: 22px; height: 22px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--bp-teal);
+  transition: transform .22s var(--smooth);
+}
+.tb-group-chev svg { width: 16px; height: 16px; }
+.tb-group.is-open .tb-group-chev { transform: rotate(180deg); }
+.tb-group-text { min-width: 0; }
+.tb-group-name {
+  display: block;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.28rem; font-weight: 700; line-height: 1.25;
+  color: var(--text);
+}
+.tb-group-meta { display: block; margin-top: 3px; font-size: .82rem; color: var(--text-muted); }
+.tb-group-meta b { color: var(--text); font-weight: 600; }
+.tb-group-meta b.is-passed { color: #B4700F; }
+/* Each compartment's total, at the right-hand end of its header where the eye
+   lands after the name: the label, the number, and a bar against the heaviest
+   compartment on screen. */
+.tb-group-total {
+  margin-left: auto; flex: none;
+  display: flex; flex-direction: column; align-items: flex-end; gap: 3px;
+  min-width: 130px;
+}
+.tb-gt-l {
+  font-size: .6rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--text-dim);
+}
+.tb-gt-n {
+  font-family: 'Jost', sans-serif;
+  font-size: 1.55rem; font-weight: 600; line-height: 1;
+  font-variant-numeric: lining-nums tabular-nums;
+  color: var(--text);
+}
+.tb-gt-bar {
+  display: block; width: 130px; height: 5px;
+  background: var(--bg-elevated); border-radius: 4px; overflow: hidden;
+}
+.tb-gt-bar i { display: block; height: 100%; background: var(--text-muted); border-radius: 4px; }
+.tb-group-total.is-none .tb-gt-n { color: var(--text-dim); }
+.tb-gt-sub { font-size: .7rem; color: var(--text-dim); }
+[data-theme="dark"] .tb-gt-bar i { background: #B9C2C3; }
+
+.tb-group-body {
+  display: flex; flex-direction: column; gap: 10px;
+  padding: 6px 22px 22px 48px;
+}
+.tb-group-body[hidden] { display: none; }
+
+/* ── one bug ── */
+.tb-bug {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--text-dim);
+  border-radius: var(--radius);
+  transition: box-shadow .18s, border-color .18s;
+}
+.tb-bug:hover { box-shadow: var(--shadow); }
+.tb-bug.is-open { box-shadow: var(--shadow); border-left-color: var(--bp-teal); }
+.tb-bug-head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 14px 16px;
+  background: none; border: 0;
+  font: inherit; text-align: left; color: inherit; cursor: pointer;
+}
+.tb-bug-head:focus-visible { outline: 2px solid var(--bp-teal); outline-offset: -2px; border-radius: var(--radius); }
+
+.tb-pri {
+  display: flex; align-items: baseline; justify-content: center;
+  width: 44px; height: 44px; line-height: 44px;
+  border-radius: 50%;
+  background: var(--bg-elevated);
+  font-family: 'Jost', sans-serif;
+  font-size: 1.05rem; font-weight: 600; color: var(--text);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+.tb-pri small {
+  font-family: 'Jost', sans-serif; font-size: .58rem; font-weight: 600;
+  color: var(--text-dim); margin-right: 1px; letter-spacing: .04em;
+}
+
+.tb-bug-main { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.tb-bug-top { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.tb-refs { display: inline-flex; flex-wrap: wrap; gap: 5px; }
+.tb-ref {
+  font-size: .68rem; font-weight: 600; letter-spacing: .02em;
+  font-variant-numeric: tabular-nums;
+  padding: 2px 8px; border-radius: 999px;
+  background: var(--bg-elevated); color: var(--text-muted);
+  border: 1px solid var(--border-subtle);
+}
+.tb-ref i { font-style: normal; font-weight: 500; color: var(--text-dim); }
+.tb-sec, .tb-nowork {
+  font-size: .64rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+  padding: 3px 8px; border-radius: 999px;
+}
+.tb-sec { background: rgba(46,158,92,.14); color: #237A47; }
+.tb-nowork { background: rgba(127,137,138,.14); color: var(--text-muted); }
+.tb-bug-title {
+  font-size: 1rem; font-weight: 600; line-height: 1.35; color: var(--text);
+}
+.tb-bug-meta {
+  display: flex; flex-wrap: wrap; gap: 4px 16px;
+  font-size: .78rem; color: var(--text-muted);
+}
+.tb-bug-meta > span { min-width: 0; max-width: 100%; }
+.tb-bug-meta em {
+  font-style: normal; font-size: .64rem; font-weight: 600;
+  letter-spacing: .08em; text-transform: uppercase; color: var(--text-dim);
+  margin-right: 3px;
+}
+.tb-bug-meta small { color: var(--text-dim); }
+.tb-dash { color: var(--text-dim); }
+/* A long written ETA — "TBD - pending item-by-item review of…" — stays on one
+   line on the card; the whole of it is in the card when it is opened. */
+.tb-eta {
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  max-width: 34ch;
+}
+.tb-eta.is-passed { color: #B4700F; max-width: none; }
+.tb-flag {
+  font-size: .66rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+  padding: 1px 6px; border-radius: 999px;
+  background: rgba(224,138,30,.16); color: #B4700F;
+}
+
+/* The weighted score: the number first, in ink, with a thin bar beside it on
+   one neutral hue — a magnitude, not a verdict. Scaled against the highest
+   score on the open backlog, so the longest bar is the one to look at. */
+.tb-score {
+  display: grid;
+  /* The second column is as wide as its label, so "Weighted score" never runs
+     under the caret beside it; the bar stretches to match. */
+  grid-template-columns: auto max-content;
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: 10px; row-gap: 3px;
+  min-width: 128px;
+}
+.tb-score-n {
+  grid-row: 1 / 3;
+  font-family: 'Jost', sans-serif;
+  font-size: 1.45rem; font-weight: 600; line-height: 1;
+  font-variant-numeric: lining-nums tabular-nums;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  text-align: right; min-width: 2.2ch;
+}
+.tb-meter {
+  display: block; height: 6px;
+  background: var(--bg-elevated);
+  border-radius: 4px; overflow: hidden;
+}
+.tb-meter i {
+  display: block; height: 100%;
+  background: var(--text-muted);
+  border-radius: 4px;
+}
+.tb-score-l {
+  font-size: .62rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--text-dim); white-space: nowrap;
+}
+.tb-score.is-none .tb-score-n { font-size: 1.1rem; color: var(--text-dim); }
+
+.tb-caret {
+  width: 18px; height: 18px; color: var(--text-dim);
+  transition: transform .2s var(--smooth);
+}
+.tb-bug.is-open .tb-caret { transform: rotate(180deg); }
+
+/* ── the opened card: every column the tracker keeps ── */
+.tb-bug-body {
+  padding: 4px 16px 18px 74px;
+  border-top: 1px dashed var(--border-subtle);
+}
+.tb-bug-body[hidden] { display: none; }
+.tb-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+  margin: 14px 0 0;
+  max-width: 88ch;
+}
+.tb-field { min-width: 0; }
+.tb-field.is-wide { grid-column: 1 / -1; }
+.tb-field dt {
+  font-size: .64rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--text-dim); margin-bottom: 5px;
+}
+.tb-field-note {
+  text-transform: none; letter-spacing: 0; font-weight: 400; font-size: .74rem;
+  color: var(--text-dim);
+}
+.tb-field dd {
+  margin: 0;
+  font-size: .88rem; line-height: 1.6; color: var(--text);
+  white-space: pre-line; overflow-wrap: anywhere;
+}
+.tb-field.is-muted dd { color: var(--text-muted); }
+.tb-field.is-passed dd { color: #B4700F; }
+.tb-field.is-score { grid-column: 1 / -1; }
+.tb-field.is-score dd {
+  font-family: 'Jost', sans-serif; font-size: 1.3rem; font-weight: 600; line-height: 1.2;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+.tb-blank { color: var(--text-dim); font-style: italic; }
+
+/* ── Finance's procedures ── */
+.tb-notes {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-elevated);
+}
+.tb-notes summary {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 16px; min-height: 44px;
+  font-size: .84rem; font-weight: 600; color: var(--text);
+  cursor: pointer; list-style: none;
+}
+.tb-notes summary::-webkit-details-marker { display: none; }
+.tb-notes summary small {
+  font-size: .7rem; font-weight: 600; color: var(--text-dim);
+  background: var(--bg-card); border-radius: 999px; padding: 2px 8px;
+}
+.tb-notes-ico { color: var(--text-dim); }
+.tb-notes-body {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px 24px;
+  padding: 4px 16px 16px;
+}
+.tb-note h4 { margin: 0 0 6px; font-size: .78rem; letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted); }
+.tb-note p { margin: 0 0 6px; font-size: .84rem; line-height: 1.55; color: var(--text); }
+
+/* ── dark ── */
+[data-theme="dark"] .tb-sec { background: rgba(46,158,92,.2); color: #6FD39A; }
+[data-theme="dark"] .tb-flag,
+[data-theme="dark"] .tb-eta.is-passed,
+[data-theme="dark"] .tb-field.is-passed dd,
+[data-theme="dark"] .tb-group-meta b.is-passed { color: #F0B35E; }
+[data-theme="dark"] .tb-flag { background: rgba(240,179,94,.16); }
+[data-theme="dark"] .tb-chip.is-on,
+[data-theme="dark"] .tb-chip.is-on b,
+[data-theme="dark"] .tb-clear,
+[data-theme="dark"] .tb-link { color: #E86C6C; }
+[data-theme="dark"] .tb-chip.is-on { border-color: #E86C6C; background: rgba(232,108,108,.1); }
+[data-theme="dark"] .tb-group-chev { color: #E86C6C; }
+[data-theme="dark"] .tb-group.is-open > .tb-group-head { background: rgba(232,108,108,.07); border-left-color: #E86C6C; }
+[data-theme="dark"] .tb-meter i { background: #B9C2C3; }
+
+@media (prefers-reduced-motion: reduce) {
+  .tb-group-chev, .tb-caret, .ei-view, .tb-chip { transition: none; }
+}
+
+/* ── tablet and phone ── */
+@media (max-width: 900px) {
+  .tb-group-body { padding: 6px 14px 18px 18px; }
+  .tb-bug-body { padding: 4px 14px 16px 14px; }
+}
+@media (max-width: 700px) {
+  .ei-views { display: flex; width: 100%; }
+  .ei-view { flex: 1 1 0; justify-content: center; padding: 10px 12px; font-size: .84rem; text-align: center; }
+  .tb-summary { padding: 14px; }
+  .tb-chips-sep { display: none; }
+  .tb-grand {
+    width: 100%; padding: 0 0 12px; border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .tb-grand-n { font-size: 1.8rem; }
+  .tb-group-total { min-width: 86px; }
+  .tb-gt-n { font-size: 1.25rem; }
+  .tb-gt-bar { width: 86px; }
+  /* Two to a row, evenly, like the register's own filters. */
+  .tb-filters { grid-template-columns: 1fr 1fr; }
+  .tb-filters select { min-width: 0; min-height: 44px; font-size: 16px; }
+  .tb-clear { grid-column: 1 / -1; min-height: 44px; }
+  .tb-search input { font-size: 16px; }
+  .tb-group-head { padding: 16px 14px; }
+  .tb-bug-head {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas: "pri main caret" "score score score";
+    gap: 10px 12px;
+    padding: 12px;
+  }
+  .tb-pri { grid-area: pri; align-self: start; width: 38px; height: 38px; line-height: 38px; font-size: .95rem; }
+  .tb-bug-main { grid-area: main; }
+  .tb-caret { grid-area: caret; align-self: start; margin-top: 10px; }
+  .tb-score { grid-area: score; grid-template-columns: auto 1fr; min-width: 0; padding-left: 50px; }
+  .tb-eta { max-width: 100%; }
+}
+

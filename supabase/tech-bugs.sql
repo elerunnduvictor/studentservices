@@ -81,6 +81,30 @@ create policy "tech_bug_notes_select" on public.tech_bug_notes
 revoke all on public.tech_bugs, public.tech_bug_notes from public, anon, authenticated;
 grant select on public.tech_bugs, public.tech_bug_notes to authenticated;
 
+-- ── the weeks behind it ────────────────────────────────────────────────────
+-- One row per workbook, per product, per section. What the page's line graphs
+-- are drawn from. Only this week's rows are replaced by a run; every earlier
+-- week stays exactly as it was recorded.
+create table if not exists public.tech_bug_history (
+  captured_on    date    not null,   -- the day that week's workbook was saved
+  product        text    not null,
+  product_label  text    not null,
+  product_order  integer not null,
+  section        text    not null check (section in ('active', 'resolved', 'closed', 'removed')),
+  bugs           integer not null,   -- how many bugs the section listed
+  scored         integer not null,   -- how many of them carried a numeric score
+  score_total    numeric not null,   -- their scores added together
+  top_score      numeric,            -- the highest of them
+  primary key (captured_on, product, section)
+);
+
+alter table public.tech_bug_history enable row level security;
+drop policy if exists "tech_bug_history_select" on public.tech_bug_history;
+create policy "tech_bug_history_select" on public.tech_bug_history
+  for select to authenticated using (public.hub_sees_emerging_issues());
+revoke all on public.tech_bug_history from public, anon, authenticated;
+grant select on public.tech_bug_history to authenticated;
+
 -- ── this week's list ──────────────────────────────────────────────────────
 delete from public.tech_bugs;
 delete from public.tech_bug_notes;
@@ -486,6 +510,19 @@ Filter for the Student''s name or ID
 Queue Post', 1, date '2026-09-13'),
   ('Finance', 'Finance', 'Important Notes for Finance Procedures', 'Add Discount', 'When manually adding a discount, we use a different tag, TDMAN. The tags are important because they need to match the different accounts.', 2, date '2026-09-13');
 
+-- ── this week, into the history ──────────────────────────────────────────
+-- Worked out from the rows just loaded, so the history can never disagree
+-- with the list. This week's rows first go, then come back; no other week
+-- is read or written.
+delete from public.tech_bug_history where captured_on = date '2026-09-13';
+insert into public.tech_bug_history
+       (captured_on, product, product_label, product_order, section,
+        bugs, scored, score_total, top_score)
+select captured_on, product, product_label, product_order, section,
+       count(*), count(score), coalesce(sum(score), 0), max(score)
+  from public.tech_bugs
+ group by captured_on, product, product_label, product_order, section;
+
 commit;
 
 -- ── check it ───────────────────────────────────────────────────────────────
@@ -500,3 +537,14 @@ select product_label,
   from public.tech_bugs
  group by product_label, product_order
  order by product_order;
+
+-- The weeks on record, for the line graphs. One row per workbook run.
+select captured_on                                              as week,
+       sum(bugs) filter (where section = 'active')              as open_bugs,
+       sum(score_total) filter (where section = 'active')       as open_weighted_score,
+       sum(bugs) filter (where section = 'closed')              as closed,
+       sum(bugs) filter (where section = 'removed')             as removed,
+       sum(bugs) filter (where section = 'resolved')            as resolved_this_week
+  from public.tech_bug_history
+ group by captured_on
+ order by captured_on;

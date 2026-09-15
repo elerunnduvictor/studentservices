@@ -34,6 +34,21 @@ Summary, Owner, Updated ETA, Workaround, Latest Status, Weighted Score.
 Finance ends with "Important Notes for Finance Procedures" — two procedures,
 not bugs. They are copied to tech_bug_notes and shown in that compartment.
 
+── The history ───────────────────────────────────────────────────────────────
+
+tech_bugs holds this week's list and nothing else: each run replaces it. The
+page's line graphs need the weeks before too, so each run also writes one row
+per product per section into tech_bug_history — how many bugs, how many of
+them scored, and their total weighted score — dated by the day the workbook was
+saved. Earlier weeks are never touched. Re-running the same week replaces that
+week's rows rather than adding a second set, so a file run twice cannot draw a
+point twice.
+
+The history begins with the first workbook run through this. It is not
+reconstructed backwards: the tracker keeps no record of what its lists looked
+like on past dates, and a line drawn from guesses would be worse than a line
+that starts late.
+
 ── What it refuses ───────────────────────────────────────────────────────────
 
 It stops with an error, and writes nothing, if a tracker sheet is missing one
@@ -398,6 +413,30 @@ create policy "tech_bug_notes_select" on public.tech_bug_notes
 
 revoke all on public.tech_bugs, public.tech_bug_notes from public, anon, authenticated;
 grant select on public.tech_bugs, public.tech_bug_notes to authenticated;
+
+-- ── the weeks behind it ────────────────────────────────────────────────────
+-- One row per workbook, per product, per section. What the page's line graphs
+-- are drawn from. Only this week's rows are replaced by a run; every earlier
+-- week stays exactly as it was recorded.
+create table if not exists public.tech_bug_history (
+  captured_on    date    not null,   -- the day that week's workbook was saved
+  product        text    not null,
+  product_label  text    not null,
+  product_order  integer not null,
+  section        text    not null check (section in ('active', 'resolved', 'closed', 'removed')),
+  bugs           integer not null,   -- how many bugs the section listed
+  scored         integer not null,   -- how many of them carried a numeric score
+  score_total    numeric not null,   -- their scores added together
+  top_score      numeric,            -- the highest of them
+  primary key (captured_on, product, section)
+);
+
+alter table public.tech_bug_history enable row level security;
+drop policy if exists "tech_bug_history_select" on public.tech_bug_history;
+create policy "tech_bug_history_select" on public.tech_bug_history
+  for select to authenticated using (public.hub_sees_emerging_issues());
+revoke all on public.tech_bug_history from public, anon, authenticated;
+grant select on public.tech_bug_history to authenticated;
 """
 
 BUG_COLS = ["product", "product_label", "product_order", "section", "row_order", "priority",
@@ -483,6 +522,20 @@ def main():
         body.append("")
         body.append(f"insert into public.tech_bug_notes ({', '.join(NOTE_COLS)}) values")
         body.append(",\n".join("  (" + ", ".join(sql(n[c]) for c in NOTE_COLS) + ")" for n in notes) + ";")
+    body += ["",
+             "-- ── this week, into the history ──────────────────────────────────────────",
+             "-- Worked out from the rows just loaded, so the history can never disagree",
+             "-- with the list. This week's rows first go, then come back; no other week",
+             "-- is read or written.",
+             f"delete from public.tech_bug_history where captured_on = {sql(captured)};",
+             "insert into public.tech_bug_history",
+             "       (captured_on, product, product_label, product_order, section,",
+             "        bugs, scored, score_total, top_score)",
+             "select captured_on, product, product_label, product_order, section,",
+             "       count(*), count(score), coalesce(sum(score), 0), max(score)",
+             "  from public.tech_bugs",
+             " group by captured_on, product, product_label, product_order, section;",
+             ]
     body += ["", "commit;", "",
              "-- ── check it ───────────────────────────────────────────────────────────────",
              "-- One row per tracker, with its counts per section. They should match the",
@@ -495,7 +548,17 @@ def main():
              "       max(captured_on)                             as tracker_saved",
              "  from public.tech_bugs",
              " group by product_label, product_order",
-             " order by product_order;", ""]
+             " order by product_order;", "",
+             "-- The weeks on record, for the line graphs. One row per workbook run.",
+             "select captured_on                                              as week,",
+             "       sum(bugs) filter (where section = 'active')              as open_bugs,",
+             "       sum(score_total) filter (where section = 'active')       as open_weighted_score,",
+             "       sum(bugs) filter (where section = 'closed')              as closed,",
+             "       sum(bugs) filter (where section = 'removed')             as removed,",
+             "       sum(bugs) filter (where section = 'resolved')            as resolved_this_week",
+             "  from public.tech_bug_history",
+             " group by captured_on",
+             " order by captured_on;", ""]
 
     OUT.write_text("\n".join(header + body), encoding="utf-8")
     print(f"wrote {OUT.relative_to(REPO)}  —  {book.name}, saved {captured.isoformat()}")

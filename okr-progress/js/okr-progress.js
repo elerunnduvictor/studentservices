@@ -1162,6 +1162,8 @@ function renderSkrDetail(r) {
     </div>
   `;
   document.getElementById("okrpModalBody").innerHTML = body;
+  // Low-key CAP guide link — see shared/js/cap-guide-link.js.
+  if (window.SS && SS.capGuideLink) SS.capGuideLink.injectInto(document.getElementById("okrpModalBody"));
 
   // Wire related-item clicks
   document.querySelectorAll(".mc-related-item").forEach(el => {
@@ -1323,6 +1325,8 @@ function renderAggregateDetail({ kind, okr, title, rows }) {
     </div>
   `;
   document.getElementById("okrpModalBody").innerHTML = body;
+  // Low-key CAP guide link — see shared/js/cap-guide-link.js.
+  if (window.SS && SS.capGuideLink) SS.capGuideLink.injectInto(document.getElementById("okrpModalBody"));
   document.querySelectorAll(".mc-related-item").forEach(el => {
     el.addEventListener("click", () => openDetailById(parseInt(el.dataset.id, 10)));
   });

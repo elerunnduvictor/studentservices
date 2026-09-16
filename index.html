@@ -16,6 +16,7 @@
      Emerging Issues alert needed a critical count; without this js/home-issues.js
      finds no SS.db and hides the alert without complaining. -->
 <script src="/shared/js/data-service.js"></script>
+<script src="/shared/js/cap-guide-link.js"></script>
 <script defer src="/shared/js/gw-tiles.js"></script>
 <script defer src="/js/home-tiles.js"></script>
 <script defer src="/js/home-issues.js"></script>
@@ -301,11 +302,17 @@
 
      Every entry is gated, and gated by removal rather than by hiding: if a
      reader may not have it, the link is not in the DOM at all. The rules are
-     SS.access.canSeeDirectory and SS.access.canUseProcesses() — the same two
-     the top nav reads on every other page, so the two menus cannot disagree
-     about who may see what. Applied by gateBottomMenu() in js/home-tiles.js
-     (this page does not load js/shared.js). If nothing survives the gate the
-     whole strip goes with it, rather than leaving an empty heading. -->
+     SS.access.canSeeDirectory, SS.access.canUseProcesses(), and (2026-09-16)
+     SS.capGuideLink.checkAccess() for the CAP guide — the last one is the
+     same live, RLS-backed query the guide's own page and its contextual nav
+     link already ask, not a fourth copy of that allow list. Directory and
+     Processes' rules are read by the top nav too, so the menus cannot
+     disagree about who may see what. Applied by gateBottomMenu() in
+     js/home-tiles.js (this page does not load js/shared.js). The grid is
+     auto-fit (see css/home.css), so 2 or 3 surviving tiles both reflow
+     correctly — nothing here assumes a fixed column count. If nothing
+     survives the gate the whole strip goes with it, rather than leaving an
+     empty heading. -->
 <nav class="home-bottom" id="homeBottomNav" aria-label="More" hidden>
   <div class="home-bottom-inner">
     <span class="home-bottom-label">Look something up</span>
@@ -333,6 +340,18 @@
         <span class="home-bottom-text">
           <span class="home-bottom-name">Process Documentation</span>
           <span class="home-bottom-sub">How each process actually works, written down</span>
+        </span>
+      </a>
+      <a class="home-bottom-link" data-need="cap-guide" href="/cap-guide/index.html">
+        <span class="home-bottom-ico" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+            <path d="M9 11l3 3L22 4"/>
+            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+          </svg>
+        </span>
+        <span class="home-bottom-text">
+          <span class="home-bottom-name">CAP Walkthrough Guide</span>
+          <span class="home-bottom-sub">Career and Performance, step by step</span>
         </span>
       </a>
     </div>

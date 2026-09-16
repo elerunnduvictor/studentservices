@@ -525,11 +525,20 @@
       ? SS.access.canUseProcesses() : Promise.resolve(false))
       ["catch"](function () { return false; });
 
-    // Both answers before anything is revealed, so the strip appears once in
-    // its final shape rather than showing and then losing a link.
-    Promise.all([directoryOK, processesOK]).then(function (ok) {
+    // Same live query the CAP guide's own page and its contextual nav link
+    // already ask (shared/js/cap-guide-link.js) — not a fourth copy of that
+    // allow list. "Some rows came back" is the whole check; RLS already did
+    // the actual deciding.
+    var capGuideOK = (SS.capGuideLink
+      ? SS.capGuideLink.checkAccess() : Promise.resolve(false))
+      ["catch"](function () { return false; });
+
+    // All three answers before anything is revealed, so the strip appears
+    // once in its final shape rather than showing and then losing a link.
+    Promise.all([directoryOK, processesOK, capGuideOK]).then(function (ok) {
       if (!ok[0]) drop("directory");
       if (!ok[1]) drop("processes");
+      if (!ok[2]) drop("cap-guide");
       if (wrap.querySelector(".home-bottom-link")) nav.hidden = false;
       else nav.remove();
     });

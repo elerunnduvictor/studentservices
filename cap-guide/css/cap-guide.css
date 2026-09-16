@@ -1,0 +1,73 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   CAP GUIDE — page-specific styles only.
+
+   Navbar, hero, section/typography, tokens (--dept-color etc.) all come from
+   /departments/css/dept.css and this page's own <style> block in <head>
+   (same convention dean.html uses) — reused directly, not redeclared here.
+   Everything below is the one thing dept.css has no equivalent for: the
+   Team Member / Leader tabs and the step-by-step guide body.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ══════════════ GATE ══════════════
+   [hidden] beats a plain class here on purpose — .cap-gate is a grid, and a
+   display rule wins over the hidden attribute otherwise, which is exactly the
+   bug that broke this gate on the Processes page once already. */
+.cap-gate {
+  min-height: calc(100vh - var(--nav-height));
+  display: grid; place-items: center;
+  padding: 40px 20px;
+}
+.cap-gate[hidden] { display: none; }
+.cap-gate-inner { max-width: 440px; text-align: center; }
+.cap-gate-inner h1 {
+  font-family: 'Cormorant Garamond', serif; font-weight: 300;
+  font-size: 2rem; margin-bottom: 12px; color: var(--text);
+}
+.cap-gate-inner p { color: var(--text-muted); line-height: 1.6; margin-bottom: 24px; }
+
+/* ══════════════ TABS ══════════════ */
+.cap-tabs {
+  display: flex; gap: 6px; padding: 4px;
+  background: var(--bg-elevated); border-radius: var(--radius-lg);
+  margin-bottom: 28px; width: fit-content;
+}
+.cap-tab {
+  border: none; background: transparent; cursor: pointer;
+  padding: 9px 20px; border-radius: 8px;
+  font: 500 0.85rem/1 'Jost', sans-serif; color: var(--text-muted);
+  transition: var(--transition);
+}
+.cap-tab.is-on { background: var(--bg-card); color: var(--dept-color); box-shadow: var(--shadow); }
+
+/* ══════════════ GUIDE BODY ══════════════ */
+.cap-guide-purpose {
+  font-size: 1.02rem; line-height: 1.7; color: var(--text-muted);
+  padding-bottom: 24px; margin-bottom: 24px; border-bottom: 1px solid var(--border);
+}
+.cap-guide-section { margin-bottom: 36px; }
+.cap-guide-section-title {
+  font-family: 'Cormorant Garamond', serif; font-weight: 600;
+  font-size: 1.45rem; color: var(--text); margin-bottom: 10px;
+}
+.cap-guide-intro { color: var(--text-muted); line-height: 1.65; margin-bottom: 12px; }
+.cap-guide-p { color: var(--text-muted); line-height: 1.65; margin: 0 0 10px; }
+.cap-guide-list { margin: 0 0 10px; padding-left: 22px; }
+.cap-guide-list.indent-1 { padding-left: 20px; margin-top: 4px; margin-bottom: 4px; }
+.cap-guide-list li {
+  color: var(--text-muted); line-height: 1.65; margin-bottom: 6px; font-size: 0.96rem;
+}
+.cap-guide-list.indent-1 li { font-size: 0.92rem; }
+.cap-guide-link {
+  color: var(--dept-color); text-decoration: none; border-bottom: 1px solid currentColor;
+}
+.cap-guide-link:hover { opacity: 0.8; }
+
+/* Links section rendered as a short card rather than a plain list, since it's
+   reference material sitting above the numbered steps. */
+.cap-guide-links-card {
+  background: var(--bg-elevated); border-radius: var(--radius-lg);
+  padding: 16px 20px; margin-bottom: 32px;
+}
+.cap-guide-links-card .cap-guide-list { margin: 0; padding-left: 20px; }
+
+.cap-guide-empty { color: var(--text-dim); padding: 40px 0; text-align: center; }

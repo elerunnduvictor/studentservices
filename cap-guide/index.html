@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <script src="/js/auth-guard.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <!-- Theme decided before the first paint. Matches every other hub page. -->
+  <script>
+    (function () {
+      try {
+        var saved = localStorage.getItem("ss-theme") || "light";
+        document.documentElement.setAttribute("data-theme", saved);
+        document.documentElement.style.colorScheme = saved === "dark" ? "dark" : "light";
+      } catch (e) { /* private mode: fall through to light */ }
+    })();
+  </script>
+  <title>CAP Walkthrough Guide — Student Services</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Jost:wght@300;400;500;600&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="/css/shared.css">
+  <link rel="stylesheet" href="/departments/css/dept.css">
+  <link rel="stylesheet" href="/cap-guide/css/cap-guide.css">
+  <style>
+    :root {
+      --dept-color: #065577;
+      --dept-color-r: 6, 85, 119;
+      --dept-dark: #054762;
+      --dept-light: #e8f1f5;
+      --dept-from: #043a4f;
+      --dept-to: #0a7a9e;
+    }
+
+    [data-theme="dark"] {
+      --dept-light: rgba(6, 85, 119, 0.16);
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ═══════════════ NAVBAR ═══════════════
+       Byte-identical to processes/index.html's nav block — the canonical
+       source for a gated, non-department page. No entry for this page here,
+       deliberately: per direction, there is no top-level nav item and
+       nothing on the home page. The only way in is the low-key link
+       shared/js/cap-guide-link.js adds after a KPI or OKR card is opened,
+       and that link only renders once its own RLS-backed check returns
+       something. -->
+  <nav class="navbar" id="navbar">
+    <a href="/index.html" class="nav-brand">Student Services</a>
+    <button class="nav-hamburger" id="navHamburger" aria-label="Menu">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="3" y1="6" x2="21" y2="6" />
+        <line x1="3" y1="12" x2="21" y2="12" />
+        <line x1="3" y1="18" x2="21" y2="18" />
+      </svg>
+    </button>
+    <div class="nav-links" id="navLinks">
+      <a href="/index.html" class="nav-link">Home</a>
+      <a href="/index.html#departments" class="nav-link">Departments</a>
+      <a href="/emerging-issues/index.html" class="nav-link">Emerging Issues</a>
+      <a href="/scorecard/index.html" class="nav-link">KPI Scorecard</a>
+      <a href="/okr-progress/index.html" class="nav-link">OKRs</a>
+      <a href="/directory/index.html" class="nav-link">Directory</a>
+      <a href="/org-chart/index.html" class="nav-link">Org Chart</a>
+      <!-- The Processes link itself is injected by SS.initNav() only for a
+           steward or an admin/director — see shared/js/shared.js. -->
+    </div>
+    <button class="nav-theme-btn" id="themeToggle" title="Toggle theme">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+      </svg>
+    </button>
+  </nav>
+
+  <!-- ═══════════════ GATE ═══════════════
+       RLS on cap_guide_sections/cap_guide_items is the real boundary (see
+       supabase/cap-guide.sql) — this is the UX layer on top of it, same
+       mirrored shape as processes/js/process-page.js's applyGate(). A
+       visitor whose session isn't on the allow list gets an empty result
+       from the database itself, not just this hidden state. -->
+  <section class="cap-gate" id="capGate" hidden>
+    <div class="cap-gate-inner">
+      <h1>CAP Walkthrough Guide</h1>
+      <p>This guide is internal to Student Services. Your account does not have access to it.</p>
+      <a href="/index.html" class="dept-nav-card" style="display:inline-flex;">Back to the hub</a>
+    </div>
+  </section>
+
+  <div id="capMain" hidden>
+    <!-- ═══════════════ HERO ═══════════════ -->
+    <section class="dept-hero">
+      <div class="hero-content">
+        <div class="hero-breadcrumb">
+          <a href="/index.html">Home</a>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+          <span>CAP Walkthrough Guide</span>
+        </div>
+        <div class="hero-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M9 11l3 3L22 4" />
+            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+          </svg>
+        </div>
+        <h1>CAP <span>Walkthrough Guide</span></h1>
+        <p class="hero-tagline">Career and Performance — how the process works, step by step, for team members and
+          for leaders running it with their team.</p>
+      </div>
+    </section>
+
+    <!-- ═══════════════ CONTENT ═══════════════ -->
+    <section class="section">
+      <div class="section-inner" style="max-width: 900px;">
+        <div id="capLoading" class="cap-guide-empty">Loading…</div>
+        <nav class="cap-tabs" id="capGuideTabs"></nav>
+        <div id="capGuideBody"></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ═══════════════ FOOTER ═══════════════ -->
+  <footer class="site-footer">
+    <span>&copy; 2026 BYU-Pathway Worldwide &middot; Student Services</span>
+  </footer>
+
+  <script src="/shared/js/hub-palette.js"></script>
+  <script src="/shared/js/config.js"></script>
+  <script src="/shared/js/hub-access.js"></script>
+  <script src="/shared/js/hub-texture.js"></script>
+  <script src="/shared/js/hub-account.js"></script>
+  <script src="/shared/js/data-service.js"></script>
+  <!-- js/shared.js before cap-guide.js, not after (unlike dean.html's
+       renderer scripts): this page's own script is a plain synchronous tag,
+       not loaded asynchronously through hub-boot.js's data-then indirection,
+       so it needs SS.escapeHtml to already exist when it runs. -->
+  <script src="/js/shared.js"></script>
+  <script src="/cap-guide/js/cap-guide.js"></script>
+</body>
+
+</html>

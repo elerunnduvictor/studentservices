@@ -1118,6 +1118,10 @@
 
     document.getElementById("scView").innerHTML = html;
     document.getElementById("scCrumbs").innerHTML = crumbs();
+    // Low-key CAP guide link, KPI cards only — see shared/js/cap-guide-link.js.
+    if (window.SS && SS.capGuideLink && (p[0] === "kpi" || p[2] === "kpi")) {
+      SS.capGuideLink.injectInto(document.getElementById("scCrumbs"));
+    }
 
     /* A footnote used to sit here reciting how many KPIs were tracked, how many
        were excluded, and where the data was read from. That is provenance for

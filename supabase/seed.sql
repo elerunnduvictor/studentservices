@@ -570,9 +570,11 @@ Accommodation appeals, adjustments, and compliance documentation
 Meet with students to discuss barriers, needs, and reasonable accommodations 
 Prepare and issue accommodation letters to students directly', null),
   (20, 'Ana De Castro', 'Student Belonging Coordinator', 'Contractor', 'Non-Discrimination Administration and Institutional Response
-Belonging-Related Concern Resolution and Systemic Risk Escalation', 'Discrimination case resolution rate 
+Belonging-Related Concern Resolution and Systemic Risk Escalation
+Ecclesiastical endorsement', 'Discrimination case resolution rate 
 Student sentiment on belonging
-Student belonging CSAT', 'Anne Marie Clark, Associate Dean of Students', 'Dean of Students Office', 'https://churchofjesuschrist.sharepoint.com/:w:/s/BYU-PathwayStudentSuccessRoleInventory/IQDw3EYyUChUSY3A6NON-yzTAbsZyYTV79vgs6HuVXn3KPM?e=eMTFQX', 'Non-discrimination administration and institutional response 
+Student belonging CSAT
+Ecclesiastical endorsement case resolution', 'Anne Marie Clark, Associate Dean of Students', 'Dean of Students Office', 'https://churchofjesuschrist.sharepoint.com/:w:/s/BYU-PathwayStudentSuccessRoleInventory/IQDw3EYyUChUSY3A6NON-yzTAbsZyYTV79vgs6HuVXn3KPM?e=eMTFQX', 'Non-discrimination administration and institutional response 
 Belonging-related concern resolution and systemic risk escalation 
 Respond to belonging and non-discrimination concerns 
 Support students experiencing discrimination or exclusion 
@@ -684,11 +686,9 @@ Support a culture of team unity via announcements, celebrations, and Team Unity 
 Strategize Enrollment Counseling priorities to improve the overall student experience
 Identify system issues, workflow bottlenecks, and escalate or resolve as needed
 Collaborate with the Enrollment Counseling Performance Coordinator', null),
-  (31, 'Shaunasee Janette James', 'Enrollment Coordinator', 'FTE', 'Transfer evaluation 
-Ecclesiastical endorsement 
-Chaplain partnership', 'Transfer evaluation processing rate 
-Number of transfer evaluation and endorsement cases
-Transfer evaluation and endorsement case resolution rate', 'Trevor Shelton, Senior Manager of Enrollment Services', 'Enrollment & Retention', 'https://churchofjesuschrist.sharepoint.com/:w:/s/BYU-PathwayStudentSuccessRoleInventory/IQBHJEF4d22UQ4TOTp6j8queASopK9ehmaq4-SfVdUQwo1g?e=qSPQFY', 'Liaise with the Ecclesiastical Clearance Office (ECO) and chaplains to resolve endorsement-related issues.
+  (31, 'Shaunasee Janette James', 'Enrollment Coordinator', 'FTE', 'Transfer evaluation', 'Transfer evaluation processing rate 
+Number of transfer evaluation
+Transfer evaluation', 'Trevor Shelton, Senior Manager of Enrollment Services', 'Enrollment & Retention', 'https://churchofjesuschrist.sharepoint.com/:w:/s/BYU-PathwayStudentSuccessRoleInventory/IQBHJEF4d22UQ4TOTp6j8queASopK9ehmaq4-SfVdUQwo1g?e=qSPQFY', 'Liaise with the Ecclesiastical Clearance Office (ECO) and chaplains to resolve endorsement-related issues.
 Manage a team that notifies students with missing or MRNs and resetting endorsement requests.
 Oversee transfer evaluation team as they make sure of transcript submission. workflows and ensure accurate linkage to student records.
 Support or lead transcript evaluation processes to verify credit.

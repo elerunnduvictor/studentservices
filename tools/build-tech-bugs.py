@@ -3,6 +3,7 @@ Build supabase/tech-bugs.sql from the TS Product Tracker workbook.
 
     python tools/build-tech-bugs.py                      # "TS Product Tracker.xlsx"
     python tools/build-tech-bugs.py "path/to/file.xlsx"
+    python tools/build-tech-bugs.py --week 2026-09-13    # correct a week already recorded
 
 Then run supabase/tech-bugs.sql in the Supabase SQL editor. That is the whole
 weekly update: the Emerging Issues page reads the table, so nothing has to be
@@ -43,6 +44,14 @@ them scored, and their total weighted score — dated by the day the workbook wa
 saved. Earlier weeks are never touched. Re-running the same week replaces that
 week's rows rather than adding a second set, so a file run twice cannot draw a
 point twice.
+
+The week a run belongs to is the day the workbook was saved. When TS sends a
+corrected copy of the week already recorded — a column they had left blank,
+say — saving it gives it a new date, which would put a second point a day or
+two after the first and read on the chart as a week that never happened. Pass
+--week with the date already on record to replace that week instead:
+
+    python tools/build-tech-bugs.py --week 2026-09-13
 
 The history begins with the first workbook run through this. It is not
 reconstructed backwards: the tracker keeps no record of what its lists looked
@@ -447,7 +456,16 @@ NOTE_COLS = ["product", "product_label", "heading", "title", "body", "note_order
 
 
 def main():
-    book = Path(sys.argv[1]) if len(sys.argv) > 1 else DEFAULT_BOOK
+    args = sys.argv[1:]
+    week = None
+    if "--week" in args:
+        i = args.index("--week")
+        try:
+            week = datetime.date.fromisoformat(args[i + 1])
+        except (IndexError, ValueError):
+            sys.exit("--week wants a date, as --week 2026-09-13")
+        del args[i:i + 2]
+    book = Path(args[0]) if args else DEFAULT_BOOK
     if not book.exists():
         sys.exit(f"No workbook at {book}")
     wb = openpyxl.load_workbook(book, data_only=True)
@@ -458,6 +476,11 @@ def main():
         captured = saved.replace(tzinfo=datetime.timezone.utc).astimezone().date()
     else:
         captured = datetime.date.fromtimestamp(book.stat().st_mtime)
+    # --week says this workbook belongs to a week already on record: a
+    # correction, not a new one. It replaces that week and adds no point.
+    if week:
+        print(f"  week pinned to {week.isoformat()} (workbook saved {captured.isoformat()})")
+        captured = week
 
     trackers, skipped = [], []
     for ws in wb.worksheets:

@@ -94,6 +94,15 @@
           </svg>
           Raise an issue
         </button>
+        <!-- The Technical Bugs Backlog's total weighted score, in the corner
+             "Raise an issue" occupies on the register — that button is hidden
+             on this tab, so the score has the place to itself. Filled and shown
+             by js/tech-bugs.js; hidden on the register. -->
+        <div class="ei-hero-score" id="tbHeroScore" hidden>
+          <div class="ei-hero-score-n" id="tbHeroScoreN"></div>
+          <div class="ei-hero-score-l">Total weighted score</div>
+          <p class="ei-hero-score-d">Weighted Score is determined by considering each bug's impact based on scope (number of students affected), severity, urgency, risk, and available workarounds.</p>
+        </div>
       </div>
     </header>
 
@@ -153,13 +162,14 @@
     <section class="tb" id="tbView" role="tabpanel" aria-labelledby="eiViewBugs" hidden>
       <div class="tb-intro">
         <p class="tb-source" id="tbSource"></p>
-        <p class="tb-legend">
-          <b>Weighted Score</b> (each bug is weighted based on scope [number of students
-          affected], level of impact, urgency, risk, and available workaround)
-        </p>
       </div>
 
       <div class="tb-summary" id="tbSummary" aria-label="At a glance"></div>
+
+      <!-- The backlog over the weeks, drawn by js/tech-bugs-trend.js from
+           tech_bug_history. Stays hidden until there is at least one week on
+           record, so the tab looks as it did before the history table exists. -->
+      <section class="tr" id="tbTrend" aria-labelledby="trTitle" hidden></section>
 
       <div class="tb-controls">
         <label class="tb-search">
@@ -169,7 +179,7 @@
                  aria-label="Search the bugs">
         </label>
         <div class="tb-filters">
-          <select id="tbProduct" aria-label="Tracker"></select>
+          <select id="tbProduct" aria-label="Product"></select>
           <select id="tbOwner" aria-label="Owner"></select>
           <select id="tbWorkaround" aria-label="Workaround"></select>
           <select id="tbEta" aria-label="Updated ETA"></select>
@@ -179,7 +189,20 @@
         </div>
       </div>
 
-      <div class="tb-count" id="tbCountLine" role="status"></div>
+      <!-- What the line in each product's header follows. Only offered where
+           there is a weighted score to follow; the note takes its place while
+           the list is filtered, since the history is kept per product, not
+           per owner or search. -->
+      <div class="tb-groupbar">
+        <div class="tb-count" id="tbCountLine" role="status"></div>
+        <div class="tb-sparkmode" id="tbSparkMode" role="group" aria-label="What the line in each product follows" hidden>
+          <span class="tb-sparkmode-l">Line in each product</span>
+          <button type="button" data-spark="bugs" aria-pressed="true">Bug count</button>
+          <button type="button" data-spark="score" aria-pressed="false">Weighted score</button>
+        </div>
+        <p class="tb-sparknote" id="tbSparkNote" hidden>The weekly lines follow whole products, so they
+          step aside while the list is filtered.</p>
+      </div>
 
       <div class="tb-groups" id="tbGroups">
         <div class="ei-empty"><strong>Loading the bug backlog…</strong></div>
@@ -262,6 +285,7 @@
   <script src="/shared/js/hub-account.js"></script>
   <script src="/shared/js/data-service.js"></script>
   <script src="/emerging-issues/js/emerging-issues.js"></script>
+  <script src="/emerging-issues/js/tech-bugs-trend.js"></script>
   <script src="/emerging-issues/js/tech-bugs.js"></script>
 </body>
 

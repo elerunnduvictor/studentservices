@@ -447,6 +447,35 @@
 .ei-hero .ei-title span { font-weight: 600; color: var(--bp-gold, #FFC328); }
 .ei-hero .ei-lead    { color: rgba(255,255,255,.82); }
 
+/* The Technical Bugs Backlog's total weighted score, alone in the top right of
+   the band — the place "Raise an issue" holds on the register — with what the
+   score means right beneath it. */
+.ei-hero-score {
+  margin-left: auto;
+  max-width: 440px;
+  text-align: right;
+}
+.ei-hero-score[hidden] { display: none !important; }
+.ei-hero-score-n {
+  font-family: 'Jost', sans-serif;
+  font-size: clamp(2.6rem, 5vw, 3.6rem); font-weight: 600; line-height: 1;
+  font-variant-numeric: lining-nums tabular-nums;
+  color: #fff;
+}
+.ei-hero-score-l {
+  margin-top: 8px;
+  font-size: .64rem; font-weight: 600; letter-spacing: .24em; text-transform: uppercase;
+  color: var(--bp-gold, #FFC328);
+}
+.ei-hero-score-d {
+  margin: 10px 0 0;
+  font-size: .82rem; line-height: 1.55;
+  color: rgba(255,255,255,.84);
+}
+@media (max-width: 700px) {
+  .ei-hero-score { margin-left: 0; max-width: none; text-align: left; }
+}
+
 /* The page content rides up into the band's fade. */
 .ei { margin-top: -76px; position: relative; z-index: 2; padding-top: 0; }
 
@@ -648,18 +677,9 @@ select.is-sev-low option { color: var(--text); font-weight: 400; background: var
    ═══════════════════════════════════════════════════════════════════════════ */
 .tb { display: block; }
 
-.tb-intro {
-  display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between;
-  gap: 8px 24px;
-  margin-bottom: 18px;
-}
+.tb-intro { margin-bottom: 18px; }
 .tb-source { margin: 0; font-size: .88rem; color: var(--text-muted); }
 .tb-source b { color: var(--text); font-weight: 600; }
-.tb-legend {
-  margin: 0; max-width: 62ch;
-  font-size: .78rem; line-height: 1.55; color: var(--text-dim);
-}
-.tb-legend b { color: var(--text-muted); font-weight: 600; }
 
 /* ── at a glance ── */
 .tb-summary {
@@ -697,25 +717,6 @@ select.is-sev-low option { color: var(--text); font-weight: 400; background: var
 .tb-chip.is-on b { color: var(--bp-teal); }
 .tb-chip:focus-visible { outline: 2px solid var(--bp-teal); outline-offset: 2px; }
 .tb-ico { font-size: .9rem; line-height: 1; opacity: .8; }
-
-/* The total weighted score of everything in the section, first in the strip
-   and the largest figure in it, set off from the counts beside it. */
-.tb-grand {
-  display: flex; align-items: center; gap: 12px;
-  padding-right: 20px;
-  border-right: 1px solid var(--border);
-}
-.tb-grand-n {
-  font-family: 'Jost', sans-serif;
-  font-size: 2.1rem; font-weight: 600; line-height: 1;
-  font-variant-numeric: lining-nums tabular-nums;
-  color: var(--text);
-}
-.tb-grand-l {
-  display: flex; flex-direction: column;
-  font-size: .8rem; font-weight: 600; line-height: 1.3; color: var(--text);
-}
-.tb-grand-l small { font-size: .72rem; font-weight: 400; color: var(--text-dim); }
 
 /* ── the filters ── */
 .tb-controls { display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
@@ -762,6 +763,223 @@ select.is-sev-low option { color: var(--text); font-weight: 400; background: var
   text-decoration: underline; cursor: pointer;
 }
 
+/* ═══ THE BACKLOG, WEEK BY WEEK ═════════════════════════════════════════════
+   The line graphs, drawn by js/tech-bugs-trend.js. One colour per section,
+   the same in the chart, its legend and every product's line, so a colour
+   means one thing across the tab. These four passed the palette validator
+   in this order — lightness band, chroma, colour-blind and normal-vision
+   separation, contrast on the card — and the dark four did the same on the
+   dark card. A new colour here should go through it too. */
+:root {
+  --tr-open: #A32222;
+  --tr-closed: #0A8F9E;
+  --tr-resolved: #B7860B;
+  --tr-removed: #7E3F8F;
+}
+[data-theme="dark"] {
+  --tr-open: #D65656;
+  --tr-closed: #1B9AA8;
+  --tr-resolved: #B98A1E;
+  --tr-removed: #9866B4;
+}
+
+/* Kept short on purpose — it sits between the summary and the filters and
+   should not take the page over. The title, what the record covers and the
+   way to the tables share one line; each panel's figures sit in one row
+   above a low chart. */
+.tr {
+  margin-bottom: 18px;
+  padding: 14px 22px 10px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+.tr[hidden] { display: none !important; }
+.tr-head {
+  display: flex; flex-wrap: wrap; align-items: baseline;
+  gap: 2px 14px;
+  margin-bottom: 10px;
+}
+.tr-title {
+  margin: 0;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.25rem; font-weight: 700; line-height: 1.2;
+  color: var(--text);
+}
+.tr-sub { margin: 0; font-size: .78rem; color: var(--text-muted); }
+.tr-sub b { color: var(--text); font-weight: 600; }
+.tr-more {
+  margin-left: auto;
+  min-height: 32px; padding: 4px 2px;
+  font: inherit; font-size: .78rem; font-weight: 600;
+  color: var(--bp-teal); background: none; border: 0; cursor: pointer;
+}
+.tr-more:hover { text-decoration: underline; }
+.tr-more:focus-visible { outline: 2px solid var(--bp-teal); outline-offset: 2px; border-radius: 4px; }
+
+.tr-panels { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); }
+/* Each panel's figures on top, its chart at the bottom, so the two charts
+   line up even when one row of figures wraps and the other does not. */
+.tr-panel { margin: 0; min-width: 0; display: flex; flex-direction: column; }
+.tr-panel > .tr-plot { margin-top: auto; }
+.tr-panel.is-wide { padding-right: 24px; }
+.tr-panel + .tr-panel { padding-left: 24px; border-left: 1px solid var(--border-subtle); }
+
+/* The legend is the scoreboard too: each line's key, name, latest figure
+   and how far it moved from the week before. */
+.tr-legend {
+  list-style: none; margin: 0 0 2px; padding: 0;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px 18px;
+  min-height: 26px;
+}
+.tr-lg { display: inline-flex; align-items: center; gap: 7px; font-size: .8rem; color: var(--text-muted); }
+.tr-lg-key {
+  position: relative; flex: none;
+  width: 16px; height: 3px; border-radius: 2px;
+  background: var(--c);
+}
+.tr-lg-key::after {
+  content: ""; position: absolute; right: -3px; top: 50%;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--c); box-shadow: 0 0 0 2px var(--bg-card);
+  transform: translateY(-50%);
+}
+.tr-lg-n {
+  font-family: 'Jost', sans-serif;
+  font-size: 1.1rem; font-weight: 600; line-height: 1;
+  font-variant-numeric: lining-nums;
+  color: var(--text);
+}
+.tr-legend.is-one .tr-lg-n { font-size: 1.3rem; }
+/* The short names the lines end with; a phone uses them in the legend too. */
+.tr-short { display: none; }
+.tr-legend.is-one .tr-lg-name { margin-left: 4px; }
+
+/* A move from last week: an arrow and a number, and the words for a screen
+   reader. Only the open backlog's are coloured — up is worse there. */
+.tr-d {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: .72rem; font-weight: 600; white-space: nowrap;
+  font-variant-numeric: lining-nums tabular-nums;
+  color: var(--text-muted);
+}
+.tr-d.is-worse { color: #B4700F; }
+.tr-d.is-better { color: #237A47; }
+.tr-d.is-flat, .tr-d.is-first { font-weight: 500; color: var(--text-dim); }
+.tr-d-w { font-weight: 500; color: var(--text-dim); }
+.tr-vh {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap;
+}
+
+.tr-plot { position: relative; border-radius: 6px; }
+.tr-plot:focus-visible { outline: 2px solid var(--bp-teal); outline-offset: 4px; }
+.tr-svg { display: block; overflow: visible; }
+.tr-svg text { font-family: 'Jost', sans-serif; font-variant-numeric: lining-nums tabular-nums; }
+.tr-grid { stroke: var(--border); stroke-width: 1; shape-rendering: crispEdges; }
+.tr-ytick { font-size: 11px; fill: var(--text-dim); text-anchor: end; }
+.tr-xtick { font-size: 11px; fill: var(--text-dim); }
+.tr-line { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.tr-area { fill-opacity: .1; stroke: none; }
+.tr-dot {
+  stroke: var(--bg-card); stroke-width: 2;
+  transform-box: fill-box; transform-origin: center;
+  transition: transform .12s;
+}
+.tr-dot.is-hot { transform: scale(1.4); }
+.tr-key { stroke-width: 3; stroke-linecap: round; }
+.tr-end { font-size: 12px; fill: var(--text-muted); }
+.tr-end-v { font-weight: 600; fill: var(--text); }
+.tr-leader { fill: none; stroke: var(--text-dim); stroke-width: 1; opacity: .7; }
+.tr-cross { stroke: var(--text-dim); stroke-width: 1; opacity: .6; pointer-events: none; }
+.tr-hit { cursor: crosshair; }
+
+/* One readout for every line at the week under the pointer. */
+.tr-tip {
+  position: absolute; z-index: 5; pointer-events: none;
+  min-width: 190px;
+  padding: 10px 12px;
+  font-size: .78rem; color: var(--text-muted);
+  background: var(--bg-card);
+  border: 1px solid var(--border); border-radius: 8px;
+  box-shadow: var(--shadow-hover);
+}
+.tr-tip[hidden] { display: none; }
+.tr-tip > b { display: block; margin-bottom: 6px; font-size: .8rem; color: var(--text); }
+.tr-tip-row { display: flex; align-items: center; gap: 8px; line-height: 1.75; }
+.tr-tip-row i { flex: none; width: 12px; height: 3px; border-radius: 2px; }
+.tr-tip-row b {
+  margin-left: auto; padding-left: 16px;
+  font-family: 'Jost', sans-serif; font-weight: 600; color: var(--text);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+.tr-tip-sub { display: block; margin-top: 4px; font-size: .72rem; color: var(--text-dim); }
+
+.tr-tables { margin-top: 10px; padding-top: 4px; border-top: 1px solid var(--border-subtle); }
+.tr-tables[hidden] { display: none; }
+.tr-table-wrap { overflow-x: auto; margin: 2px 0 12px; }
+.tr-tables table { border-collapse: collapse; width: 100%; font-size: .8rem; }
+.tr-tables caption {
+  text-align: left; padding: 6px 0 8px;
+  font-size: .66rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--text-dim);
+}
+.tr-tables th, .tr-tables td {
+  padding: 7px 12px; text-align: right; white-space: nowrap;
+  border-bottom: 1px solid var(--border-subtle);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+.tr-tables th:first-child { text-align: left; padding-left: 0; }
+.tr-tables thead th {
+  font-size: .64rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--text-dim);
+}
+.tr-tables tbody th { font-weight: 600; color: var(--text); }
+.tr-tables td { color: var(--text); }
+.tr-tables td small { display: block; font-size: .7rem; color: var(--text-dim); }
+.tr-tables td.is-none { color: var(--text-dim); }
+
+/* The lines draw themselves in once, when the tab first opens — never on a
+   filter change or a resize. */
+.tr-anim .tr-line { stroke-dasharray: 1; animation: tr-draw 1.1s var(--smooth) both; }
+.tr-anim .tr-area, .tr-anim .tr-dot, .tr-anim .tr-end, .tr-anim .tr-key, .tr-anim .tr-leader,
+.tr-anim .tb-spark-end { animation: tr-fade .45s ease-out .85s both; }
+/* A product's line is wiped in from the left, which works whatever its width. */
+.tb-spark-plot.tr-anim .tb-spark-svg { animation: tr-wipe 1.1s var(--smooth) both; }
+@keyframes tr-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes tr-fade { from { opacity: 0; } }
+@keyframes tr-wipe { from { clip-path: inset(-6px 100% -6px 0); } to { clip-path: inset(-6px -6px -6px 0); } }
+
+/* ── above the compartments: the count, and what each product's line follows ── */
+.tb-groupbar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px;
+  min-height: 1.2em; margin: 6px 0 12px;
+}
+.tb-groupbar .tb-count { margin: 0; }
+.tb-sparkmode {
+  display: inline-flex; align-items: center; gap: 2px;
+  margin-left: auto; padding: 3px;
+  background: var(--bg-card);
+  border: 1px solid var(--border); border-radius: 999px;
+}
+.tb-sparkmode[hidden], .tb-sparknote[hidden] { display: none !important; }
+.tb-sparkmode-l {
+  padding: 0 8px 0 10px;
+  font-size: .6rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--text-dim); white-space: nowrap;
+}
+.tb-sparkmode button {
+  font: inherit; font-size: .78rem;
+  min-height: 32px; padding: 5px 14px;
+  border: 0; border-radius: 999px;
+  background: none; color: var(--text-muted); cursor: pointer;
+  transition: background .15s, color .15s;
+}
+.tb-sparkmode button:hover { color: var(--text); }
+.tb-sparkmode button.is-on { background: var(--bp-teal); color: #fff; font-weight: 600; }
+.tb-sparkmode button:focus-visible { outline: 2px solid var(--bp-teal); outline-offset: 2px; }
+.tb-sparknote { margin: 0 0 0 auto; font-size: .76rem; color: var(--text-dim); }
+
 /* ── the compartments — the OKR page's accordion, in this page's colour ── */
 .tb-groups {
   background: var(--bg-card);
@@ -794,7 +1012,10 @@ select.is-sev-low option { color: var(--text); font-weight: 400; background: var
 }
 .tb-group-chev svg { width: 16px; height: 16px; }
 .tb-group.is-open .tb-group-chev { transform: rotate(180deg); }
-.tb-group-text { min-width: 0; }
+/* The name and counts take what is left, which lines the product lines and
+   the totals up in two columns down the page. A zero basis lets them wrap
+   rather than push the total onto a line of its own. */
+.tb-group-text { flex: 1 1 0; min-width: 0; }
 .tb-group-name {
   display: block;
   font-family: 'Cormorant Garamond', serif;
@@ -830,6 +1051,49 @@ select.is-sev-low option { color: var(--text); font-weight: 400; background: var
 .tb-group-total.is-none .tb-gt-n { color: var(--text-dim); }
 .tb-gt-sub { font-size: .7rem; color: var(--text-dim); }
 [data-theme="dark"] .tb-gt-bar i { background: #B9C2C3; }
+
+/* ── each product's own line, between its counts and its total ──
+   Drawn in the colour of the section being read. One width for every row,
+   growing with the window, so the lines stand in a column down the page and
+   fill the gap the header leaves; the name and counts take what remains. */
+.tb-spark {
+  flex: none;
+  display: flex; flex-direction: column; gap: 5px;
+  width: clamp(200px, 28vw, 440px); margin-right: 26px;
+}
+.tb-spark-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.tb-spark-l {
+  font-size: .6rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--text-dim); white-space: nowrap;
+}
+.tb-spark .tr-d { font-size: .7rem; }
+.tb-spark-plot { position: relative; display: block; height: 40px; }
+.tb-spark-svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.tb-spark-base { stroke: var(--border); stroke-width: 1; }
+.tb-spark-area { fill: var(--c); fill-opacity: .1; }
+.tb-spark-line { fill: none; stroke: var(--c); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.tb-spark-band { cursor: crosshair; }
+/* The dots sit over the drawing rather than in it, so a stretched line never
+   stretches them. 8px with a 2px ring in the card's colour; the hover mark
+   is hollow so it never reads as a second "now". */
+.tb-spark-end, .tb-spark-hot {
+  position: absolute; pointer-events: none;
+  width: 8px; height: 8px; margin: -4px 0 0 -4px; border-radius: 50%;
+  box-sizing: content-box;
+}
+.tb-spark-end { background: var(--c); border: 2px solid var(--bg-card); margin: -6px 0 0 -6px; }
+.tb-spark-hot { background: var(--bg-card); border: 2px solid var(--c); margin: -6px 0 0 -6px; }
+.tb-spark-hot[hidden] { display: none; }
+.tb-spark-empty { padding: 11px 0; font-size: .74rem; color: var(--text-dim); }
+.tb-spark-tip {
+  position: fixed; z-index: 1000; pointer-events: none;
+  padding: 6px 10px;
+  font-size: .76rem; color: var(--text); white-space: nowrap;
+  background: var(--bg-card);
+  border: 1px solid var(--border); border-radius: 7px;
+  box-shadow: var(--shadow-hover);
+}
+.tb-spark-tip[hidden] { display: none; }
 
 .tb-group-body {
   display: flex; flex-direction: column; gap: 10px;
@@ -1053,26 +1317,68 @@ select.is-sev-low option { color: var(--text); font-weight: 400; background: var
 [data-theme="dark"] .tb-group-chev { color: #E86C6C; }
 [data-theme="dark"] .tb-group.is-open > .tb-group-head { background: rgba(232,108,108,.07); border-left-color: #E86C6C; }
 [data-theme="dark"] .tb-meter i { background: #B9C2C3; }
+[data-theme="dark"] .tr-d.is-worse { color: #F0B35E; }
+[data-theme="dark"] .tr-d.is-better { color: #6FD39A; }
+[data-theme="dark"] .tr-more { color: #E86C6C; }
+[data-theme="dark"] .tb-sparkmode button.is-on { background: #B83232; }
 
 @media (prefers-reduced-motion: reduce) {
-  .tb-group-chev, .tb-caret, .ei-view, .tb-chip { transition: none; }
+  .tb-group-chev, .tb-caret, .ei-view, .tb-chip, .tr-dot, .tb-sparkmode button { transition: none; }
+  .tr-anim .tr-line, .tr-anim .tr-area, .tr-anim .tr-dot, .tr-anim .tr-end, .tr-anim .tr-key,
+  .tr-anim .tr-leader, .tr-anim .tb-spark-end, .tb-spark-plot.tr-anim .tb-spark-svg { animation: none; }
 }
 
 /* ── tablet and phone ── */
+@media (max-width: 1100px) {
+  .tb-spark { margin-right: 18px; }
+}
+@media (max-width: 780px) {
+  /* The two panels stay side by side as long as both can be read, which
+     keeps the card short on a laptop or a tablet held sideways; below this
+     they stack, with shorter charts. */
+  .tr-panels { grid-template-columns: minmax(0, 1fr); }
+  .tr-panel.is-wide { padding-right: 0; }
+  .tr-panel + .tr-panel {
+    padding-left: 0; border-left: 0;
+    margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-subtle);
+  }
+}
 @media (max-width: 900px) {
   .tb-group-body { padding: 6px 14px 18px 18px; }
   .tb-bug-body { padding: 4px 14px 16px 14px; }
+  /* The product's line takes a row of its own under its name and total. The
+     row is the full width, so it always breaks; the line inside it stops at
+     a comfortable length. */
+  .tb-group-head { flex-wrap: wrap; row-gap: 10px; }
+  .tb-spark {
+    order: 5; flex: 0 0 100%; width: auto;
+    margin: 0; padding-left: 36px; box-sizing: border-box;
+  }
+  .tb-spark-top, .tb-spark-plot, .tb-spark-empty { max-width: 520px; }
 }
 @media (max-width: 700px) {
   .ei-views { display: flex; width: 100%; }
   .ei-view { flex: 1 1 0; justify-content: center; padding: 10px 12px; font-size: .84rem; text-align: center; }
   .tb-summary { padding: 14px; }
-  .tb-chips-sep { display: none; }
-  .tb-grand {
-    width: 100%; padding: 0 0 12px; border-right: 0;
-    border-bottom: 1px solid var(--border);
+  .tr { padding: 12px 14px 6px; }
+  .tr-title { font-size: 1.15rem; }
+  /* Title and "See the numbers" on one line, what the record covers under
+     them; the four sections under their short names, two rows not three. */
+  .tr-more { order: 2; }
+  .tr-sub { order: 3; flex-basis: 100%; }
+  .tr-full {
+    position: absolute; width: 1px; height: 1px; overflow: hidden;
+    clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap;
   }
-  .tb-grand-n { font-size: 1.8rem; }
+  .tr-short { display: inline; }
+  .tr-legend { gap: 2px 14px; }
+  .tr-lg { font-size: .76rem; }
+  .tr-lg-n { font-size: 1rem; }
+  .tb-sparkmode { width: 100%; margin-left: 0; }
+  .tb-sparkmode-l { display: none; }
+  .tb-sparkmode button { flex: 1 1 0; min-height: 40px; }
+  .tb-sparknote { margin-left: 0; }
+  .tb-chips-sep { display: none; }
   .tb-group-total { min-width: 86px; }
   .tb-gt-n { font-size: 1.25rem; }
   .tb-gt-bar { width: 86px; }

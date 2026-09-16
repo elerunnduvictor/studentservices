@@ -17,6 +17,11 @@
    Status and Weighted Score. The face of the card holds what tells two bugs
    apart at a glance; opening it shows the rest.
 
+   Under the summary, the backlog week by week; in each compartment's header,
+   that product's own line. Both are drawn by js/tech-bugs-trend.js from
+   tech_bug_history, which each weekly run of the SQL adds a week to. Without
+   that table, or before its first week, the tab simply has no lines.
+
    Who may read it is decided by the database, with the same rule as the
    register: tech_bugs' policy calls hub_sees_emerging_issues(). This file
    only waits to be told the page is allowed to draw.
@@ -51,10 +56,12 @@
   ];
   const sectionOf = (id) => SECTIONS.find((s) => s.id === id) || SECTIONS[0];
 
-  /* The wording asked for, once per card beside the score. The braces in the
-     request are square brackets here: they sit inside a parenthesis already. */
-  const SCORE_NOTE = "(each bug is weighted based on scope [number of students affected], " +
-                     "level of impact, urgency, risk, and available workaround)";
+  /* What the weighted score is, in the words the TS team gave for it. Shown
+     under the total in the band at the top, and beside the score in every
+     opened card. */
+  const SCORE_NOTE = "Weighted Score is determined by considering each bug's impact based on " +
+                     "scope (number of students affected), severity, urgency, risk, and " +
+                     "available workarounds.";
 
   /* Two of these keep the compartments and three set them aside.
 
@@ -65,16 +72,18 @@
      compartment only, with every compartment still closed, which on screen
      looked like nothing happening at all.
 
-     "Trackers by total score" is the compartments again, heaviest first — the
-     order the totals on their headers invite. */
+     The page opens on the first: products from the heaviest total weighted
+     score to the lightest, and inside each product its bugs from the highest
+     score down. The workbook's own order — tab by tab, by the priority number
+     each product gives its bugs — is still there as the second. */
   const SORTS = [
-    { id: "priority", label: "Tracker priority",              layout: "groups" },
-    { id: "total",    label: "Trackers by total score",       layout: "groups" },
-    { id: "score",    label: "Weighted score, highest first", layout: "list",
+    { id: "total",    label: "Products, highest score first", layout: "groups" },
+    { id: "priority", label: "Products, workbook order",      layout: "groups" },
+    { id: "score",    label: "All bugs, highest score first", layout: "list",
       heading: "highest weighted score first" },
-    { id: "newest",   label: "Discovered, newest first",      layout: "list",
+    { id: "newest",   label: "All bugs, newest first",        layout: "list",
       heading: "most recently discovered first" },
-    { id: "oldest",   label: "Discovered, oldest first",      layout: "list",
+    { id: "oldest",   label: "All bugs, oldest first",        layout: "list",
       heading: "longest-standing first" },
   ];
   const sortOf = (id) => SORTS.find((x) => x.id === id) || SORTS[0];
@@ -143,12 +152,26 @@
   let NOTES = [];               // Finance's procedure notes
   let LOADING = null;
   let MAX_SCORE = 1;            // the top weighted score on the open backlog
-  const f = { section: "active", product: "", owner: "", workaround: "", eta: "", q: "", sort: "priority" };
+  const f = { section: "active", product: "", owner: "", workaround: "", eta: "", q: "", sort: "total" };
   let OPEN_GROUP = null;        // accordion, when nothing is filtered
   const COLLAPSED = new Set();  // compartments closed by hand while filtering
   let OPEN_BUG = null;
 
+  let HISTORY = null;           // one row per week, product and section; null when none
+  let DRAWN = false;            // the lines draw themselves in once, not on every filter
+  const TREND = window.TBTrend || null;
+  /* What the line in each product follows — its bug count or its weighted
+     score. Remembered in this browser; a browser that will not remember it
+     just starts on the count. */
+  const SPARK_KEY = "tb-spark-metric";
+  let SPARK = (function () {
+    try { return localStorage.getItem(SPARK_KEY) === "score" ? "score" : "bugs"; } catch (e) { return "bugs"; }
+  })();
+
   const filtering = () => !!(f.product || f.owner || f.workaround || f.eta || f.q.trim());
+  // The history is kept per product, so a product filter leaves each line
+  // true to its compartment; an owner, a search or the rest do not.
+  const narrowedWithin = () => !!(f.owner || f.workaround || f.eta || f.q.trim());
   const keyOf = (r) => r.product + "|" + r.section + "|" + r.row_order;
 
   /* ── the view switch ─────────────────────────────────────────────────── */
@@ -186,10 +209,19 @@
     if (el("eiTitle")) el("eiTitle").innerHTML = words.title;
     if (el("eiLead")) el("eiLead").textContent = words.lead;
     document.title = words.doc;
+    // The total belongs to this tab; renderSummary() decides whether there is
+    // one to show once the rows are in.
+    if (!bugs && el("tbHeroScore")) el("tbHeroScore").hidden = true;
     if (fromReader) {
       history.replaceState(null, "", bugs ? "#bugs" : location.pathname + location.search);
     }
-    if (bugs) load();
+    if (bugs) {
+      load();
+      // Drawn at the width it had; the window may have changed while the
+      // register was showing.
+      const t = el("tbTrend");
+      if (t && t._redraw) t._redraw();
+    }
   }
 
   function wireViews() {
@@ -232,20 +264,26 @@
     if (LOADING) return LOADING;
     LOADING = Promise.all([
       SS.db.select("tech_bugs", { order: "product_order.asc,row_order.asc" }),
-      // The notes are a nicety; a missing table must not cost the bugs.
+      // The notes and the history are niceties; a missing table must not
+      // cost the bugs.
       SS.db.select("tech_bug_notes", { order: "note_order.asc" }).catch(() => []),
-    ]).then(([rows, notes]) => {
+      TREND ? SS.db.select("tech_bug_history", { order: "captured_on.asc,product_order.asc" }).catch(() => null)
+            : Promise.resolve(null),
+    ]).then(([rows, notes, hist]) => {
       ROWS = (rows || []).map((r) => Object.assign({}, r, {
         score: r.score == null || r.score === "" ? null : Number(r.score),
         bug_refs: Array.isArray(r.bug_refs) ? r.bug_refs : [],
       }));
       NOTES = notes || [];
+      HISTORY = Array.isArray(hist) && hist.length ? hist : null;
       const open = ROWS.filter((r) => r.section === "active");
       MAX_SCORE = Math.max(1, ...open.map((r) => r.score).filter((n) => Number.isFinite(n)));
       paintCount(open.length);
       paintSource();
       fillFilters();
+      renderTrend();
       render();
+      DRAWN = true;
     }).catch((err) => {
       LOADING = null;          // let the next visit to the tab try again
       const missing = /404|PGRST205|does not exist/i.test(err.message || "");
@@ -259,12 +297,45 @@
     return LOADING;
   }
 
+  // Where the list comes from and how often. The date the workbook was saved
+  // is not repeated here: the chart under the summary already shows it.
   function paintSource() {
-    const days = ROWS.map((r) => r.captured_on).filter(isDay).sort();
-    const saved = days.length ? days[days.length - 1] : null;
-    el("tbSource").innerHTML = saved
-      ? `From the TS Product Tracker, updated <b>${esc(fmtDay(saved))}</b>.`
-      : "From the TS Product Tracker.";
+    el("tbSource").textContent = "From the TS Product Tracker, updated weekly.";
+  }
+
+  /* ── the weeks behind it ─────────────────────────────────────────────── */
+  function renderTrend() {
+    const host = el("tbTrend");
+    if (!host) return;
+    if (!TREND || !HISTORY) { host.hidden = true; return; }
+    TREND.renderMain(host, HISTORY, { animate: !DRAWN });
+    TREND.wireSparks(el("tbGroups"));
+  }
+
+  /* The line in one product's header: that product's weeks in the section
+     being read. Its weighted score only where the section has one to add up
+     and the reader has asked for it; otherwise its count. */
+  function sparkFor(p, sec) {
+    if (!TREND || !HISTORY || narrowedWithin()) return "";
+    const metric = totalsApply(sec) ? SPARK : "bugs";
+    return TREND.productSpark(HISTORY, p.key, f.section, metric, { animate: !DRAWN });
+  }
+
+  /* The switch above the compartments, and the note that stands in for it
+     while the list is filtered. Neither shows when there are no lines. */
+  function paintSparkBar(layout) {
+    const sec = sectionOf(f.section);
+    const lines = !!(TREND && HISTORY) && layout === "groups";
+    const mode = el("tbSparkMode"), note = el("tbSparkNote");
+    if (mode) {
+      mode.hidden = !(lines && !narrowedWithin() && totalsApply(sec));
+      mode.querySelectorAll("[data-spark]").forEach((b) => {
+        const on = b.dataset.spark === SPARK;
+        b.classList.toggle("is-on", on);
+        b.setAttribute("aria-pressed", String(on));
+      });
+    }
+    if (note) note.hidden = !(lines && narrowedWithin());
   }
 
   /* ── filters ─────────────────────────────────────────────────────────── */
@@ -276,7 +347,7 @@
 
   function fillFilters() {
     const opt = (v, t) => `<option value="${esc(v)}">${esc(t)}</option>`;
-    el("tbProduct").innerHTML = opt("", "All trackers") + products().map((p) => opt(p.key, p.label)).join("");
+    el("tbProduct").innerHTML = opt("", "All products") + products().map((p) => opt(p.key, p.label)).join("");
 
     fillOwners();
 
@@ -288,7 +359,7 @@
       const n = ROWS.filter((r) => r.section === s.id).length;
       return opt(s.id, `${s.label} (${n})`);
     }).join("");
-    el("tbSort").innerHTML = SORTS.map((s) => opt(s.id, "Order: " + s.label)).join("");
+    el("tbSort").innerHTML = SORTS.map((s) => opt(s.id, s.label)).join("");
     syncControls();
   }
 
@@ -366,7 +437,7 @@
   function renderSummary() {
     const sec = sectionOf(f.section);
     const rows = ROWS.filter((r) => r.section === f.section);
-    const trackers = new Set(rows.map((r) => r.product)).size;
+    const productCount = new Set(rows.map((r) => r.product)).size;
     const noWork = rows.filter((r) => !hasWorkaround(r.workaround)).length;
     const passed = rows.filter(etaPassed).length;
     const owners = {};
@@ -379,20 +450,27 @@
     const ownerChips = VENDORS.filter((v) => owners[v]).map((v) =>
       chip("owner", v, f.owner === v, `${esc(v)} <b>${owners[v]}</b>`)).join("");
 
+    /* The total weighted score of the whole section, alone in the top right
+       of the band, its description beneath it. Hidden where there is nothing
+       to add up: closed and removed bugs carry a Priority Estimator Score in
+       that column instead. */
     const tot = scoreTotal(rows);
-    const grand = totalsApply(sec) && tot.scored
-      ? `<div class="tb-grand" title="${esc(`The weighted scores of ${plural(tot.scored, "bug", "bugs")} added together` +
-            (tot.unscored ? ` — ${plural(tot.unscored, "bug has", "bugs have")} no score and ${tot.unscored === 1 ? "is" : "are"} not counted` : ""))}">
-           <span class="tb-grand-n">${fmtNum(tot.total)}</span>
-           <span class="tb-grand-l">Total weighted score
-             <small>all ${plural(trackers, "tracker", "trackers")} combined${tot.unscored ? ` · ${tot.unscored} not scored` : ""}</small>
-           </span>
-         </div>`
-      : "";
+    const hero = el("tbHeroScore");
+    if (hero) {
+      const show = totalsApply(sec) && tot.scored > 0;
+      hero.hidden = !show;
+      if (show) {
+        el("tbHeroScoreN").textContent = fmtNum(tot.total);
+        hero.title = `The weighted scores of ${plural(tot.scored, "bug", "bugs")} across ` +
+          `${plural(productCount, "product", "products")} added together` +
+          (tot.unscored ? ` — ${plural(tot.unscored, "bug has", "bugs have")} no score and ` +
+                          `${tot.unscored === 1 ? "is" : "are"} not counted` : "");
+      }
+    }
 
-    el("tbSummary").innerHTML = grand +
+    el("tbSummary").innerHTML =
       `<div class="tb-total"><b>${rows.length}</b> ${esc(rows.length === 1 ? sec.one : sec.many)}` +
-        (trackers ? ` across <b>${trackers}</b> tracker${trackers === 1 ? "" : "s"}` : "") + `</div>` +
+        (productCount ? ` across <b>${productCount}</b> product${productCount === 1 ? "" : "s"}` : "") + `</div>` +
       `<div class="tb-chips">` +
         (noWork ? chip("workaround", "no", f.workaround === "no",
           `<span class="tb-ico" aria-hidden="true">⊘</span><b>${noWork}</b> with no workaround listed`) : "") +
@@ -539,6 +617,7 @@
     if (!ROWS) return;
     syncControls();
     renderSummary();
+    if (TREND) TREND.hideSparkTip();
 
     const sec = sectionOf(f.section);
     const all = ROWS.filter((r) => r.section === f.section);
@@ -552,24 +631,26 @@
       : "";
 
     if (!shown.length) {
+      paintSparkBar("none");
       host.innerHTML = all.length
         ? `<div class="ei-empty"><strong>Nothing matches.</strong>
              <p>No ${esc(sec.many)} match these filters. <button type="button" class="tb-link" data-clear>Clear the filters</button></p></div>`
         : `<div class="ei-empty"><strong>No ${esc(sec.many)}.</strong>
-             <p>The tracker lists none this week.</p></div>`;
+             <p>The TS Product Tracker lists none this week.</p></div>`;
       return;
     }
 
     const sort = sorter();
     const order = sortOf(f.sort);
+    paintSparkBar(order.layout);
 
     if (order.layout === "list") {
       const list = shown.slice().sort(sort);
-      const trackers = new Set(list.map((r) => r.product)).size;
+      const productCount = new Set(list.map((r) => r.product)).size;
       host.innerHTML = `
         <div class="tb-list">
           <p class="tb-list-head"><b>${plural(list.length, sec.one, sec.many)}</b>
-            ${trackers > 1 ? `across ${trackers} trackers, ` : ""}${esc(order.heading)}</p>
+            ${productCount > 1 ? `across ${productCount} products, ` : ""}${esc(order.heading)}</p>
           ${list.map((r) => bugCard(r, true)).join("")}
         </div>`;
       return;
@@ -628,6 +709,7 @@
               <span class="tb-group-name">${esc(p.label)}</span>
               <span class="tb-group-meta">${meta}</span>
             </span>
+            ${sparkFor(p, sec)}
             ${total}
           </button>
           <div class="tb-group-body"${open ? "" : " hidden"}>
@@ -676,6 +758,28 @@
       const k = c.dataset.set, v = c.dataset.value;
       f[k] = f[k] === v ? "" : v;
       onFilterChange();
+    });
+
+    // The line in each product: its count or its weighted score. Redrawing
+    // keeps whichever compartment is open, open.
+    const mode = el("tbSparkMode");
+    if (mode) mode.addEventListener("click", (e) => {
+      const b = e.target.closest("[data-spark]");
+      if (!b || b.dataset.spark === SPARK) return;
+      SPARK = b.dataset.spark;
+      try { localStorage.setItem(SPARK_KEY, SPARK); } catch (err) { /* not remembered, still switched */ }
+      render();
+    });
+
+    // The chart is drawn to its width in pixels, so it is redrawn when that
+    // changes — once the resizing has settled, and only while it is showing.
+    let rt = null;
+    window.addEventListener("resize", () => {
+      clearTimeout(rt);
+      rt = setTimeout(() => {
+        const t = el("tbTrend");
+        if (t && t._redraw && !t.hidden && !el("tbView").hidden) t._redraw();
+      }, 160);
     });
 
     // Delegated: the compartments are redrawn on every filter change.

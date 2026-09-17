@@ -718,7 +718,75 @@ window.SS.WORKBOOKS = {
     ],
   },
 
-  /* ═══════════ 5. Student Services Hub Analytics ═══════════
+  /* ═══════════ 5. Cap Guide ═══════════
+     The Bridge's Cap Walkthrough Guide (cap-guide/index.html) reads these two
+     tables live on every page load — see supabase/cap-guide.sql for the RLS
+     and cap-guide/js/cap-guide.js for the reader. Two flat sheets, matching
+     every other workbook here, rather than one sheet with nested rows: an
+     item's Section column is a live dropdown of section titles (built from
+     cap_guide_sections by the workbook's optionsFrom mechanism below) instead
+     of a raw section_id a PM would have to look up by number. */
+  cap_guide: {
+    label: "Cap Guide",
+    subtitle: "Cap Walkthrough Guide",
+    accent: "cap_guide",
+    sheets: [
+      {
+        key: "cap_guide_sections",
+        label: "Sections",
+        table: "cap_guide_sections",
+        order: "audience.asc,sort_order.asc",
+        columns: [
+          { key: "audience",    label: "Audience",    type: "select",   width: 130, required: true,
+            options: [
+              { value: "team_member", label: "Team Member" },
+              { value: "leader",      label: "Leader" },
+            ],
+            help: "Which tab of the guide this section appears under." },
+          { key: "sort_order",  label: "Order",       type: "number",   width: 80,
+            help: "Where this section falls within its audience, lowest first." },
+          { key: "section_key", label: "Section Key", type: "text",     width: 150, required: true,
+            help: "A short, unique-per-audience code (e.g. \"step_1\"). Not shown on the page." },
+          { key: "title",       label: "Title",       type: "text",     width: 260, required: true },
+          { key: "intro",       label: "Intro",       type: "longtext", width: 320,
+            help: "Optional paragraph shown under the heading, before its items." },
+        ],
+      },
+      {
+        key: "cap_guide_items",
+        label: "Items",
+        table: "cap_guide_items",
+        order: "section_id.asc,sort_order.asc",
+        columns: [
+          { key: "section_id",  label: "Section",     type: "select",   width: 220, required: true,
+            options: [],
+            optionsFrom: { table: "cap_guide_sections", value: "id", label: "title",
+                           order: "audience.asc,sort_order.asc" },
+            help: "Which section this bullet or paragraph belongs to." },
+          { key: "sort_order",  label: "Order",       type: "number",   width: 80,
+            help: "Where this item falls within its section, lowest first." },
+          { key: "kind",        label: "Kind",        type: "select",   width: 120, required: true,
+            options: [
+              { value: "paragraph", label: "Paragraph" },
+              { value: "list_item", label: "List item" },
+            ] },
+          { key: "indent",      label: "Indent",      type: "select",   width: 90,
+            options: [
+              { value: "0", label: "0" },
+              { value: "1", label: "1" },
+            ],
+            help: "1 nests a lettered sub-list under a numbered one. Ignored for paragraphs." },
+          { key: "body",        label: "Body",        type: "longtext", width: 380 },
+          { key: "link_label",  label: "Link Label",  type: "text",     width: 160,
+            help: "Optional — the visible text of one inline or trailing link." },
+          { key: "link_url",    label: "Link URL",    type: "url",      width: 110, linkLabel: "Open ↗",
+            help: "Optional. Leave both link fields blank for an item with no link." },
+        ],
+      },
+    ],
+  },
+
+  /* ═══════════ 6. Student Services Hub Analytics ═══════════
      How the hub is actually being used: which pages, by how many distinct
      people, and the daily shape of visits and sign-ins. Read-only throughout —
      an audit trail that can be edited is worth less than one that cannot. */

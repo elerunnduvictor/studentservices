@@ -631,7 +631,14 @@ export class Grid {
         break;
       }
       case "select": {
-        const opt = (col.options || []).find((o) => (o.value ?? o) === value);
+        // String comparison, not ===: a live-loaded FK option's value is
+        // whatever its source table's key type is (a bigint id often comes
+        // back from PostgREST as a JS number), while a value just picked in
+        // this sheet's own dropdown is always the string an <option> element
+        // holds. Every existing hardcoded column already gets its match on
+        // the first (strict-equal) comparison a String() coercion would also
+        // make, so this only adds matches, never removes one.
+        const opt = (col.options || []).find((o) => String(o.value ?? o) === String(value));
         const tone = opt && opt.tone ? opt.tone : "grey";
         const pill = document.createElement("span");
         pill.className = "pill " + tone;

@@ -431,6 +431,13 @@ body[data-book="analytics"] {
 }
 [data-theme="dark"] body[data-book="analytics"] { --accent: #5FB6C4; --accent-soft: rgba(95,182,196,.16); }
 .tab[data-book="analytics"] .dot { background: var(--bp-teal-mid); }
+body[data-book="cap_guide"] {
+  --accent: var(--bp-green);
+  --accent-soft: rgba(162, 194, 61, .14);
+  --accent-line: rgba(162, 194, 61, .40);
+}
+[data-theme="dark"] body[data-book="cap_guide"] { --accent: #B7D467; --accent-soft: rgba(183,212,103,.16); }
+.tab[data-book="cap_guide"] .dot { background: var(--bp-green); }
 
 /* ══════════════ NESTED SHEET TABS ══════════════
    The second row, shown when a top-level tab stands for several sheets — a

@@ -164,6 +164,32 @@
         <p class="tb-source" id="tbSource"></p>
       </div>
 
+      <!-- Two ways in: the ten heaviest bugs, which is what most readers come
+           for, and the whole backlog behind them. js/tech-bugs.js switches
+           them; #bugs/top and #bugs/backlog in the address say which. -->
+      <nav class="tb-subs" id="tbSubs" role="tablist" aria-label="Which bugs">
+        <button type="button" class="tb-sub is-on" data-sub="top" id="tbSubTop"
+                role="tab" aria-selected="true" aria-controls="tbTop">
+          Top 10 Tech Bugs
+        </button>
+        <button type="button" class="tb-sub" data-sub="backlog" id="tbSubBacklog"
+                role="tab" aria-selected="false" aria-controls="tbBacklog" tabindex="-1">
+          Bugs Backlog <span class="ei-view-n" id="tbSubCount" hidden></span>
+        </button>
+      </nav>
+
+      <!-- ── the ten heaviest ── -->
+      <section class="tt" id="tbTop" role="tabpanel" aria-labelledby="tbSubTop">
+        <div class="tt-summary" id="tbTopSummary" aria-label="At a glance"></div>
+        <section class="tr" id="tbTopTrend" hidden></section>
+        <div class="tt-list" id="tbTopList">
+          <div class="ei-empty"><strong>Loading the heaviest bugs…</strong></div>
+        </div>
+      </section>
+
+      <!-- ── the whole backlog ── -->
+      <div id="tbBacklog" role="tabpanel" aria-labelledby="tbSubBacklog" hidden>
+
       <div class="tb-summary" id="tbSummary" aria-label="At a glance"></div>
 
       <!-- The backlog over the weeks, drawn by js/tech-bugs-trend.js from
@@ -206,6 +232,7 @@
 
       <div class="tb-groups" id="tbGroups">
         <div class="ei-empty"><strong>Loading the bug backlog…</strong></div>
+      </div>
       </div>
     </section>
     </main>

@@ -6,21 +6,37 @@
    supabase/tech-bugs.sql, and running that replaces this week's list. Nothing
    on this tab writes to the database, and there is no form.
 
-   One compartment per tracker tab — Admissions / EE, Finance, Canvas, … — the
-   way the OKR page groups its sub-key results: a header that says what is
-   inside, and the bugs under it. Opening one closes the others, until the
-   reader filters or searches; then every compartment with a match opens, since
-   the point of searching is to see what was found.
+   Two sub-tabs. **Top 10 Tech Bugs** opens first: the ten heaviest open bugs
+   across every product, what they are, who has them, and how that ten has
+   moved. **Bugs Backlog** is the whole list behind them.
+
+   The ten are ordered by weighted score, because a priority number is given
+   per product and says nothing across products — Admissions' 1 and Finance's
+   1 are different bugs. Ties go to the bug with no workaround, then the one
+   affecting more students, then the longest-standing. The same order is
+   written down once more, in tools/build-tech-bugs.py, which snapshots the
+   twenty heaviest at each capture so the tab can say what entered the ten,
+   what dropped out, and how long each has been up there.
+
+   In the backlog sub-tab, one compartment per tracker tab — Admissions / EE,
+   Finance, Canvas, … — the way the OKR page groups its sub-key results: a
+   header that says what is inside, and the bugs under it. Opening one closes
+   the others, until the reader filters or searches; then every compartment
+   with a match opens, since the point of searching is to see what was
+   found.
 
    Each bug carries the ten columns the tracker keeps for it: Priority,
    Discovered, Bug / ADO, Scope, Summary, Owner, Updated ETA, Workaround, Latest
    Status and Weighted Score. The face of the card holds what tells two bugs
    apart at a glance; opening it shows the rest.
 
-   Under the summary, the backlog week by week; in each compartment's header,
-   that product's own line. Both are drawn by js/tech-bugs-trend.js from
-   tech_bug_history, which each weekly run of the SQL adds a week to. Without
-   that table, or before its first week, the tab simply has no lines.
+   Under the summary, the backlog over time; in each compartment's header,
+   that product's own line. Both are drawn by js/tech-bugs-trend.js. The
+   points come from tech_bug_trend(grain, since) — supabase/tech-bug-trend.sql
+   — which groups tech_bug_history into one row per point, so the page reads a
+   hundred rows however long the record grows. Before that function exists the
+   page falls back to reading the history table and grouping it here; without
+   the table at all, the tab simply has no lines.
 
    Who may read it is decided by the database, with the same rule as the
    register: tech_bugs' policy calls hub_sees_emerging_issues(). This file
@@ -37,7 +53,8 @@
 
   /* Read before anything else runs: the register replaces the address when it
      arrives on #raise, and this has to know what the reader asked for. */
-  const ASKED_FOR_BUGS = location.hash === "#bugs";
+  const ASKED_FOR_BUGS = location.hash.indexOf("#bugs") === 0;
+  const ASKED_FOR_SUB = location.hash === "#bugs/backlog" ? "backlog" : "top";
 
   /* The four sections a tracker sheet keeps, and what each calls two of its
      columns. "Latest Status" becomes the reason a bug left the backlog; the
@@ -157,9 +174,32 @@
   const COLLAPSED = new Set();  // compartments closed by hand while filtering
   let OPEN_BUG = null;
 
-  let HISTORY = null;           // one row per week, product and section; null when none
+  /* Which sub-tab is showing, and the captures of the heaviest bugs behind
+     the Top 10 tab. The list itself is always ranked from the live rows, so
+     it cannot disagree with the backlog; the captures are only for the
+     trends, what entered and left, and how long each bug has been up. */
+  const TOP_N = 10;
+  let SUB = "top";
+  let TOP_POINTS = null;
+  const TOP_CACHE = new Map();
+
+  let POINTS = null;            // one object per point on the lines; null when none
+  let RAW_HISTORY = null;       // the fallback's rows, read once if it is needed
   let DRAWN = false;            // the lines draw themselves in once, not on every filter
   const TREND = window.TBTrend || null;
+  const TREND_CACHE = new Map();
+
+  /* How far back the lines reach and how coarse their points are. Remembered
+     in this browser; a browser that will not remember it starts on the
+     nineties days, a point a week. */
+  const RANGE_KEY = "tb-trend-range", GRAIN_KEY = "tb-trend-grain";
+  const remembered = (key, fallback, ok) => {
+    try { const v = localStorage.getItem(key); return v && ok(v) ? v : fallback; } catch (e) { return fallback; }
+  };
+  let RANGE = !TREND ? "90d" : remembered(RANGE_KEY, TREND.DEFAULTS.range,
+    (v) => TREND.RANGES.some((r) => r.id === v));
+  let GRAIN = !TREND ? "week" : remembered(GRAIN_KEY, TREND.DEFAULTS.grain,
+    (v) => TREND.rangeOf(RANGE).grains.indexOf(v) >= 0);
   /* What the line in each product follows — its bug count or its weighted
      score. Remembered in this browser; a browser that will not remember it
      just starts on the count. */
@@ -219,9 +259,71 @@
       load();
       // Drawn at the width it had; the window may have changed while the
       // register was showing.
-      const t = el("tbTrend");
+      const t = SUB === "top" ? el("tbTopTrend") : el("tbTrend");
       if (t && t._redraw) t._redraw();
     }
+  }
+
+  /* ── the two sub-tabs ─────────────────────────────────────────────────── */
+  function switchSub(sub, fromReader) {
+    SUB = sub === "backlog" ? "backlog" : "top";
+    if (el("tbTop")) el("tbTop").hidden = SUB !== "top";
+    if (el("tbBacklog")) el("tbBacklog").hidden = SUB !== "backlog";
+    document.querySelectorAll("#tbSubs .tb-sub").forEach((b) => {
+      const on = b.dataset.sub === SUB;
+      b.classList.toggle("is-on", on);
+      b.setAttribute("aria-selected", String(on));
+      b.tabIndex = on ? 0 : -1;
+    });
+    // The total in the band belongs to the whole open backlog, which is what
+    // both sub-tabs are about, so it stays put.
+    if (fromReader) {
+      history.replaceState(null, "", SUB === "backlog" ? "#bugs/backlog" : "#bugs");
+    }
+    // Drawn to the width it has now: a chart in a hidden panel has none.
+    const host = SUB === "top" ? el("tbTopTrend") : el("tbTrend");
+    if (host && host._redraw) host._redraw();
+  }
+
+  function wireSubs() {
+    const nav = el("tbSubs");
+    if (!nav) return;
+    nav.addEventListener("click", (e) => {
+      const b = e.target.closest(".tb-sub");
+      if (b) switchSub(b.dataset.sub, true);
+    });
+    nav.addEventListener("keydown", (e) => {
+      if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+      const tabs = [...nav.querySelectorAll(".tb-sub")];
+      const i = tabs.indexOf(document.activeElement);
+      if (i < 0) return;
+      const next = tabs[(i + (e.key === "ArrowRight" ? 1 : tabs.length - 1)) % tabs.length];
+      next.focus();
+      switchSub(next.dataset.sub, true);
+    });
+  }
+
+  /* One open card at a time in the Top 10 list, toggled in place. */
+  function wireTopList() {
+    const host = el("tbTopList");
+    if (!host) return;
+    host.addEventListener("click", (e) => {
+      const head = e.target.closest(".tt-bug-head");
+      if (!head) return;
+      const card = head.closest(".tt-bug"), key = card.dataset.key;
+      const was = OPEN_BUG === key;
+      host.querySelectorAll(".tt-bug.is-open").forEach((c) => {
+        c.classList.remove("is-open");
+        c.querySelector(".tt-bug-head").setAttribute("aria-expanded", "false");
+        c.querySelector(".tb-bug-body").hidden = true;
+      });
+      OPEN_BUG = was ? null : key;
+      if (!was) {
+        card.classList.add("is-open");
+        head.setAttribute("aria-expanded", "true");
+        card.querySelector(".tb-bug-body").hidden = false;
+      }
+    });
   }
 
   function wireViews() {
@@ -254,28 +356,28 @@
     } catch (e) { /* the tab simply shows no number */ }
   }
   function paintCount(n) {
-    const c = el("tbViewCount");
-    if (!c) return;
-    c.textContent = n;
-    c.hidden = !n;
+    [el("tbViewCount"), el("tbSubCount")].forEach((c) => {
+      if (!c) return;
+      c.textContent = n;
+      c.hidden = !n;
+    });
   }
 
   function load() {
     if (LOADING) return LOADING;
     LOADING = Promise.all([
       SS.db.select("tech_bugs", { order: "product_order.asc,row_order.asc" }),
-      // The notes and the history are niceties; a missing table must not
-      // cost the bugs.
+      // The notes and the lines are niceties; a missing table or function
+      // must not cost the bugs.
       SS.db.select("tech_bug_notes", { order: "note_order.asc" }).catch(() => []),
-      TREND ? SS.db.select("tech_bug_history", { order: "captured_on.asc,product_order.asc" }).catch(() => null)
-            : Promise.resolve(null),
-    ]).then(([rows, notes, hist]) => {
+      loadPoints(),
+      loadTopPoints(),
+    ]).then(([rows, notes]) => {
       ROWS = (rows || []).map((r) => Object.assign({}, r, {
         score: r.score == null || r.score === "" ? null : Number(r.score),
         bug_refs: Array.isArray(r.bug_refs) ? r.bug_refs : [],
       }));
       NOTES = notes || [];
-      HISTORY = Array.isArray(hist) && hist.length ? hist : null;
       const open = ROWS.filter((r) => r.section === "active");
       MAX_SCORE = Math.max(1, ...open.map((r) => r.score).filter((n) => Number.isFinite(n)));
       paintCount(open.length);
@@ -283,6 +385,7 @@
       fillFilters();
       renderTrend();
       render();
+      renderTopTab();
       DRAWN = true;
     }).catch((err) => {
       LOADING = null;          // let the next visit to the tab try again
@@ -297,18 +400,74 @@
     return LOADING;
   }
 
-  // Where the list comes from and how often. The date the workbook was saved
-  // is not repeated here: the chart under the summary already shows it.
+  // Where the list comes from. Neither the date the workbook was saved nor how
+  // often it is loaded is repeated here: the charts carry the dates, and the
+  // cadence changes.
   function paintSource() {
-    el("tbSource").textContent = "From the TS Product Tracker, updated weekly.";
+    el("tbSource").textContent = "From the TS Product Tracker.";
   }
 
-  /* ── the weeks behind it ─────────────────────────────────────────────── */
+  /* ── the points behind the lines ────────────────────────────────────────
+     tech_bug_trend() groups the history into one row per point, which keeps
+     the read small however many captures pile up. Before that function has
+     been created the history table is read once and grouped here instead, so
+     a page deployed ahead of the SQL still draws. */
+  async function loadPoints() {
+    if (!TREND) return;
+    const key = GRAIN + "|" + RANGE;
+    if (TREND_CACHE.has(key)) { POINTS = TREND_CACHE.get(key); return; }
+    const sinceDay = TREND.since(RANGE, TODAY);
+    let points = null;
+    try {
+      const rows = await SS.db.rpc("tech_bug_trend", { p_grain: GRAIN, p_since: sinceDay });
+      points = TREND.fromRpc(rows);
+    } catch (err) {
+      if (RAW_HISTORY === null) {
+        RAW_HISTORY = await SS.db.select("tech_bug_history",
+          { order: "captured_on.asc,product_order.asc" }).catch(() => false);
+      }
+      points = RAW_HISTORY ? TREND.fromHistory(RAW_HISTORY, GRAIN, sinceDay) : null;
+    }
+    // A point a week says nothing about a record three days long: fall back to
+    // a point a day rather than drawing one dot.
+    if (points && points.length < 2 && GRAIN !== "day") {
+      GRAIN = "day";
+      TREND_CACHE.set(key, points);
+      return loadPoints();
+    }
+    POINTS = points && points.length ? points : null;
+    TREND_CACHE.set(key, POINTS);
+  }
+
+  /* The range and the grain belong to the page, not to one card: both tabs
+     draw the same window, so switching tab never switches the question. */
+  function onPickChange(pick) {
+    if (pick.range) {
+      RANGE = pick.range;
+      // A grain the new range cannot carry steps back to one it can.
+      if (TREND.rangeOf(RANGE).grains.indexOf(GRAIN) < 0) GRAIN = TREND.rangeOf(RANGE).grains[0];
+    }
+    if (pick.grain) GRAIN = pick.grain;
+    try {
+      localStorage.setItem(RANGE_KEY, RANGE);
+      localStorage.setItem(GRAIN_KEY, GRAIN);
+    } catch (e) { /* not remembered, still changed */ }
+    [el("tbTrend"), el("tbTopTrend")].forEach((h) => h && h.classList.add("is-loading"));
+    Promise.all([loadPoints(), loadTopPoints()]).then(() => {
+      [el("tbTrend"), el("tbTopTrend")].forEach((h) => h && h.classList.remove("is-loading"));
+      renderTrend();
+      render();
+      renderTopTab();
+    });
+  }
+
   function renderTrend() {
     const host = el("tbTrend");
     if (!host) return;
-    if (!TREND || !HISTORY) { host.hidden = true; return; }
-    TREND.renderMain(host, HISTORY, { animate: !DRAWN });
+    if (!TREND || !POINTS) { host.hidden = true; return; }
+    TREND.renderMain(host, POINTS, {
+      grain: GRAIN, range: RANGE, animate: !DRAWN, onChange: onPickChange,
+    });
     TREND.wireSparks(el("tbGroups"));
   }
 
@@ -316,16 +475,16 @@
      being read. Its weighted score only where the section has one to add up
      and the reader has asked for it; otherwise its count. */
   function sparkFor(p, sec) {
-    if (!TREND || !HISTORY || narrowedWithin()) return "";
+    if (!TREND || !POINTS || narrowedWithin()) return "";
     const metric = totalsApply(sec) ? SPARK : "bugs";
-    return TREND.productSpark(HISTORY, p.key, f.section, metric, { animate: !DRAWN });
+    return TREND.productSpark(POINTS, p.key, f.section, metric, { animate: !DRAWN });
   }
 
   /* The switch above the compartments, and the note that stands in for it
      while the list is filtered. Neither shows when there are no lines. */
   function paintSparkBar(layout) {
     const sec = sectionOf(f.section);
-    const lines = !!(TREND && HISTORY) && layout === "groups";
+    const lines = !!(TREND && POINTS) && layout === "groups";
     const mode = el("tbSparkMode"), note = el("tbSparkNote");
     if (mode) {
       mode.hidden = !(lines && !narrowedWithin() && totalsApply(sec));
@@ -336,6 +495,48 @@
       });
     }
     if (note) note.hidden = !(lines && narrowedWithin());
+  }
+
+  /* ── the ten heaviest ────────────────────────────────────────────────────
+     The order is the one written down in tools/build-tech-bugs.py, and it has
+     to stay in step with it: weighted score first, then the bug with no
+     workaround, then the larger scope, then the longest-standing, then the
+     workbook's own order. */
+  const scopeSize = (v) => {
+    const m = /\d[\d,]*/.exec(v == null ? "" : String(v));
+    return m ? Number(m[0].replace(/,/g, "")) : -1;
+  };
+  function rankOpen(rows) {
+    return rows.filter((r) => r.section === "active" && Number.isFinite(r.score)).slice().sort((a, b) =>
+      b.score - a.score ||
+      (hasWorkaround(a.workaround) ? 1 : 0) - (hasWorkaround(b.workaround) ? 1 : 0) ||
+      scopeSize(b.scope) - scopeSize(a.scope) ||
+      String(a.discovered_on || "2100-01-01").localeCompare(String(b.discovered_on || "2100-01-01")) ||
+      a.product_order - b.product_order || a.row_order - b.row_order);
+  }
+  /* What makes this bug the same bug at the next capture — its first ticket
+     number, or its title where the tracker gives none. Matches bug_key() in
+     the builder. */
+  function bugKey(r) {
+    if (r.bug_refs && r.bug_refs.length) return String(r.bug_refs[0].id);
+    return oneLine(r.bug_title || r.bug || "").toLowerCase().slice(0, 200);
+  }
+
+  async function loadTopPoints() {
+    if (!TREND) return;
+    const key = GRAIN + "|" + RANGE;
+    if (TOP_CACHE.has(key)) { TOP_POINTS = TOP_CACHE.get(key); return; }
+    let pts = null;
+    try {
+      const rows = await SS.db.rpc("tech_bug_top_trend",
+        { p_grain: GRAIN, p_since: TREND.since(RANGE, TODAY) });
+      pts = (rows || []).map((r) => ({ day: String(r.bucket || "").slice(0, 10), top: r.top || [] }))
+        .filter((x) => x.day && x.top.length);
+    } catch (err) {
+      pts = null;      // the snapshot table is not there yet; the list still works
+    }
+    TOP_POINTS = pts && pts.length ? pts : null;
+    TOP_CACHE.set(key, TOP_POINTS);
   }
 
   /* ── filters ─────────────────────────────────────────────────────────── */
@@ -478,6 +679,145 @@
           `<span class="tb-ico" aria-hidden="true">⏱</span><b>${passed}</b> past their updated ETA`) : "") +
         (ownerChips ? `<span class="tb-chips-sep" aria-hidden="true"></span>${ownerChips}` : "") +
       `</div>`;
+  }
+
+  /* ── the Top 10 tab ──────────────────────────────────────────────────────
+     The list is ranked from the rows on screen, so it can never disagree with
+     the backlog behind it. The captures only answer what counting cannot:
+     what entered the ten, what dropped out, and how long each has been up. */
+  function topTen() { return ROWS ? rankOpen(ROWS).slice(0, TOP_N) : []; }
+
+  /** The day a bug has been in the ten since, unbroken, or null. */
+  function inTenSince(key) {
+    if (!TOP_POINTS || !TREND) return null;
+    return TREND.top.tenure(TOP_POINTS, key);
+  }
+
+  function renderTopSummary(ten) {
+    const host = el("tbTopSummary");
+    if (!host) return;
+    const allOpen = ROWS.filter((r) => r.section === "active");
+    const weight = ten.reduce((a, r) => a + r.score, 0);
+    const whole = scoreTotal(allOpen).total;
+    const share = whole ? Math.round((weight / whole) * 100) : 0;
+    const byProduct = {};
+    ten.forEach((r) => { byProduct[r.product_label] = (byProduct[r.product_label] || 0) + 1; });
+    const worst = Object.entries(byProduct).sort((a, b) => b[1] - a[1])[0];
+    const noWork = ten.filter((r) => !hasWorkaround(r.workaround)).length;
+    const passed = ten.filter(etaPassed).length;
+    const dated = ten.map((r) => r.discovered_on).filter(isDay).sort();
+    const oldest = dated.length ? daysSince(dated[0]) : null;
+
+    host.innerHTML =
+      `<div class="tt-weight">
+         <div class="tt-weight-n">${fmtNum(weight)}</div>
+         <div class="tt-weight-l">Weight the ten carry</div>
+         <p class="tt-weight-d">${share}% of the ${fmtNum(whole)} on the whole open backlog,
+            from ${plural(ten.length, "bug", "bugs")} of ${allOpen.length}.</p>
+       </div>
+       <div class="tt-chips">
+         ${worst ? `<span class="tt-chip"><b>${worst[1]}</b> in ${esc(worst[0])}</span>` : ""}
+         <span class="tt-chip">across <b>${Object.keys(byProduct).length}</b> products</span>
+         ${noWork ? `<span class="tt-chip is-warn"><span class="tb-ico" aria-hidden="true">⊘</span>
+            <b>${noWork}</b> with no workaround</span>` : ""}
+         ${passed ? `<span class="tt-chip is-warn"><span class="tb-ico" aria-hidden="true">⏱</span>
+            <b>${passed}</b> past ${passed === 1 ? "its" : "their"} ETA</span>` : ""}
+         ${oldest != null ? `<span class="tt-chip">oldest open <b>${fmtNum(oldest)}</b> days</span>` : ""}
+       </div>`;
+  }
+
+  /* What changed at the top since the capture before: named, not counted. */
+  function movementHtml() {
+    if (!TOP_POINTS || TOP_POINTS.length < 2 || !TREND) {
+      return `<p class="tt-move is-quiet">${TOP_POINTS
+        ? "The first capture on record — what enters and leaves the ten shows from the next one."
+        : "Once supabase/tech-bugs.sql has recorded a capture of the heaviest bugs, this says what entered the ten and what dropped out."}</p>`;
+    }
+    const now = TOP_POINTS[TOP_POINTS.length - 1], was = TOP_POINTS[TOP_POINTS.length - 2];
+    const inn = TREND.top.entrants(now, was) || [], out = TREND.top.leavers(now, was);
+    const list = (bugs) => bugs.map((b) =>
+      `<span class="tt-move-b"><i class="tb-trk">${esc(b.label)}</i>${esc(b.title)}
+         <b>${fmtNum(Number(b.score))}</b></span>`).join("");
+    if (!inn.length && !out.length) {
+      return `<p class="tt-move is-quiet">The same ten as ${esc(fmtDay(was.day))} — no changes at the top.</p>`;
+    }
+    return `<div class="tt-move">
+      ${inn.length ? `<div class="tt-move-side"><h4>Into the ten since ${esc(fmtDay(was.day))}</h4>${list(inn)}</div>` : ""}
+      ${out.length ? `<div class="tt-move-side is-out"><h4>Out of the ten</h4>${list(out)}</div>` : ""}
+    </div>`;
+  }
+
+  function topCard(r, rank) {
+    const sec = sectionOf("active");
+    const key = keyOf(r);
+    const open = OPEN_BUG === key;
+    const eta = etaText(r), passed = etaPassed(r), disc = discoveredText(r);
+    const age = isDay(r.discovered_on) ? daysSince(r.discovered_on) : null;
+    const scope = scopeText(r.scope);
+    const work = hasWorkaround(r.workaround);
+    const since = inTenSince(bugKey(r));
+    const dash = '<span class="tb-dash">—</span>';
+    const etaFull = r.updated_eta && !isDay(r.updated_eta) ? String(r.updated_eta) : "";
+
+    return `
+      <article class="tt-bug${open ? " is-open" : ""}${work ? "" : " no-work"}" data-key="${esc(key)}">
+        <button type="button" class="tt-bug-head" aria-expanded="${open}">
+          <span class="tt-rank${rank <= 3 ? " is-top" : ""}" aria-label="Number ${rank}">${rank}</span>
+          <span class="tt-bug-main">
+            <span class="tt-bug-top">
+              <span class="tb-trk">${esc(r.product_label)}</span>
+              ${r.bug_refs.length ? `<span class="tb-refs">${refsHtml(r)}</span>` : ""}
+              ${work ? "" : `<span class="tb-nowork"><span aria-hidden="true">⊘</span> No workaround</span>`}
+              ${since ? `<span class="tt-since" title="${esc("In the top ten since " + fmtDay(since))}">in the ten since ${esc(fmtDay(since))}</span>` : ""}
+            </span>
+            <span class="tb-bug-title">${esc(titleOf(r))}</span>
+            <span class="tb-bug-meta">
+              <span><em>Owner</em> ${r.owner ? esc(oneLine(r.owner)) : dash}</span>
+              <span><em>Scope</em> ${scope ? esc(oneLine(scope)) : dash}</span>
+              <span class="tb-eta${passed ? " is-passed" : ""}"${etaFull ? ` title="${esc(oneLine(etaFull))}"` : ""}>
+                <em>Updated ETA</em> ${eta ? esc(eta) : dash}
+                ${passed ? ` <b class="tb-flag"><span aria-hidden="true">⏱</span> passed</b>` : ""}</span>
+              <span><em>Discovered</em> ${disc ? esc(disc) : dash}${age != null && age >= 0 ? ` <small>· ${plural(age, "day", "days")}</small>` : ""}</span>
+            </span>
+          </span>
+          ${scoreBlock(r, sec)}
+          <svg class="tb-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="tb-bug-body"${open ? "" : " hidden"}>
+          <dl class="tb-fields">
+            ${field("Summary", r.summary ? esc(r.summary) : null)}
+            ${field("Workaround", r.workaround ? esc(r.workaround) : null, work ? "" : "is-muted")}
+            ${field(sec.status, r.latest_status ? esc(r.latest_status) : null)}
+            ${etaFull.length > 30 || /\n/.test(etaFull) ? field("Updated ETA", esc(etaFull), passed ? "is-passed" : "") : ""}
+            ${field(sec.score, Number.isFinite(r.score) ? String(r.score) : null, "is-score", SCORE_NOTE)}
+          </dl>
+        </div>
+      </article>`;
+  }
+
+  function renderTopTab() {
+    if (!ROWS || !el("tbTopList")) return;
+    const ten = topTen();
+    renderTopSummary(ten);
+    const host = el("tbTopList");
+    host.innerHTML = ten.length
+      ? `<p class="tt-note">Ranked by weighted score. Where two bugs score the same, the one with no
+           workaround comes first, then the one affecting more students, then the longest-standing.</p>` +
+        ten.map((r, i) => topCard(r, i + 1)).join("")
+      : `<div class="ei-empty"><strong>No scored bugs on the open backlog.</strong>
+           <p>The tracker has no weighted scores to rank this week.</p></div>`;
+
+    const trend = el("tbTopTrend");
+    if (trend && TREND && TOP_POINTS) {
+      TREND.renderTop(trend, TOP_POINTS, {
+        grain: GRAIN, range: RANGE, animate: !DRAWN, after: movementHtml(),
+        onChange: onPickChange,
+      });
+    } else if (trend) {
+      trend.hidden = false;
+      trend.innerHTML = `<div class="tr-head"><h3 class="tr-title">The top ten over time</h3></div>` + movementHtml();
+    }
   }
 
   /* ── one bug ─────────────────────────────────────────────────────────── */
@@ -777,7 +1117,7 @@
     window.addEventListener("resize", () => {
       clearTimeout(rt);
       rt = setTimeout(() => {
-        const t = el("tbTrend");
+        const t = SUB === "top" ? el("tbTopTrend") : el("tbTrend");
         if (t && t._redraw && !t.hidden && !el("tbView").hidden) t._redraw();
       }, 160);
     });
@@ -843,7 +1183,10 @@
     if (!window.SS.access || !window.SS.access.canSeeEmergingIssues) return;
 
     wireViews();
+    wireSubs();
+    wireTopList();
     wireBugs();
+    switchSub(ASKED_FOR_SUB, false);
     if (ASKED_FOR_BUGS) setView("bugs", false);
     else loadCount();
   }

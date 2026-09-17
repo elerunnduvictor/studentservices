@@ -1,44 +1,46 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    TECHNICAL BUGS BACKLOG — THE LINES OVER TIME
 
-   Longitudinal line graphs for the second tab of the Emerging Issues page,
-   drawn from tech_bug_history: one row per weekly workbook, per product, per
-   section (supabase/tech-bugs.sql writes it). Nothing here is fetched; the
-   page hands these functions the rows and they return drawings.
+   Line graphs for the second tab of the Emerging Issues page, drawn from
+   tech_bug_history, which every run of supabase/tech-bugs.sql adds a capture
+   to. The grouping is done in the database by tech_bug_trend(grain, since)
+   — see supabase/tech-bug-trend.sql — so the page receives one row per point
+   on the chart however long the record grows.
 
-   Two things are drawn:
+   ── what the reader chooses ──────────────────────────────────────────────
+   How far back (7 days … everything on record) and how coarse each point is
+   (a day, a week, a month). A point is always a real capture: the latest one
+   inside that day, week or month, labelled with its own date. Nothing is
+   averaged.
 
-     · The backlog, week by week — under the summary, kept short so it sits
-       beside the page rather than taking it over. Two panels rather than one
-       chart with two scales: the bug counts in each section on the left, the
-       open backlog's total weighted score on the right. A count and a score
-       on one axis would flatten one of them; on two axes it would invite
-       comparing lines that do not share a unit.
+   ── stocks and flows ─────────────────────────────────────────────────────
+   Three panels, one unit each, because a count of what stands cannot share an
+   axis with a count of what changed without flattening one of them:
 
-     · A line in each product's header, in the gap between its counts and its
-       total score — that product's own weeks, in the colour of the section
-       being read, so the same colour means the same thing everywhere on the
-       tab. Where it stands now is the dot; how far it moved since the week
-       before is written above it.
+     · Open backlog — where the backlog stood at each point.
+     · Resolved and Removed — how many bugs left the backlog between one point
+       and the next. The tracker's Closed and Removed sheets are archives that
+       only climb, so drawing them said nothing; the database turns them into
+       per-period figures, counting the "Resolved This Week" staging list
+       alongside the Closed archive so a bug counts once, the day it leaves.
+     · Total weighted score — the weight carried by the open backlog.
+
+   ── in each product's header ─────────────────────────────────────────────
+   That product's own line, in the colour of the section being read, on the
+   same axis as every other product's so they read down the page together.
 
    ── the drawing rules ──
    Lines 2px with round joins; end-dots 8px with a 2px ring in the card's
-   colour so they read where lines cross; a 10% wash under a single line;
-   hairline solid gridlines; every value written in ink, never in the line's
-   colour, beside a short key that says which line it is. A legend always, for
-   more than one line. Hover finds the week, not the line: a crosshair snaps to
-   the nearest week and one readout lists every line there. The arrow keys do
-   the same from the keyboard, and every value is in the tables behind "See
-   the numbers", so nothing can only be reached by pointing.
+   colour; a 10% wash under a single line; hairline solid gridlines; values
+   written in ink, never in a line's colour, beside a short key in its colour.
+   A legend always, for more than one line. Hover finds the point, not the
+   line, and one readout lists every line there; the arrow keys do the same.
+   Time is to scale, so a gap in the record shows as a gap. Axes start at zero
+   unless a figure goes below it.
 
-   The four section colours are the Bridge's own red, teal, gold and purple,
-   stepped until they passed the palette validator — lightness band, chroma,
-   separation for colour-blind readers and for everyone, contrast against the
-   card — in light and in dark. See --tr-* in emerging-issues.css.
-
-   Time is to scale: weeks sit where their dates put them, so a missed week
-   shows as a longer gap rather than being quietly closed up. Every axis starts
-   at zero — a line that starts part-way up turns a small change into a cliff.
+   The section colours are the Bridge's own red, teal, gold and purple,
+   stepped until they passed the palette validator in light and in dark. See
+   --tr-* in emerging-issues.css.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 (function () {
@@ -49,100 +51,146 @@
 
   const SHORT = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
   const LONG = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
+  const MONTH = new Intl.DateTimeFormat("en-US", { month: "short", year: "numeric", timeZone: "UTC" });
   const dayOf = (v) => { const s = String(v || "").slice(0, 10); return /^\d{4}-\d{2}-\d{2}$/.test(s) ? s : ""; };
   const ms = (iso) => Date.parse(iso + "T00:00:00Z");
   const short = (iso) => SHORT.format(new Date(ms(iso)));
   const long = (iso) => LONG.format(new Date(ms(iso)));
   const fmt = (n) => (Number(n) || 0).toLocaleString("en-US", { maximumFractionDigits: 1 });
-  const fmtAxis = (v) => v >= 10000 ? fmt(v / 1000) + "k" : fmt(v);
-  const plural = (n, one, many) => fmt(n) + " " + (n === 1 ? one : many);
+  const fmtAxis = (v) => Math.abs(v) >= 10000 ? fmt(v / 1000) + "k" : fmt(v);
+  const plural = (n, one, many) => fmt(n) + " " + (Math.abs(n) === 1 ? one : many);
 
-  /* In palette order — the order the validator passed them in, which is what
-     keeps neighbouring colours apart for colour-blind readers. */
+  /* ── what the reader can ask for ──────────────────────────────────────────
+     A range, and how coarse its points are. Grains that would leave fewer
+     than two points in a range are not offered for it: a month has nothing
+     to say about seven days. */
+  const RANGES = [
+    { id: "7d",  label: "7 days",   days: 7,   grains: ["day"] },
+    { id: "30d", label: "30 days",  days: 30,  grains: ["day", "week"] },
+    { id: "90d", label: "90 days",  days: 90,  grains: ["day", "week", "month"] },
+    { id: "6m",  label: "6 months", days: 182, grains: ["week", "month"] },
+    { id: "1y",  label: "1 year",   days: 365, grains: ["week", "month"] },
+    { id: "all", label: "All",      days: null, grains: ["day", "week", "month"] },
+  ];
+  const GRAINS = [
+    { id: "day",   label: "Day",   one: "day",   many: "days",   before: "the day before",   point: "day" },
+    { id: "week",  label: "Week",  one: "week",  many: "weeks",  before: "the week before",  point: "week" },
+    { id: "month", label: "Month", one: "month", many: "months", before: "the month before", point: "month" },
+  ];
+  const rangeOf = (id) => RANGES.find((r) => r.id === id) || RANGES[2];
+  const grainOf = (id) => GRAINS.find((g) => g.id === id) || GRAINS[1];
+  const DEFAULTS = { range: "90d", grain: "week" };
+
+  /** The earliest capture a range wants, as a plain day, or null for all. */
+  function since(rangeId, today) {
+    const r = rangeOf(rangeId);
+    if (!r.days) return null;
+    const t = today ? ms(today) : Date.now();
+    return new Date(t - (r.days - 1) * 86400000).toISOString().slice(0, 10);
+  }
+
+  /* The three panels' colours. Resolved takes the teal the Closed archive
+     used to carry, since it is mostly that archive's growth. */
+  const OPEN = { key: "open", label: "Open backlog", short: "Open", color: "var(--tr-open)" };
+  const RESOLVED = { key: "resolvedFlow", label: "Resolved", short: "Resolved", color: "var(--tr-closed)" };
+  const REMOVED = { key: "removedFlow", label: "Removed", short: "Removed", color: "var(--tr-removed)" };
+
+  /* Each product's line follows the section the reader is in, in that
+     section's colour. */
   const SECTIONS = [
-    { id: "active",   label: "Open backlog",       short: "Open",     color: "var(--tr-open)",
-      line: "Open bugs",     one: "open bug",     many: "open bugs" },
-    { id: "closed",   label: "Closed",             short: "Closed",   color: "var(--tr-closed)",
-      line: "Closed bugs",   one: "closed bug",   many: "closed bugs" },
-    { id: "resolved", label: "Resolved this week", short: "Resolved", color: "var(--tr-resolved)",
-      line: "Resolved",      one: "bug resolved", many: "bugs resolved" },
-    { id: "removed",  label: "Removed",            short: "Removed",  color: "var(--tr-removed)",
-      line: "Removed bugs",  one: "removed bug",  many: "removed bugs" },
+    { id: "active",   color: "var(--tr-open)",     line: "Open bugs",   one: "open bug",     many: "open bugs" },
+    { id: "closed",   color: "var(--tr-closed)",   line: "Closed bugs", one: "closed bug",   many: "closed bugs" },
+    { id: "resolved", color: "var(--tr-resolved)", line: "Resolved",    one: "bug resolved", many: "bugs resolved" },
+    { id: "removed",  color: "var(--tr-removed)",  line: "Removed bugs", one: "removed bug", many: "removed bugs" },
   ];
   const sectionOf = (id) => SECTIONS.find((s) => s.id === id) || SECTIONS[0];
 
-  /* ── the numbers ─────────────────────────────────────────────────────────
-     Indexed once per load: the weeks on record, what each product recorded
-     in each of them, and the whole backlog's totals week by week. */
-  const CACHE = new WeakMap();
-  function index(history) {
-    let ix = CACHE.get(history);
-    if (ix) return ix;
-    const at = new Map();          // "week|product" → { section: row }
-    const prods = new Map();       // product → how it was last named and ordered
-    const weekly = new Map();      // week → the whole backlog that week
-    history.forEach((r) => {
-      const w = dayOf(r.captured_on);
-      if (!w) return;
-      const k = w + "|" + r.product;
-      if (!at.has(k)) at.set(k, {});
-      at.get(k)[r.section] = r;
-      const was = prods.get(r.product);
-      if (!was || w >= was.week) {
-        prods.set(r.product, { key: r.product, label: r.product_label, order: Number(r.product_order), week: w });
-      }
-      if (!weekly.has(w)) {
-        const t = { week: w, score: 0, scored: 0 };
-        SECTIONS.forEach((s) => { t[s.id] = 0; });
-        weekly.set(w, t);
-      }
-      const t = weekly.get(w);
-      if (t[r.section] != null) t[r.section] += Number(r.bugs) || 0;
-      if (r.section === "active") {
-        t.score += Number(r.score_total) || 0;
-        t.scored += Number(r.scored) || 0;
-      }
-    });
-    const weeks = [...weekly.keys()].sort();
-    ix = {
-      weeks, at,
-      totals: weeks.map((w) => weekly.get(w)),
-      products: [...prods.values()].sort((a, b) => a.order - b.order),
-    };
-    CACHE.set(history, ix);
-    return ix;
+  /* ── the points ───────────────────────────────────────────────────────────
+     One object per point on the chart, whether the database grouped them or
+     this file had to. */
+  const num = (v) => (v == null || v === "" ? null : Number(v));
+
+  /** tech_bug_trend()'s rows, which already carry a point each. */
+  function fromRpc(rows) {
+    return (rows || []).map((r) => ({
+      day: dayOf(r.bucket),
+      open: num(r.open_bugs) || 0,
+      score: num(r.open_score) || 0,
+      scored: num(r.open_scored) || 0,
+      closed: num(r.closed_total) || 0,
+      removed: num(r.removed_total) || 0,
+      listed: num(r.resolved_listed) || 0,
+      resolvedFlow: num(r.resolved_flow),
+      removedFlow: num(r.removed_flow),
+      products: r.products || {},
+    })).filter((p) => p.day).sort((a, b) => a.day.localeCompare(b.day));
   }
 
-  /** One product, one section, every week on record: null where the product
-      was not in that week's workbook at all; zeros where it was, with nothing
-      in the section. */
-  function productSeries(history, product, section) {
-    const ix = index(history);
-    return ix.weeks.map((w) => {
-      const e = ix.at.get(w + "|" + product);
-      if (!e) return null;
-      const r = e[section];
-      return { week: w, bugs: r ? Number(r.bugs) : 0,
-               score: r ? Number(r.score_total) : 0, scored: r ? Number(r.scored) : 0 };
+  /** The same, worked out here from raw tech_bug_history rows — the path
+      taken before supabase/tech-bug-trend.sql has been run. */
+  function fromHistory(rows, grainId, sinceDay) {
+    const byDay = new Map();
+    (rows || []).forEach((r) => {
+      const d = dayOf(r.captured_on);
+      if (!d) return;
+      if (!byDay.has(d)) byDay.set(d, []);
+      byDay.get(d).push(r);
     });
+    // The latest capture in each day, week or month.
+    const key = (d) => {
+      if (grainId === "day") return d;
+      if (grainId === "month") return d.slice(0, 7);
+      const t = new Date(ms(d));
+      t.setUTCDate(t.getUTCDate() - ((t.getUTCDay() + 6) % 7));   // back to Monday
+      return t.toISOString().slice(0, 10);
+    };
+    const picked = new Map();
+    [...byDay.keys()].sort().forEach((d) => { picked.set(key(d), d); });
+
+    const points = [...picked.values()].sort().map((d) => {
+      const mine = byDay.get(d);
+      const sum = (section, field) => mine.filter((r) => r.section === section)
+        .reduce((a, r) => a + (Number(r[field]) || 0), 0);
+      const products = {};
+      mine.forEach((r) => {
+        const p = products[r.product] = products[r.product] || { label: r.product_label || r.product, sections: {} };
+        p.sections[r.section] = [Number(r.bugs) || 0, Number(r.scored) || 0, Number(r.score_total) || 0];
+      });
+      return { day: d, open: sum("active", "bugs"), score: sum("active", "score_total"),
+               scored: sum("active", "scored"), closed: sum("closed", "bugs"),
+               removed: sum("removed", "bugs"), listed: sum("resolved", "bugs"),
+               resolvedFlow: null, removedFlow: null, products };
+    });
+    // The flows, from one point to the next.
+    points.forEach((p, i) => {
+      if (!i) return;
+      const was = points[i - 1];
+      p.resolvedFlow = (p.closed + p.listed) - (was.closed + was.listed);
+      p.removedFlow = p.removed - was.removed;
+    });
+    return sinceDay ? points.filter((p) => p.day >= sinceDay) : points;
   }
 
   /* Round steps — 1, 2, 2.5, 5 — so the gridlines land on numbers a person
-     would pick. About three to the height: the charts are short, and more
-     lines than that would crowd them. */
+     would pick, about three to a short panel. */
   function niceStep(raw) {
     if (!(raw > 0)) return 1;
     const p = Math.pow(10, Math.floor(Math.log10(raw)));
     const f = raw / p;
     return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * p;
   }
-  function yScale(max, integers) {
-    let step = niceStep((max || 1) / 3);
+  /* Zero is always on the axis; a figure below it (bugs coming back out of an
+     archive) pulls the axis down rather than being clipped. */
+  function yScale(values, integers) {
+    const seen = values.filter((v) => v != null);
+    const hi = Math.max(0, ...seen), lo = Math.min(0, ...seen);
+    let step = niceStep((hi - lo || 1) / 3);
     if (integers) step = Math.max(1, Math.round(step));
-    const top = Math.max(step, Math.ceil((max || 1) / step) * step);
+    const top = Math.max(step, Math.ceil(hi / step) * step);
+    const bottom = Math.min(0, Math.floor(lo / step) * step);
     const ticks = [];
-    for (let v = 0; v <= top + 1e-9; v += step) ticks.push(v);
-    return { top, ticks };
+    for (let v = bottom; v <= top + 1e-9; v += step) ticks.push(v);
+    return { top, bottom, ticks };
   }
 
   const P = (n) => n.toFixed(1);
@@ -171,81 +219,76 @@
   }
   const lastIndex = (values) => { for (let i = values.length - 1; i >= 0; i--) if (values[i] != null) return i; return -1; };
 
-  /* How far a line moved since the week before, as an arrow and words. Only
-     the open backlog says whether that is good or bad — more open bugs, or
-     more weight on them, is worse; the other sections are lists that grow as
-     work gets done, so their arrows stay in ink. */
-  function change(d, { worseUp, one, many, since, compact }) {
+  /* How far a figure moved from the point before, as an arrow and words. Only
+     the open backlog and its weight say whether that is good or bad. */
+  function change(d, { worseUp, one, many, since: sinceLabel, compact }) {
+    if (d == null) return "";
     if (!d) {
-      return `<span class="tr-d is-flat" title="${esc(`No change since ${since}`)}">` +
-             `${compact ? "no change" : `No change since ${esc(since)}`}</span>`;
+      return `<span class="tr-d is-flat" title="${esc(`No change since ${sinceLabel}`)}">` +
+             `${compact ? "no change" : `No change since ${esc(sinceLabel)}`}</span>`;
     }
     const up = d > 0;
     const tone = worseUp ? (up ? " is-worse" : " is-better") : "";
     const n = Math.abs(d);
     const what = one ? plural(n, one, many) : fmt(n);
     return `<span class="tr-d${up ? " is-up" : " is-down"}${tone}" ` +
-             `title="${esc(`${up ? "Up" : "Down"} ${what} since ${since}`)}">` +
+             `title="${esc(`${up ? "Up" : "Down"} ${what} since ${sinceLabel}`)}">` +
              `<span aria-hidden="true">${up ? "▲" : "▼"}</span><span class="tr-vh">${up ? "up" : "down"}</span> ` +
-             `${fmt(n)}${compact ? "" : ` <span class="tr-d-w">since ${esc(since)}</span>`}</span>`;
+             `${fmt(n)}${compact ? "" : ` <span class="tr-d-w">since ${esc(sinceLabel)}</span>`}</span>`;
   }
 
   /* ── one panel ───────────────────────────────────────────────────────────
      Drawn at the width it is given, in pixels, so the text stays text-sized
      at every width; redrawn when the window changes. */
   function plot(el, cfg) {
-    const W = Math.max(260, Math.floor(el.clientWidth || 600));
-    // Short on purpose; shorter again where the two panels stack (the same
-    // width as the stylesheet's), and shortest on a phone. Decided by the
-    // screen, not the panel, so the two charts side by side always match.
+    const W = Math.max(240, Math.floor(el.clientWidth || 420));
     const mq = (q) => !!(window.matchMedia && window.matchMedia(q).matches);
-    const H = mq("(max-width: 480px)") ? 130 : mq("(max-width: 780px)") ? 140 : 170;
+    // Three panels stack on a phone, so each is shorter there than it would
+    // be beside the others.
+    const H = mq("(max-width: 480px)") ? 112 : mq("(max-width: 780px)") ? 130 : 160;
     const endW = cfg.endWidth || 0;
-    const m = { l: 44, r: 16 + endW, t: 10, b: 26 };
+    const m = { l: 40, r: 14 + endW, t: 10, b: 24 };
     const iw = Math.max(40, W - m.l - m.r), ih = H - m.t - m.b;
-    const weeks = cfg.weeks, n = weeks.length;
-    const t0 = ms(weeks[0]), t1 = ms(weeks[n - 1]);
-    // One week on record sits at the right-hand edge, where the latest week
-    // always sits; the weeks that follow will push it left.
-    const x = (i) => n === 1 ? m.l + iw : m.l + ((ms(weeks[i]) - t0) / (t1 - t0)) * iw;
-    const max = Math.max(0, ...cfg.series.flatMap((s) => s.values.filter((v) => v != null)));
-    const { top, ticks } = yScale(max, cfg.integers);
-    const y = (v) => m.t + ih - (v / top) * ih;
+    const days = cfg.days, n = days.length;
+    const t0 = ms(days[0]), t1 = ms(days[n - 1]);
+    const x = (i) => n === 1 ? m.l + iw : m.l + ((ms(days[i]) - t0) / (t1 - t0 || 1)) * iw;
+    const { top, bottom, ticks } = yScale(cfg.series.flatMap((s) => s.values), cfg.integers);
+    const span = top - bottom || 1;
+    const y = (v) => m.t + ih - ((v - bottom) / span) * ih;
 
     const grid = ticks.map((v) =>
-      `<line class="tr-grid" x1="${m.l}" x2="${m.l + iw}" y1="${P(y(v))}" y2="${P(y(v))}"/>` +
-      `<text class="tr-ytick" x="${m.l - 8}" y="${P(y(v) + 3.5)}">${esc(fmtAxis(v))}</text>`).join("");
+      `<line class="tr-grid${v === 0 && bottom < 0 ? " is-zero" : ""}" x1="${m.l}" x2="${m.l + iw}" y1="${P(y(v))}" y2="${P(y(v))}"/>` +
+      `<text class="tr-ytick" x="${m.l - 7}" y="${P(y(v) + 3.5)}">${esc(fmtAxis(v))}</text>`).join("");
 
-    // Week labels: the latest always, then working back, every week that
-    // leaves room for its label — so weeks bunched together by the time
-    // scale never print on top of each other. The first week is labelled
-    // too, taking the place of whichever label would crowd it.
-    const room = 54;
-    const labelled = [n - 1];
+    // The latest point always labelled, then working back while there is room;
+    // the first point takes the place of whichever label would crowd it.
+    const room = cfg.grain === "month" ? 62 : 54;
+    const label = (i) => cfg.grain === "month" ? MONTH.format(new Date(ms(days[i]))) : short(days[i]);
+    const marked = [n - 1];
     for (let i = n - 2; i >= 0; i--) {
-      if (x(labelled[labelled.length - 1]) - x(i) >= room) labelled.push(i);
+      if (x(marked[marked.length - 1]) - x(i) >= room) marked.push(i);
     }
-    if (n > 1 && labelled[labelled.length - 1] !== 0) {
-      if (x(labelled[labelled.length - 1]) - x(0) < room && labelled.length > 1) labelled.pop();
-      if (x(labelled[labelled.length - 1]) - x(0) >= room) labelled.push(0);
+    if (n > 1 && marked[marked.length - 1] !== 0) {
+      if (x(marked[marked.length - 1]) - x(0) < room && marked.length > 1) marked.pop();
+      if (x(marked[marked.length - 1]) - x(0) >= room) marked.push(0);
     }
-    const xticks = labelled.map((i) =>
-      `<text class="tr-xtick" x="${P(x(i))}" y="${H - 6}" text-anchor="middle">${esc(short(weeks[i]))}</text>`).join("");
+    const xticks = marked.map((i) =>
+      `<text class="tr-xtick" x="${P(x(i))}" y="${H - 6}" text-anchor="middle">${esc(label(i))}</text>`).join("");
 
-    const dots = n <= 16;
+    const dots = n <= 20;
     const lines = cfg.series.map((s) => {
       const pts = s.values.map((v, i) => (v == null ? null : [x(i), y(v)]));
       const last = lastIndex(s.values);
-      const area = cfg.area ? `<path class="tr-area" d="${areaOf(pts, y(0))}" style="fill:${s.color}"/>` : "";
+      const area = cfg.series.length === 1 ? `<path class="tr-area" d="${areaOf(pts, y(0))}" style="fill:${s.color}"/>` : "";
       const line = `<path class="tr-line" pathLength="1" d="${pathOf(pts)}" style="stroke:${s.color}"/>`;
       const marks = pts.map((p, i) => (!p || (!dots && i !== last)) ? "" :
-        `<circle class="tr-dot${i === last ? " is-end" : ""}" data-i="${i}" cx="${P(p[0])}" cy="${P(p[1])}" r="4" style="fill:${s.color}"/>`).join("");
+        `<circle class="tr-dot" data-i="${i}" cx="${P(p[0])}" cy="${P(p[1])}" r="4" style="fill:${s.color}"/>`).join("");
       return area + line + marks;
     }).join("");
 
-    // Where each line ends: its latest value and its name, in ink, beside a
+    // Where each line ends: its latest figure and its name, in ink, beside a
     // short key in its colour. Labels that would sit on each other are spread
-    // apart and tied back to their line with a thin leader.
+    // apart and tied back with a thin leader.
     let ends = "";
     if (endW) {
       const items = cfg.series.map((s) => {
@@ -259,13 +302,13 @@
       for (let k = items.length - 2; k >= 0; k--) {
         if (items[k].ly > items[k + 1].ly - gap) items[k].ly = items[k + 1].ly - gap;
       }
-      const lx = m.l + iw + 16;
+      const lx = m.l + iw + 14;
       ends = items.map((it) => {
         const px = x(it.i);
         const moved = Math.abs(it.ly - it.py) > 1.5 || px < m.l + iw - 1;
         return (moved ? `<path class="tr-leader" d="M${P(px + 6)} ${P(it.py)}L${P(lx - 3)} ${P(it.ly)}"/>` : "") +
-          `<line class="tr-key" x1="${lx}" x2="${lx + 10}" y1="${P(it.ly)}" y2="${P(it.ly)}" style="stroke:${it.s.color}"/>` +
-          `<text class="tr-end" x="${lx + 15}" y="${P(it.ly + 4)}"><tspan class="tr-end-v">${esc(cfg.format(it.v))}</tspan>` +
+          `<line class="tr-key" x1="${lx}" x2="${lx + 9}" y1="${P(it.ly)}" y2="${P(it.ly)}" style="stroke:${it.s.color}"/>` +
+          `<text class="tr-end" x="${lx + 14}" y="${P(it.ly + 4)}"><tspan class="tr-end-v">${esc(fmt(it.v))}</tspan>` +
           `${it.s.short ? " " + esc(it.s.short) : ""}</text>`;
       }).join("");
     }
@@ -274,11 +317,11 @@
       `<svg class="tr-svg${cfg.animate ? " tr-anim" : ""}" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" aria-hidden="true">` +
         grid + xticks + lines + ends +
         `<line class="tr-cross" x1="0" x2="0" y1="${m.t}" y2="${m.t + ih}" visibility="hidden"/>` +
-        `<rect class="tr-hit" x="${m.l - 14}" y="0" width="${iw + 28}" height="${H}" fill="transparent"/>` +
+        `<rect class="tr-hit" x="${m.l - 12}" y="0" width="${iw + 24}" height="${H}" fill="transparent"/>` +
       `</svg>` +
       `<div class="tr-tip" hidden></div>`;
 
-    // ── hover, touch and keyboard: find the week, read every line there ──
+    // ── hover, touch and keyboard: find the point, read every line there ──
     const svg = el.querySelector("svg"), cross = el.querySelector(".tr-cross"), tip = el.querySelector(".tr-tip");
     let at = -1;
     function show(i) {
@@ -289,10 +332,8 @@
       svg.querySelectorAll(".tr-dot").forEach((d) => d.classList.toggle("is-hot", Number(d.dataset.i) === at));
       tip.innerHTML = cfg.tip(at);
       tip.hidden = false;
-      // To the right of the week, unless that would cover the labels at the
-      // lines' ends; then to the left.
       const tw = tip.offsetWidth;
-      tip.style.left = Math.max(0, cx + 14 + tw > m.l + iw ? cx - 14 - tw : cx + 14) + "px";
+      tip.style.left = Math.max(0, cx + 12 + tw > m.l + iw ? cx - 12 - tw : cx + 12) + "px";
       tip.style.top = m.t + "px";
     }
     function hide() {
@@ -310,11 +351,7 @@
     const hit = el.querySelector(".tr-hit");
     hit.addEventListener("pointermove", (e) => show(nearest(e.clientX)));
     hit.addEventListener("pointerdown", (e) => show(nearest(e.clientX)));
-    // A mouse leaving hides the readout; a finger lifting leaves it up until
-    // the next tap somewhere else.
     hit.addEventListener("pointerleave", (e) => { if (e.pointerType === "mouse") hide(); });
-    // The container outlives each drawing, so its listeners are added once
-    // and always reach the latest drawing's functions.
     el._hide = hide;
     el._show = () => show(at < 0 ? n - 1 : at);
     el._key = (e) => {
@@ -335,142 +372,304 @@
     }
   }
 
-  /* ── the backlog, week by week ─────────────────────────────────────────── */
-  function renderMain(host, history, opts) {
-    const ix = index(history);
-    const rows = ix.totals;
-    if (!rows.length) { host.hidden = true; host.innerHTML = ""; host._redraw = null; return; }
-    const weeks = ix.weeks, n = weeks.length;
-    const now = rows[n - 1], prev = n > 1 ? rows[n - 2] : null;
-    const since = prev ? short(prev.week) : "";
+  /* ── the card ─────────────────────────────────────────────────────────── */
+  function controls(range, grain) {
+    const allowed = rangeOf(range).grains;
+    const btn = (kind, id, label, on, off, why) =>
+      `<button type="button" class="tr-btn${on ? " is-on" : ""}" data-${kind}="${id}"
+               aria-pressed="${on}"${off ? ` disabled title="${esc(why)}"` : ""}>${esc(label)}</button>`;
+    return `
+      <div class="tr-picks">
+        <div class="tr-pick" role="group" aria-label="How far back">
+          ${RANGES.map((r) => btn("range", r.id, r.label, r.id === range, false, "")).join("")}
+        </div>
+        <div class="tr-pick" role="group" aria-label="A point every">
+          <span class="tr-pick-l">Point every</span>
+          ${GRAINS.map((g) => btn("grain", g.id, g.label, g.id === grain,
+              allowed.indexOf(g.id) < 0, `${g.label} needs a longer range than ${rangeOf(range).label}`)).join("")}
+        </div>
+      </div>`;
+  }
 
-    /* The legend is also the scoreboard: each section's colour, its name,
-       where it stands this week and how far it moved from the last. */
-    const legend = SECTIONS.map((s) => `
-      <li class="tr-lg">
-        <i class="tr-lg-key" style="--c:${s.color}" aria-hidden="true"></i>
-        <span class="tr-lg-name"><span class="tr-full">${esc(s.label)}</span><span class="tr-short" aria-hidden="true">${esc(s.short)}</span></span>
-        <b class="tr-lg-n">${fmt(now[s.id])}</b>
-        ${prev ? change(now[s.id] - prev[s.id], { worseUp: s.id === "active", one: s.one, many: s.many, since, compact: true }) : ""}
-      </li>`).join("");
-
-    const recent = weeks.slice(-8).reverse();
-    const byProduct = ix.products.map((p) => {
-      const cells = recent.map((w) => {
-        const e = ix.at.get(w + "|" + p.key);
-        if (!e) return `<td class="is-none">—</td>`;
-        const r = e.active;
-        const bugs = r ? Number(r.bugs) : 0, scored = r ? Number(r.scored) : 0;
-        return `<td><b>${fmt(bugs)}</b><small>${scored ? fmt(r.score_total) : "not scored"}</small></td>`;
-      }).join("");
-      return `<tr><th scope="row">${esc(p.label)}</th>${cells}</tr>`;
-    }).join("");
-
-    // One line beside the title: in the first week, that more is coming;
-    // after it, how long the record runs and what the arrows compare. No
-    // dates — the chart's own axis carries them.
-    const sub = n === 1
-      ? `The lines grow with each weekly update`
-      : `<b>${plural(n, "week", "weeks")}</b> on record · arrows show the change from the week before`;
-
+  /* ── a card: a title, the picker, panels side by side, and the numbers ──
+     Both tabs draw one of these. A panel is {id, legend, series, tip} and
+     carries one unit; the picker is the same on both, so "this week" cannot
+     mean two different things on one page. */
+  function renderCard(host, o) {
+    const grain = grainOf(o.grain), range = rangeOf(o.range);
     host.innerHTML = `
       <div class="tr-head">
-        <h3 class="tr-title" id="trTitle">The backlog, week by week</h3>
-        <p class="tr-sub">${sub}</p>
-        <button type="button" class="tr-more" aria-expanded="false" aria-controls="trTables">See the numbers</button>
+        <h3 class="tr-title">${esc(o.title)}</h3>
+        <p class="tr-sub">${o.sub}</p>
+        ${o.tables ? `<button type="button" class="tr-more" aria-expanded="false">See the numbers</button>` : ""}
       </div>
+      ${controls(range.id, grain.id)}
       <div class="tr-panels">
-        <div class="tr-panel is-wide">
-          <ul class="tr-legend" aria-label="Bugs in each section">${legend}</ul>
-          <div class="tr-plot" id="trSections" tabindex="0" role="group" aria-roledescription="chart"
-               aria-label="${esc(`Bugs in each section, ${n === 1 ? "one week" : n + " weeks"}. Latest, ${long(now.week)}: ` +
-                 SECTIONS.map((s) => `${s.label} ${fmt(now[s.id])}`).join(", ") + ". Arrow keys move between weeks.")}"></div>
-        </div>
-        <div class="tr-panel">
-          <div class="tr-legend is-one" title="${esc(`${fmt(now.scored)} of ${plural(now.active, "open bug", "open bugs")} carry a score`)}">
-            <span class="tr-lg"><i class="tr-lg-key" style="--c:var(--tr-open)" aria-hidden="true"></i>
-              <b class="tr-lg-n">${fmt(now.score)}</b>
-              ${prev ? change(now.score - prev.score, { worseUp: true, since, compact: true }) : ""}
-              <span class="tr-lg-name">Total weighted score, open backlog</span></span>
-          </div>
-          <div class="tr-plot" id="trScore" tabindex="0" role="group" aria-roledescription="chart"
-               aria-label="${esc(`Total weighted score of the open backlog, ${n === 1 ? "one week" : n + " weeks"}. Latest, ${long(now.week)}: ${fmt(now.score)}. Arrow keys move between weeks.`)}"></div>
-        </div>
+        ${o.panels.map((pl) => `
+          <div class="tr-panel">
+            <ul class="tr-legend" aria-label="${esc(pl.about || pl.title || "")}">${pl.legend}</ul>
+            <div class="tr-plot" id="${pl.id}" tabindex="0" role="group" aria-roledescription="chart"
+                 aria-label="${esc(pl.aria || "")}"></div>
+          </div>`).join("")}
       </div>
-      <div class="tr-tables" id="trTables" hidden>
+      ${o.after || ""}
+      ${o.tables ? `<div class="tr-tables" hidden>${o.tables}</div>` : ""}`;
+    host.hidden = false;
+
+    const more = host.querySelector(".tr-more"), tables = host.querySelector(".tr-tables");
+    if (more && tables) {
+      more.addEventListener("click", () => {
+        const open = tables.hidden;
+        tables.hidden = !open;
+        more.setAttribute("aria-expanded", String(open));
+        more.textContent = open ? "Hide the numbers" : "See the numbers";
+      });
+    }
+    if (o.onChange) {
+      host.querySelectorAll("[data-range], [data-grain]").forEach((b) => {
+        b.addEventListener("click", () => {
+          if (!b.disabled) o.onChange(b.dataset.range ? { range: b.dataset.range } : { grain: b.dataset.grain });
+        });
+      });
+    }
+    const draw = (animate) => o.panels.forEach((pl) => {
+      const el = host.querySelector("#" + pl.id);
+      if (el) plot(el, { days: o.days, grain: grain.id, integers: pl.integers !== false,
+                         endWidth: pl.endWidth || 96, series: pl.series, tip: pl.tip, animate: !!animate });
+    });
+    draw(o.animate);
+    host._redraw = () => draw(false);
+  }
+
+  /* A figure in a legend: its key, its name, where it stands and how it
+     moved. */
+  function legendRow(s, value, delta, note) {
+    return `
+      <li class="tr-lg">
+        <i class="tr-lg-key" style="--c:${s.color}" aria-hidden="true"></i>
+        <span class="tr-lg-name">${esc(s.label)}</span>
+        <b class="tr-lg-n">${value == null ? "—" : fmt(value)}</b>
+        ${delta || ""}${note ? `<span class="tr-lg-note">${esc(note)}</span>` : ""}
+      </li>`;
+  }
+
+  /* ── the backlog's card ───────────────────────────────────────────────── */
+  function renderMain(host, points, opts) {
+    const o = opts || {};
+    const grain = grainOf(o.grain);
+    if (!points || !points.length) { host.hidden = true; host.innerHTML = ""; host._redraw = null; return; }
+    const days = points.map((p) => p.day), n = points.length;
+    const now = points[n - 1], prev = n > 1 ? points[n - 2] : null;
+    const sinceLabel = prev ? (grain.id === "month" ? MONTH.format(new Date(ms(prev.day))) : short(prev.day)) : "";
+    const pointName = (d) => grain.id === "month" ? MONTH.format(new Date(ms(d))) : long(d);
+
+    const row = (s, value, extra) =>
+      `<span class="tr-tip-row"><i style="background:${s.color}"></i>${esc(s.label)}` +
+      `<b>${value == null ? "—" : fmt(value)}</b></span>` + (extra || "");
+    const head = (i) => `<b>${esc(pointName(points[i].day))}</b>`;
+
+    const rows = points.slice().reverse();
+    const recent = points.slice(-8).reverse();
+    const prods = {};
+    points.forEach((p) => Object.entries(p.products || {}).forEach(([k, v]) => { prods[k] = v.label || k; }));
+
+    renderCard(host, {
+      title: "The backlog over time",
+      sub: `<b>${plural(n, grain.one, grain.many)}</b> shown · arrows compare with ${esc(grain.before)}`,
+      range: o.range, grain: o.grain, onChange: o.onChange, animate: o.animate, days,
+      panels: [
+        { id: "trOpen", about: "Where the backlog stands", endWidth: 96,
+          legend: legendRow(OPEN, now.open,
+            prev ? change(now.open - prev.open, { worseUp: true, one: "open bug", many: "open bugs", since: sinceLabel, compact: true }) : ""),
+          aria: `Open backlog, ${plural(n, grain.one, grain.many)}. Latest, ${pointName(now.day)}: ${fmt(now.open)} open bugs. Arrow keys move between points.`,
+          series: [{ label: OPEN.label, short: OPEN.short, color: OPEN.color, values: points.map((p) => p.open) }],
+          tip: (i) => head(i) + row(OPEN, points[i].open) +
+            `<span class="tr-tip-sub">${fmt(points[i].closed)} closed and ${fmt(points[i].removed)} removed to date</span>` },
+        { id: "trFlow", about: "What left the backlog", endWidth: 104,
+          legend:
+            legendRow(RESOLVED, now.resolvedFlow,
+              prev && prev.resolvedFlow != null && now.resolvedFlow != null
+                ? change(now.resolvedFlow - prev.resolvedFlow, { since: sinceLabel, compact: true }) : "") +
+            legendRow(REMOVED, now.removedFlow,
+              prev && prev.removedFlow != null && now.removedFlow != null
+                ? change(now.removedFlow - prev.removedFlow, { since: sinceLabel, compact: true }) : ""),
+          aria: `Bugs that left the backlog in each ${grain.one}. Latest, ${pointName(now.day)}: ${fmt(now.resolvedFlow)} resolved, ${fmt(now.removedFlow)} removed. Arrow keys move between points.`,
+          series: [{ label: RESOLVED.label, short: RESOLVED.short, color: RESOLVED.color, values: points.map((p) => p.resolvedFlow) },
+                   { label: REMOVED.label, short: REMOVED.short, color: REMOVED.color, values: points.map((p) => p.removedFlow) }],
+          tip: (i) => head(i) + row(RESOLVED, points[i].resolvedFlow) + row(REMOVED, points[i].removedFlow) +
+            (i ? `<span class="tr-tip-sub">since ${esc(short(points[i - 1].day))}</span>`
+               : `<span class="tr-tip-sub">no earlier capture to compare with</span>`) },
+        { id: "trScore", about: "The weight on the backlog", endWidth: 58, integers: false,
+          legend: legendRow({ label: "Weighted score", color: OPEN.color }, now.score,
+            prev ? change(now.score - prev.score, { worseUp: true, since: sinceLabel, compact: true }) : "",
+            `${fmt(now.scored)} of ${fmt(now.open)} scored`),
+          aria: `Total weighted score of the open backlog. Latest, ${pointName(now.day)}: ${fmt(now.score)}. Arrow keys move between points.`,
+          series: [{ label: "Weighted score", short: "", color: OPEN.color, values: points.map((p) => p.score) }],
+          tip: (i) => head(i) + row({ label: "Weighted score", color: OPEN.color }, points[i].score) +
+            `<span class="tr-tip-sub">${fmt(points[i].scored)} of ${plural(points[i].open, "open bug", "open bugs")} scored</span>` },
+      ],
+      tables: `
         <div class="tr-table-wrap">
           <table>
-            <caption>The whole backlog, week by week</caption>
-            <thead><tr><th scope="col">Week</th>${SECTIONS.map((s) => `<th scope="col">${esc(s.label)}</th>`).join("")}
-              <th scope="col">Weighted score, open</th></tr></thead>
-            <tbody>${rows.slice().reverse().map((r) =>
-              `<tr><th scope="row">${esc(long(r.week))}</th>${SECTIONS.map((s) => `<td>${fmt(r[s.id])}</td>`).join("")}` +
-              `<td>${fmt(r.score)}</td></tr>`).join("")}</tbody>
+            <caption>Every point shown, newest first</caption>
+            <thead><tr><th scope="col">Point</th><th scope="col">Open backlog</th>
+              <th scope="col">Resolved</th><th scope="col">Removed</th>
+              <th scope="col">Weighted score, open</th>
+              <th scope="col">Closed to date</th><th scope="col">Removed to date</th></tr></thead>
+            <tbody>${rows.map((p) => `<tr><th scope="row">${esc(long(p.day))}</th>
+              <td>${fmt(p.open)}</td><td>${p.resolvedFlow == null ? "—" : fmt(p.resolvedFlow)}</td>
+              <td>${p.removedFlow == null ? "—" : fmt(p.removedFlow)}</td>
+              <td>${fmt(p.score)}</td><td>${fmt(p.closed)}</td><td>${fmt(p.removed)}</td></tr>`).join("")}</tbody>
           </table>
         </div>
         <div class="tr-table-wrap">
           <table class="is-products">
-            <caption>Open bugs in each product, with their total weighted score beneath${weeks.length > 8 ? " — the latest eight weeks" : ""}</caption>
-            <thead><tr><th scope="col">Product</th>${recent.map((w) => `<th scope="col">${esc(long(w))}</th>`).join("")}</tr></thead>
-            <tbody>${byProduct}</tbody>
+            <caption>Open bugs in each product, with their total weighted score beneath${n > 8 ? " — the latest eight points" : ""}</caption>
+            <thead><tr><th scope="col">Product</th>${recent.map((p) => `<th scope="col">${esc(long(p.day))}</th>`).join("")}</tr></thead>
+            <tbody>${Object.keys(prods).map((k) => `<tr><th scope="row">${esc(prods[k])}</th>${recent.map((p) => {
+              const c = p.products && p.products[k] && p.products[k].sections && p.products[k].sections.active;
+              return c ? `<td><b>${fmt(c[0])}</b><small>${c[1] ? fmt(c[2]) : "not scored"}</small></td>` : `<td class="is-none">—</td>`;
+            }).join("")}</tr>`).join("")}</tbody>
           </table>
-        </div>
-      </div>`;
-    host.hidden = false;
-
-    // The tables stay out of the way until they are asked for.
-    const more = host.querySelector(".tr-more"), tables = host.querySelector("#trTables");
-    more.addEventListener("click", () => {
-      const open = tables.hidden;
-      tables.hidden = !open;
-      more.setAttribute("aria-expanded", String(open));
-      more.textContent = open ? "Hide the numbers" : "See the numbers";
+        </div>`,
     });
+  }
 
-    const sectionsCfg = {
-      weeks, integers: true, endWidth: 112, format: fmt,
-      series: SECTIONS.map((s) => ({ label: s.label, short: s.short, color: s.color, values: rows.map((r) => r[s.id]) })),
-      tip: (i) => `<b>${esc(long(weeks[i]))}</b>` + SECTIONS.map((s) =>
-        `<span class="tr-tip-row"><i style="background:${s.color}"></i>${esc(s.label)}<b>${fmt(rows[i][s.id])}</b></span>`).join(""),
-    };
-    const scoreCfg = {
-      weeks, area: true, endWidth: 58, format: fmt,
-      series: [{ label: "Total weighted score", short: "", color: "var(--tr-open)", values: rows.map((r) => r.score) }],
-      tip: (i) => `<b>${esc(long(weeks[i]))}</b>` +
-        `<span class="tr-tip-row"><i style="background:var(--tr-open)"></i>Total weighted score<b>${fmt(rows[i].score)}</b></span>` +
-        `<span class="tr-tip-sub">${fmt(rows[i].scored)} of ${plural(rows[i].active, "open bug", "open bugs")} scored</span>`,
-    };
-    const draw = (animate) => {
-      sectionsCfg.animate = scoreCfg.animate = !!animate;
-      const a = host.querySelector("#trSections"), b = host.querySelector("#trScore");
-      if (a) plot(a, sectionsCfg);
-      if (b) plot(b, scoreCfg);
-    };
-    draw(opts && opts.animate);
-    host._redraw = () => draw(false);
+  /* ── the Top 10 tab's card ───────────────────────────────────────────────
+     Its points are captures of the heaviest bugs themselves, so it can draw
+     what counts alone cannot: the weight the ten carry, the score it takes to
+     get in, and how many of the ten are new. */
+  const TEN = 10;
+  const tenOf = (p) => (p.top || []).filter((b) => b.rank <= TEN);
+  const weightOf = (p) => tenOf(p).reduce((a, b) => a + (Number(b.score) || 0), 0);
+  const atRank = (p, rank) => {
+    const b = (p.top || []).find((x) => x.rank === rank);
+    return b ? Number(b.score) : null;
+  };
+  /** Bugs in this point's ten that were not in the one before's. */
+  function entrants(p, was) {
+    if (!was) return null;
+    const had = new Set(tenOf(was).map((b) => b.key));
+    return tenOf(p).filter((b) => !had.has(b.key));
+  }
+  function leavers(p, was) {
+    if (!was) return [];
+    const has = new Set(tenOf(p).map((b) => b.key));
+    return tenOf(was).filter((b) => !has.has(b.key));
+  }
+  /** How long a bug has been in the ten, in points and in days. */
+  function tenure(points, key) {
+    let since = null;
+    for (let i = points.length - 1; i >= 0; i--) {
+      if (tenOf(points[i]).some((b) => b.key === key)) since = points[i].day; else break;
+    }
+    return since;
+  }
+
+  const WEIGHT = { label: "Weight the ten carry", short: "Weight", color: "var(--tr-open)" };
+  const CUTOFF = { label: "Tenth place", short: "10th", color: "var(--tr-resolved)" };
+  const HEAVIEST = { label: "The heaviest", short: "1st", color: "var(--tr-open)" };
+  const CHURN = { label: "New in the ten", short: "New", color: "var(--tr-closed)" };
+
+  function renderTop(host, points, opts) {
+    const o = opts || {};
+    const grain = grainOf(o.grain);
+    if (!points || !points.length) { host.hidden = true; host.innerHTML = ""; host._redraw = null; return; }
+    const days = points.map((p) => p.day), n = points.length;
+    const now = points[n - 1], prev = n > 1 ? points[n - 2] : null;
+    const sinceLabel = prev ? (grain.id === "month" ? MONTH.format(new Date(ms(prev.day))) : short(prev.day)) : "";
+    const pointName = (d) => grain.id === "month" ? MONTH.format(new Date(ms(d))) : long(d);
+    const churn = points.map((p, i) => { const e = entrants(p, i ? points[i - 1] : null); return e ? e.length : null; });
+
+    const row = (s, value, extra) =>
+      `<span class="tr-tip-row"><i style="background:${s.color}"></i>${esc(s.label)}` +
+      `<b>${value == null ? "—" : fmt(value)}</b></span>` + (extra || "");
+    const head = (i) => `<b>${esc(pointName(points[i].day))}</b>`;
+    const named = (list) => list.length
+      ? list.map((b) => `${b.label}: ${b.title}`).join("; ")
+      : "none";
+
+    renderCard(host, {
+      title: "The top ten over time",
+      sub: `<b>${plural(n, grain.one, grain.many)}</b> shown · arrows compare with ${esc(grain.before)}`,
+      range: o.range, grain: o.grain, onChange: o.onChange, animate: o.animate, days,
+      panels: [
+        { id: "ttWeight", about: "The weight the ten carry", endWidth: 70, integers: false,
+          legend: legendRow(WEIGHT, weightOf(now),
+            prev ? change(weightOf(now) - weightOf(prev), { worseUp: true, since: sinceLabel, compact: true }) : "",
+            o.shareNote || ""),
+          aria: `Weighted score of the top ten added together, ${plural(n, grain.one, grain.many)}. Latest, ${pointName(now.day)}: ${fmt(weightOf(now))}. Arrow keys move between points.`,
+          series: [{ label: WEIGHT.label, short: WEIGHT.short, color: WEIGHT.color, values: points.map(weightOf) }],
+          tip: (i) => head(i) + row(WEIGHT, weightOf(points[i])) +
+            `<span class="tr-tip-sub">${fmt(tenOf(points[i]).length)} bugs, heaviest ${fmt(atRank(points[i], 1))}</span>` },
+        { id: "ttBar", about: "What it takes to be in the ten", endWidth: 82,
+          legend:
+            legendRow(HEAVIEST, atRank(now, 1),
+              prev ? change(atRank(now, 1) - atRank(prev, 1), { worseUp: true, since: sinceLabel, compact: true }) : "") +
+            legendRow(CUTOFF, atRank(now, TEN),
+              prev && atRank(prev, TEN) != null ? change(atRank(now, TEN) - atRank(prev, TEN), { worseUp: true, since: sinceLabel, compact: true }) : ""),
+          aria: `The heaviest bug's score and the tenth place score. Latest, ${pointName(now.day)}: heaviest ${fmt(atRank(now, 1))}, tenth ${fmt(atRank(now, TEN))}. Arrow keys move between points.`,
+          series: [{ label: HEAVIEST.label, short: HEAVIEST.short, color: HEAVIEST.color, values: points.map((p) => atRank(p, 1)) },
+                   { label: CUTOFF.label, short: CUTOFF.short, color: CUTOFF.color, values: points.map((p) => atRank(p, TEN)) }],
+          tip: (i) => head(i) + row(HEAVIEST, atRank(points[i], 1)) + row(CUTOFF, atRank(points[i], TEN)) +
+            `<span class="tr-tip-sub">a bug had to score ${fmt(atRank(points[i], TEN))} to be in the ten</span>` },
+        { id: "ttChurn", about: "How much the ten changes", endWidth: 74,
+          legend: legendRow(CHURN, churn[n - 1],
+            prev && churn[n - 2] != null && churn[n - 1] != null
+              ? change(churn[n - 1] - churn[n - 2], { since: sinceLabel, compact: true }) : "",
+            prev ? `${fmt(leavers(now, prev).length)} dropped out` : ""),
+          aria: `How many of the top ten are new at each point. Latest, ${pointName(now.day)}: ${churn[n - 1] == null ? "no earlier capture" : fmt(churn[n - 1])}. Arrow keys move between points.`,
+          series: [{ label: CHURN.label, short: CHURN.short, color: CHURN.color, values: churn }],
+          tip: (i) => {
+            const e = entrants(points[i], i ? points[i - 1] : null);
+            const l = i ? leavers(points[i], points[i - 1]) : [];
+            return head(i) + row(CHURN, e ? e.length : null) +
+              (e ? `<span class="tr-tip-sub">in: ${esc(named(e))}</span>
+                    <span class="tr-tip-sub">out: ${esc(named(l))}</span>`
+                 : `<span class="tr-tip-sub">no earlier capture to compare with</span>`);
+          } },
+      ],
+      after: o.after || "",
+      tables: `
+        <div class="tr-table-wrap">
+          <table>
+            <caption>The top ten at every point shown, newest first</caption>
+            <thead><tr><th scope="col">Point</th><th scope="col">Weight the ten carry</th>
+              <th scope="col">Heaviest</th><th scope="col">Tenth place</th>
+              <th scope="col">New in the ten</th><th scope="col">Dropped out</th></tr></thead>
+            <tbody>${points.slice().reverse().map((p, k, arr) => {
+              const was = k + 1 < arr.length ? arr[k + 1] : null;
+              const e = entrants(p, was), l = leavers(p, was);
+              return `<tr><th scope="row">${esc(long(p.day))}</th><td>${fmt(weightOf(p))}</td>
+                <td>${fmt(atRank(p, 1))}</td><td>${atRank(p, TEN) == null ? "—" : fmt(atRank(p, TEN))}</td>
+                <td>${e ? fmt(e.length) : "—"}</td><td>${was ? fmt(l.length) : "—"}</td></tr>`;
+            }).join("")}</tbody>
+          </table>
+        </div>`,
+    });
   }
 
   /* ── a product's line, in its header ─────────────────────────────────────
-     Its own weeks, on the same time axis as every other product's so the
-     lines read down the page together; its own vertical scale, from zero —
-     the number beside it gives the size, the line gives the direction. Each
-     week is a band that can be pointed at.
-
-     It stretches to whatever width the header gives it and stays 40px tall:
-     the drawing scales freely while the line keeps a 2px stroke, and the dots
-     are laid over it as round marks of their own, so nothing turns oval. */
+     That product's own points, in the colour of the section being read; its
+     own vertical scale, from zero. It stretches to whatever width the header
+     gives it and stays 40px tall, so the drawing scales freely while the line
+     keeps a 2px stroke and the dots stay round. */
   const SW = 240, SH = 40;
   const pctX = (v) => (v / SW * 100).toFixed(2) + "%";
   const pctY = (v) => (v / SH * 100).toFixed(2) + "%";
-  function productSpark(history, product, section, metric, opts) {
-    const ix = index(history);
+  function productSpark(points, product, section, metric, opts) {
     const s = sectionOf(section);
     const byScore = metric === "score";
-    const pts = productSeries(history, product, section);
-    // A week with nothing scored has no score to draw — not a score of zero.
-    const values = pts.map((p) => !p ? null : byScore ? (p.scored ? p.score : null) : p.bugs);
+    const cell = (p) => {
+      const e = p.products && p.products[product];
+      const arr = e && e.sections && e.sections[section];
+      return arr ? { bugs: Number(arr[0]) || 0, scored: Number(arr[1]) || 0, score: Number(arr[2]) || 0 } : null;
+    };
+    const cells = points.map(cell);
+    // A point with nothing scored has no score to draw — not a score of zero.
+    const values = cells.map((c) => !c ? null : byScore ? (c.scored ? c.score : null) : c.bugs);
     const name = byScore ? "Weighted score" : s.line;
-    const n = ix.weeks.length;
+    const n = points.length;
     const have = values.map((v, i) => (v == null ? -1 : i)).filter((i) => i >= 0);
     const head = (right) => `<span class="tb-spark-top"><span class="tb-spark-l">${esc(name)}</span>${right}</span>`;
 
@@ -479,18 +678,17 @@
                 <span class="tb-spark-empty">${byScore ? "Nothing scored on record" : "Nothing on record"}</span></span>`;
     }
 
-    // How far it moved since the week before, when both weeks have a figure.
     const cur = values[n - 1], before = n > 1 ? values[n - 2] : undefined;
     let delta;
-    if (n === 1) delta = `<span class="tr-d is-first">first week</span>`;
+    if (n === 1) delta = `<span class="tr-d is-first">one point</span>`;
     else if (cur == null) delta = `<span class="tr-d is-flat">${byScore ? "not scored now" : "not listed now"}</span>`;
-    else if (before == null) delta = `<span class="tr-d is-flat" title="${esc(`No figure for ${long(ix.weeks[n - 2])}`)}">new this week</span>`;
+    else if (before == null) delta = `<span class="tr-d is-flat">new</span>`;
     else delta = change(cur - before, { worseUp: section === "active",
-      one: byScore ? null : s.one, many: byScore ? null : s.many, since: short(ix.weeks[n - 2]) });
+      one: byScore ? null : s.one, many: byScore ? null : s.many, since: short(points[n - 2].day) });
 
-    const t0 = ms(ix.weeks[0]), t1 = ms(ix.weeks[n - 1]);
+    const t0 = ms(points[0].day), t1 = ms(points[n - 1].day);
     const pl = 5, pr = 6, pt = 6, pb = 5;
-    const x = (i) => n === 1 ? SW - pr : pl + ((ms(ix.weeks[i]) - t0) / (t1 - t0)) * (SW - pl - pr);
+    const x = (i) => n === 1 ? SW - pr : pl + ((ms(points[i].day) - t0) / (t1 - t0 || 1)) * (SW - pl - pr);
     const max = Math.max(...have.map((i) => values[i]));
     const top = max > 0 ? max : 1;
     const y = (v) => pt + (SH - pt - pb) * (1 - v / top);
@@ -498,10 +696,10 @@
     const last = have[have.length - 1];
 
     const tipOf = (i) => {
-      const p = pts[i];
-      return long(ix.weeks[i]) + " · " + (byScore
-        ? `weighted score ${fmt(p.score)}` + (p.scored < p.bugs ? ` (${fmt(p.scored)} of ${fmt(p.bugs)} scored)` : "")
-        : plural(p.bugs, s.one, s.many));
+      const c = cells[i];
+      return long(points[i].day) + " · " + (byScore
+        ? `weighted score ${fmt(c.score)}` + (c.scored < c.bugs ? ` (${fmt(c.scored)} of ${fmt(c.bugs)} scored)` : "")
+        : plural(c.bugs, s.one, s.many));
     };
     const bands = have.map((i, k) => {
       const left = k ? (x(have[k - 1]) + x(i)) / 2 : 0;
@@ -524,7 +722,7 @@
   }
 
   /* One readout for every product line on the page, following the pointer
-     from week to week. Wired once, to the container the compartments are
+     from point to point. Wired once, to the container the compartments are
      drawn in, so redrawing them does not pile up listeners. */
   let TIP = null, HOT = null;
   function hideSparkTip() {
@@ -551,8 +749,8 @@
       HOT.hidden = false;
       TIP.textContent = b.dataset.tip;
       TIP.hidden = false;
-      const r = plotEl.getBoundingClientRect();
-      const px = r.left + (cx / SW) * r.width, py = r.top + (cy / SH) * r.height;
+      const r = plotEl.getBoundingClientRect(), k = r.width / SW;
+      const px = r.left + cx * k, py = r.top + (cy / SH) * r.height;
       const tw = TIP.offsetWidth, th = TIP.offsetHeight;
       TIP.style.left = Math.max(8, Math.min(window.innerWidth - tw - 8, px - tw / 2)) + "px";
       TIP.style.top = (py - th - 12 < 8 ? py + 14 : py - th - 12) + "px";
@@ -565,5 +763,8 @@
     window.addEventListener("scroll", hideSparkTip, { passive: true });
   }
 
-  window.TBTrend = { SECTIONS, index, productSeries, renderMain, productSpark, wireSparks, hideSparkTip };
+  window.TBTrend = { RANGES, GRAINS, DEFAULTS, rangeOf, grainOf, since,
+                     fromRpc, fromHistory, renderMain, renderTop, productSpark,
+                     wireSparks, hideSparkTip,
+                     top: { TEN, tenOf, weightOf, atRank, entrants, leavers, tenure } };
 })();

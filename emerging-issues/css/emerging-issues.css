@@ -763,8 +763,147 @@ select.is-sev-low option { color: var(--text); font-weight: 400; background: var
   text-decoration: underline; cursor: pointer;
 }
 
-/* ═══ THE BACKLOG, WEEK BY WEEK ═════════════════════════════════════════════
-   The line graphs, drawn by js/tech-bugs-trend.js. One colour per section,
+/* ═══ THE TOP TEN ═══════════════════════════════════════════════════════════
+   The first sub-tab of the Technical Bugs Backlog: the ten heaviest open bugs
+   across every product. Underlined sub-tabs rather than more pills, so the two
+   levels of tab on this page never read as the same control. */
+.tb-subs {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px 22px;
+  margin: 0 0 20px;
+  border-bottom: 1px solid var(--border);
+}
+.tb-sub {
+  display: inline-flex; align-items: center; gap: 8px;
+  min-height: 44px; padding: 10px 2px;
+  font-family: 'Jost', sans-serif; font-size: .95rem; font-weight: 500;
+  color: var(--text-muted);
+  background: none; border: 0; border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  cursor: pointer;
+  transition: color .15s, border-color .15s;
+}
+.tb-sub:hover { color: var(--text); }
+.tb-sub.is-on { color: var(--bp-teal); border-bottom-color: var(--bp-teal); font-weight: 600; }
+.tb-sub:focus-visible { outline: 2px solid var(--bp-teal); outline-offset: 2px; border-radius: 4px; }
+[data-theme="dark"] .tb-sub.is-on { color: #E86C6C; border-bottom-color: #E86C6C; }
+.tt[hidden], #tbBacklog[hidden] { display: none !important; }
+
+/* ── at a glance: the weight the ten carry, and what is awkward about them ── */
+.tt-summary {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 14px 28px;
+  padding: 16px 20px;
+  margin-bottom: 18px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+.tt-weight { min-width: 0; }
+.tt-weight-n {
+  font-family: 'Jost', sans-serif;
+  font-size: clamp(1.9rem, 4vw, 2.5rem); font-weight: 600; line-height: 1;
+  font-variant-numeric: lining-nums;
+  color: var(--text);
+}
+.tt-weight-l {
+  margin-top: 4px;
+  font-size: .62rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--text-dim);
+}
+.tt-weight-d { margin: 6px 0 0; max-width: 48ch; font-size: .82rem; line-height: 1.5; color: var(--text-muted); }
+.tt-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-left: auto; }
+.tt-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  min-height: 34px; padding: 6px 13px;
+  font-family: 'Jost', sans-serif; font-size: .8rem; color: var(--text-muted);
+  background: var(--bg); border: 1px solid var(--border); border-radius: 999px;
+}
+.tt-chip b { color: var(--text); font-weight: 600; }
+.tt-chip.is-warn { border-color: rgba(224,138,30,.45); }
+.tt-chip.is-warn b { color: #B4700F; }
+[data-theme="dark"] .tt-chip.is-warn b { color: #F0B35E; }
+
+/* ── what entered the ten and what left, named rather than counted ── */
+.tt-move {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 10px 24px;
+  margin: 14px 0 2px; padding: 12px 14px;
+  background: var(--bg-elevated); border-radius: 8px;
+}
+.tt-move.is-quiet { display: block; font-size: .82rem; color: var(--text-muted); }
+.tt-move h4 {
+  margin: 0 0 6px;
+  font-size: .62rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--text-dim);
+}
+.tt-move-b {
+  display: flex; align-items: baseline; gap: 8px;
+  padding: 2px 0;
+  font-size: .84rem; line-height: 1.5; color: var(--text);
+}
+.tt-move-b b { margin-left: auto; font-family: 'Jost', sans-serif; font-variant-numeric: lining-nums; }
+.tt-move-b .tb-trk { font-style: normal; flex: none; }
+.tt-move-side.is-out .tt-move-b { color: var(--text-muted); }
+
+/* ── the ten themselves ── */
+.tt-note { margin: 0 0 12px; max-width: 92ch; font-size: .8rem; line-height: 1.5; color: var(--text-dim); }
+.tt-list { display: flex; flex-direction: column; gap: 10px; }
+.tt-bug {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--text-dim);
+  border-radius: var(--radius);
+  transition: box-shadow .18s, border-color .18s;
+}
+.tt-bug:hover { box-shadow: var(--shadow); }
+.tt-bug.is-open { box-shadow: var(--shadow); border-left-color: var(--bp-teal); }
+.tt-bug.no-work { border-left-color: #B4700F; }
+.tt-bug-head {
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center; gap: 16px;
+  width: 100%; padding: 14px 16px;
+  background: none; border: 0; font: inherit; text-align: left; color: inherit; cursor: pointer;
+}
+.tt-bug-head:focus-visible { outline: 2px solid var(--bp-teal); outline-offset: -2px; border-radius: var(--radius); }
+/* The rank is the whole point of this tab: the first three carry the page's
+   own colour, the rest a quiet ring. */
+.tt-rank {
+  display: flex; align-items: center; justify-content: center;
+  width: 38px; height: 38px; border-radius: 50%;
+  font-family: 'Jost', sans-serif; font-size: 1.1rem; font-weight: 600;
+  font-variant-numeric: lining-nums tabular-nums;
+  color: var(--text-muted); background: var(--bg-elevated);
+  border: 1px solid var(--border);
+}
+.tt-rank.is-top { background: var(--bp-teal); border-color: var(--bp-teal); color: #fff; }
+[data-theme="dark"] .tt-rank.is-top { background: #B83232; border-color: #B83232; }
+.tt-bug-main { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.tt-bug-top { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.tt-since {
+  font-size: .66rem; font-weight: 600; letter-spacing: .04em;
+  padding: 2px 8px; border-radius: 999px;
+  color: var(--text-muted); background: var(--bg-elevated); border: 1px solid var(--border-subtle);
+}
+.tt-bug .tb-bug-body { padding: 4px 16px 18px 70px; }
+
+@media (max-width: 700px) {
+  .tb-subs { gap: 2px 16px; }
+  .tb-sub { font-size: .88rem; }
+  .tt-summary { padding: 14px; }
+  .tt-chips { margin-left: 0; }
+  .tt-bug-head {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas: "rank main caret" "score score score";
+    gap: 10px 12px; padding: 12px;
+  }
+  .tt-rank { grid-area: rank; align-self: start; width: 32px; height: 32px; font-size: .95rem; }
+  .tt-bug-main { grid-area: main; }
+  .tt-bug-head .tb-caret { grid-area: caret; align-self: start; margin-top: 8px; }
+  .tt-bug-head .tb-score { grid-area: score; grid-template-columns: auto 1fr; min-width: 0; padding-left: 44px; }
+  .tt-bug .tb-bug-body { padding: 4px 14px 16px 14px; }
+}
+
+/* ═══ THE LINES OVER TIME ═══════════════════════════════════════════════════
+   The line graphs on both sub-tabs, drawn by js/tech-bugs-trend.js. One colour per section,
    the same in the chart, its legend and every product's line, so a colour
    means one thing across the tab. These four passed the palette validator
    in this order — lightness band, chroma, colour-blind and normal-vision
@@ -817,13 +956,43 @@ select.is-sev-low option { color: var(--text); font-weight: 400; background: var
 .tr-more:hover { text-decoration: underline; }
 .tr-more:focus-visible { outline: 2px solid var(--bp-teal); outline-offset: 2px; border-radius: 4px; }
 
-.tr-panels { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); }
-/* Each panel's figures on top, its chart at the bottom, so the two charts
-   line up even when one row of figures wraps and the other does not. */
+/* How far back, and how coarse each point is. Two groups of pills on one
+   row; a grain a range cannot carry is offered but disabled, with the reason
+   on hover, rather than disappearing. */
+.tr-picks {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px;
+  margin: 0 0 12px;
+}
+.tr-pick { display: inline-flex; align-items: center; gap: 2px; flex-wrap: wrap; }
+.tr-pick-l {
+  padding-right: 6px;
+  font-size: .6rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--text-dim); white-space: nowrap;
+}
+.tr-btn {
+  font: inherit; font-size: .76rem;
+  min-height: 30px; padding: 4px 11px;
+  border: 1px solid transparent; border-radius: 999px;
+  background: none; color: var(--text-muted); cursor: pointer;
+  transition: background .15s, color .15s, border-color .15s;
+}
+.tr-btn:hover:not(:disabled) { color: var(--text); border-color: var(--border); }
+.tr-btn.is-on { background: var(--bp-teal); color: #fff; font-weight: 600; border-color: var(--bp-teal); }
+.tr-btn:disabled { color: var(--text-dim); opacity: .5; cursor: not-allowed; }
+.tr-btn:focus-visible { outline: 2px solid var(--bp-teal); outline-offset: 2px; }
+
+/* One unit per panel: what stands, what left, and the weight carried. They
+   sit side by side while each stays wide enough to read, and wrap when not. */
+.tr-panels {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+  gap: 14px 26px;
+}
+/* Each panel's figures on top, its chart at the bottom, so the charts line up
+   even when one row of figures wraps and another does not. */
 .tr-panel { margin: 0; min-width: 0; display: flex; flex-direction: column; }
 .tr-panel > .tr-plot { margin-top: auto; }
-.tr-panel.is-wide { padding-right: 24px; }
-.tr-panel + .tr-panel { padding-left: 24px; border-left: 1px solid var(--border-subtle); }
+.tr.is-loading .tr-panels { opacity: .55; transition: opacity .15s; }
 
 /* The legend is the scoreboard too: each line's key, name, latest figure
    and how far it moved from the week before. */
@@ -851,6 +1020,7 @@ select.is-sev-low option { color: var(--text); font-weight: 400; background: var
   color: var(--text);
 }
 .tr-legend.is-one .tr-lg-n { font-size: 1.3rem; }
+.tr-lg-note { font-size: .72rem; color: var(--text-dim); }
 /* The short names the lines end with; a phone uses them in the legend too. */
 .tr-short { display: none; }
 .tr-legend.is-one .tr-lg-name { margin-left: 4px; }
@@ -877,6 +1047,9 @@ select.is-sev-low option { color: var(--text); font-weight: 400; background: var
 .tr-svg { display: block; overflow: visible; }
 .tr-svg text { font-family: 'Jost', sans-serif; font-variant-numeric: lining-nums tabular-nums; }
 .tr-grid { stroke: var(--border); stroke-width: 1; shape-rendering: crispEdges; }
+/* Where a figure went below zero — bugs coming back out of an archive — the
+   zero line is the one to read against. */
+.tr-grid.is-zero { stroke: var(--text-dim); opacity: .55; }
 .tr-ytick { font-size: 11px; fill: var(--text-dim); text-anchor: end; }
 .tr-xtick { font-size: 11px; fill: var(--text-dim); }
 .tr-line { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
@@ -1362,6 +1535,26 @@ select.is-sev-low option { color: var(--text); font-weight: 400; background: var
   .tb-summary { padding: 14px; }
   .tr { padding: 12px 14px 6px; }
   .tr-title { font-size: 1.15rem; }
+  /* Three stacked panels would fill a phone screen, so they become one row
+     the reader swipes through, a panel at a time. */
+  .tr-panels {
+    display: flex; gap: 16px;
+    overflow-x: auto; scroll-snap-type: x mandatory;
+    scrollbar-width: thin;
+    /* Without this the panels waiting off to the right still count towards
+       the page's own width in Chrome, and the whole page scrolls sideways. */
+    contain: paint;
+  }
+  /* A little under the full width, so the edge of the next panel shows and
+     the reader can see there is more to swipe to. */
+  .tr-panel { flex: 0 0 95%; scroll-snap-align: start; }
+  /* The dividers the stacked layout adds have no place in a swiped row. */
+  .tr-panel + .tr-panel { margin-top: 0; padding-top: 0; padding-left: 0; border-top: 0; }
+  .tr-legend { min-height: 22px; margin-bottom: 0; }
+  .tr-picks { gap: 6px 12px; }
+  .tr-pick { gap: 4px; }
+  .tr-btn { min-height: 38px; padding: 6px 12px; font-size: .8rem; }
+  .tr-pick-l { flex-basis: 100%; padding: 0 0 2px; }
   /* Title and "See the numbers" on one line, what the record covers under
      them; the four sections under their short names, two rows not three. */
   .tr-more { order: 2; }

@@ -58,6 +58,24 @@ reconstructed backwards: the tracker keeps no record of what its lists looked
 like on past dates, and a line drawn from guesses would be worse than a line
 that starts late.
 
+── The top ten ───────────────────────────────────────────────────────────────
+
+tech_bug_history counts bugs; it cannot say which ones. So each run also
+writes the twenty heaviest open bugs into tech_bug_top_history — twenty rows
+a run — which is what lets the Top 10 tab say what entered, what dropped out,
+and how long a bug has been up there. Twenty rather than ten so a bug hovering
+around tenth place can be seen crossing the line.
+
+The order is decided here, once, rather than in the page and the database as
+well: weighted score first, because a priority number is given per product and
+says nothing across products — Admissions' 1 and Finance's 1 are different
+bugs. Ties go to the bug with no workaround, then the one affecting more
+students, then the longest-standing, then the workbook's own order.
+
+Each row carries a bug_key: its first ticket number, or its title where the
+tracker gives no number. That is what makes a bug the same bug from one run to
+the next, since its row on the sheet moves as lists are re-ordered.
+
 ── What it refuses ───────────────────────────────────────────────────────────
 
 It stops with an error, and writes nothing, if a tracker sheet is missing one
@@ -446,7 +464,83 @@ create policy "tech_bug_history_select" on public.tech_bug_history
   for select to authenticated using (public.hub_sees_emerging_issues());
 revoke all on public.tech_bug_history from public, anon, authenticated;
 grant select on public.tech_bug_history to authenticated;
+
+-- ── the heaviest bugs behind the Top 10 tab ────────────────────────────────
+-- The twenty heaviest open bugs at each capture, in order. What lets the tab
+-- say which bugs entered or dropped out and how long each has been up there,
+-- none of which counts alone can answer.
+create table if not exists public.tech_bug_top_history (
+  captured_on    date    not null,
+  rank           integer not null,   -- 1 is the heaviest
+  bug_key        text    not null,   -- its first ticket number, or its title
+  product        text    not null,
+  product_label  text    not null,
+  title          text    not null,
+  score          numeric not null,   -- its weighted score
+  priority       text,               -- as its own sheet numbers it
+  scope          text,               -- students affected, as written
+  no_workaround  boolean not null,
+  primary key (captured_on, rank)
+);
+
+alter table public.tech_bug_top_history enable row level security;
+drop policy if exists "tech_bug_top_history_select" on public.tech_bug_top_history;
+create policy "tech_bug_top_history_select" on public.tech_bug_top_history
+  for select to authenticated using (public.hub_sees_emerging_issues());
+revoke all on public.tech_bug_top_history from public, anon, authenticated;
+grant select on public.tech_bug_top_history to authenticated;
 """
+
+TOP_COLS = ["captured_on", "rank", "bug_key", "product", "product_label", "title",
+            "score", "priority", "scope", "no_workaround"]
+
+
+# "No known workaround.", "None", "N/A" and an empty cell all say the same
+# thing — the same rule the page uses, kept in step with hasWorkaround() in
+# emerging-issues/js/tech-bugs.js.
+NO_WORKAROUND = re.compile(r"^no (known |current )?workaround")
+
+
+def has_workaround(w):
+    t = str(w or "").strip().lower().rstrip(".")
+    if not t:
+        return False
+    return not (t in ("none", "n/a", "na") or NO_WORKAROUND.match(t))
+
+
+def bug_key(b):
+    """What makes this bug the same bug at the next capture: its first ticket
+    number, or its title where the tracker gives none. Row numbers shift as
+    the sheets are re-ordered, so they cannot be used."""
+    if b["bug_refs"]:
+        return b["bug_refs"][0]["id"]
+    return " ".join((b["bug_title"] or b["bug"] or "").split()).lower()[:200]
+
+
+def scope_size(v):
+    """The students affected, as a number, for ordering only. "~2100" is 2100,
+    "TBD" is nothing at all."""
+    if v is None:
+        return -1.0
+    m = re.search(r"\d[\d,]*", str(v))
+    return float(m.group(0).replace(",", "")) if m else -1.0
+
+
+def top_bugs(bugs, how_many=20):
+    """The heaviest open bugs, in the order the Top 10 tab shows them. See the
+    docstring: score first, then the ones with no workaround, then scope, then
+    age, then the workbook's own order."""
+    open_scored = [b for b in bugs if b["section"] == "active" and b["score"] is not None]
+    open_scored.sort(key=lambda b: (
+        -b["score"],
+        0 if not has_workaround(b["workaround"]) else 1,
+        -scope_size(b["scope"]),
+        b["discovered_on"] or datetime.date(2100, 1, 1),
+        b["product_order"],
+        b["row_order"],
+    ))
+    return open_scored[:how_many]
+
 
 BUG_COLS = ["product", "product_label", "product_order", "section", "row_order", "priority",
             "discovered", "discovered_on", "bug", "bug_title", "bug_refs", "scope", "summary",
@@ -559,6 +653,25 @@ def main():
              "  from public.tech_bugs",
              " group by captured_on, product, product_label, product_order, section;",
              ]
+
+    top = top_bugs(bugs)
+    if top:
+        body += ["",
+                 "-- ── and the heaviest bugs, in order ─────────────────────────────────────",
+                 "-- The Top 10 tab reads the latest of these for its list, and the earlier",
+                 "-- ones to say what entered, what left, and how long each has been up",
+                 "-- there. This capture's rows are replaced; no other is touched.",
+                 f"delete from public.tech_bug_top_history where captured_on = {sql(captured)};",
+                 "insert into public.tech_bug_top_history (" + ", ".join(TOP_COLS) + ") values"]
+        rows = []
+        for i, b in enumerate(top, 1):
+            rows.append("  (" + ", ".join([
+                sql(captured), str(i), sql(bug_key(b)), sql(b["product"]), sql(b["product_label"]),
+                sql(" ".join((b["bug_title"] or b["bug"] or "").split())), sql(b["score"]),
+                sql(b["priority"]), sql(b["scope"]),
+                "true" if not has_workaround(b["workaround"]) else "false",
+            ]) + ")")
+        body += [",\n".join(rows) + ";"]
     body += ["", "commit;", "",
              "-- ── check it ───────────────────────────────────────────────────────────────",
              "-- One row per tracker, with its counts per section. They should match the",

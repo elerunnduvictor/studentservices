@@ -11,6 +11,12 @@
       "permanent": false
     },
     {
+      "source": "/cap-guide",
+      "has": [{ "type": "host", "value": "studentservicespm.vercel.app" }],
+      "destination": "/pm/cap-guide",
+      "permanent": false
+    },
+    {
       "source": "/pm/:path*",
       "missing": [{ "type": "host", "value": "studentservicespm.vercel.app" }],
       "destination": "/",

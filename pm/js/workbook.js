@@ -15,6 +15,45 @@ import { Grid } from "./grid.js";
 
 const SS = window.SS;
 
+/**
+ * Refill a `select` column's options from another table's live rows.
+ *
+ * A column declares this with `optionsFrom: { table, value, label, order?,
+ * filter? }` instead of a hardcoded `options` array — for a foreign key like
+ * cap_guide_items.section_id, where the choices are content someone can add
+ * through this same app, so a fixed list would go stale the moment they did.
+ *
+ * Mutates `col.options` in place (clear, then push) rather than reassigning
+ * it. `showSheet` hands a *copy* of each column object to `new Grid(...)`,
+ * but that copy is shallow — its `options` property is the same array
+ * reference as the schema's own column. Only a mutation of that shared array
+ * is visible through both references; replacing it with a new array would
+ * update the schema's copy while leaving the grid's already-built column
+ * pointed at the old, empty one.
+ *
+ * Called on every `showSheet`, not just the sheet's first load, so a section
+ * added a moment ago in this same session already appears the next time the
+ * Items sheet is opened — no redeploy, no page reload.
+ */
+async function loadLiveOptions(columns) {
+  const withSource = columns.filter((c) => c.optionsFrom && Array.isArray(c.options));
+  await Promise.all(withSource.map(async (col) => {
+    const spec = col.optionsFrom;
+    try {
+      const rows = await SS.db.select(spec.table, {
+        select: `${spec.value},${spec.label}`,
+        order: spec.order,
+        filter: spec.filter,
+      });
+      col.options.length = 0;
+      rows.forEach((r) => col.options.push({ value: String(r[spec.value]), label: r[spec.label] }));
+    } catch {
+      // Left whatever the dropdown already had rather than blanking a
+      // working one over a transient network hiccup.
+    }
+  }));
+}
+
 export async function mountWorkbook(bookKey) {
   const book = SS.WORKBOOKS[bookKey];
   document.body.dataset.book = book.accent;
@@ -285,6 +324,7 @@ export async function mountWorkbook(bookKey) {
     // Employees one. Awaited before the first paint so cells are not drawn
     // unmarked and then marked a moment later.
     if (sheet.columns.some((c) => c.check)) { try { await loadRoster(); } catch { /* flag nothing */ } }
+    if (sheet.columns.some((c) => c.optionsFrom)) { try { await loadLiveOptions(sheet.columns); } catch { /* leave existing options */ } }
 
     if (!state.loaded.get(sheet.key)) {
       try {

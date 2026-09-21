@@ -6,8 +6,12 @@ Build supabase/tech-bugs.sql from the TS Product Tracker workbook.
     python tools/build-tech-bugs.py --week 2026-09-13    # correct a week already recorded
 
 Then run supabase/tech-bugs.sql in the Supabase SQL editor. That is the whole
-weekly update: the Emerging Issues page reads the table, so nothing has to be
+update: the Emerging Issues page reads the table, so nothing has to be
 deployed when the list changes.
+
+Delete the workbook from the folder once the SQL is written. Everything in it
+is in that file, the folder stays clear for the next drop, and the workbook is
+gitignored so nothing is lost.
 
 ── What it reads ─────────────────────────────────────────────────────────────
 

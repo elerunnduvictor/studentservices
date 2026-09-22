@@ -441,6 +441,37 @@ function progressCell(value, row) {
 }
 
 window.SS = window.SS || {};
+/* ── the Cost Budget sheet's three fixed lists ──────────────────────────────
+   The departments are the five the budget is broken down by, written with the
+   codes the finance workbook uses. A code not on this list has no rows to copy
+   its name and colour from, which the database refuses rather than inventing
+   a sixth department. */
+const COST_DEPTS = [
+  { value: "VP",     label: "VP — Student Services" },
+  { value: "RRS",    label: "Records, Registration & Support" },
+  { value: "DOS",    label: "Dean of Students" },
+  { value: "DigOps", label: "Digital Operations" },
+  { value: "E&R",    label: "Enrollment & Retention" },
+];
+
+/* Total last, because it is the one the Cost KPI is scored on and the one
+   people reach for — not because it sums the others, which it does not. */
+const COST_CATEGORIES = [
+  { value: "wages",    label: "Wages" },
+  { value: "travel",   label: "Travel" },
+  { value: "contract", label: "Contract" },
+  { value: "total",    label: "Total" },
+];
+
+const COST_MONTHS = [
+  { value: "1",  label: "January" },   { value: "2",  label: "February" },
+  { value: "3",  label: "March" },     { value: "4",  label: "April" },
+  { value: "5",  label: "May" },       { value: "6",  label: "June" },
+  { value: "7",  label: "July" },      { value: "8",  label: "August" },
+  { value: "9",  label: "September" }, { value: "10", label: "October" },
+  { value: "11", label: "November" },  { value: "12", label: "December" },
+];
+
 window.SS.WORKBOOKS = {
   /* ═══════════ 1. OKRs ═══════════ */
   okrs: {
@@ -664,6 +695,51 @@ window.SS.WORKBOOKS = {
         { key: "data_source",       label: "Data Source",    type: "url",    width: 110, linkLabel: "Report ↗" },
         { key: "update_frequency",  label: "Update Freq.",   type: "select", width: 130, options: FREQUENCY },
         { key: "update_date",       label: "Update Date",    type: "date",   width: 120 },
+      ],
+    },
+    {
+      /* The figures behind the Cost KPI tab of the hub's KPI Scorecard: what
+         share of each department's annual budget has gone, month by month.
+
+         Four fields, not nine. A department's colour, printed name and order
+         never change between months, so the database copies them from that
+         department's existing rows rather than asking for them again — which
+         is also what stops one department acquiring two spellings and two
+         colours. See the trigger in supabase/cost-budget.sql.
+
+         `Total` is deliberately one of the categories rather than something
+         computed: it is the department's own figure and does NOT equal Wages
+         plus Travel plus Contract, because the categories listed are the
+         largest ones and not all of them. Adding them up here would quietly
+         disagree with Finance. */
+      key: "cost_budget",
+      label: "Cost Budget",
+      table: "cost_budget",
+      order: "budget_year.desc,dept_order.asc,category_order.asc,month.asc",
+      columns: [
+        { key: "budget_year",    label: "Year",       type: "number", width: 80, required: true,
+          help: "The budget year these figures belong to." },
+        { key: "dept_code",      label: "Department", type: "select", width: 150, required: true,
+          options: COST_DEPTS,
+          help: "Must be a department already on record — the first row of a new one has to be added in SQL." },
+        { key: "category_key",   label: "Category",   type: "select", width: 140, required: true,
+          options: COST_CATEGORIES,
+          help: "Total is the department's own figure, not the other rows added together." },
+        { key: "month",          label: "Month",      type: "select", width: 110, required: true,
+          options: COST_MONTHS },
+        { key: "pct",            label: "% Spent",    type: "number", width: 110, required: true,
+          check: (v) => {
+            const n = Number(v);
+            if (v === "" || v === null || v === undefined || !isFinite(n)) return null;
+            if (n < 0) return "Spend cannot be negative.";
+            if (n > 200) return "That reads as more than twice the annual budget — is it a percentage?";
+            return null;
+          },
+          help: "Share of the WHOLE YEAR's budget spent by the end of this month, cumulative. " +
+                "64 means 64%, not 0.64." },
+        { key: "dept_label",     label: "Shown As",   type: "text",   width: 210, readOnly: true,
+          help: "How the Cost KPI tab prints this department. Filled in automatically." },
+        { key: "updated_by",     label: "Updated By", type: "text",   width: 150, readOnly: true },
       ],
     }],
   },

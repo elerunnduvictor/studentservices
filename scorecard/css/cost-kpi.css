@@ -1,0 +1,222 @@
+/* ═══ COST KPI ═══════════════════════════════════════════════════════════════
+   The second tab of the KPI Scorecard: how much of each department's annual
+   budget has been spent, month by month, and where the year is heading.
+
+   The chart colours are not new. The four category inks are the set already
+   validated for colour-blind reading on the Emerging Issues trend charts, and
+   each department's own colour comes from DEPT_COLORS, which was tuned so the
+   five stay apart for red-blind readers. Nothing here invents a palette.
+   ═══════════════════════════════════════════════════════════════════════════ */
+:root {
+  --ck-total: #1C2325;          /* the Total line: the heaviest ink on the chart */
+  --ck-wages: #0A8F9E;
+  --ck-travel: #B7860B;
+  --ck-contract: #7E3F8F;
+  --ck-other: #A32222;
+  --ck-grid: rgba(188,190,192,0.45);
+  --ck-budget: #C0553F;         /* the 100%-of-budget rule */
+  --ck-pace: #98A0A2;           /* the even-spend reference */
+}
+[data-theme="dark"] {
+  --ck-total: #E8E4DC;
+  --ck-wages: #1B9AA8;
+  --ck-travel: #B98A1E;
+  --ck-contract: #9866B4;
+  --ck-other: #D65656;
+  --ck-grid: rgba(255,255,255,0.10);
+  --ck-budget: #D2705A;
+  --ck-pace: #6A6660;
+}
+
+/* ── the two tabs above the panel ───────────────────────────────────────────
+   Underlined rather than pills: the scorecard already spends its pill shape on
+   the category lens, and two controls of the same shape would read as one. */
+.sc-tabs {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px 26px;
+  margin: 0 0 24px;
+  border-bottom: 1px solid var(--border);
+}
+.sc-tab {
+  display: inline-flex; align-items: center; gap: 8px;
+  min-height: 44px; padding: 10px 2px;
+  font-family: 'Jost', sans-serif; font-size: .98rem; font-weight: 500;
+  color: var(--text-muted);
+  background: none; border: 0; border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  cursor: pointer;
+  transition: color .15s, border-color .15s;
+}
+.sc-tab:hover { color: var(--text); }
+.sc-tab.is-on { color: var(--sc-accent); border-bottom-color: var(--sc-accent); font-weight: 600; }
+.sc-tab:focus-visible { outline: 2px solid var(--sc-accent); outline-offset: 2px; border-radius: 4px; }
+.sc-tab-n {
+  font-size: .72rem; font-weight: 600;
+  padding: 2px 8px; border-radius: 999px;
+  color: var(--text-muted); background: var(--bg-elevated);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+.sc-tab.is-on .sc-tab-n { color: #fff; background: var(--sc-accent); }
+#scCostView[hidden], #scScoreView[hidden] { display: none !important; }
+
+/* ── what the year looks like, before any chart ── */
+.ck-head { margin: 0 0 22px; }
+.ck-head h2 {
+  margin: 0 0 6px;
+  font-family: 'Cormorant Garamond', serif; font-weight: 600;
+  font-size: clamp(1.5rem, 3vw, 1.95rem); color: var(--text);
+}
+.ck-head p { margin: 0; max-width: 78ch; font-size: .88rem; line-height: 1.6; color: var(--text-muted); }
+.ck-head .ck-caveat { margin-top: 8px; color: var(--text-dim); font-size: .82rem; }
+
+/* The five departments as a row of readable cards, each its own door into the
+   chart below. Scrolls sideways on a phone rather than stacking five tall. */
+.ck-strip {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(186px, 1fr));
+  gap: 12px; margin-bottom: 24px;
+}
+.ck-chip {
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 14px 16px; text-align: left;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--ck-dept, var(--text-dim));
+  border-radius: var(--radius);
+  cursor: pointer; font: inherit; color: inherit;
+  transition: box-shadow .18s, transform .18s, border-color .18s;
+}
+.ck-chip:hover { box-shadow: var(--shadow); transform: translateY(-1px); }
+.ck-chip.is-on { box-shadow: var(--shadow); border-color: var(--ck-dept, var(--text-dim)); }
+.ck-chip:focus-visible { outline: 2px solid var(--sc-accent); outline-offset: 2px; }
+.ck-chip-code {
+  font-size: .66rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--ck-dept, var(--text-dim));
+}
+.ck-chip-name { font-size: .82rem; font-weight: 500; color: var(--text); line-height: 1.35; }
+.ck-chip-row { display: flex; align-items: baseline; gap: 8px; margin-top: 8px; }
+.ck-chip-n {
+  font-family: 'Jost', sans-serif; font-size: 1.5rem; font-weight: 600; line-height: 1;
+  font-variant-numeric: lining-nums; color: var(--text);
+}
+.ck-chip-of { font-size: .7rem; color: var(--text-dim); }
+.ck-chip-proj { margin-top: 6px; font-size: .76rem; color: var(--text-muted); }
+.ck-chip-proj b { font-weight: 600; font-variant-numeric: lining-nums; }
+
+.ck-pill {
+  display: inline-flex; align-items: center; gap: 5px; align-self: flex-start;
+  margin-top: 8px; padding: 3px 10px; border-radius: 999px;
+  font-size: .7rem; font-weight: 600; white-space: nowrap;
+}
+.ck-pill.green  { color: var(--status-green);  background: var(--green-pale); }
+.ck-pill.yellow { color: var(--status-yellow); background: var(--yellow-pale); }
+.ck-pill.red    { color: var(--status-red);    background: var(--red-pale); }
+.ck-pill.nodata { color: var(--status-nodata); background: var(--nodata-pale); }
+
+/* ── a chart and everything attached to it ── */
+.ck-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 22px 24px;
+  margin-bottom: 20px;
+}
+.ck-card.is-dept { border-top: 3px solid var(--ck-dept, var(--text-dim)); }
+.ck-card-head {
+  display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between;
+  gap: 12px 20px; margin-bottom: 4px;
+}
+.ck-card-title {
+  margin: 0; font-family: 'Jost', sans-serif; font-weight: 600;
+  font-size: 1.02rem; color: var(--text);
+}
+.ck-card-sub { margin: 4px 0 0; font-size: .8rem; line-height: 1.5; color: var(--text-dim); max-width: 72ch; }
+.ck-figs { display: flex; align-items: center; gap: 18px; }
+.ck-fig { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+.ck-fig-l {
+  font-size: .62rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--text-dim);
+}
+.ck-fig-n {
+  font-family: 'Jost', sans-serif; font-size: 1.35rem; font-weight: 600; line-height: 1;
+  font-variant-numeric: lining-nums; color: var(--text);
+}
+.ck-fig-n.is-proj { color: var(--ck-fig-color, var(--text)); }
+.ck-rule { width: 1px; align-self: stretch; background: var(--border); }
+
+.ck-plot { position: relative; margin-top: 14px; }
+.ck-plot svg { display: block; width: 100%; height: auto; overflow: visible; }
+.ck-dot { r: 3.5; }
+
+/* The key sits under the chart, each line's own colour beside its last
+   reading, so the chart itself needs no colour-matching by eye. */
+.ck-key { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border-subtle); }
+.ck-key-i { display: inline-flex; align-items: center; gap: 7px; font-size: .78rem; color: var(--text-muted); }
+.ck-key-s { width: 16px; height: 0; border-top-style: solid; border-top-color: currentColor; flex: none; }
+.ck-key-i b { color: var(--text); font-weight: 600; font-variant-numeric: lining-nums; }
+
+/* A note the data itself earned — a figure that fell when it cannot, or a
+   projection that depends on which months you trust. */
+.ck-note {
+  display: flex; gap: 9px; align-items: flex-start;
+  margin-top: 14px; padding: 10px 13px;
+  font-size: .79rem; line-height: 1.55;
+  color: var(--text-muted);
+  background: var(--yellow-pale);
+  border-radius: var(--radius);
+}
+.ck-note svg { flex: none; margin-top: 2px; color: var(--status-yellow); }
+.ck-note b { color: var(--text); font-weight: 600; }
+
+.ck-more {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-top: 14px; padding: 7px 0;
+  font: inherit; font-size: .78rem; font-weight: 500;
+  color: var(--sc-accent); background: none; border: 0; cursor: pointer;
+}
+.ck-more:hover { text-decoration: underline; }
+.ck-more:focus-visible { outline: 2px solid var(--sc-accent); outline-offset: 2px; border-radius: 4px; }
+.ck-more svg { transition: transform .18s; }
+.ck-more[aria-expanded="true"] svg { transform: rotate(90deg); }
+
+.ck-table-wrap { overflow-x: auto; margin-top: 12px; }
+.ck-table-wrap[hidden] { display: none !important; }
+.ck-table { border-collapse: collapse; width: 100%; min-width: 460px; }
+.ck-table th, .ck-table td {
+  padding: 7px 10px; font-size: .78rem; text-align: right; white-space: nowrap;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+.ck-table th:first-child, .ck-table td:first-child { text-align: left; }
+.ck-table thead th {
+  color: var(--text-dim); font-weight: 600;
+  border-bottom: 1px solid var(--border);
+}
+.ck-table tbody td { color: var(--text-muted); border-bottom: 1px solid var(--border-subtle); }
+.ck-table tbody th { text-align: left; font-weight: 500; color: var(--text); padding: 7px 10px; font-size: .78rem; }
+.ck-table tr.is-total th, .ck-table tr.is-total td {
+  font-weight: 600; color: var(--text);
+  border-top: 1px solid var(--border); border-bottom: none;
+}
+.ck-table td.is-empty { color: var(--text-dim); }
+
+/* `start`, not the default stretch: a card with an open table would otherwise
+   set the height of every card beside it, leaving the short ones half empty. */
+.ck-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+  gap: 20px; align-items: start;
+}
+.ck-grid .ck-card { margin-bottom: 0; }
+
+.ck-foot { margin: 6px 0 0; font-size: .76rem; line-height: 1.6; color: var(--text-dim); }
+
+@media (max-width: 860px) {
+  .ck-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 620px) {
+  .ck-card { padding: 18px 16px; }
+  .ck-card-head { flex-direction: column; }
+  .ck-figs { width: 100%; justify-content: flex-start; gap: 14px; }
+  .ck-fig { align-items: flex-start; }
+  .ck-strip { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+  .ck-chip { padding: 12px 13px; }
+  .sc-tabs { gap: 2px 18px; }
+  .sc-tab { font-size: .9rem; }
+}

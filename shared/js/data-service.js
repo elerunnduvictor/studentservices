@@ -374,6 +374,23 @@
     map: (r) => window.SS.kpiStatus.decorate(r),
   };
 
+  /* The Cost KPI tab: one row per department, category and month, holding the
+     share of the annual budget spent by the end of that month.
+
+     Loaded raw — no `map`. Everything the tab shows (the year-end projection,
+     the status band, which months disagree with each other) is derived from
+     these rows at draw time, so a figure corrected in the PM Hub changes the
+     picture on the next load with nothing else to update.
+
+     Optional in the scorecard's hub-boot tag: until cost-budget.sql has been
+     run the table does not exist, and the tab says so rather than the page
+     reporting that live data is down. */
+  DATASETS.costBudget = {
+    global: "COST_BUDGET",
+    view: "cost_budget",
+    order: "dept_order.asc,category_order.asc,month.asc",
+  };
+
   function numOrNull(v) {
     if (v === null || v === undefined || v === "") return null;
     const n = Number(v);
@@ -483,7 +500,11 @@
       // A dataset is a view by default; `rpc` names a function instead, for rows
       // the reader is given in a shape RLS alone cannot produce.
       const raw = def.rpc ? await rpc(def.rpc) : await select(def.view, { order: def.order });
-      const rows = raw.map(def.map);
+      // `map` is optional: a dataset whose rows are already the shape the page
+      // wants takes them as they come. Without this a dataset that declares no
+      // map fails with "undefined is not a function" and reads as the database
+      // being down, which is a confusing way to report a missing line of config.
+      const rows = def.map ? raw.map(def.map) : raw;
       window[def.global] = rows;
       if (def.after) await def.after(rows);
       cacheWrite(name, rows);

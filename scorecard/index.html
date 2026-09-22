@@ -33,6 +33,7 @@
     rel="stylesheet">
   <link rel="stylesheet" href="/css/shared.css">
   <link rel="stylesheet" href="/scorecard/css/scorecard.css">
+  <link rel="stylesheet" href="/scorecard/css/cost-kpi.css">
 </head>
 
 <body>
@@ -97,8 +98,22 @@
   <main class="sc-section">
     <div class="sc-inner">
       <div class="sc-panel" data-reveal>
-        <nav class="sc-crumbs" id="scCrumbs" aria-label="Scorecard breadcrumb"></nav>
-        <div id="scView"></div>
+        <!-- Two readings of the same organisation: what the KPIs say, and what
+             the budget says. Tabs rather than a second page, because the Cost
+             KPI is one of the six category types the scorecard already scores
+             — it belongs beside them, not somewhere else. -->
+        <nav class="sc-tabs" id="scTabs" role="tablist" aria-label="Scorecard views">
+          <button class="sc-tab is-on" type="button" role="tab" data-tab="score"
+                  id="scTabScore" aria-controls="scScoreView" aria-selected="true">Scorecard</button>
+          <button class="sc-tab" type="button" role="tab" data-tab="cost"
+                  id="scTabCost" aria-controls="scCostView" aria-selected="false"
+                  tabindex="-1">Cost KPI</button>
+        </nav>
+        <div id="scScoreView" role="tabpanel" aria-labelledby="scTabScore">
+          <nav class="sc-crumbs" id="scCrumbs" aria-label="Scorecard breadcrumb"></nav>
+          <div id="scView"></div>
+        </div>
+        <div id="scCostView" role="tabpanel" aria-labelledby="scTabCost" hidden></div>
       </div>
 
       <!-- The "Sort by student outcome" panel stood here. It grouped the same
@@ -120,8 +135,8 @@
   <script src="/shared/js/data-service.js"></script>
   <script src="/shared/js/cap-guide-link.js"></script>
   <script src="/shared/js/hub-boot.js"
-          data-datasets="kpis,outcomeKpis?"
-          data-then="scorecard/js/scorecard.js"></script>
+          data-datasets="kpis,outcomeKpis?,costBudget?"
+          data-then="scorecard/js/scorecard.js,scorecard/js/cost-kpi.js"></script>
   <script src="/js/shared.js"></script>
 
 </body>

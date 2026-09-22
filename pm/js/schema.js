@@ -420,13 +420,35 @@ function statusCell(_value, row) {
   return span;
 }
 
+/* An OKR row is a count when its Type carries "#" ("KPI # - Decrease"): 8 bugs
+   against a goal of 5, not 8% against 5%. Everything else on the sheet is a
+   fraction shown as a percentage. The OKR page and the department pages read
+   the same rule, from shared/js/okr-math.js. */
+const isCountRow = (row) => !!(row && row.type && /#/.test(String(row.type)));
+
+/* Goal and Stretch Goal: a count shows as the number it is. It used to go
+   through the generic percent display, so a goal of 5 bugs read "5%". */
+function goalCell(value, row) {
+  const span = document.createElement("span");
+  span.className = "cell num";
+  if (value === null || value === undefined || value === "") {
+    span.className = "cell muted"; span.textContent = "—"; return span;
+  }
+  const n = Number(value);
+  if (!Number.isFinite(n)) { span.textContent = String(value); return span; }
+  span.textContent = isCountRow(row)
+    ? String(n)
+    : (Math.abs(n) <= 1 ? Math.round(n * 1000) / 10 + "%" : n + "%");
+  return span;
+}
+
 function progressCell(value, row) {
   const span = document.createElement("span");
   if (value === null || value === undefined || value === "") {
     span.className = "cell muted"; span.textContent = "—"; return span;
   }
   const n = Number(value);
-  const isCount = row.type && /#/.test(row.type);
+  const isCount = isCountRow(row);
   const pct = isCount ? null : Math.round(n * 1000) / 10;
   const wrap = document.createElement("span");
   wrap.className = "bar";
@@ -494,9 +516,16 @@ window.SS.WORKBOOKS = {
           help: "Comma-separated. Shown on the hub as separate people." },
         { key: "project_manager",        label: "Project Manager",         type: "text",     width: 150 },
         { key: "type",                   label: "Type",                    type: "text",     width: 150 },
-        { key: "goal",                   label: "Goal",                    type: "percent",  width: 90 },
-        { key: "stretch_goal",           label: "Stretch Goal",            type: "percent",  width: 100 },
-        { key: "progress",               label: "Progress",                type: "percent",  width: 140, render: progressCell },
+        // `countIf`: on a "KPI #" row these hold a count, so 9 is stored as 9 —
+        // not read as 9% and saved as 0.09. See Grid._parse.
+        { key: "goal",                   label: "Goal",                    type: "percent",  width: 90,
+          render: goalCell, countIf: isCountRow,
+          help: 'A percentage (75 = 75%), or on a "KPI #" row the count itself (5 = 5).' },
+        { key: "stretch_goal",           label: "Stretch Goal",            type: "percent",  width: 100,
+          render: goalCell, countIf: isCountRow },
+        { key: "progress",               label: "Progress",                type: "percent",  width: 140,
+          render: progressCell, countIf: isCountRow,
+          help: 'A percentage (75 = 75%), or on a "KPI #" row the count itself (9 = 9).' },
         { key: "status",                 label: "Status",                  type: "select",   width: 150, options: OKR_STATUS },
         { key: "trend",                  label: "Trend",                   type: "select",   width: 130, options: TREND },
         { key: "comment",                label: "Comment",                 type: "longtext", width: 560 },

@@ -48,11 +48,19 @@ const escapeHtml = window.SS.escapeHtml;
 const unique = window.SS.unique;
 function pct(v) { return Math.round((v || 0) * 100); }
 /* Display unit for a row's metric — KPI #-typed rows are raw counts
-   (e.g. "9 / 5"), everything else renders as a percentage. */
-function unitOf(r) { return r && r.type && /#/.test(r.type) ? "" : "%"; }
+   (e.g. "9 / 5"), everything else renders as a percentage. The rule itself
+   lives in shared/js/okr-math.js, which the department pages read too. */
+function unitOf(r) { return window.SS.okr.isCount(r) ? "" : "%"; }
+/* A count is shown as the number it is. This used to run every value through
+   pct() and only drop the % sign for counts, so 9 bugs against a goal of 5
+   read "900 / 500". Percentages keep this page's whole-number rounding. */
 function formatValue(v, r) {
   if (v == null) return "—";
-  return pct(v) + unitOf(r);
+  if (window.SS.okr.isCount(r)) {
+    const n = Number(v);
+    return Number.isFinite(n) ? String(Math.round(n * 100) / 100) : String(v);
+  }
+  return pct(v) + "%";
 }
 /* Stretch goals come in three shapes from Profit.co:
      • a positive number (a real stretch target)
@@ -137,7 +145,9 @@ function progressBarInfo(r) {
   }
 
   // Increase-style item with a "full completion" goal (1.0): 0–100 scale.
-  if (!isDecrease && r.goal >= 1) {
+  // Percentages only: on a count row a goal of 3 is three of something, not
+  // 300%, and it has to reach the goal-met test below like any other target.
+  if (!isDecrease && !window.SS.okr.isCount(r) && r.goal >= 1) {
     return {
       mode: "completion",
       progressPct, goalPct, progressDisplay, goalDisplay,
@@ -1014,8 +1024,13 @@ function renderSkrDetail(r) {
      roadmap") and demote the Parent into the breadcrumb. Rows without a
      Child show the Parent as the title (current behavior). */
   const titleText = r.subKeyResultChild || r.subKeyResult;
+  /* A group may be named after its own key result — "Achieve retention &
+     completion KPIs" is both — and the trail would then say it twice. */
+  const parentCrumb = r.subKeyResult && r.subKeyResult !== r.keyResult
+    ? `<span class="mc-breadcrumb-sep">›</span><b>${escapeHtml(r.subKeyResult)}</b>`
+    : "";
   const breadcrumbHtml = r.subKeyResultChild
-    ? `<span>${escapeHtml(r.okr)}</span><span class="mc-breadcrumb-sep">›</span><span>${escapeHtml(r.keyResult)}</span><span class="mc-breadcrumb-sep">›</span><b>${escapeHtml(r.subKeyResult)}</b>`
+    ? `<span>${escapeHtml(r.okr)}</span><span class="mc-breadcrumb-sep">›</span><span>${escapeHtml(r.keyResult)}</span>${parentCrumb}`
     : `<span>${escapeHtml(r.okr)}</span><span class="mc-breadcrumb-sep">›</span><b>${escapeHtml(r.keyResult)}</b>`;
   const updatedOn = formatDate(r.updateDate);
   const typeIcon = r.type && /KPI/i.test(r.type)
@@ -1026,7 +1041,7 @@ function renderSkrDetail(r) {
     <div class="mc-banner" style="${bannerCss}">
       <div class="mc-banner-grid"></div>
       <div class="mc-breadcrumb">${breadcrumbHtml}</div>
-      <div class="mc-level-badge">${r.subKeyResultChild ? "Quarterly Sub-Key Result" : "Sub-Key Result"}</div>
+      <div class="mc-level-badge">${/^Q[1-4]\b/i.test(r.subKeyResultChild || "") ? "Quarterly Sub-Key Result" : "Sub-Key Result"}</div>
       <h2 class="mc-title" id="okrpModalTitle">${escapeHtml(titleText)}</h2>
       <div class="mc-banner-meta">
         <span class="mc-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>${escapeHtml(r.period)}</span>
@@ -1090,7 +1105,7 @@ function renderSkrDetail(r) {
                 : info.mode === "target"
                 ? `Scale: 0–${info.goalDisplay} (bar full = goal reached)`
                 : info.mode === "exceeded"
-                ? `<b>Goal met</b> · ${info.progressDisplay} ${unitOf(r) === "%" ? "achieved" : "(at or below " + info.goalDisplay + ")"}`
+                ? `<b>Goal met</b> · ${info.progressDisplay} ${window.SS.okr.isCount(r) && /decrease/i.test(String(r.type || "")) ? "(at or below " + info.goalDisplay + ")" : "achieved"}`
                 : `Scale: 0–100% (full completion)`}
             </div>
           ` : ""}

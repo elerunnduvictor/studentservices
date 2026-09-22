@@ -1065,7 +1065,7 @@ export class Grid {
     const { col, rowIdx, input } = this.editing;
     const raw = input.value;
     this.editing = null;
-    const parsed = this._parse(col, raw);
+    const parsed = this._parse(col, raw, this.rows[rowIdx]);
     this.setValue(rowIdx, col.key, parsed);
     this.render();
     // The render just destroyed the focused input. Reclaim focus so the next
@@ -1082,7 +1082,7 @@ export class Grid {
     this.focus(r, c);
   }
 
-  _parse(col, raw) {
+  _parse(col, raw, row) {
     const v = typeof raw === "string" ? raw.trim() : raw;
     if (v === "" || v === null || v === undefined) return null;
     if (col.type === "number") {
@@ -1093,6 +1093,12 @@ export class Grid {
       const s = String(v).replace(/[%,\s]/g, "");
       const n = Number(s);
       if (!Number.isFinite(n)) return v;
+      // A column that holds a percentage on most rows and a count on others
+      // (an OKR's Goal: 75% on one row, "5 bugs" on the next) says which is
+      // which through `countIf`. A count is stored as typed. Without this,
+      // typing 9 into a count row stored 0.09, and the OKR page read it back
+      // as 0.09 bugs.
+      if (col.countIf && row && col.countIf(row)) return n;
       // "85" typed into a fraction column means 85%, not 8500%
       return /%/.test(String(v)) || n > 1 ? n / 100 : n;
     }
@@ -1139,7 +1145,7 @@ export class Grid {
         const col = this.visibleColumns[this.active.c + dc];
         if (!col || col.readOnly) return;
         const before = this.rows[rowIdx][col.key] ?? null;
-        const after = this._parse(col, raw);
+        const after = this._parse(col, raw, this.rows[rowIdx]);
         if (String(before ?? "") === String(after ?? "")) return;
         this.setValue(rowIdx, col.key, after, { silent: true });
         cells.push({ rowIdx, colKey: col.key, before, after });

@@ -346,18 +346,29 @@
     var fell = dips(d.total);
     if (fell.length) {
       var f = fell[0];
+      /* Both figures are right — Ben confirmed April for DigOps, the one case
+         so far — so the note does not suggest a typo. Spend already made cannot
+         come back, which leaves two ways a share can fall: the budget it is a
+         share of grew, or spending was taken out of this department. */
       notes += noteHtml(
         "Total fell from <b>" + pct(f.from.y) + "</b> in " + MONTHS[f.from.x] + " to <b>" +
-        pct(f.to.y) + "</b> in " + MONTHS[f.to.x] + ". Money already spent cannot come back, " +
-        "so either the budget was restated or one of the two figures is wrong — and the " +
-        "December projection is drawn through both."
+        pct(f.to.y) + "</b> in " + MONTHS[f.to.x] + ". Spending already made cannot come back, " +
+        "so between those months either the budget grew or spending was moved out of this " +
+        "department. The December projection is drawn through both months."
       );
     }
     if (o.diverges) {
+      /* After a fall like the one above, the two lines answer different
+         questions, and which one to read depends on what caused it. Without a
+         fall they are two fits of the same story, and the reader only needs to
+         know they disagree. */
       notes += noteHtml(
         "The last " + RECENT + " months point at <b>" + pct(o.recent) + "</b> by December, " +
         "against <b>" + pct(o.projected) + "</b> for the year so far — drawn as the fainter " +
-        "dotted line. Worth deciding which months to trust before reading this one as settled."
+        "dotted line. " + (fell.length
+          ? "If the fall came from a larger budget, the months before it were measured against " +
+            "a smaller one, and the recent pace is the one to go by."
+          : "Worth deciding which months to trust before reading this one as settled.")
       );
     }
 

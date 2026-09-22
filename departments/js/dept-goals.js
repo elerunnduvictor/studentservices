@@ -286,7 +286,9 @@
         var fill = att === null ? 0 : Math.round(att * 100);
         return '<li class="dg-kr">' +
           '<div class="dg-kr-head">' +
-            '<span class="dg-kr-name">' + esc(r.subKeyResult || r.keyResult) + "</span>" +
+            // The child first: rows grouped under one parent share its name, so
+            // titling by the parent printed "Q1…", "Q2…" as four identical lines.
+            '<span class="dg-kr-name">' + esc(r.subKeyResultChild || r.subKeyResult || r.keyResult) + "</span>" +
             '<span class="dg-kr-status" style="color:' + (OKR_STATUS_COLOR[r.status] || "#7F898A") + '">' +
               esc(r.status || "—") + "</span>" +
           "</div>" +

@@ -99,7 +99,7 @@ account under **Authentication → Users** and they can set a new one.
 
 ### 4b. Who may edit
 
-Seven people, in `pm/js/pm-editors.js`:
+Seven people, in `supabase/pm-editors.js`:
 
 | Person | Scope |
 |--------|-------|

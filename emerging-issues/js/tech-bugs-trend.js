@@ -724,10 +724,13 @@
   /* One readout for every product line on the page, following the pointer
      from point to point. Wired once, to the container the compartments are
      drawn in, so redrawing them does not pile up listeners. */
-  let TIP = null, HOT = null;
+  // BAND is the point the pointer is on, so a scroll can move the tip with it
+  // rather than throwing it away.
+  let TIP = null, HOT = null, BAND = null;
   function hideSparkTip() {
     if (TIP) TIP.hidden = true;
     if (HOT) { HOT.hidden = true; HOT = null; }
+    BAND = null;
   }
   function wireSparks(root) {
     if (!root || root._sparks) return;
@@ -737,30 +740,49 @@
     TIP.hidden = true;
     TIP.setAttribute("aria-hidden", "true");     // the same figures are in the tables
     document.body.appendChild(TIP);
+    /* The tip is positioned in viewport coordinates, so it has to be placed
+       again whenever the page moves under it. */
+    const place = (b) => {
+      const plotEl = b.closest(".tb-spark-plot");
+      if (!plotEl) return;
+      const cx = Number(b.dataset.cx), cy = Number(b.dataset.cy);
+      const r = plotEl.getBoundingClientRect(), k = r.width / SW;
+      const px = r.left + cx * k, py = r.top + (cy / SH) * r.height;
+      const tw = TIP.offsetWidth, th = TIP.offsetHeight;
+      TIP.style.left = Math.max(8, Math.min(window.innerWidth - tw - 8, px - tw / 2)) + "px";
+      TIP.style.top = (py - th - 12 < 8 ? py + 14 : py - th - 12) + "px";
+    };
+
     root.addEventListener("pointerover", (e) => {
       const b = e.target.closest ? e.target.closest(".tb-spark-band") : null;
       if (!b) return;
       const plotEl = b.closest(".tb-spark-plot");
       const cx = Number(b.dataset.cx), cy = Number(b.dataset.cy);
       hideSparkTip();
+      BAND = b;
       HOT = plotEl.querySelector(".tb-spark-hot");
       HOT.style.left = pctX(cx);
       HOT.style.top = pctY(cy);
       HOT.hidden = false;
       TIP.textContent = b.dataset.tip;
       TIP.hidden = false;
-      const r = plotEl.getBoundingClientRect(), k = r.width / SW;
-      const px = r.left + cx * k, py = r.top + (cy / SH) * r.height;
-      const tw = TIP.offsetWidth, th = TIP.offsetHeight;
-      TIP.style.left = Math.max(8, Math.min(window.innerWidth - tw - 8, px - tw / 2)) + "px";
-      TIP.style.top = (py - th - 12 < 8 ? py + 14 : py - th - 12) + "px";
+      place(b);
     });
     root.addEventListener("pointerout", (e) => {
       const b = e.target.closest ? e.target.closest(".tb-spark-band") : null;
       const to = e.relatedTarget && e.relatedTarget.closest ? e.relatedTarget.closest(".tb-spark-band") : null;
       if (b && !to) hideSparkTip();
     });
-    window.addEventListener("scroll", hideSparkTip, { passive: true });
+    /* Scrolling used to hide the tip outright, which is right when the reader
+       has scrolled away from the line — and wrong in the case that actually
+       happens: scrolling down to a product and reaching for its line while the
+       page is still gliding. Trackpad momentum kept firing scroll events, so
+       the tip was killed the instant it appeared and the line felt dead. While
+       the pointer is still on a point, follow it instead. */
+    window.addEventListener("scroll", () => {
+      if (BAND && BAND.isConnected && !TIP.hidden) place(BAND);
+      else hideSparkTip();
+    }, { passive: true });
   }
 
   window.TBTrend = { RANGES, GRAINS, DEFAULTS, rangeOf, grainOf, since,

@@ -221,8 +221,12 @@
            per owner or search. -->
       <div class="tb-groupbar">
         <div class="tb-count" id="tbCountLine" role="status"></div>
-        <div class="tb-sparkmode" id="tbSparkMode" role="group" aria-label="What the line in each product follows" hidden>
-          <span class="tb-sparkmode-l">Line in each product</span>
+        <!-- The label finishes in the buttons: "Each product's line follows —
+             bug count / weighted score". It used to read "Line in each
+             product", which named a thing rather than asking a question, so it
+             looked like a control of its own that did nothing when clicked. -->
+        <div class="tb-sparkmode" id="tbSparkMode" role="group" aria-label="What each product&rsquo;s line follows" hidden>
+          <span class="tb-sparkmode-l">Each product&rsquo;s line follows</span>
           <button type="button" data-spark="bugs" aria-pressed="true">Bug count</button>
           <button type="button" data-spark="score" aria-pressed="false">Weighted score</button>
         </div>

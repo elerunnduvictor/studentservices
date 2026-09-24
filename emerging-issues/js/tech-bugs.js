@@ -54,6 +54,7 @@
   /* Read before anything else runs: the register replaces the address when it
      arrives on #raise, and this has to know what the reader asked for. */
   const ASKED_FOR_BUGS = location.hash.indexOf("#bugs") === 0;
+  const ASKED_FOR_NOTES = location.hash.indexOf("#notes") === 0;
   const ASKED_FOR_SUB = location.hash === "#bugs/backlog" ? "backlog" : "top";
 
   /* The four sections a tracker sheet keeps, and what each calls two of its
@@ -219,6 +220,12 @@
      own words are read from the page at start, so they stay written in one
      place; the tracker's are here. */
   const REGISTER = { eyebrow: "", title: "", lead: "", doc: "" };
+  const FIELD_NOTES = {
+    eyebrow: "Weekly Notes",
+    title: 'Field <span>Notes</span>',
+    lead: "What the week held for each of us, what got in the way, and what comes next.",
+    doc: "Field Notes — Student Services — BYU-Pathway Worldwide",
+  };
   const BUGS = {
     eyebrow: "Technical Support",
     title: 'Technical Bugs <span>Backlog</span>',
@@ -228,9 +235,12 @@
   };
 
   function setView(view, fromReader) {
-    const bugs = view === "bugs";
-    el("eiRegister").hidden = bugs;
+    // Three registers now, so each panel is told whether it is the one showing
+    // rather than toggled against a single boolean.
+    const bugs = view === "bugs", notes = view === "notes";
+    el("eiRegister").hidden = bugs || notes;
     el("tbView").hidden = !bugs;
+    if (el("fnView")) el("fnView").hidden = !notes;
     // CSS hides "Raise an issue" off this attribute, rather than this file
     // setting `hidden` on it — the register hides it from partners by that
     // attribute, and switching back must not quietly undo that.
@@ -242,7 +252,7 @@
       b.setAttribute("aria-selected", String(on));
       b.tabIndex = on ? 0 : -1;
     });
-    const words = bugs ? BUGS : REGISTER;
+    const words = bugs ? BUGS : notes ? FIELD_NOTES : REGISTER;
     if (el("eiEyebrow")) el("eiEyebrow").textContent = words.eyebrow;
     // The title is the page's own markup or the constant above, never text
     // from the database, so setting it as HTML carries its gold word safely.
@@ -253,8 +263,10 @@
     // one to show once the rows are in.
     if (!bugs && el("tbHeroScore")) el("tbHeroScore").hidden = true;
     if (fromReader) {
-      history.replaceState(null, "", bugs ? "#bugs" : location.pathname + location.search);
+      history.replaceState(null, "",
+        bugs ? "#bugs" : notes ? "#notes" : location.pathname + location.search);
     }
+    if (notes && window.SS && window.SS.fieldNotes) window.SS.fieldNotes.show();
     if (bugs) {
       load();
       // Drawn at the width it had; the window may have changed while the
@@ -1188,6 +1200,7 @@
     wireBugs();
     switchSub(ASKED_FOR_SUB, false);
     if (ASKED_FOR_BUGS) setView("bugs", false);
+    else if (ASKED_FOR_NOTES) setView("notes", false);
     else loadCount();
   }
 

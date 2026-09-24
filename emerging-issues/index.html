@@ -94,6 +94,17 @@
           </svg>
           Raise an issue
         </button>
+        <!-- Takes the same corner on the Field Notes tab, where "Raise an
+             issue" would be the wrong verb. Which of the two shows is decided
+             by the data-view attribute in CSS, the same way the bugs tab
+             already hides the other. -->
+        <button type="button" class="ei-btn ei-btn-primary" id="fnAdd">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+               stroke-width="2" aria-hidden="true">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          Add a field note
+        </button>
         <!-- The Technical Bugs Backlog's total weighted score, in the corner
              "Raise an issue" occupies on the register — that button is hidden
              on this tab, so the score has the place to itself. Filled and shown
@@ -117,6 +128,14 @@
       <button type="button" class="ei-view is-on" role="tab" aria-selected="true"
               data-view="register" id="eiViewRegister" aria-controls="eiRegister">
         Emerging Issues
+      </button>
+      <!-- Hidden for anyone outside Student Services by js/field-notes.js: a
+           partner cannot read a note, so offering the tab would only lead to
+           an empty room. -->
+      <button type="button" class="ei-view" role="tab" aria-selected="false"
+              data-view="notes" id="eiViewNotes" aria-controls="fnView" hidden>
+        Field Notes
+        <span class="ei-view-n" id="fnViewCount" hidden></span>
       </button>
       <button type="button" class="ei-view" role="tab" aria-selected="false"
               data-view="bugs" id="eiViewBugs" aria-controls="tbView">
@@ -153,6 +172,45 @@
       <div class="ei-empty"><strong>Loading the register…</strong></div>
     </section>
     </div>
+
+    <!-- ═══════════════ FIELD NOTES ═══════════════
+         One note per person per week: what the week held, anything in the way,
+         and what comes next. Wired by js/field-notes.js, stored by
+         supabase/field-notes.sql. You see your own notes; directors and admins
+         see everyone's. -->
+    <section class="fn" id="fnView" role="tabpanel" aria-labelledby="eiViewNotes" hidden>
+
+      <!-- The note at the top: what this register is, and where to take a
+           problem instead. Without it the two tabs read as the same thing with
+           different fields, and blockers end up filed here where nobody is
+           watching for them. -->
+      <div class="fn-intro">
+        <h2>What a field note is</h2>
+        <p>A short weekly account of your own work &mdash; what the week held, anything that got
+          in the way, and what you are turning to next. It is a record, not a queue: nobody is
+          assigned a field note and nothing here is tracked to a resolution.</p>
+        <p class="fn-intro-cta"><strong>Something that needs acting on?</strong> Raise it in
+          <button type="button" class="fn-link" data-goto="register">Emerging Issues</button>,
+          where it gets a severity, an owning department and a status somebody follows.</p>
+      </div>
+
+      <!-- By the week the note is about, not by the day it was written. -->
+      <nav class="ei-tabs" id="fnTabs" role="tablist" aria-label="Which week"></nav>
+
+      <section class="ei-controls">
+        <div class="ei-filters">
+          <select id="fnDept" aria-label="Filter by department"></select>
+          <select id="fnPerson" aria-label="Filter by person"></select>
+        </div>
+        <div class="ei-count" id="fnCount"></div>
+      </section>
+
+      <div class="ei-say" id="fnSay" role="status" hidden></div>
+
+      <section class="fn-list" id="fnList">
+        <div class="ei-empty"><strong>Loading the field notes&hellip;</strong></div>
+      </section>
+    </section>
 
     <!-- ═══════════════ TECHNICAL BUGS BACKLOG ═══════════════
          Read-only. Every row comes from the TS Product Tracker workbook,
@@ -308,6 +366,53 @@
     </form>
   </dialog>
 
+  <!-- ═══════════════ ADD A FIELD NOTE ═══════════════ -->
+  <dialog class="ei-dialog" id="fnDialog" aria-label="Add a field note">
+    <form id="fnForm" method="dialog">
+      <h2 class="ei-dialog-title">Add a field note</h2>
+
+      <!-- Date is the day you are writing; Week of is the week the note is
+           about, and it follows the date unless you change it — which is what
+           someone filing on Monday for the week just gone needs to do. Only
+           Mondays are offered, because the register buckets on that column. -->
+      <div class="ei-dialog-row">
+        <div>
+          <label class="ei-label" for="fnDate">Date</label>
+          <input id="fnDate" name="note_date" type="date" required>
+        </div>
+        <div>
+          <label class="ei-label" for="fnWeek">Week of</label>
+          <select id="fnWeek" name="week_of" required></select>
+        </div>
+      </div>
+
+      <div class="ei-dialog-row">
+        <div>
+          <label class="ei-label" for="fnPersonIn">Person reporting</label>
+          <input id="fnPersonIn" name="person" type="text" maxlength="120" required>
+        </div>
+        <div>
+          <label class="ei-label" for="fnDeptIn">Department</label>
+          <select id="fnDeptIn" name="department" required></select>
+        </div>
+      </div>
+
+      <label class="ei-label" for="fnNotes">Notes &mdash; what the week held</label>
+      <textarea id="fnNotes" name="notes" rows="5" required></textarea>
+
+      <label class="ei-label" for="fnBlockers">Blockers or challenges &mdash; if there were any</label>
+      <textarea id="fnBlockers" name="blockers" rows="3"></textarea>
+
+      <label class="ei-label" for="fnFocus">Focus for next week</label>
+      <textarea id="fnFocus" name="focus" rows="3" required></textarea>
+
+      <div class="ei-dialog-actions">
+        <button type="button" class="ei-btn" id="fnCancel">Cancel</button>
+        <button type="submit" class="ei-btn ei-btn-primary" id="fnSubmit">Post the note</button>
+      </div>
+    </form>
+  </dialog>
+
   <script src="/js/shared.js"></script>
   <script src="/shared/js/hub-palette.js"></script>
   <script src="/shared/js/config.js"></script>
@@ -316,6 +421,7 @@
   <script src="/shared/js/hub-account.js"></script>
   <script src="/shared/js/data-service.js"></script>
   <script src="/emerging-issues/js/emerging-issues.js"></script>
+  <script src="/emerging-issues/js/field-notes.js"></script>
   <script src="/emerging-issues/js/tech-bugs-trend.js"></script>
   <script src="/emerging-issues/js/tech-bugs.js"></script>
 </body>

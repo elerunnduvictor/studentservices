@@ -353,6 +353,9 @@
     get role() { return state.role; },
     /** Job title for display — "Partner" for anyone outside Student Services. */
     get title() { return state.title; },
+    /** The name on this person's hub_access row, for prefilling a form that
+     *  asks who is writing. Null until profileReady has resolved. */
+    get fullName() { return state.fullName; },
     get scope() { return state.scope; },
     get session() { return state.session; },
     get isPartner() { return state.role === "partner"; },

@@ -1595,3 +1595,82 @@ select.is-sev-low option { color: var(--text); font-weight: 400; background: var
   .tb-eta { max-width: 100%; }
 }
 
+
+/* ═══ FIELD NOTES ═══════════════════════════════════════════════════════════
+   The third register: one note per person per week. Built from the same parts
+   as the issue register above — the same week tabs, the same filter row, the
+   same dialog — so the two read as one page rather than two apps sharing a
+   navbar. */
+#fnView[hidden] { display: none !important; }
+
+/* Only one of the two hero buttons belongs to any given tab. */
+.ei-page[data-view="notes"] #eiRaise { display: none !important; }
+#fnAdd { display: none; }
+.ei-page[data-view="notes"] #fnAdd { display: inline-flex; }
+#fnAdd[hidden] { display: none !important; }
+
+/* ── what this register is, and where a problem goes instead ── */
+.fn-intro {
+  padding: 18px 22px;
+  margin-bottom: 22px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--bp-teal);
+  border-radius: var(--radius-lg);
+}
+.fn-intro h2 {
+  margin: 0 0 8px;
+  font-family: 'Jost', sans-serif; font-weight: 600; font-size: 1rem;
+  color: var(--text);
+}
+.fn-intro p { margin: 0; max-width: 80ch; font-size: .86rem; line-height: 1.6; color: var(--text-muted); }
+.fn-intro-cta { margin-top: 10px !important; }
+.fn-intro-cta strong { color: var(--text); }
+.fn-link {
+  font: inherit; font-weight: 600; color: var(--bp-teal);
+  background: none; border: 0; padding: 0; cursor: pointer;
+  text-decoration: underline; text-underline-offset: 2px;
+}
+.fn-link:hover { color: var(--text); }
+.fn-link:focus-visible { outline: 2px solid var(--bp-teal); outline-offset: 2px; border-radius: 3px; }
+
+/* ── the notes themselves ── */
+.fn-list { display: flex; flex-direction: column; gap: 12px; }
+.fn-note {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--ei-dept, var(--text-dim));
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+}
+.fn-note.is-mine { border-left-color: var(--bp-teal); }
+.fn-note-head {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px;
+  margin-bottom: 4px;
+}
+.fn-who { font-family: 'Jost', sans-serif; font-weight: 600; font-size: .98rem; color: var(--text); }
+.fn-mine-tag {
+  font-size: .62rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+  padding: 2px 8px; border-radius: 999px;
+  color: var(--bp-teal); background: rgba(163,34,34,.12);
+}
+.fn-dept { font-size: .78rem; color: var(--ei-dept, var(--text-muted)); font-weight: 500; }
+.fn-when { margin-left: auto; font-size: .74rem; color: var(--text-dim); white-space: nowrap; }
+
+.fn-body { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }
+.fn-part > h4 {
+  margin: 0 0 4px;
+  font-size: .62rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--text-dim);
+}
+.fn-part p { margin: 0; font-size: .87rem; line-height: 1.6; color: var(--text); white-space: pre-wrap; }
+.fn-part.is-blockers { padding-left: 11px; border-left: 2px solid var(--status-yellow); }
+.fn-part.is-blockers h4 { color: #B4700F; }
+[data-theme="dark"] .fn-part.is-blockers h4 { color: #F0B35E; }
+.fn-part.is-focus p { color: var(--text-muted); }
+
+@media (max-width: 620px) {
+  .fn-intro { padding: 15px 16px; }
+  .fn-note { padding: 14px 15px; }
+  .fn-when { margin-left: 0; width: 100%; }
+}

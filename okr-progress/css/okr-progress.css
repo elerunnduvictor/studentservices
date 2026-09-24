@@ -17,6 +17,21 @@
   --status-not: #7F898A;
   --status-arch: #58595B;
 
+  /* Fixed (not per-OKR) accents for the two grouping levels between an
+     objective header and a plain row — Key Result and Sub-Key Result
+     (parent). Unlike --okr-color/--skr-color, which vary by data, these are
+     the same amber/blue-grey everywhere so the level itself is what a reader
+     recognizes, not which objective it's under. */
+  --kr-color: #d4a020;
+  --kr-pale: rgba(212,160,32,0.14);
+  --skrp-color: #5B7186;
+  --skrp-pale: rgba(91,113,134,0.14);
+  /* Deliberately more muted than --status-track (the same green used for an
+     "On Track" pill) — a Completed folder is a place finished work goes to
+     stop competing for attention, not a status to draw the eye toward. */
+  --done-color: #6B9C7D;
+  --done-pale: rgba(107,156,125,0.12);
+
   --bg: #FFFFFF;
   --bg-card: #FFFFFF;
   --bg-elevated: #F5F6F8;
@@ -1369,6 +1384,75 @@ body.modal-open { overflow: hidden; }
    is the whole thing this list exists to avoid. */
 .okrp-group-body[hidden] { display: none; }
 
+/* ── a key result with several sub-key results under it ──
+   Sits between the objective header and the sub-key-result-parent grouping
+   below it: same collapsing-card shape, amber instead of teal, and a step
+   quieter than the objective it's nested in. Only appears when 2+ rows
+   share a Key Result — see groupByKeyResult() in the JS. */
+.okrp-kr {
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--kr-color);
+  border-radius: 10px;
+  background: var(--bg);
+  overflow: hidden;
+}
+.okrp-kr-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 13px 15px;
+  background: none;
+  border: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background .18s;
+}
+.okrp-kr:not(.is-open) > .okrp-kr-head { min-height: calc(var(--okrp-row-h) - 2px); }
+.okrp-kr-head:hover { background: var(--kr-pale); }
+.okrp-kr.is-open > .okrp-kr-head { background: var(--kr-pale); }
+.okrp-kr-head:focus-visible { outline: 2px solid var(--kr-color); outline-offset: -2px; }
+
+.okrp-kr-chev {
+  flex: none;
+  width: 20px; height: 20px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--kr-color);
+  transition: transform .22s var(--smooth, ease);
+}
+.okrp-kr-chev svg { width: 15px; height: 15px; }
+.okrp-kr.is-open .okrp-kr-chev { transform: rotate(180deg); }
+
+.okrp-kr-text { min-width: 0; }
+.okrp-kr-name {
+  display: block;
+  font-size: 0.98rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--text);
+}
+.okrp-kr-meta {
+  display: block;
+  margin-top: 3px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+.okrp-kr-meta b { color: var(--text); font-weight: 600; }
+.okrp-kr-meta .is-risk { color: #C9762E; }
+
+.okrp-kr-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 2px 14px 14px 32px;
+}
+.okrp-kr-body[hidden] { display: none; }
+
+@media (max-width: 760px) {
+  .okrp-kr-body { padding: 2px 10px 10px 16px; }
+}
+
 /* ── one sub-key result ── */
 .okrp-skr {
   border: 1px solid var(--border);
@@ -1470,11 +1554,16 @@ body.modal-open { overflow: hidden; }
 }
 
 /* ── a sub-key result with several rows under it ──
-   The same collapsing card as the objective above it, one level in and quieter:
-   an objective is a heading, this is a grouping of rows. */
+   The same collapsing card as the objective and key-result headers above it,
+   one level in and quieter again: muted blue-grey rather than the teal/amber
+   above it, and this is the last of the three group levels before plain
+   rows. Fixed color, not derived from the row's own palette — --skr-color on
+   this section historically read as "another shade of the objective's own
+   teal," which is the wrong story for the level that sits fixed under every
+   objective and key result alike. */
 .okrp-sub {
   border: 1px solid var(--border);
-  border-left: 3px solid var(--skr-color);
+  border-left: 3px solid var(--skrp-color);
   border-radius: 10px;
   background: var(--bg);
   overflow: hidden;
@@ -1501,15 +1590,15 @@ body.modal-open { overflow: hidden; }
    A min-height follows them up rather than clipping. */
 .okrp-sub:not(.is-open) > .okrp-sub-head { min-height: calc(var(--okrp-row-h) - 2px); }
 
-.okrp-sub-head:hover { background: var(--skr-pale); }
-.okrp-sub.is-open > .okrp-sub-head { background: var(--skr-pale); }
-.okrp-sub-head:focus-visible { outline: 2px solid var(--skr-color); outline-offset: -2px; }
+.okrp-sub-head:hover { background: var(--skrp-pale); }
+.okrp-sub.is-open > .okrp-sub-head { background: var(--skrp-pale); }
+.okrp-sub-head:focus-visible { outline: 2px solid var(--skrp-color); outline-offset: -2px; }
 
 .okrp-sub-chev {
   flex: none;
   width: 18px; height: 18px;
   display: flex; align-items: center; justify-content: center;
-  color: var(--skr-color);
+  color: var(--skrp-color);
   transition: transform .22s var(--smooth, ease);
 }
 .okrp-sub-chev svg { width: 14px; height: 14px; }
@@ -1549,4 +1638,75 @@ body.modal-open { overflow: hidden; }
 
 @media (max-width: 760px) {
   .okrp-sub-body { padding: 2px 10px 10px 14px; }
+}
+
+/* ── completed folder ──
+   The fourth and quietest level: green instead of teal/amber/blue-grey, a
+   checkmark instead of the rollup line the levels above carry, and a single
+   compact row rather than a two-line header — it exists to get finished work
+   out of the way, not to ask for another look. Can appear inside a Key
+   Result's body or a Sub-Key Result parent's body, so it's styled once and
+   reused in both. */
+.okrp-done {
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--done-color);
+  border-radius: 10px;
+  background: var(--bg);
+  overflow: hidden;
+}
+.okrp-done-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background .18s;
+}
+.okrp-done-head:hover { background: var(--done-pale); }
+.okrp-done.is-open > .okrp-done-head { background: var(--done-pale); }
+.okrp-done-head:focus-visible { outline: 2px solid var(--done-color); outline-offset: -2px; }
+
+.okrp-done-chev {
+  flex: none;
+  width: 16px; height: 16px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--done-color);
+  transition: transform .22s var(--smooth, ease);
+}
+.okrp-done-chev svg { width: 13px; height: 13px; }
+.okrp-done.is-open .okrp-done-chev { transform: rotate(180deg); }
+
+.okrp-done-check {
+  flex: none;
+  width: 18px; height: 18px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  background: var(--done-pale);
+  color: var(--done-color);
+}
+.okrp-done-check svg { width: 12px; height: 12px; }
+
+.okrp-done-text {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+.okrp-done.is-open .okrp-done-text { color: var(--text); }
+
+.okrp-done-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 2px 12px 12px 12px;
+}
+.okrp-done-body[hidden] { display: none; }
+.okrp-done-body .okrp-skr { background: var(--bg-card); }
+
+@media (max-width: 760px) {
+  .okrp-done-body { padding: 2px 8px 8px 8px; }
 }

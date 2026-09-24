@@ -12,6 +12,11 @@ function effectiveStatus(r) {
   if (r.progress == null) return "Not Started";
   return "On Track";
 }
+/* "Completed" for the purpose of folding finished leaf rows out of the way —
+   anchored to the start of the string so it catches both "Completed - On
+   time" and "Completed - Late" but not, say, a status that merely mentions
+   completion in passing. */
+function isCompleted(r) { return /^Completed/i.test(effectiveStatus(r)); }
 
 /* ═══════════════ STATE ═══════════════ */
 const state = {
@@ -36,10 +41,18 @@ const state = {
      opening one automatically does not fight a reader who then closes it:
      without it the next keystroke in the search box would open it again. */
   openGroup: null,
-  /* And which sub-key result is open inside it — the same accordion, one level
-     in. Separate from openGroup because they nest: closing an objective should
-     not forget which of its sub-groups you had open. */
+  /* And which key result is open inside it, and which sub-key-result parent is
+     open inside that — the same accordion, two levels further in. Each kept
+     separate from the others because they nest: closing an objective should
+     not forget which key result or sub-group you had open inside it. */
+  openKr: null,
   openSub: null,
+  /* Completed folders don't share the Key Result/Sub-Key Result levels'
+     one-at-a-time accordion — there can be one inside every Key Result group
+     and every Sub-Key Result parent group on the page at once, and opening
+     one to check on finished work shouldn't close another a reader already
+     had open elsewhere. A Set of the open ones' keys, not a single value. */
+  openCompleted: new Set(),
   autoOpenedFor: null,
 };
 
@@ -401,31 +414,38 @@ function renderStakeholderBars(filtered) {
 /* ═══════════════ RENDER: TABLE ═══════════════ */
 /* ═══════════════ RENDER: SUB-KEY RESULTS, BY OBJECTIVE ═══════════════
 
-   Two levels of collapsing, both working the same way.
+   Up to four levels of collapsing, all working the same way, and all subject
+   to the same "2+ rows or it's just a plain row" rule below the top one.
 
-   The outer level is the objective — one card per objective in view. That
+   The outermost level is the objective — one card per objective in view. That
    replaced a flat table of every sub-key result with eleven columns: accurate,
    and unreadable at fifty rows.
 
-   The inner level is the sub-key result itself, where it has more than one row
-   under it. "Complete Admissions ITD roadmap of essential features for scale"
-   is four quarters; listing all four as siblings of everything else made the
-   objective card long again, and repeated that same sentence four times to do
-   it. Four parents in the data have several rows (7, 5, 4 and 4); the other
-   thirty have exactly one and are drawn as a plain row, because a card you
-   have to open to find a single item inside is a step that answers nothing.
+   Inside it, rows group by Key Result where 2+ rows share one — see
+   krGroup(). Inside that (or directly under the objective, for a Key Result
+   with only one row), rows group again by Sub-Key Result where 2+ rows share
+   that identical parent text — see subGroup(). "Complete Admissions ITD
+   roadmap of essential features for scale" is four quarters; listing all four
+   as siblings of everything else made the objective card long again, and
+   repeated that same sentence four times to do it. A parent with exactly one
+   row is drawn as a plain row, because a card you have to open to find a
+   single item inside is a step that answers nothing — and the same is true of
+   a Key Result with exactly one row underneath it.
 
    Nothing is hidden that was not hidden before: the same rows carry the same
-   fields, and each still opens the same detail modal.
+   fields, and each still opens the same detail modal. Objective cards default
+   open, same as always; the two levels inside them default closed, so the
+   page reads exactly as it did before they existed until a reader opens one.
 
    ── What is open ──
 
-   One objective at a time, and one sub-group at a time, like an accordion —
-   two open at once is most of the way back to the wall of rows this replaced.
-   Both are held in `state`, not in the DOM, because renderAll() rebuilds this
-   list on every filter change and every search keystroke; left in the DOM, a
-   card you opened would slam shut the moment you typed in the search box.
-   `autoOpenedFor` stops the automatic opening from fighting a reader who has
+   One objective at a time, one Key Result at a time, and one Sub-Key-Result
+   group at a time, like a three-level accordion — more than one of a kind
+   open at once is most of the way back to the wall of rows this replaced.
+   All three are held in `state`, not in the DOM, because renderAll() rebuilds
+   this list on every filter change and every search keystroke; left in the
+   DOM, a card you opened would slam shut the moment you typed in the search
+   box. `autoOpenedFor` stops the automatic opening from fighting a reader who has
    deliberately closed something. */
 function groupRows(filtered) {
   const map = new Map();
@@ -450,7 +470,27 @@ function groupByParent(rows) {
   return [...map.entries()].map(([parent, kids]) => ({ parent, rows: kids }));
 }
 
+/* The rows of one objective, gathered under the key result they belong to —
+   one level further out than groupByParent. Same insertion-order rule. */
+function groupByKeyResult(rows) {
+  const map = new Map();
+  rows.forEach((r) => {
+    const key = r.keyResult || "";
+    if (!map.has(key)) map.set(key, []);
+    map.get(key).push(r);
+  });
+  return [...map.entries()].map(([keyResult, kids]) => ({ keyResult, rows: kids }));
+}
+
 function subKey(okr, parent) { return okr + "||" + parent; }
+function krSectionKey(okr, keyResult) { return "kr::" + okr + "||" + keyResult; }
+
+/* Sort key shared by every grouping level — alphabetical by what the reader
+   sees, `numeric` so a tenth item sorts after the ninth rather than after the
+   first. */
+function byName(a, b) {
+  return String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: "base" });
+}
 
 function skrItem(r, opts) {
   const nested = !!(opts && opts.nested);
@@ -535,20 +575,66 @@ function skrItem(r, opts) {
    that claimed a single stakeholder for seven rows owned by different people
    would be worse than saying nothing.
 
+/* The finished-work folder — the fourth and quietest group level. Wherever
+   leaf rows would otherwise render directly in a level's body (a Key
+   Result's own flat rows, or a Sub-Key Result parent's children), a genuine
+   mix of completed and still-active ones splits: actives stay in their
+   normal spot, completed ones move into this, collapsed, at the end.
+
+   Muted on purpose — green and a checkmark instead of the amber/blue-grey
+   the levels above use, and a bare "Completed (N)" instead of their avg/at-
+   risk rollup, because there's nothing left to track once something's done.
+   `scopeKey` (the caller's own group key, e.g. krSectionKey() or subKey())
+   is reused so this folder's own open state doesn't collide with another
+   completed folder elsewhere in the tree. */
+function completedFolder(scopeKey, rows, renderItem) {
+  const key = "completed::" + scopeKey;
+  const open = state.openCompleted.has(key);
+  return `
+    <section class="okrp-done${open ? " is-open" : ""}" data-completed="${escapeHtml(key)}">
+      <button type="button" class="okrp-done-head" aria-expanded="${open}">
+        <span class="okrp-done-chev" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </span>
+        <span class="okrp-done-check" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </span>
+        <span class="okrp-done-text">Completed (${rows.length})</span>
+      </button>
+      <div class="okrp-done-body"${open ? "" : " hidden"}>
+        ${rows.map(renderItem).join("")}
+      </div>
+    </section>`;
+}
+
 /* A sub-key result with several rows under it: a header that summarises them,
    and the rows themselves behind it. Same shape as the objective card above,
    one level in. */
 function subGroup(okr, entry) {
   const key = subKey(okr, entry.parent);
   const open = state.openSub === key;
-  const skr = skrPalette(entry.rows[0]);
   const avg = window.SS.okr.averagePercent(entry.rows);
   const atRisk = entry.rows.filter((r) => /risk|trouble|behind/i.test(effectiveStatus(r))).length;
   const done = entry.rows.filter((r) => /complet/i.test(effectiveStatus(r))).length;
 
+  /* This parent's children are exactly the leaf rows that render directly
+     under it — split completed out to a folder only when they're a genuine
+     mix; entirely one or the other renders flat, same as before this
+     existed. */
+  const completedRows = entry.rows.filter(isCompleted);
+  const activeRows = entry.rows.filter((r) => !isCompleted(r));
+  const splitDone = completedRows.length > 0 && activeRows.length > 0;
+  const renderChild = (r) => skrItem(r, { nested: true });
+  const childrenHtml = splitDone
+    ? activeRows.map(renderChild).join("") + completedFolder(key, completedRows, renderChild)
+    : entry.rows.map(renderChild).join("");
+
   return `
-    <section class="okrp-sub${open ? " is-open" : ""}" data-sub="${escapeHtml(key)}"
-             style="--skr-color:${skr.bg}; --skr-pale:${skr.pale};">
+    <section class="okrp-sub${open ? " is-open" : ""}" data-sub="${escapeHtml(key)}">
       <button type="button" class="okrp-sub-head" aria-expanded="${open}">
         <span class="okrp-sub-chev" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
@@ -561,7 +647,74 @@ function subGroup(okr, entry) {
         </span>
       </button>
       <div class="okrp-sub-body"${open ? "" : " hidden"}>
-        ${entry.rows.map((r) => skrItem(r, { nested: true })).join("")}
+        ${childrenHtml}
+      </div>
+    </section>`;
+}
+
+/* The sub-key-result-parent grouping for one set of rows — shared by the
+   plain path (rows straight under an objective, when their Key Result had
+   only one row) and the nested path (rows inside a krGroup()). A parent with
+   2+ rows becomes its own collapsible group; a parent with one row is drawn
+   as that row, same 2+ rule as everywhere else on this page.
+
+   `scopeKey` names this level's own completed folder (see completedFolder());
+   the rows that stay flat here — one per parent with a single row — are
+   exactly the leaf rows this level renders directly, so they're what gets
+   split. A parent's own subGroup() handles the split for its own children
+   independently; a multi-row parent doesn't participate in this level's. */
+function renderSkrLevel(okr, rows, scopeKey) {
+  const entries = groupByParent(rows)
+    .map((entry) => ({
+      parent: entry.parent,
+      // Q1 → Q2 → Q3 → Q4 where several children share one parent.
+      rows: entry.rows.slice().sort((a, b) =>
+        byName(a.subKeyResultChild || a.subKeyResult, b.subKeyResultChild || b.subKeyResult)),
+    }))
+    .sort((a, b) => byName(a.parent, b.parent));
+
+  const leafRows = entries.filter((e) => e.rows.length === 1).map((e) => e.rows[0]);
+  const completedLeaves = leafRows.filter(isCompleted);
+  const splitLeaves = completedLeaves.length > 0 && completedLeaves.length < leafRows.length;
+
+  const mainHtml = entries.map((entry) => {
+    if (entry.rows.length > 1) return subGroup(okr, entry);
+    const r = entry.rows[0];
+    if (splitLeaves && isCompleted(r)) return ""; // moved into the folder below, out of its alphabetical slot
+    return skrItem(r);
+  }).join("");
+
+  const folderHtml = splitLeaves ? completedFolder(scopeKey, completedLeaves, (r) => skrItem(r)) : "";
+  return mainHtml + folderHtml;
+}
+
+/* A key result with several sub-key results under it — one level out from
+   subGroup(), same accordion pattern, amber instead of blue-grey. Only
+   built when 2+ rows share a Key Result; a Key Result with one row skips
+   straight to renderSkrLevel() with no wrapper, so it renders exactly as it
+   did before this level existed. */
+function krGroup(okr, entry) {
+  const key = krSectionKey(okr, entry.keyResult);
+  const open = state.openKr === key;
+  const avg = window.SS.okr.averagePercent(entry.rows);
+  const atRisk = entry.rows.filter((r) => /risk|trouble|behind/i.test(effectiveStatus(r))).length;
+  const done = entry.rows.filter((r) => /complet/i.test(effectiveStatus(r))).length;
+
+  return `
+    <section class="okrp-kr${open ? " is-open" : ""}" data-kr="${escapeHtml(key)}">
+      <button type="button" class="okrp-kr-head" aria-expanded="${open}">
+        <span class="okrp-kr-chev" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </span>
+        <span class="okrp-kr-text">
+          <span class="okrp-kr-name">${escapeHtml(entry.keyResult)}</span>
+          <span class="okrp-kr-meta"><b>${entry.rows.length}</b> sub-key result${entry.rows.length === 1 ? "" : "s"}${avg === null ? "" : ` · <b>${avg}%</b> avg`}${done ? ` · ${done} complete` : ""}${atRisk ? ` · <b class="is-risk">${atRisk} at risk</b>` : ""}</span>
+        </span>
+      </button>
+      <div class="okrp-kr-body"${open ? "" : " hidden"}>
+        ${renderSkrLevel(okr, entry.rows, key)}
       </div>
     </section>`;
 }
@@ -594,33 +747,20 @@ function renderGroups(filtered) {
     const atRisk = g.rows.filter((r) => /risk|trouble|behind/i.test(effectiveStatus(r))).length;
     const done = g.rows.filter((r) => /complet/i.test(effectiveStatus(r))).length;
 
-    /* A parent with several rows becomes a group of its own; one with a single
-       row is drawn as that row. A collapsible holding one item asks to be
-       opened to show what it already said.
+    /* A Key Result with several rows becomes a group of its own; one with a
+       single row skips straight to the sub-key-result-parent grouping with no
+       wrapper — same "2+ or plain" rule this page already used one level in,
+       now applied one level out too. A collapsible holding one item asks to
+       be opened to show what it already said.
 
-       Ordered alphabetically by what the reader sees — the parent's name —
-       whether it ends up a group or a single row, so the two kinds interleave
-       rather than the groups clumping at one end. Sorting used to key off the
-       key result first, which is invisible here: it put "Achieve 75% PC New
-       yield" after three parents beginning with "Complete" for a reason
-       nothing on screen explained.
+       Ordered alphabetically by what the reader sees — the key result's own
+       name — so groups and single rows interleave rather than clumping at
+       one end. */
+    const krEntries = groupByKeyResult(g.rows)
+      .sort((a, b) => byName(a.keyResult, b.keyResult));
 
-       `numeric` so a tenth item sorts after the ninth rather than after the
-       first. */
-    const byName = (a, b) =>
-      String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: "base" });
-
-    const entries = groupByParent(g.rows)
-      .map((entry) => ({
-        parent: entry.parent,
-        // Q1 → Q2 → Q3 → Q4 where several children share one parent.
-        rows: entry.rows.slice().sort((a, b) =>
-          byName(a.subKeyResultChild || a.subKeyResult, b.subKeyResultChild || b.subKeyResult)),
-      }))
-      .sort((a, b) => byName(a.parent, b.parent));
-
-    const body = entries.map((entry) =>
-      entry.rows.length > 1 ? subGroup(g.okr, entry) : skrItem(entry.rows[0])
+    const body = krEntries.map((entry) =>
+      entry.rows.length > 1 ? krGroup(g.okr, entry) : renderSkrLevel(g.okr, entry.rows, krSectionKey(g.okr, entry.keyResult))
     ).join("");
 
     return `
@@ -649,8 +789,23 @@ function renderGroups(filtered) {
   if (!host.dataset.wired) {
     host.dataset.wired = "1";
     host.addEventListener("click", (e) => {
-      // Innermost first: a sub-group header sits inside an objective's body, so
-      // testing the objective first would swallow every click on a sub.
+      // Innermost first: a completed folder can sit inside a sub-group's body
+      // or a key-result's body, both of which sit inside an objective's body,
+      // so testing the outer levels first would swallow every click on the
+      // level(s) nested inside them.
+      const doneHead = e.target.closest(".okrp-done-head");
+      if (doneHead) {
+        const sec = doneHead.closest(".okrp-done");
+        const key = sec.dataset.completed;
+        // Independent toggle, not an accordion — see state.openCompleted.
+        const nowOpen = !state.openCompleted.has(key);
+        if (nowOpen) state.openCompleted.add(key); else state.openCompleted.delete(key);
+        sec.classList.toggle("is-open", nowOpen);
+        sec.querySelector(".okrp-done-head").setAttribute("aria-expanded", String(nowOpen));
+        sec.querySelector(".okrp-done-body").hidden = !nowOpen;
+        return;
+      }
+
       const subHead = e.target.closest(".okrp-sub-head");
       if (subHead) {
         const sec = subHead.closest(".okrp-sub");
@@ -662,6 +817,21 @@ function renderGroups(filtered) {
           s2.classList.toggle("is-open", isIt);
           s2.querySelector(".okrp-sub-head").setAttribute("aria-expanded", String(isIt));
           s2.querySelector(".okrp-sub-body").hidden = !isIt;
+        });
+        return;
+      }
+
+      const krHead = e.target.closest(".okrp-kr-head");
+      if (krHead) {
+        const sec = krHead.closest(".okrp-kr");
+        const key = sec.dataset.kr;
+        const nowOpen = state.openKr !== key;
+        state.openKr = nowOpen ? key : null;
+        host.querySelectorAll(".okrp-kr").forEach((s2) => {
+          const isIt = s2 === sec && nowOpen;
+          s2.classList.toggle("is-open", isIt);
+          s2.querySelector(".okrp-kr-head").setAttribute("aria-expanded", String(isIt));
+          s2.querySelector(".okrp-kr-body").hidden = !isIt;
         });
         return;
       }

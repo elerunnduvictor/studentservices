@@ -344,6 +344,23 @@ const departmentSheets = (key, label, department) => [
     columns: STUDENT_COLUMNS,
   },
   {
+    /* The department's student contractors, beside its student employees. The
+       same rows as the all-department Student Contractors tabs further down,
+       filtered to this department — so a department's page shows its whole
+       roster, which it did not while these lived only in that shared list.
+
+       Still `student_contractors`, never `student_employees`: the hub's
+       directory unions the second and not the first, so this is what keeps
+       these names off the public directory. A row added here is filed to this
+       department automatically. */
+    key: key + "_contractors", group: key, groupLabel: label, label: "Student Contractors",
+    table: "student_contractors",
+    order: "name.asc.nullslast",
+    filter: { department: `eq.${department}`, active: "eq.true" },
+    seed: { department, active: true },
+    columns: STUDENT_CONTRACTOR_COLUMNS,
+  },
+  {
     key: key + "_archived", group: key, groupLabel: label, label: "Archived",
     // FTE, Temporary and Professional Contractors share one archive rather
     // than one each — Employment Type is already a visible column on

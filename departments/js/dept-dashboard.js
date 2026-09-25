@@ -23,6 +23,9 @@
   var ftt = filtered.filter(function(e) { return e.type === "Full-Time Temporary"; }).length;
   var ptt = filtered.filter(function(e) { return e.type === "Part-Time Temporary"; }).length;
   var proContractors = filtered.filter(function(e) { return e.type === "Professional Contractor"; }).length;
+  // Employed through an Employer of Record rather than contracted at a tier, so
+  // counted apart from the contractors and given a card of their own.
+  var eor = filtered.filter(function(e) { return e.type === "Employer of Record"; }).length;
   var studentEmployees = filtered.filter(function(e) { return e.type === "Student Employee"; }).length;
   var studentContractors = (window.STUDENT_CONTRACTORS && window.STUDENT_CONTRACTORS[DEPT]) || 0;
   var contractors = proContractors + studentContractors;
@@ -53,6 +56,15 @@
           ? proContractors + ' professional · ' + studentContractors + ' student'
           : proContractors + ' professional') + '</div>'
     + '</div>'
+    // Only where a department has any, so the other departments' rows are
+    // unchanged.
+    + (eor > 0
+      ? '<div class="dd-kpi" style="--kpi-color:' + (typeC["Employer of Record"] || "#C9682B") + ';">'
+      +   '<div class="dd-kpi-label">Employer of Record</div>'
+      +   '<div class="dd-kpi-value">' + eor + '</div>'
+      +   '<div class="dd-kpi-sub">employed through an EOR</div>'
+      + '</div>'
+      : '')
     + '<div class="dd-kpi" style="--kpi-color:' + (typeC["Student Employee"] || "#5E60CE") + ';">'
     +   '<div class="dd-kpi-label">Student Employees</div>'
     +   '<div class="dd-kpi-value">' + studentEmployees + '</div>'
@@ -99,6 +111,7 @@
     { label: "Full-Time Temporary",    value: ftt,                color: typeC["Full-Time Temporary"]     || "#28738A" },
     { label: "Part-Time Temporary",    value: ptt,                color: typeC["Part-Time Temporary"]     || "#FFC328" },
     { label: "Professional Contractor",value: proContractors,     color: typeC["Professional Contractor"] || "#7F898A" },
+    { label: "Employer of Record",     value: eor,                color: typeC["Employer of Record"]      || "#C9682B" },
     { label: "Student Employee",       value: studentEmployees,   color: typeC["Student Employee"]        || "#5E60CE" },
     { label: "Student Contractor",     value: studentContractors, color: typeC["Student Contractor"]      || "#B687AC" },
   ].filter(function(d) { return d.value > 0; });

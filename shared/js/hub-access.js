@@ -260,6 +260,34 @@
         }
       } catch { /* offline — the cached title, if any, still stands */ }
     }
+
+    /* A second, looser try: first and last name, anything between.
+
+       The access list and the directory spell people differently, most often
+       by a middle name — "Mariela Gisell Pezzali" against "Mariela Pezzali",
+       "Joshua Hadden" against "Joshua Stafford Hadden". An exact match found
+       nobody, so the chip fell through to guessing from the access category,
+       and "Student Services - DOS Director" put "Director" beside a project
+       manager's name. Accepted only when exactly one person matches: this is a
+       label, and two candidates means no answer rather than the wrong one. */
+    for (const name of names) {
+      const words = String(name).trim().split(/\s+/);
+      if (words.length < 2) continue;
+      const pattern = words[0] + "*" + words[words.length - 1];
+      try {
+        const res = await fetch(
+          base() + "/rest/v1/v_hub_directory?select=role&limit=2&name=ilike." + encodeURIComponent(pattern),
+          { headers: headers() });
+        if (!res.ok) continue;
+        const rows = await res.json();
+        if (rows.length === 1 && rows[0].role) {
+          state.title = rows[0].role;
+          try { localStorage.setItem(TITLE_KEY, JSON.stringify({ email: state.email, title: rows[0].role })); }
+          catch { /* private mode */ }
+          return;
+        }
+      } catch { /* offline */ }
+    }
     if (!state.title) state.title = titleFromCategory(state.category);
   }
 

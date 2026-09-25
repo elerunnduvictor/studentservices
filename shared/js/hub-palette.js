@@ -37,6 +37,11 @@ window.TYPE_COLORS = {
   "Full-Time Temporary":     "#28738A",
   "Part-Time Temporary":     "#FFC328",
   "Professional Contractor": "#7F898A",
+  // Employed through an Employer of Record (Velocity Global, XML) rather than
+  // contracted at a tier — a different relationship, so its own colour. Burnt
+  // orange sits apart from the grey contractors, the gold temporaries and the
+  // blues in both hue and lightness.
+  "Employer of Record":      "#C9682B",
   "Student Contractor":      "#B687AC",
   "Student Employee":        "#5E60CE",
 };

@@ -77,6 +77,10 @@ function renderKpis(filtered) {
   const total = filtered.length + studentContractors;
   const fte = filtered.filter(e => e.type === "Full-Time Employee").length;
   const contractors = filtered.filter(e => e.type === "Professional Contractor").length;
+  // Employed through an Employer of Record, not contracted at a tier — counted
+  // apart, and only given a card when the filtered view holds any.
+  const eor = filtered.filter(e => e.type === "Employer of Record").length;
+  const eorPct = total ? Math.round(eor / total * 100) : 0;
   const studentEmployees = filtered.filter(e => e.type === "Student Employee").length;
   const deptCount = new Set([
     ...filtered.map(e => e.dept),
@@ -103,6 +107,12 @@ function renderKpis(filtered) {
       <div class="kpi-value">${contractors}</div>
       <div class="kpi-sub">${contractorPct}% of filtered</div>
     </div>
+    ${eor ? `
+    <div class="kpi-card" style="--kpi-color: ${TYPE_COLORS["Employer of Record"] || "#C9682B"};">
+      <div class="kpi-label">Employer of Record</div>
+      <div class="kpi-value">${eor}</div>
+      <div class="kpi-sub">${eorPct}% of filtered</div>
+    </div>` : ""}
     <div class="kpi-card" style="--kpi-color: var(--type-student-employee);">
       <div class="kpi-label">Student Employees</div>
       <div class="kpi-value">${studentEmployees}</div>

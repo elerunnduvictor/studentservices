@@ -60,6 +60,9 @@
     { key: "fte",      label: "Full-Time",   match: (t) => t === "Full-Time Employee" },
     { key: "temp",     label: "Temporary",   match: (t) => t === "Full-Time Temporary" || t === "Part-Time Temporary" },
     { key: "contract", label: "Contractors", match: (t) => t === "Professional Contractor" },
+    // Its own kind because it has its own tab. Without it these people match
+    // no kind, and the bars would count a department short of its own roster.
+    { key: "eor",      label: "Employer of Record", match: (t) => t === "Employer of Record" },
     { key: "student",  label: "Students",    match: null },   // its own table
   ];
 
@@ -73,6 +76,7 @@
     "Full-Time Temporary",
     "Part-Time Temporary",
     "Professional Contractor",
+    "Employer of Record",
     "Student Employee",
   ];
   /* Drawn from the same tokens as the bars rather than raw hexes. In dark mode
@@ -84,6 +88,7 @@
     "Full-Time Temporary":     "--wf-ftt",
     "Part-Time Temporary":     "--wf-temp",
     "Professional Contractor": "--wf-contract",
+    "Employer of Record":      "--wf-eor",
     "Student Employee":        "--wf-student",
   };
   // Anything unexpected keeps the hub palette, then a neutral.
@@ -107,11 +112,11 @@
     el.textContent = `
     /* Light steps. Dark is a separate set below, not a filter over these. */
     .wf { --wf-fte:#065577; --wf-ftt:#28738A; --wf-temp:#FFC328;
-          --wf-contract:#7F898A; --wf-student:#5E60CE;
+          --wf-contract:#7F898A; --wf-eor:#C9682B; --wf-student:#5E60CE;
           --wf-track:rgba(0,0,0,.06); }
     :root[data-theme="dark"] .wf {
       --wf-fte:#4F9DBA; --wf-ftt:#2C7F94; --wf-temp:#FFC328;
-      --wf-contract:#B9C2C3; --wf-student:#6C6FD8;
+      --wf-contract:#B9C2C3; --wf-eor:#E08A4F; --wf-student:#6C6FD8;
       --wf-track:rgba(255,255,255,.08);
     }
     .wf { padding:22px 26px 30px; overflow:auto; height:100%; }
@@ -297,8 +302,8 @@
 
     // Inactive people stay on record but are not workforce.
     const live = (r) => r && r.active !== false;
-    const byDept = new Map(DEPARTMENTS.map((d) => [d, { fte: 0, temp: 0, contract: 0, student: 0 }]));
-    const other = { fte: 0, temp: 0, contract: 0, student: 0 };
+    const byDept = new Map(DEPARTMENTS.map((d) => [d, { fte: 0, temp: 0, contract: 0, eor: 0, student: 0 }]));
+    const other = { fte: 0, temp: 0, contract: 0, eor: 0, student: 0 };
     const bucket = (d) => byDept.get(d) || other;
 
     const byType = {};
@@ -354,6 +359,7 @@
         ${tile(grand.fte, "Full-time employees")}
         ${tile(grand.temp, "Temporary (FTT / PTT)")}
         ${tile(grand.contract, "Professional contractors")}
+        ${grand.eor ? tile(grand.eor, "Employer of Record") : ""}
         ${tile(grand.student, "Student employees")}
       </div>
 

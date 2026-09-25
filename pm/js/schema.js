@@ -162,6 +162,9 @@ const EMPLOYMENT_TYPES = [
   { value: "Full-Time Temporary",    label: "Full-Time Temporary",    tone: "grey" },
   { value: "Part-Time Temporary",    label: "Part-Time Temporary",    tone: "grey" },
   { value: "Professional Contractor", label: "Professional Contractor", tone: "grey" },
+  // Employed through an Employer of Record (Velocity Global, XML) — not a
+  // tiered contractor, which is why it is a type of its own and not a tier.
+  { value: "Employer of Record",     label: "Employer of Record",     tone: "grey" },
   { value: "Student Employee",       label: "Student Employee",       tone: "grey" },
 ];
 
@@ -268,6 +271,10 @@ const STUDENT_CONTRACTOR_COLUMNS = [
           "name on the hub's directory." },
   { key: "job_name",       label: "Job Name",        type: "text", width: 115 },
   { key: "role_title",     label: "Role Title",      type: "text", width: 143 },
+  // Added with the Dean of Students' five, who are all T2. The same idea as
+  // `tier` on the staff tabs, which holds "3", "3.5" or "EOR".
+  { key: "tier",           label: "Tier",            type: "text", width: 70,
+    help: 'The contractor tier, e.g. "T2".' },
   { key: "sub_department", label: "Sub-Dept",        type: "text", width: 130 },
   { key: "supervisor",     label: "Supervisor",      type: "text", width: 117,
     help: "Must match a name in a department's staff tabs exactly.",
@@ -312,6 +319,18 @@ const departmentSheets = (key, label, department) => [
     order: "name.asc.nullslast",
     filter: { department: `eq.${department}`, employment_type: "eq.Professional Contractor", active: "eq.true" },
     seed: { department, employment_type: "Professional Contractor", active: true },
+    columns: PEOPLE_COLUMNS,
+  },
+  {
+    /* Every department gets this tab, not only the one that has EOR staff
+       today. A type with no tab is a person the Hub cannot reach — that is how
+       the VP's two people once had nowhere to be edited — and an empty tab
+       costs a click, where a missing one costs a person. */
+    key: key + "_eor", group: key, groupLabel: label, label: "Employer of Record",
+    table: "employees",
+    order: "name.asc.nullslast",
+    filter: { department: `eq.${department}`, employment_type: "eq.Employer of Record", active: "eq.true" },
+    seed: { department, employment_type: "Employer of Record", tier: "EOR", active: true },
     columns: PEOPLE_COLUMNS,
   },
   {

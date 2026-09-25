@@ -446,9 +446,10 @@
      * Three ways in: a process steward (a row in process_stewards, a separate
      * allow-list deliberately not derived from hub_access.role), a reviewer
      * (role 'admin'; directors are not reviewers of process documentation),
-     * or a director (role 'director', 2026-09-02 — read-only visibility into
-     * their own scope_department, via a SELECT-only RLS policy with no write
-     * rights alongside it).
+     * or anyone with reports in the org chart (2026-09-25 — read-only
+     * visibility into their own reporting subtree, via a SELECT-only RLS
+     * policy with no write rights alongside it; replaced the 2026-09-02
+     * directors-only, department-wide version).
      *
      * It lives here rather than beside the navbar that first needed it because
      * the home page needs the same answer and does not load that file. One rule
@@ -465,7 +466,7 @@
       state.procAccess = (async () => {
         try { await SS.access.ready; } catch { return false; }
         if (state.role === "admin") return true;                 // reviewer
-        if (state.role === "director") return true;              // read-only, own department
+        if (state.role === "director") return true;              // read-only, own team
         if (!SS.db || !state.email) return false;
         try {
           // process_stewards is world-readable; there is no process_me() RPC.
@@ -474,9 +475,17 @@
             filter: { email: "ilike." + state.email, active: "eq.true" },
             limit: 1,
           });
-          return rows.length > 0;
+          if (rows.length > 0) return true;
         } catch {
-          return false;      // not a steward, or the table isn't reachable yet
+          // not a steward, or the table isn't reachable yet — try the team check
+        }
+        if (state.role !== "staff") return false;
+        try {
+          // A staff manager who isn't a steward still gets the read-only team view.
+          const team = await SS.db.rpc("hub_subtree_emails");
+          return (team || []).length > 1;
+        } catch {
+          return false;
         }
       })();
       return state.procAccess;

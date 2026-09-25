@@ -93,11 +93,11 @@
         You don't currently have process documentation access. If you think you should, reach out to your PM.
       </div>
 
-      <!-- My Processes (stewards only) -->
+      <!-- Processes (a steward with no reports: their own rows, flat list) -->
       <section id="procMine" class="proc-card" hidden data-reveal>
         <div class="proc-card-header">
           <div>
-            <div class="proc-card-title">My Processes</div>
+            <div class="proc-card-title">Processes</div>
             <div id="procMineCount" class="proc-card-count"></div>
           </div>
           <button type="button" class="proc-btn proc-btn-primary" id="procNewBtn">+ New Process</button>
@@ -118,41 +118,18 @@
         </div>
       </section>
 
-      <!-- My Department (director only, read-only) -->
-      <section id="procDirectorView" class="proc-card" hidden data-reveal>
-        <div class="proc-card-header">
-          <div>
-            <div class="proc-card-title">My Department</div>
-            <div id="procDirectorCount" class="proc-card-count"></div>
-          </div>
-        </div>
-        <div id="procDirectorScope" class="proc-hint proc-review-scope"></div>
-        <div class="proc-table-wrap">
-          <table class="proc-table">
-            <thead>
-              <tr>
-                <th>Process Name</th>
-                <th>Steward</th>
-                <th>Status</th>
-                <th>Updated</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody id="procDirectorBody"></tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- Review (admin only) -->
+      <!-- Processes for an admin (org-wide or their department) or anyone
+           with reports (their subtree) — process-review.js decides which. -->
       <section id="procReview" class="proc-card" hidden data-reveal>
         <div class="proc-card-header">
           <div>
-            <div class="proc-card-title">Review</div>
+            <div class="proc-card-title">Processes</div>
             <div id="procReviewCount" class="proc-card-count"></div>
           </div>
           <!-- Shown to every reviewer, org-wide admins included — the RLS
-               insert policy's admin branch allows scope_department IS NULL. -->
-          <button type="button" class="proc-btn proc-btn-primary" id="procReviewNewBtn" hidden>+ New Process for Steward</button>
+               insert policy's admin branch allows scope_department IS NULL.
+               Shown to a leader only if they're also a process steward. -->
+          <button type="button" class="proc-btn proc-btn-primary" id="procReviewNewBtn" hidden>+ New Process</button>
         </div>
         <div id="procReviewScope" class="proc-hint proc-review-scope"></div>
 
@@ -164,8 +141,7 @@
           <span class="proc-filters-label">Filters</span>
           <select id="procFilterDept" class="proc-select" aria-label="Filter by department" hidden></select>
           <select id="procFilterStatus" class="proc-select" aria-label="Filter by status"></select>
-          <input id="procFilterSteward" class="proc-search" type="search" placeholder="Search by steward..."
-            aria-label="Search by steward">
+          <select id="procFilterSteward" class="proc-select" aria-label="Filter by steward"></select>
           <button id="procFilterClear" class="proc-clear" type="button">Clear</button>
         </div>
 
@@ -213,7 +189,6 @@
   <script src="/processes/js/process-form.js"></script>
   <script src="/processes/js/process-list.js"></script>
   <script src="/processes/js/process-review.js"></script>
-  <script src="/processes/js/process-director.js"></script>
   <script src="/processes/js/process-page.js"></script>
 </body>
 

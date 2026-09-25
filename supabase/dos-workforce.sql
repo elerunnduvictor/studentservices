@@ -105,10 +105,14 @@ select 'Dean of Students',
 commit;
 
 -- ── check it ───────────────────────────────────────────────────────────────
--- Expect: Steven K. Thomas and Anne Marie Clark alone in Department
--- Leadership; Ana de Castro, Helen, Joseph, Sandra and Katelyn Ray in Service
--- Area Coordinators; Sandra and Joseph as Employer of Record; and a student
--- contractor headcount of 5 beside five named T2 contractors.
+-- Expect: Steven K. Thomas, Anne Marie Clark and Mariela Pezzali in
+-- Department Leadership; Ana de Castro, Helen, Joseph, Sandra and Katelyn Ray
+-- in Service Area Coordinators; Sandra and Joseph as Employer of Record; and a
+-- student contractor headcount of 5 beside five named T2 contractors.
+--
+-- Mariela stays in Department Leadership as the department's PM. The KPI
+-- scorecard's Department Leadership card still shows only Steven and Anne
+-- Marie, because it lists KPI owners and Mariela owns no tracked KPI.
 select 'staff' as what, sub_department as detail, employment_type as kind, name
   from public.employees
  where department = 'Dean of Students'

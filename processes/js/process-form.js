@@ -5,7 +5,9 @@
      PROC.form.openCreate()            steward, blank
      PROC.form.openCreateForSteward()  reviewer — pick a steward in their own
                                         scoped department first, then the same
-                                        blank form with department locked
+                                        blank form with department locked;
+                                        a steward with reports picks from
+                                        their own reporting subtree instead
      PROC.form.openEdit(row)           steward, their own row — full fields,
                                         editable at ANY status (widened
                                         2026-09-02); Draft still offers Save
@@ -15,9 +17,8 @@
      PROC.form.openReview(row)         reviewer — full fields, editable, plus
                                         Status; a content-only save leaves
                                         status (and reviewed_by/at) untouched
-     PROC.form.openView(row)           director (2026-09-02) — every field,
-                                        read-only, Close only; no edit rights
-                                        accompany their read access
+     PROC.form.openView(row)           read-only fallback inside openReview()
+                                        — every field, Close only
 
    Status and the reviewed-by/at stamp never appear as inputs on the
    steward's own form — not because the database would refuse them (it would,
@@ -415,10 +416,17 @@
    * never reaches the isSteward branch here at all, since they're routed to
    * openCreate() instead; a reviewer with no steward row of their own simply
    * has nothing to prepend.
+   *
+   * A non-admin steward with reports (PROC.hasTeam, 2026-09-25) lands here
+   * too, but their list is the active stewards in their own reporting
+   * subtree (PROC.stewardsInSubtree) rather than a department, matching what
+   * processes_insert will accept from them. Someone with no reports never
+   * gets here: openCreate() already locks the row to themself.
    */
   async function openCreateForSteward() {
     buildModal();
-    const scopeDept = PROC.reviewScopeDepartment;
+    const teamMode = !PROC.isReviewer;
+    const scopeDept = teamMode ? null : PROC.reviewScopeDepartment;
     session = { mode: "pick-steward" };
     els.title.textContent = "New Process";
     els.error.textContent = "";
@@ -429,7 +437,7 @@
 
     let stewards = [];
     try {
-      stewards = await PROC.stewardsInDepartment(scopeDept);
+      stewards = teamMode ? await PROC.stewardsInSubtree() : await PROC.stewardsInDepartment(scopeDept);
     } catch (err) {
       els.body.innerHTML = `<div class="proc-hint">Could not load stewards: ${escapeHtml(err.message || String(err))}</div>`;
       return;
@@ -447,7 +455,7 @@
       }));
 
     if (!options.length) {
-      els.body.innerHTML = `<div class="proc-hint">No active stewards are set up${scopeDept ? " in " + escapeHtml(scopeDept) : ""} yet.</div>`;
+      els.body.innerHTML = `<div class="proc-hint">No active stewards are set up${teamMode ? " on your team" : scopeDept ? " in " + escapeHtml(scopeDept) : ""} yet.</div>`;
       return;
     }
 
@@ -542,10 +550,9 @@
 
   /**
    * Plain read-only view — every field, no editable controls at all, just a
-   * Close button. Used by the director's "My Department" panel (read-only
-   * by RLS design, 2026-09-02: no write policy accompanies their SELECT
-   * grant, so there's genuinely nothing here for them to act on) and as the
-   * fallback inside openReview() for a status it can't otherwise act on.
+   * Close button. The fallback inside openReview() for a status it can't
+   * otherwise act on. (It also served the read-only "My Department" / "My
+   * Team" panels until 2026-09-25, when team rows became editable.)
    */
   function openView(row) {
     buildModal();

@@ -253,7 +253,13 @@
           io.unobserve(el);
         }
       });
-    }, { threshold: 0.1, rootMargin: "0px 0px -20px 0px" });
+    // Measured against the viewport, not the element: reveal once any part
+    // of it is a tenth of the way up the screen. The old `threshold: 0.1`
+    // needed 10% of the *element* visible at once, which an element taller
+    // than ten viewports can never manage — the Processes list stacked into
+    // cards at phone width (17,000px for 51 rows) stayed at opacity 0 for
+    // good, leaving the page blank below the hero.
+    }, { threshold: 0, rootMargin: "0px 0px -10% 0px" });
     document.querySelectorAll("[data-reveal]").forEach(function (el) {
       if (!el.dataset.ssRevealObserved) {
         el.dataset.ssRevealObserved = "1";

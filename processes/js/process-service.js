@@ -31,31 +31,40 @@
                          only ever existed to carry a reviewer's reason for
                          bouncing a row back to that state.
 
+   hub_subtree_emails() (2026-09-25) is the caller's reporting subtree from
+   org_chart_nodes — themselves plus everyone under them at any depth. Their
+   own login email is always included, even where the org chart carries a
+   different address for them.
+
    Row-level security, exactly as deployed:
      select   own rows (created_by = caller OR steward_email = caller), OR
               hub_access.role = 'admin' (directors are NOT reviewers here)
               with active=true and scope_department is null or equals
-              processes.department, OR (2026-09-02, a separate policy)
-              hub_access.role = 'director' with active=true and
-              scope_department = processes.department (exact match only —
-              unlike the admin branch, there's no null/org-wide case, since
-              a director always carries a department scope). Read-only: this
-              new policy has no accompanying insert/update/delete grant, so
-              a director's extra visibility never becomes extra capability.
-     insert   created_by must be the caller, and either the caller has an
-              active process_stewards row (a steward creating their own row —
-              steward_email = created_by = the steward's own email), or the
-              caller is an admin whose scope_department is null or equals the
-              row's department (a PM creating on behalf of a steward —
-              created_by is still the PM's own email, steward_email is the
-              picked steward's). Same "null or equals" shape as select/update,
-              so a scoped PM can create only within their own department, and
-              an org-wide admin (Jess Swinburne, Elie Gilles Ravel Mambou) can
-              create for any steward anywhere (2026-08-26 — deliberately
-              widened from an earlier, exact-match version of this branch).
+              processes.department, OR (processes_select_team, 2026-09-25 —
+              replaced the flat department-name director policy) a staff or
+              director caller whose subtree contains the row's created_by or
+              steward_email. processes_update_team grants edit on exactly
+              those same rows, so a leader can fix anything they can see.
+     insert   created_by must be the caller, and either the caller is an
+              admin whose scope_department is null or equals the row's
+              department (any steward — Jess Swinburne and Elie Gilles Ravel
+              Mambou are org-wide), or the caller has an active
+              process_stewards row AND steward_email is in their own subtree
+              (2026-09-25 — before this, a steward could name anyone).
      update   ONE combined policy, own row at ANY status (created_by =
               caller OR steward_email = caller — widened 2026-09-02, no
-              longer restricted to Draft/Submitted) OR admin-in-scope. A
+              longer restricted to Draft/Submitted) OR admin-in-scope. Its
+              WITH CHECK also requires steward_email to stay in the editor's
+              subtree unless they're an in-scope admin (2026-09-25), so a row
+              can't be reassigned outside the editor's line. Plus
+              processes_update_team (2026-09-25): a staff/director caller may
+              edit any row processes_select_team shows them, as long as
+              steward_email stays in their subtree (or is null on a row
+              their line created). Permissive policies are OR'd, which is why
+              that check doesn't also accept "created_by in subtree" alone —
+              it would let anyone reassign their own rows anywhere. The
+              processes_touch trigger stamps updated_by from the editor's
+              JWT on every update, so a leader's edit is recorded as theirs. A
               BEFORE UPDATE trigger, process_guard(), is the actual
               enforcement for who may touch status/reviewed_by/reviewed_at:
                 reviewer   any status change auto-stamps reviewed_by/
@@ -84,13 +93,11 @@
               from this page can delete a row, which is why there's no
               delete affordance in the UI.
 
-   process-review.js additionally hides Draft rows from the reviewer UI on
-   its own — RLS's admin select branch has no status restriction, so an
-   admin's own query can technically return a Draft row in their department.
-   That's accepted as a UI-only boundary, not promoted to RLS: worst case a
-   department PM sees one of their own team's Drafts slightly early, which
-   isn't a real exposure given they're already fully trusted with that data
-   the moment it's Submitted.
+   RLS's admin select branch has no status restriction, and since 2026-09-25
+   the UI doesn't add one either: an admin's Processes list shows Drafts in
+   their scope, like a leader's shows their subtree's. (The old Review
+   section hid Drafts because an admin's own were listed separately; once
+   the two were merged, that filter hid every Draft from admins.)
 
    Deliberately NOT run through shared/js/data-service.js's dataset loader.
    That loader exists to fall back to a bundled snapshot when Supabase is
@@ -107,6 +114,7 @@
 
   const state = {
     steward: null,       // process_stewards row, or null
+    subtree: [],          // lowercased emails: the caller and everyone under them
     rows: [],             // everything the current session may see
     departments: [],      // [{ name }]
     error: null,
@@ -146,6 +154,41 @@
     };
     if (department) opts.filter.department = "eq." + department;
     return SS.db.select("process_stewards", opts);
+  }
+
+  async function loadSubtree() {
+    try {
+      // PostgREST returns a setof-scalar function as bare values; the object
+      // shape is accepted too in case that ever changes.
+      const rows = await SS.db.rpc("hub_subtree_emails");
+      state.subtree = (rows || [])
+        .map((r) => (r && typeof r === "object" ? r.hub_subtree_emails : r))
+        .filter(Boolean)
+        .map((e) => String(e).toLowerCase());
+    } catch {
+      // Without it the page behaves as for someone with no reports: the
+      // steward creates for themself only, no team panel.
+      state.subtree = [];
+    }
+  }
+
+  function inSubtree(email) {
+    return !!email && state.subtree.includes(String(email).toLowerCase());
+  }
+
+  /**
+   * For a non-admin steward with reports: every active steward in their own
+   * reporting subtree, whatever department that steward is in. Mirrors
+   * processes_insert's steward branch, so nobody is offered a name the
+   * insert would refuse.
+   */
+  async function stewardsInSubtree() {
+    const rows = await SS.db.select("process_stewards", {
+      select: "email,full_name,department,job_title",
+      filter: { active: "eq.true" },
+      order: "full_name.asc",
+    });
+    return rows.filter((s) => inSubtree(s.email));
   }
 
   async function loadDepartments() {
@@ -248,7 +291,7 @@
       return state;
     }
 
-    await Promise.all([loadSteward(), loadDepartments()]);
+    await Promise.all([loadSteward(), loadSubtree(), loadDepartments()]);
     await refresh();
     state.loaded = true;
     return state;
@@ -260,13 +303,13 @@
     // Directors are not reviewers here — the live RLS policy checks
     // hub_access.role = 'admin' only.
     isReviewer:   { get: () => SS.access.role === "admin" },
-    // Read-only visibility into their own department (2026-09-02) — a
-    // separate grant from isReviewer, never both true for one person since
-    // 'admin' and 'director' are mutually exclusive values of the same
-    // hub_access.role column. Can be true alongside isSteward, though (all
-    // four directors are also stewards of their own department) — that's
-    // fine, since this view has no actionable buttons to duplicate.
-    isDirector:   { get: () => SS.access.role === "director" },
+    // Anyone with people under them in the org chart, at any level
+    // (2026-09-25 — replaced isDirector's department-wide view). Staff and
+    // directors only, matching processes_select_team / processes_update_team;
+    // an admin already sees more through Review. Turns the Processes list
+    // into the team list with a Steward filter.
+    hasTeam:      { get: () => (SS.access.role === "staff" || SS.access.role === "director")
+                                 && state.subtree.some((e) => e !== String(SS.access.email || "").toLowerCase()) },
     reviewScopeDepartment: { get: () => (SS.access.scope && SS.access.scope.department) || null },
     rows:         { get: () => state.rows },
     departments:  { get: () => state.departments },
@@ -285,6 +328,8 @@
   PROC.save = save;
   PROC.review = review;
   PROC.stewardsInDepartment = stewardsInDepartment;
+  PROC.stewardsInSubtree = stewardsInSubtree;
+  PROC.inSubtree = inSubtree;
   PROC.statusTone = (status) => STATUS_TONE[status] || "grey";
   PROC.formatDate = (iso) => {
     if (!iso) return "—";

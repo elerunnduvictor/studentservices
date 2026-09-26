@@ -1,25 +1,44 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   "REVIEW" — renders only for hub_access role = admin. Directors are not
-   reviewers of process documentation (verified against the live RLS policy,
-   which checks h.role = 'admin' specifically).
+   "PROCESSES" — the one list for anyone who sees more than their own rows
+   (2026-09-25; before this, admins had a separate "Review" section stacked
+   under an often-empty "My Processes", and leaders had their own list).
+   Someone with no reports and no review rights gets process-list.js's flat
+   list instead, and this panel stays hidden.
 
-   scope_department set means that department only; null means everything —
-   which is already how RLS filtered the rows this panel reads, so the
-   department filter below is a UX narrowing on top of an already-narrowed
-   set, not a second access boundary. It's hidden entirely for a scoped PM,
-   since for them it can only ever have one useful value.
+   Two modes, never both for one person — hub_access.role is admin for one
+   and staff/director for the other:
 
-   Draft rows are excluded here even though RLS's admin select branch has no
-   status restriction and can technically return one — Draft is private to
-   the steward by UI convention only. Accepted as-is (2026-08-26): worst case
-   a department PM sees one of their own team's Drafts slightly early, not a
-   real exposure given they're already fully trusted with that data the
-   moment it's Submitted.
+     review   role = admin (Directors are not reviewers of process
+              documentation — the live RLS policy checks h.role = 'admin'
+              specifically.) Rows: everything RLS returns (scope_department,
+              or org-wide when null), Drafts included — the old Review
+              section hid Drafts because the admin's own were listed
+              separately under "My Processes"; merged into one list, that
+              filter hid every Draft from admins entirely (2026-09-25).
+              Rows open in the reviewer form (Review), except Drafts, which
+              open in the steward form (Edit) — the reviewer form can only
+              show a Draft read-only.
+     team     PROC.hasTeam — anyone with reports. Rows: their reporting
+              subtree's (created_by or steward_email in hub_subtree_emails()),
+              Drafts included — fixing a report's process before it's
+              submitted is the point (processes_update_team). Rows open in
+              the steward form (Edit); process_guard() refuses a
+              non-reviewer's move to Reviewed/Archived.
 
-   Built for the eventual volume (200+ rows) this panel is meant to carry:
-   summary counts, two tabs (Active / Archived), a filter bar, and a
-   days-waiting column so the oldest unresolved submissions don't get lost.
-   No bulk actions — reviewing one process at a time is deliberate, not a gap.
+   Same pieces in both: Active/Archived tabs, stat tiles, Status filter, and a
+   Steward dropdown (All / Me / each steward — the same list the create
+   form's picker offers, so the two never disagree). The Department filter
+   is for an org-wide admin only: a scoped PM's could only ever hold one
+   value, and a leader's subtree already decides their rows. It's a UX
+   narrowing on top of what RLS returned, not a second access boundary.
+
+   The tiles partition the Active tab — Draft + Submitted + Reviewed always
+   equals its total — with Waiting 7+ Days as a subset of Submitted, so the
+   numbers visibly add up for every account, not just ones with no Drafts.
+
+   Built for the eventual volume (200+ rows): summary counts, two tabs, a
+   filter bar, and a days-waiting column so the oldest unresolved submissions
+   don't get lost. No bulk actions — one process at a time is deliberate.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 (function () {
@@ -37,39 +56,55 @@
   const EDITABLE = ["Submitted", "Reviewed", "Archived"];
   const WAITING_DAYS_WARN = 7;
 
-  // Newest activity that still needs eyes rises to the top; oldest within
-  // that bucket sorts first, since that's the row that's been waiting longest.
-  const PRIORITY = { "Submitted": 0, "Reviewed": 1, "Archived": 2 };
+  // What still needs eyes rises to the top; oldest within each bucket sorts
+  // first, since that's the row that's been waiting longest.
+  const PRIORITY = { "Submitted": 0, "Draft": 1, "Reviewed": 2, "Archived": 3 };
 
   const TABS = [
-    { id: "active", label: "Active", statuses: ["Submitted", "Reviewed"] },
+    { id: "active", label: "Active", statuses: ["Draft", "Submitted", "Reviewed"] },
     { id: "archived", label: "Archived", statuses: ["Archived"] },
   ];
 
   const state = { department: "", status: "", steward: "" };
   let TAB = "active";
   let filtersWired = false;
+  let stewardOptionsBuilt = false;
+
+  function myEmail() {
+    return String(SS.access.email || "").toLowerCase();
+  }
+
+  /** "review" for an admin, "team" for anyone with reports, else null. */
+  function mode() {
+    if (PROC.isReviewer) return "review";
+    if (PROC.hasTeam) return "team";
+    return null;
+  }
 
   function daysWaiting(r) {
     if (DECIDABLE.indexOf(r.status) === -1 || !r.updated_at) return null;
     return Math.floor((Date.now() - new Date(r.updated_at).getTime()) / 86400000);
   }
 
-  /** Everything a reviewer may see at all — RLS's rows, minus Draft. */
-  function reviewableRows() {
-    return PROC.rows.filter((r) => r.status !== "Draft");
+  /** Everything this panel lists before filters — see the header. */
+  function panelRows() {
+    if (mode() === "team") {
+      return PROC.rows.filter((r) => PROC.inSubtree(r.created_by) || PROC.inSubtree(r.steward_email));
+    }
+    return PROC.rows;
   }
 
   function renderKpis(rows) {
     const target = document.getElementById("procReviewKpis");
     if (!target) return;
     const counts = {
-      Submitted: 0, Reviewed: 0,
+      Draft: 0, Submitted: 0, Reviewed: 0,
       waiting: rows.filter((r) => r.status === "Submitted" && (daysWaiting(r) ?? 0) >= WAITING_DAYS_WARN).length,
     };
     rows.forEach((r) => { if (r.status in counts) counts[r.status]++; });
 
     const cards = [
+      { label: "Draft", value: counts.Draft, color: "var(--text-dim)" },
       { label: "Submitted", value: counts.Submitted, color: "var(--proc-yellow)" },
       { label: "Reviewed", value: counts.Reviewed, color: "var(--proc-accent)" },
       { label: "Waiting 7+ Days", value: counts.waiting, color: "var(--proc-red)" },
@@ -81,14 +116,39 @@
       </div>`).join("");
   }
 
+  /** The Steward dropdown — built once, from the same list the create
+   *  form's picker uses for this mode, so the two never disagree. */
+  async function buildStewardOptions() {
+    if (stewardOptionsBuilt) return;
+    stewardOptionsBuilt = true;
+    const select = document.getElementById("procFilterSteward");
+    const me = myEmail();
+    let stewards = [];
+    try {
+      stewards = mode() === "team"
+        ? await PROC.stewardsInSubtree()
+        : await PROC.stewardsInDepartment(PROC.reviewScopeDepartment);
+    } catch {
+      // "All Stewards" and "Me" still work without the list.
+    }
+    select.innerHTML =
+      `<option value="">All Stewards</option>` +
+      `<option value="${escapeHtml(me)}">Me</option>` +
+      stewards
+        .filter((s) => String(s.email || "").toLowerCase() !== me)
+        .map((s) => `<option value="${escapeHtml(String(s.email).toLowerCase())}">${escapeHtml(s.full_name)}</option>`)
+        .join("");
+    select.value = state.steward;
+  }
+
   function renderFilterOptions() {
     const deptSel = document.getElementById("procFilterDept");
     const statusSel = document.getElementById("procFilterStatus");
 
-    // A scoped PM's department filter can only ever equal their one scope —
-    // showing it would be a dropdown with nothing to choose. Only an
-    // org-wide admin (null scope) gets it.
-    if (PROC.reviewScopeDepartment) {
+    document.getElementById("procFilterSteward").hidden = false;
+    buildStewardOptions();
+
+    if (mode() === "team" || PROC.reviewScopeDepartment) {
       deptSel.hidden = true;
     } else {
       deptSel.hidden = false;
@@ -118,7 +178,7 @@
     document.getElementById("procFilterStatus").addEventListener("change", (e) => {
       state.status = e.target.value; render();
     });
-    document.getElementById("procFilterSteward").addEventListener("input", (e) => {
+    document.getElementById("procFilterSteward").addEventListener("change", (e) => {
       state.steward = e.target.value; render();
     });
     document.getElementById("procFilterClear").addEventListener("click", () => {
@@ -133,18 +193,19 @@
       state.status = ""; // last tab's status choice rarely applies to this one
       render();
     });
-    const newForSteward = document.getElementById("procReviewNewBtn");
-    if (newForSteward) newForSteward.addEventListener("click", () => PROC.form.openCreateForSteward());
+    // Both modes open the picker; it offers the admin's department (or
+    // everyone) or the leader's subtree, plus "Me".
+    const newBtn = document.getElementById("procReviewNewBtn");
+    if (newBtn) newBtn.addEventListener("click", () => PROC.form.openCreateForSteward());
   }
 
   /** Department + steward filters, before the tab split — tab counts have to
    *  come from this, or each tab would report the number showing on the tab
    *  you are already looking at. */
   function afterFilters() {
-    const q = state.steward.trim().toLowerCase();
-    return reviewableRows().filter((r) => {
+    return panelRows().filter((r) => {
       if (state.department && r.department !== state.department) return false;
-      if (q && !String(r.steward_name || r.created_by || "").toLowerCase().includes(q)) return false;
+      if (state.steward && String(r.steward_email || "").toLowerCase() !== state.steward) return false;
       return true;
     });
   }
@@ -162,25 +223,37 @@
     }).join("");
   }
 
+  /** Which form a row opens in, and the button's label for it. */
+  function rowAction(r) {
+    if (mode() === "team") return { label: "Edit", open: PROC.form.openEdit };
+    if (r.status === "Draft") return { label: "Edit", open: PROC.form.openEdit };
+    return EDITABLE.indexOf(r.status) !== -1
+      ? { label: "Review", open: PROC.form.openReview }
+      : { label: "View", open: PROC.form.openReview };
+  }
+
   function render() {
     const panel = document.getElementById("procReview");
     if (!panel) return;
 
-    if (!PROC.isReviewer) { panel.hidden = true; return; }
+    const m = mode();
+    if (!m) { panel.hidden = true; return; }
     panel.hidden = false;
     wireFilters();
 
     const scopeNote = document.getElementById("procReviewScope");
-    scopeNote.textContent = PROC.reviewScopeDepartment
-      ? "Showing processes in " + PROC.reviewScopeDepartment + "."
-      : "Showing processes across every department.";
+    scopeNote.textContent = m === "team"
+      ? "Showing processes for you and everyone who reports to you."
+      : PROC.reviewScopeDepartment
+        ? "Showing processes in " + PROC.reviewScopeDepartment + "."
+        : "Showing processes across every department.";
 
-    // Shown to every reviewer, org-wide admins included — processes_insert's
-    // admin branch now allows scope_department IS NULL, same as select/update.
-    const newForSteward = document.getElementById("procReviewNewBtn");
-    if (newForSteward) newForSteward.hidden = false;
+    // Every reviewer may create (processes_insert's admin branch). A leader
+    // only if they're also a process steward — the insert requires it.
+    const newBtn = document.getElementById("procReviewNewBtn");
+    if (newBtn) newBtn.hidden = m === "team" && !PROC.isSteward;
 
-    renderKpis(reviewableRows());
+    renderKpis(panelRows());
 
     const filtered = afterFilters();
     renderTabs(filtered);
@@ -221,14 +294,14 @@
         <td data-label="Status"><span class="proc-pill proc-pill-${PROC.statusTone(r.status)}">${escapeHtml(r.status)}</span></td>
         <td data-label="Waiting">${waitingCell}</td>
         <td class="proc-cell-dim" data-label="Updated">${PROC.formatDate(r.updated_at)}</td>
-        <td class="proc-cell-action"><button type="button" class="proc-btn proc-btn-small" data-review="${r.id}">${EDITABLE.indexOf(r.status) !== -1 ? "Review" : "View"}</button></td>
+        <td class="proc-cell-action"><button type="button" class="proc-btn proc-btn-small" data-row="${r.id}">${rowAction(r).label}</button></td>
       </tr>`;
     }).join("");
 
-    body.querySelectorAll("[data-review]").forEach((btn) => {
+    body.querySelectorAll("[data-row]").forEach((btn) => {
       btn.addEventListener("click", () => {
-        const row = PROC.rows.find((r) => String(r.id) === btn.dataset.review);
-        if (row) PROC.form.openReview(row);
+        const row = PROC.rows.find((r) => String(r.id) === btn.dataset.row);
+        if (row) rowAction(row).open(row);
       });
     });
   }

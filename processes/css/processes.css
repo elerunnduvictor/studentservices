@@ -262,7 +262,8 @@
 /* ══════════════ REVIEW SUMMARY KPIs ══════════════ */
 .proc-kpis {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  /* 130px so all four tiles share one row at tablet width, two at phone. */
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
   gap: 14px;
   margin-bottom: 20px;
 }
@@ -671,7 +672,10 @@
    itself, full width and 44px tall, because it is the thing the row exists to
    be tapped for.
    ══════════════════════════════════════════════════════════════════════════ */
-@media (max-width: 700px) {
+/* 900px, not 700: the Processes table has seven columns, and at tablet width
+   (~768px) it overflowed its card with the row's Edit/Review button scrolled
+   out of sight — the one control a row exists for. Cards from here down. */
+@media (max-width: 900px) {
   .proc-table-wrap { overflow-x: visible; padding: 12px 14px 4px; }
 
   .proc-table,

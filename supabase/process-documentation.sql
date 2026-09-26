@@ -9,8 +9,10 @@
 -- live changes (processes_insert's admin branch widened to also allow
 -- scope_department IS NULL; a steward_email column added, with
 -- processes_select/processes_update widened to also match it, so a process a
--- PM created on a steward's behalf is visible/editable to that steward), and
--- is meant to be run only in the disaster-recovery case of rebuilding the
+-- PM created on a steward's behalf is visible/editable to that steward), with
+-- the `processes` policies re-read from the live database on 2026-09-25 when
+-- the hierarchy-based rules (hub_subtree_emails, processes_select_team) went
+-- in, and is meant to be run only in the disaster-recovery case of rebuilding the
 -- project from nothing,
 -- the same way schema.sql and access-control.sql are. It should reproduce
 -- what's live; if the two ever drift, the database is the truth and this file
@@ -269,13 +271,50 @@ begin
 end;
 $$;
 
+-- The caller's reporting subtree (2026-09-25): themselves plus everyone under
+-- them in org_chart_nodes, at any depth. The caller's own JWT email is always
+-- included, even where the org chart carries a different address for them
+-- (two stewards did at the time). UNION rather than UNION ALL so a cycle
+-- introduced by an org-chart edit terminates instead of recursing forever.
+-- SECURITY DEFINER for the same reason as hub_me(); callable by signed-in
+-- users only, since the Processes page calls it directly to build its picker.
+create or replace function public.hub_subtree_emails()
+returns setof text
+language sql
+stable
+security definer
+set search_path to 'public', 'pg_temp'
+as $function$
+  with recursive me(email) as (
+    select lower(coalesce((select auth.jwt()) ->> 'email', ''))
+  ),
+  subtree(node_key) as (
+    select lower(o.node_key)
+    from public.org_chart_nodes o, me
+    where me.email <> '' and lower(o.email) = me.email
+    union
+    select lower(o.node_key)
+    from public.org_chart_nodes o
+    join subtree s on lower(o.reports_to_key) = s.node_key
+  )
+  select email from me where email <> ''
+  union
+  select lower(o.email)
+  from public.org_chart_nodes o
+  join subtree s on lower(o.node_key) = s.node_key
+  where coalesce(o.email, '') <> '';
+$function$;
+
+revoke all on function public.hub_subtree_emails() from public, anon;
+grant execute on function public.hub_subtree_emails() to authenticated, service_role;
+
 -- Own rows (created_by OR steward_email — a PM-created row's created_by is
 -- the PM, not the steward it's for), or an admin reviewer whose scope covers
--- this row's department. Directors do not see this table at all.
+-- this row's department.
 create policy "processes_select" on public.processes
   for select using (
     lower(created_by) = lower(coalesce((select auth.jwt()) ->> 'email', ''))
-    or lower(coalesce(steward_email, '')) = lower(coalesce((select auth.jwt()) ->> 'email', ''))
+    or lower(steward_email) = lower(coalesce((select auth.jwt()) ->> 'email', ''))
     or exists (
       select 1 from public.hub_access h
        where lower(h.email) = lower(coalesce((select auth.jwt()) ->> 'email', ''))
@@ -284,48 +323,57 @@ create policy "processes_select" on public.processes
     )
   );
 
--- Two ways in, both requiring created_by to be the caller's own email:
---   1. a provisioned, active steward creating their own row, or
---   2. an admin reviewer (hub_access role=admin) creating a row on behalf of
---      a steward — scope_department null or equal to the row's department,
---      same shape as select/update, so an org-wide admin may create for a
---      steward in any department while a scoped PM is still limited to their
---      own. created_by is still the PM's own email, never the steward's;
---      steward_name/steward_role are just descriptive text for whose process
---      this is.
+-- Read-only view of the caller's reporting subtree, for staff and directors
+-- (2026-09-25). Replaced processes_select_director (2026-09-02), which gave a
+-- director every row whose department matched their scope_department by
+-- name; a director's subtree is their whole department, so no director lost
+-- a row. processes_update_team (below) grants edit on the same rows.
+create policy "processes_select_team" on public.processes
+  for select using (
+    hub_role() = any (array['staff', 'director'])
+    and (
+      lower(processes.created_by) in (select public.hub_subtree_emails())
+      or lower(processes.steward_email) in (select public.hub_subtree_emails())
+    )
+  );
+
+-- created_by must be the caller, and either:
+--   1. an admin reviewer (hub_access role=admin) whose scope_department is
+--      null or equals the row's department — may name any steward, or
+--   2. an active process steward naming themselves or someone in their own
+--      reporting subtree as steward_email (2026-09-25 — before this, a
+--      steward could name anyone at all).
 create policy "processes_insert" on public.processes
   for insert with check (
-    (
-      lower(created_by) = lower(coalesce((select auth.jwt()) ->> 'email', ''))
-      and lower(coalesce((select auth.jwt()) ->> 'email', '')) in
-          (select lower(s.email) from public.process_stewards s where s.active)
-    )
-    or
-    (
-      lower(created_by) = lower(coalesce((select auth.jwt()) ->> 'email', ''))
-      and exists (
+    lower(created_by) = lower(coalesce((select auth.jwt()) ->> 'email', ''))
+    and (
+      exists (
         select 1 from public.hub_access h
          where lower(h.email) = lower(coalesce((select auth.jwt()) ->> 'email', ''))
            and h.active and h.role = 'admin'
            and (h.scope_department is null or h.scope_department = processes.department)
       )
+      or (
+        lower(coalesce((select auth.jwt()) ->> 'email', ''))
+          in (select lower(s.email) from public.process_stewards s where s.active)
+        and (
+          processes.steward_email is null
+          or lower(processes.steward_email) in (select public.hub_subtree_emails())
+        )
+      )
     )
   );
 
--- One combined policy — own row (created_by OR steward_email) while unlocked
--- (Draft or Submitted), OR an admin reviewer in scope. Note the WITH CHECK:
--- it does not additionally restrict status on the steward branch, nor which
--- columns either branch may touch. See the file header — that gap is covered
--- at the application layer and by processes_guard today.
+-- One combined policy — own row (created_by OR steward_email) at any status
+-- (the Draft/Submitted restriction was dropped 2026-09-02), OR an admin
+-- reviewer in scope; process_guard() polices status transitions. WITH CHECK
+-- additionally keeps steward_email inside the editor's subtree unless they're
+-- an in-scope admin (2026-09-25), so a row can't be reassigned outside the
+-- editor's line after the fact.
 create policy "processes_update" on public.processes
   for update using (
-    (
-      (
-        lower(created_by) = lower(coalesce((select auth.jwt()) ->> 'email', ''))
-        or lower(coalesce(steward_email, '')) = lower(coalesce((select auth.jwt()) ->> 'email', ''))
-      )
-      and status in ('Draft', 'Submitted')
-    )
+    lower(created_by) = lower(coalesce((select auth.jwt()) ->> 'email', ''))
+    or lower(steward_email) = lower(coalesce((select auth.jwt()) ->> 'email', ''))
     or exists (
       select 1 from public.hub_access h
        where lower(h.email) = lower(coalesce((select auth.jwt()) ->> 'email', ''))
@@ -333,12 +381,47 @@ create policy "processes_update" on public.processes
          and (h.scope_department is null or h.scope_department = processes.department)
     )
   ) with check (
-    lower(created_by) = lower(coalesce((select auth.jwt()) ->> 'email', ''))
-    or exists (
-      select 1 from public.hub_access h
-       where lower(h.email) = lower(coalesce((select auth.jwt()) ->> 'email', ''))
-         and h.active and h.role = 'admin'
-         and (h.scope_department is null or h.scope_department = processes.department)
+    (
+      lower(created_by) = lower(coalesce((select auth.jwt()) ->> 'email', ''))
+      or lower(steward_email) = lower(coalesce((select auth.jwt()) ->> 'email', ''))
+      or exists (
+        select 1 from public.hub_access h
+         where lower(h.email) = lower(coalesce((select auth.jwt()) ->> 'email', ''))
+           and h.active and h.role = 'admin'
+           and (h.scope_department is null or h.scope_department = processes.department)
+      )
+    )
+    and (
+      exists (
+        select 1 from public.hub_access h
+         where lower(h.email) = lower(coalesce((select auth.jwt()) ->> 'email', ''))
+           and h.active and h.role = 'admin'
+           and (h.scope_department is null or h.scope_department = processes.department)
+      )
+      or processes.steward_email is null
+      or lower(processes.steward_email) in (select public.hub_subtree_emails())
+    )
+  );
+
+-- Anything a leader can see through processes_select_team, they can also edit
+-- (2026-09-25). WITH CHECK keeps steward_email inside the editor's subtree
+-- (or null on a row their line created). Permissive policies are OR'd, so a
+-- looser "created_by in subtree" branch here would let anyone reassign their
+-- own rows to any steward, undoing processes_update's own subtree check.
+-- updated_by is stamped from the editor's JWT by the processes_touch trigger;
+-- process_guard() still stops a non-reviewer setting Reviewed/Archived.
+create policy "processes_update_team" on public.processes
+  for update using (
+    hub_role() = any (array['staff', 'director'])
+    and (
+      lower(processes.created_by) in (select public.hub_subtree_emails())
+      or lower(processes.steward_email) in (select public.hub_subtree_emails())
+    )
+  ) with check (
+    lower(processes.steward_email) in (select public.hub_subtree_emails())
+    or (
+      processes.steward_email is null
+      and lower(processes.created_by) in (select public.hub_subtree_emails())
     )
   );
 

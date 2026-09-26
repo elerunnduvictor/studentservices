@@ -47,7 +47,15 @@
   .sc-outcome[data-outcome="cost"] .sc-parts { grid-template-columns: repeat(3, 1fr); }
 }
 .sc-part--cost .sc-part-score small { font-size: .55em; margin-left: 2px; }
-.sc-part--cost .sc-part-note { margin-top: 8px; }
+.sc-part--cost .sc-part-note {
+  margin-top: 8px;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px;
+}
+/* What this department counts for in the section's score. */
+.sc-part-share {
+  font-size: .7rem; color: var(--text-dim);
+  font-variant-numeric: lining-nums tabular-nums; white-space: nowrap;
+}
 
 /* ── what the year looks like, before any chart ── */
 .ck-head { margin: 0 0 22px; }

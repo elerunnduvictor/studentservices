@@ -469,10 +469,18 @@
      because a budget belongs to a department, and each opens onto that
      department's graphs.
 
-     Its score is the same arithmetic — Green 100, Yellow 50, Red 0 — over each
-     department's status, and it stands beside the organisation's health index
+     Its score uses the same Green 100, Yellow 50, Red 0 over each department's
+     status, but weighted: the VP's budget counts for half of it and the other
+     departments share the other half (see weights() in cost-kpi.js). Each card
+     says what it counts for, so the score can be worked out from the page. It
+     stands beside the organisation's health index
      rather than inside it: that index is a roll-up of KPIs, and folding the
      budget into it would move the headline number, which is its own decision. */
+  function shareText(f) {
+    var n = Math.round(f * 1000) / 10;
+    return (n % 1 ? n.toFixed(1) : String(n)) + "%";
+  }
+
   function costOutcome() {
     var cost = window.SS && SS.costKpi && SS.costKpi.summary();
     var head = function (score, meta, go) {
@@ -506,12 +514,14 @@
         '<div class="sc-part-meta">' + (d.last === null ? "Not tracked yet" :
           Math.round(d.last) + "% spent by " + esc(cost.lastMonthName)) + "</div>" +
         spectrum(mini, true) +
-        '<div class="sc-part-note">' + statusChip(d.spectrum, d.status.label) + "</div>" +
+        '<div class="sc-part-note">' + statusChip(d.spectrum, d.status.label) +
+          (d.share === null ? "" : '<span class="sc-part-share">' + shareText(d.share) +
+            " of the score</span>") + "</div>" +
       "</button>";
     }).join("");
 
     return '<section class="sc-outcome is-lead" data-outcome="cost">' +
-      head(score, cost.depts.length + " departments · budget year " + cost.year,
+      head(score, cost.depts.length + " departments · VP counts for half · budget year " + cost.year,
         '<span class="sc-outcome-go">See the graphs <span aria-hidden="true">›</span></span>') +
       spectrum(cost.counts) +
       '<div class="sc-parts">' + parts + "</div>" +

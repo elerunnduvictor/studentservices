@@ -41,10 +41,16 @@
                      "July", "August", "September", "October", "November", "December"];
   var YEAR_END = 12;                 // December: the month everything projects to
 
-  /* Landing near 100% is the target. Under-spending a fifth of a budget is not
-     a win — it means the budget was set wrong — so the scale is two-sided.
-     One place to retune if Ben and Jess want it wider or narrower. */
-  var BANDS = { onLo: 95, onHi: 105, nearLo: 85, nearHi: 110 };
+  /* Landing near 100% is the target. Under-spending a quarter of a budget is
+     not a win — it means the budget was set wrong — so the scale is two-sided:
+
+       Green   85–105%
+       Yellow  75–85% under, or 105–110% over
+       Red     below 75%, or above 110%
+
+     Yellow was 85–95% at first; widened to 75–85% on 2026-09-25, which made
+     85–95% green. The over-budget side is unchanged. One place to retune. */
+  var BANDS = { onLo: 85, onHi: 105, nearLo: 75, nearHi: 110 };
 
   function statusOf(p) {
     if (p === null || p === undefined || !isFinite(p)) return { key: "nodata", label: "Not tracked" };
@@ -163,17 +169,46 @@
   var SCORE = { green: 100, yellow: 50, red: 0 };
   var SPECTRUM_KEY = { green: "Green", yellow: "Yellow", red: "Red", nodata: "No Data" };
 
+  /* How much each department counts towards the section's score. The VP's
+     budget carries half of it on its own; the other departments share the
+     other half equally, so with four of them each is an eighth. Set on
+     2026-09-25 — it had been a plain average, one fifth each.
+
+     A department with no projection yet is left out and the rest are scaled
+     back up to 100, rather than being scored as a zero it has not earned. */
+  var LEAD = "VP";
+  var LEAD_SHARE = 0.5;
+
+  function weights(depts) {
+    var scored = depts.filter(function (d) { return SCORE[d.status.key] !== undefined; });
+    var lead = scored.filter(function (d) { return d.code === LEAD; });
+    var rest = scored.filter(function (d) { return d.code !== LEAD; });
+    var w = {};
+    if (lead.length && rest.length) {
+      w[LEAD] = LEAD_SHARE;
+      rest.forEach(function (d) { w[d.code] = (1 - LEAD_SHARE) / rest.length; });
+    } else {
+      // Only one side has figures: it is the whole score.
+      scored.forEach(function (d) { w[d.code] = 1 / scored.length; });
+    }
+    return w;
+  }
+
   function summary() {
     var data = load();
     if (!data) return null;
     var counts = { Green: 0, Yellow: 0, Red: 0, "Manual Review": 0, "No Data": 0 };
+    var w = weights(data.depts);
     var sum = 0, scored = 0;
     var depts = data.depts.map(function (d) {
       counts[SPECTRUM_KEY[d.status.key]]++;
-      if (SCORE[d.status.key] !== undefined) { sum += SCORE[d.status.key]; scored++; }
+      if (w[d.code] !== undefined) { sum += SCORE[d.status.key] * w[d.code]; scored += w[d.code]; }
       return { code: d.code, slug: d.slug, label: d.label, color: deptColor(d),
                last: d.out.last ? d.out.last.y : null, projected: d.out.projected,
-               status: d.status, spectrum: SPECTRUM_KEY[d.status.key] };
+               status: d.status, spectrum: SPECTRUM_KEY[d.status.key],
+               // Its part of the section's score, 0–1 (weights() makes them sum
+               // to 1); null when it has no projection to score.
+               share: w[d.code] !== undefined ? w[d.code] : null };
     });
     return { year: data.year, lastMonth: data.last, lastMonthName: MONTH_NAMES[data.last],
              elapsed: Math.round((data.last / YEAR_END) * 100),

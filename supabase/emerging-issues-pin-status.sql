@@ -233,14 +233,23 @@ select 'functions', string_agg(routine_name, ', ' order by routine_name)
 union all
 select 'can a signed-in user UPDATE directly? (must be no)',
        case when has_table_privilege('authenticated', 'public.emerging_issues', 'UPDATE')
-            then 'YES — check the revoke' else 'no' end
-union all
-select 'tile this week = Current Week tab',
-       (select b.raised_7d from public.v_emerging_issues_brief b)::text || ' = ' ||
+            then 'YES — check the revoke' else 'no' end;
+
+-- ── and the tile, read the way the site reads it ───────────────────────────
+-- The tile's view only answers for a signed-in reader (it is filtered by
+-- hub_sees_emerging_issues()), and the SQL editor is signed in as nobody — so
+-- asked from here directly it returns no rows at all. This signs in as Jess
+-- for the length of one transaction, reads it, and rolls back. Each pair of
+-- figures should match.
+begin;
+set local role authenticated;
+select set_config('request.jwt.claims',
+  '{"email":"jswinburne@churchofjesuschrist.org","role":"authenticated"}', true);
+select b.raised_7d    as tile_this_week,
        (select count(*) from public.v_emerging_issues
-         where age_days < 7 or pinned_at is not null)::text
-union all
-select 'tile last week = Last Week tab',
-       (select b.raised_prev7 from public.v_emerging_issues_brief b)::text || ' = ' ||
+         where age_days < 7 or pinned_at is not null)                       as current_week_tab,
+       b.raised_prev7 as tile_last_week,
        (select count(*) from public.v_emerging_issues
-         where age_days >= 7 and age_days < 14 and pinned_at is null)::text;
+         where age_days >= 7 and age_days < 14 and pinned_at is null)       as last_week_tab
+  from public.v_emerging_issues_brief b;
+rollback;

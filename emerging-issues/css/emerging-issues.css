@@ -1674,3 +1674,39 @@ select.is-sev-low option { color: var(--text); font-weight: 400; background: var
   .fn-note { padding: 14px 15px; }
   .fn-when { margin-left: 0; width: 100%; }
 }
+
+/* ═══ PINNED ISSUES AND STATUS ═══════════════════════════════════════════════
+   A pinned issue stays in Current Week, at the top, until it is unpinned. Its
+   card says so twice — a mark beside the severity and status, and a gold edge
+   — so a pin reads at a glance without opening anything. Gold because it is
+   the hub's own emphasis colour and is not already a severity. */
+.ei-chip-pin { background: rgba(255,195,40,.22); color: #8a6400; }
+[data-theme="dark"] .ei-chip-pin { background: rgba(255,195,40,.18); color: #FFC328; }
+.ei-card.is-pinned { border-left-color: #FFC328; }
+
+/* The two things that may change after an issue is raised, beneath what was
+   written about it. */
+.ei-actions {
+  margin-top: 14px; padding-top: 12px;
+  border-top: 1px solid var(--border-subtle, var(--border));
+}
+.ei-actions-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
+.ei-act-pin { display: inline-flex; align-items: center; gap: 7px; }
+.ei-act-status {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: .78rem; color: var(--text-muted);
+}
+.ei-act-status span {
+  font-size: .64rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+}
+/* Dressed like the filter selects above the list, so the page has one kind
+   of dropdown rather than two. */
+.ei-act-status select {
+  min-height: 38px;
+  font: inherit; font-size: .8rem; padding: 7px 11px;
+  border: 1px solid var(--border); border-radius: 8px;
+  background: var(--bg-card); color: var(--text); cursor: pointer;
+}
+.ei-act-status select:focus-visible { outline: 2px solid var(--bp-teal); outline-offset: 2px; }
+.ei-act-status select:disabled { opacity: .6; cursor: progress; }
+.ei-trail { margin: 10px 0 0; font-size: .76rem; line-height: 1.5; color: var(--text-dim); }

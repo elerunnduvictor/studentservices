@@ -53,7 +53,7 @@
      `max` is exclusive: 0-6 days is this week, 7-13 last week, 14+ backlog. */
   const BUCKETS = [
     { id: "current", label: "Current Week", max: 7,
-      blurb: "Raised in the last seven days." },
+      blurb: "Raised in the last seven days, and anything pinned." },
     { id: "last",    label: "Last Week",    max: 14,
       blurb: "Raised seven to fourteen days ago." },
     { id: "backlog", label: "Backlog",      max: Infinity,
@@ -214,7 +214,11 @@
     return Math.max(0, Math.floor((Date.now() - t) / 86400000));
   }
 
+  /* A pinned issue sits in Current Week whatever its age, for everyone, until
+     somebody unpins it — then its age puts it back where it belongs. The home
+     tile and the nav bell count it the same way (v_emerging_issues_brief). */
   function bucketOf(i) {
+    if (i.pinned_at) return "current";
     const age = ageDays(i);
     return (BUCKETS.find((b) => age < b.max) || BUCKETS[BUCKETS.length - 1]).id;
   }
@@ -257,6 +261,24 @@
       ).join("");
   }
 
+  /* ── what this reader may do to an issue ────────────────────────────────
+     The same rules the database enforces in ei_set_pin() and ei_set_status()
+     (supabase/emerging-issues-pin-status.sql). These only decide what to
+     offer; a control offered by mistake would still be refused. */
+  const me = () => String((SS.access && SS.access.email) || "").toLowerCase();
+  const roleIs = (...r) => !!(SS.access && r.indexOf(SS.access.role) >= 0);
+  function canPin() { return roleIs("staff", "director", "admin"); }
+  function canSetStatus(i) {
+    if (roleIs("director", "admin")) return true;
+    return roleIs("staff") && !!me() && String(i.raised_by || "").toLowerCase() === me();
+  }
+  /** An address as a name, for "Pinned by ...". */
+  function byName(email) {
+    const e = String(email || "").trim();
+    if (!e) return "someone";
+    return e.split("@")[0].replace(/[._]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  }
+
   /* ── one issue ─────────────────────────────────────────────────────────── */
   function issueCard(i) {
     const t = triage(i);
@@ -284,12 +306,13 @@
     ].join("");
 
     return `
-      <article class="ei-card${open ? " is-open" : ""}" data-id="${i.id}"
+      <article class="ei-card${open ? " is-open" : ""}${i.pinned_at ? " is-pinned" : ""}" data-id="${i.id}"
                data-sev="${esc(i.severity)}">
         <button type="button" class="ei-card-head" aria-expanded="${open}">
           <div class="ei-card-marks">
             ${chip("sev-" + String(i.severity || "").toLowerCase(), i.severity)}
             ${chip("status", i.status)}
+            ${i.pinned_at ? chip("pin", "Pinned") : ""}
           </div>
           <div class="ei-card-main">
             <h3 class="ei-card-title">${esc(i.title)}</h3>
@@ -303,20 +326,80 @@
                stroke-width="2" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
         </button>
 
-        <!-- Report once, and that is the record.
-             There was an "Add an update" box here that could also move the
-             status and the severity. Raising an issue is a report, not a
-             ticket somebody comes back to edit — so what is written when it is
-             raised is what it says, and the card is read-only from then on. -->
+        <!-- Report once, and that is the record — for what was said. The
+             title, description, severity and department stay as they were
+             written. Two things can move afterwards, because they describe
+             where the issue stands rather than what it is: whether it is
+             pinned to Current Week, and its status. The database allows those
+             two and refuses every other edit. -->
         <div class="ei-card-body" ${open ? "" : "hidden"}>
           ${i.summary ? `<p class="ei-para">${esc(i.summary)}</p>` : ""}
           ${i.impact ? `<p class="ei-para"><strong>Who it affects.</strong> ${esc(i.impact)}</p>` : ""}
+          ${actions(i)}
         </div>
       </article>`;
   }
 
+  /* The pin and the status, under what was written. Each control appears only
+     for someone allowed to use it; the history of both is shown to everyone. */
+  function actions(i) {
+    const trail = [
+      i.pinned_at ? `Pinned by ${esc(byName(i.pinned_by))} · ${fmtWhen(i.pinned_at)}` : null,
+      i.status_changed_at
+        ? `Status set to ${esc(i.status)} by ${esc(byName(i.status_changed_by))} · ${fmtWhen(i.status_changed_at)}`
+        : null,
+    ].filter(Boolean);
+
+    const pin = canPin()
+      ? `<button type="button" class="ei-btn ei-act-pin" data-pin="${i.pinned_at ? "off" : "on"}">
+           <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor"
+                stroke-width="2" aria-hidden="true"><path d="M12 17v5"/><path d="M9 10.76V6h6v4.76a2 2 0 0 0 .7 1.52l1.6 1.44A1 1 0 0 1 16.63 15H7.37a1 1 0 0 1-.67-1.28l1.6-1.44A2 2 0 0 0 9 10.76z"/><path d="M8 6h8"/></svg>
+           ${i.pinned_at ? "Unpin" : "Pin to Current Week"}
+         </button>`
+      : "";
+
+    const status = canSetStatus(i)
+      ? `<label class="ei-act-status">
+           <span>Status</span>
+           <select data-status-for="${i.id}" aria-label="Change the status">
+             ${STATUS.map((st) => `<option value="${esc(st)}"${st === i.status ? " selected" : ""}>${esc(st)}</option>`).join("")}
+           </select>
+         </label>`
+      : "";
+
+    if (!pin && !status && !trail.length) return "";
+    return `<div class="ei-actions">
+        ${pin || status ? `<div class="ei-actions-row">${pin}${status}</div>` : ""}
+        ${trail.length ? `<p class="ei-trail">${trail.join(" &nbsp;·&nbsp; ")}</p>` : ""}
+      </div>`;
+  }
+
+  /* ── pinning and status, sent to the database ───────────────────────────── */
+  async function setPin(id, pinned) {
+    await SS.db.rpc("ei_set_pin", { p_id: id, p_pinned: pinned });
+    await load();
+  }
+  async function setStatus(id, status) {
+    await SS.db.rpc("ei_set_status", { p_id: id, p_status: status });
+    await load();
+  }
+  /** A line under the tabs, then gone. */
+  function tell(text, bad) {
+    const box = el("eiSay");
+    if (!box) return;
+    box.textContent = text;
+    box.hidden = !text;
+    box.classList.toggle("is-bad", !!bad);
+    box.classList.toggle("is-good", !bad && !!text);
+    clearTimeout(tell._t);
+    if (text && !bad) tell._t = setTimeout(() => { box.hidden = true; }, 4500);
+  }
+
   function visible() {
     return afterFilters().filter((i) => bucketOf(i) === TAB).sort((a, b) => {
+      // Pinned first: pinning something is asking for it to be seen.
+      const p = (b.pinned_at ? 1 : 0) - (a.pinned_at ? 1 : 0);
+      if (p) return p;
       /* Everything still open comes first, ranked as before; resolved issues
          follow. Without this a resolved Critical would outrank an open
          Moderate, and the top of the list is meant to be what needs doing. */
@@ -551,7 +634,41 @@
     });
 
     // Open and close an issue. Delegated, because the list is redrawn often.
-    el("eiList").addEventListener("click", (e) => {
+    el("eiList").addEventListener("change", async (e) => {
+      const sel = e.target.closest("[data-status-for]");
+      if (!sel) return;
+      const id = Number(sel.dataset.statusFor);
+      const before = (ISSUES.find((x) => x.id === id) || {}).status;
+      sel.disabled = true;
+      try {
+        await setStatus(id, sel.value);
+        tell(`Status changed to ${sel.value}.`);
+      } catch (err) {
+        tell("That did not save: " + ((err && err.message) || err), true);
+        sel.value = before;
+        sel.disabled = false;
+      }
+    });
+
+    el("eiList").addEventListener("click", async (e) => {
+      const pinBtn = e.target.closest("[data-pin]");
+      if (pinBtn) {
+        const id = Number(pinBtn.closest(".ei-card").dataset.id);
+        const on = pinBtn.dataset.pin === "on";
+        pinBtn.disabled = true;
+        try {
+          await setPin(id, on);
+          // Pinning from Last Week or the Backlog moves it out of the tab being
+          // read, so say where it went rather than letting it vanish.
+          tell(on ? (TAB === "current" ? "Pinned. It stays at the top of Current Week."
+                                       : "Pinned. It is now at the top of Current Week.")
+                  : "Unpinned. It is back in the week it was raised.");
+        } catch (err) {
+          tell("That did not save: " + ((err && err.message) || err), true);
+          pinBtn.disabled = false;
+        }
+        return;
+      }
       const head = e.target.closest(".ei-card-head");
       if (!head) return;
       const card = head.closest(".ei-card");

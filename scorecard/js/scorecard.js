@@ -310,13 +310,14 @@
       key: "operational",
       name: "Operational Outcomes",
       blurb: "How well the work runs.",
-      /* Speed and Quality. Cost used to be the third part here — greyed,
-         because no KPI was ever filed against it — and is now an outcome of
-         its own, drawn from the monthly budget rather than from KPI rows. See
-         costOutcome() below and scorecard/js/cost-kpi.js. */
+      /* Quality, Speed and Cost. Cost is drawn from the monthly budget rather
+         than from KPI rows, so it is marked `cost` and its card, page and
+         score come from scorecard/js/cost-kpi.js — see costPartCard(). It
+         sorts last by TYPE_ORDER, after Quality and Speed. */
       parts: [
         { type: "Speed",   note: "Promptness of execution." },
         { type: "Quality", note: "Accuracy and satisfaction." },
+        { type: "Cost",    note: "Cost control and scalability.", cost: true },
       ],
     },
   ];
@@ -410,7 +411,7 @@
     var parts = outcome.parts.slice().sort(function (a, b) {
       return TYPE_ORDER.indexOf(a.type) - TYPE_ORDER.indexOf(b.type);
     }).map(function (p) {
-      return partCard(p, partRows(mine, p.type), outcome.key);
+      return p.cost ? costPartCard(outcome.key) : partCard(p, partRows(mine, p.type), outcome.key);
     }).join("");
 
     var score = roll.health === null
@@ -457,75 +458,46 @@
   function outcomes(rows) {
     return '<div class="sc-outcomes">' +
       OUTCOMES.map(function (o) { return outcomeCard(o, rows); }).join("") +
-      // A lens narrows the page to one kind of KPI; budget is none of them.
-      (state.lens === "All" ? costOutcome() : "") +
     "</div>";
   }
 
-  /* ── Cost Outcomes ───────────────────────────────────────────────────────
-     The third section, built from the same parts as the other two so it reads
-     as one of them: a heading that opens onto everything under it, a spectrum,
-     and a card per part. Its parts are departments rather than KPI types,
-     because a budget belongs to a department, and each opens onto that
-     department's graphs.
+  /* ── Cost, a part of Operational Outcomes ────────────────────────────────
+     Built like its neighbours, Quality and Speed, but from the monthly budget
+     rather than from KPI rows (scorecard/js/cost-kpi.js): the score is each
+     department's status — Green 100, Yellow 50, Red 0 — weighted so the VP's
+     budget counts for half and the other departments share the other half.
 
-     Its score uses the same Green 100, Yellow 50, Red 0 over each department's
-     status, but weighted: the VP's budget counts for half of it and the other
-     departments share the other half (see weights() in cost-kpi.js). Each card
-     says what it counts for, so the score can be worked out from the page. It
-     stands beside the organisation's health index
-     rather than inside it: that index is a roll-up of KPIs, and folding the
-     budget into it would move the headline number, which is its own decision. */
+     That score stands on the card. It does not feed Operational Outcomes'
+     own score, which is still a roll-up of its KPIs, nor the organisation's
+     health index: folding a budget into a KPI roll-up moves the headline
+     number, and that is a decision of its own.
+
+     Opens onto every department and its graphs; each department opens onto
+     its own chart, notes and months. */
+  var COST_HOME = "#/outcome/operational/cost";
+
   function shareText(f) {
     var n = Math.round(f * 1000) / 10;
     return (n % 1 ? n.toFixed(1) : String(n)) + "%";
   }
 
-  function costOutcome() {
+  function costPartCard() {
     var cost = window.SS && SS.costKpi && SS.costKpi.summary();
-    var head = function (score, meta, go) {
-      return '<button type="button" class="sc-outcome-head sc-outcome-open" data-goto="#/outcome/cost">' +
-        "<div>" +
-          '<div class="sc-outcome-name">Cost Outcomes</div>' +
-          '<div class="sc-outcome-blurb">Cost control and scalability — each department against its budget.</div>' +
-        "</div>" +
-        '<div class="sc-outcome-figures">' + score +
-          '<span class="sc-outcome-cov">' + esc(meta) + "</span>" + go +
-        "</div>" +
-      "</button>";
-    };
+    var name = '<div class="sc-part-name">' + esc(typeLabel("Cost")) + "</div>";
+    var note = '<div class="sc-part-note">Cost control and scalability.</div>';
     if (!cost) {
-      return '<section class="sc-outcome is-lead" data-outcome="cost">' +
-        head('<span class="sc-outcome-score is-empty">—</span>', "Budget figures not loaded", "") +
-        spectrum({}) + "</section>";
+      return '<div class="sc-part is-empty">' + name +
+        '<div class="sc-part-score is-empty">—</div>' +
+        '<div class="sc-part-meta">Budget figures not loaded</div>' + note + "</div>";
     }
-
-    var score = cost.health === null
-      ? '<span class="sc-outcome-score is-empty">—</span>'
-      : '<span class="sc-outcome-score">' + cost.health + "<small>/100</small></span>";
-    var parts = cost.depts.map(function (d) {
-      var mini = {}; mini[d.spectrum] = 1;
-      return '<button type="button" class="sc-part sc-part--cost" style="--sc-part-accent:' + d.color +
-          '" data-goto="#/outcome/cost/' + esc(d.slug) + '">' +
-        '<span class="sc-part-arrow" aria-hidden="true">›</span>' +
-        '<div class="sc-part-name">' + esc(d.label) + "</div>" +
-        '<div class="sc-part-score">' + (d.projected === null ? "—" : Math.round(d.projected) +
-          "<small>% by Dec</small>") + "</div>" +
-        '<div class="sc-part-meta">' + (d.last === null ? "Not tracked yet" :
-          Math.round(d.last) + "% spent by " + esc(cost.lastMonthName)) + "</div>" +
-        spectrum(mini, true) +
-        '<div class="sc-part-note">' + statusChip(d.spectrum, d.status.label) +
-          (d.share === null ? "" : '<span class="sc-part-share">' + shareText(d.share) +
-            " of the score</span>") + "</div>" +
-      "</button>";
-    }).join("");
-
-    return '<section class="sc-outcome is-lead" data-outcome="cost">' +
-      head(score, cost.depts.length + " departments · VP counts for half · budget year " + cost.year,
-        '<span class="sc-outcome-go">See the graphs <span aria-hidden="true">›</span></span>') +
-      spectrum(cost.counts) +
-      '<div class="sc-parts">' + parts + "</div>" +
-    "</section>";
+    return '<button type="button" class="sc-part" data-goto="' + COST_HOME + '">' +
+      '<span class="sc-part-arrow" aria-hidden="true">›</span>' + name +
+      (cost.health === null
+        ? '<div class="sc-part-score is-empty">—</div>'
+        : '<div class="sc-part-score">' + cost.health + "<small>/100</small></div>") +
+      '<div class="sc-part-meta">' + cost.depts.length + " departments · VP counts for half</div>" +
+      spectrum(cost.counts, true) + note +
+    "</button>";
   }
 
   function head(eyebrow, title, meta) {
@@ -556,7 +528,7 @@
       : '<div class="sc-kid-score">' + roll.health + "<small>/100</small></div>";
     var cov = roll.health === null
       ? '<div class="sc-kid-cov">' + statusChip("No Data", "Awaiting data") + "</div>"
-      : '<div class="sc-kid-cov">Coverage ' + roll.coverage + "%</div>";
+      : '<div class="sc-kid-cov">' + (opts.covText ? esc(opts.covText) : "Coverage " + roll.coverage + "%") + "</div>";
     var body =
       '<div class="sc-kid-name">' + esc(opts.name) + "</div>" +
       '<div class="sc-kid-role">' + esc(opts.sub) + "</div>" +
@@ -1021,9 +993,13 @@
     var rows = outcomeRows(outcomeSource(), o);
     var roll = rollup(rows);
     var parts = sortedParts(o);
-    var measured = parts.filter(function (p) { return partRows(rows, p.type).length; }).length;
+    var costOn = !!(window.SS && SS.costKpi && SS.costKpi.summary());
+    var measured = parts.filter(function (p) {
+      return p.cost ? costOn : partRows(rows, p.type).length;
+    }).length;
 
     var kids = parts.map(function (p) {
+      if (p.cost) return costKid();
       var pr = partRows(rows, p.type);
       return kidCard({
         name: typeLabel(p.type),
@@ -1046,19 +1022,44 @@
       kpiList(rows, true, outcomeKpiHref(o));
   }
 
+  /* #/outcome/operational/cost[/<dept>] — and #/outcome/cost[/<dept>], where
+     Cost briefly lived as an outcome of its own, so a saved link still lands. */
+  function costPage(p) {
+    return p[0] === "outcome" &&
+      ((p[1] === "operational" && p[2] === "cost") || p[1] === "cost");
+  }
+  function costDept(p) { return p[1] === "cost" ? p[2] : p[3]; }
+
   function renderCost(slug) {
     var ck = window.SS && SS.costKpi;
     var cost = ck && ck.summary();
     if (!slug) {
-      return head("Outcome", "Cost Outcomes",
+      return head("Operational Outcomes", typeLabel("Cost"),
           cost ? cost.depts.length + " departments · budget year " + cost.year +
                  " · tracked through " + cost.lastMonthName : "") +
         (ck ? ck.pageHtml(null) : "");
     }
     var d = ck && ck.deptBySlug(slug);
-    return head("Cost Outcomes", d ? d.label : "Unknown department",
+    return head(typeLabel("Cost"), d ? d.label : "Unknown department",
         d && cost ? d.status.label + " · budget year " + cost.year : "") +
       (ck ? ck.pageHtml(slug) : "");
+  }
+
+  /* Cost on the Operational page: its score in the card every part uses,
+     with the department count where the others show coverage. */
+  function costKid() {
+    var cost = window.SS && SS.costKpi && SS.costKpi.summary();
+    if (!cost) {
+      return kidCard({ name: typeLabel("Cost"), sub: "Budget figures not loaded",
+        roll: { health: null, counts: {} }, href: COST_HOME, empty: true });
+    }
+    return kidCard({
+      name: typeLabel("Cost"),
+      sub: cost.depts.length + " departments · budget year " + cost.year,
+      roll: { health: cost.health, counts: cost.counts },
+      covText: "VP counts for half",
+      href: COST_HOME,
+    });
   }
 
   function renderPart(key, slug) {
@@ -1108,9 +1109,12 @@
     var bare = p[0] === "kpi" ? findKpi(parseInt(p[1], 10), false) : null;
     var bareHome = bare && !bare.employee ? homeOf(bare) : null;
 
-    if (p[0] === "outcome" && p[1] === "cost") {
-      items.push({ label: "Cost Outcomes", href: "#/outcome/cost" });
-      var cd = p[2] && window.SS && SS.costKpi && SS.costKpi.deptBySlug(p[2]);
+    if (costPage(p)) {
+      var op = outcomeByKey("operational");
+      items.push({ label: op.name, href: "#/outcome/operational" });
+      items.push({ label: typeLabel("Cost"), href: COST_HOME });
+      var cslug = costDept(p);
+      var cd = cslug && window.SS && SS.costKpi && SS.costKpi.deptBySlug(cslug);
       if (cd) items.push({ label: cd.label, href: null });
     } else if (p[0] === "outcome") {
       var oc = outcomeByKey(p[1]);
@@ -1193,7 +1197,7 @@
     var html;
 
     if (p[0] === "kpi") html = renderKpi(parseInt(p[1], 10), false);
-    else if (p[0] === "outcome" && p[1] === "cost") html = renderCost(p[2]);
+    else if (costPage(p)) html = renderCost(costDept(p));
     else if (p[0] === "outcome") {
       if (p[2] === "kpi") html = renderKpi(parseInt(p[3], 10), true);
       else if (p[2]) html = renderPart(p[1], p[2]);
@@ -1210,7 +1214,7 @@
     document.getElementById("scView").innerHTML = html;
     document.getElementById("scCrumbs").innerHTML = crumbs();
     // The Cost pages hold charts, which are drawn once they have a width.
-    if (p[0] === "outcome" && p[1] === "cost" && window.SS && SS.costKpi) {
+    if (costPage(p) && window.SS && SS.costKpi) {
       SS.costKpi.draw(document.getElementById("scView"));
     }
     // Low-key CAP guide link, KPI cards only — see shared/js/cap-guide-link.js.

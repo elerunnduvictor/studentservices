@@ -151,6 +151,9 @@
     var rows = window.COST_BUDGET || [];
     if (!rows.length) return null;
     var depts = build(rows);
+    // What each counts for in the Cost score, so its own card can say so.
+    var w = weights(depts);
+    depts.forEach(function (d) { d.share = w[d.code] !== undefined ? w[d.code] : null; });
     var months = [];
     depts.forEach(function (d) {
       points(d.total).forEach(function (p) { if (months.indexOf(p.x) < 0) months.push(p.x); });
@@ -434,13 +437,15 @@
 
     var title = open
       ? ""   // its own page: the heading above already names it
-      : '<h3 class="ck-card-title"><button type="button" class="ck-card-link" data-goto="#/outcome/cost/' +
+      : '<h3 class="ck-card-title"><button type="button" class="ck-card-link" data-goto="#/outcome/operational/cost/' +
           esc(d.slug) + '">' + esc(d.label) + ' <span aria-hidden="true">›</span></button></h3>';
 
     return '<div class="ck-card is-dept" style="--ck-dept:' + deptColor(d) + '" data-dept="' + esc(d.code) + '">' +
       '<div class="ck-card-head"><div>' + title +
         '<p class="ck-card-sub">' + esc(d.code) + " · " +
-          (known.length ? known.length + " categories tracked" : "no categories broken out") + "</p>" +
+          (known.length ? known.length + " categories tracked" : "no categories broken out") +
+          (d.share === null || d.share === undefined ? "" :
+            " · counts for " + (Math.round(d.share * 1000) / 10) + "% of the Cost score") + "</p>" +
         "</div>" + figs +
       "</div>" +
       '<div class="ck-plot" data-ck-plot="' + id + '"></div>' +

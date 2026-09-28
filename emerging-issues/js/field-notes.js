@@ -37,7 +37,15 @@
     "Enrollment & Retention",
     "Dean of Students",
     "Digital Operations",
+    "Vice President",
   ];
+
+  /* What the rest of the hub calls a department this form names differently.
+     "Vice President" is how the form says it; the directory, the palette and
+     access scopes say "VP - Student Services". Used for the colour on a note
+     and to prefill the form for someone scoped to the VP's office. */
+  const HUB_NAME = { "Vice President": "VP - Student Services" };
+  const FORM_NAME = { "VP - Student Services": "Vice President" };
 
   const WEEKS_OFFERED = 8;        // this week and the seven before it, in the form
 
@@ -109,7 +117,7 @@
   const isMine = (n) => !!myEmail() && String(n.created_by || "").toLowerCase() === myEmail();
 
   function deptColor(name) {
-    const c = window.DEPT_COLORS && window.DEPT_COLORS[name];
+    const c = window.DEPT_COLORS && window.DEPT_COLORS[HUB_NAME[name] || name];
     return (c && c.bg) || "var(--text-dim)";
   }
 
@@ -241,7 +249,8 @@
     if (dept) {
       dept.innerHTML = `<option value="">&mdash;</option>` +
         DEPARTMENTS.map((d) => `<option value="${esc(d)}">${esc(d)}</option>`).join("");
-      const mine = access() && access().scope && access().scope.department;
+      const scoped = access() && access().scope && access().scope.department;
+      const mine = FORM_NAME[scoped] || scoped;
       if (mine && DEPARTMENTS.indexOf(mine) >= 0) dept.value = mine;
     }
   }

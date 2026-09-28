@@ -28,34 +28,8 @@
   --ck-pace: #6A6660;
 }
 
-/* ── the Cost Outcomes section on the scorecard ──────────────────────────────
-   Drawn from the scorecard's own .sc-outcome / .sc-part markup, so it already
-   looks like the other two outcomes. The one addition: a department's card
-   carries its department's colour along its top edge, the way the department
-   cards across the hub do, since here the parts are departments. */
-.sc-part--cost { border-top: 3px solid var(--sc-part-accent, var(--border)); }
-/* Five departments, where the other outcomes have two or three parts. At the
-   shared 240px minimum they wrapped four and one, leaving a department alone
-   on a row; a narrower minimum puts all five across on a desktop and still
-   folds to one a row on a phone. */
-.sc-outcome[data-outcome="cost"] .sc-parts {
-  grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
-}
-/* Between desktop and phone auto-fit still left one alone (four and one), so
-   the middle widths get three and two instead. */
-@media (max-width: 1180px) and (min-width: 641px) {
-  .sc-outcome[data-outcome="cost"] .sc-parts { grid-template-columns: repeat(3, 1fr); }
-}
-.sc-part--cost .sc-part-score small { font-size: .55em; margin-left: 2px; }
-.sc-part--cost .sc-part-note {
-  margin-top: 8px;
-  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px;
-}
-/* What this department counts for in the section's score. */
-.sc-part-share {
-  font-size: .7rem; color: var(--text-dim);
-  font-variant-numeric: lining-nums tabular-nums; white-space: nowrap;
-}
+/* Cost now sits as a card under Operational Outcomes, drawn with the
+   scorecard's own .sc-part markup, so it needs no styles of its own there. */
 
 /* ── what the year looks like, before any chart ── */
 .ck-head { margin: 0 0 22px; }

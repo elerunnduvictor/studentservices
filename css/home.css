@@ -691,9 +691,10 @@ body.home-single .hero-compact h1 span {
    strategy statement (2026-09-29; it replaced a row of stone arches, which
    read heavy, and was moved up from above the cards to give them the room):
    two slim towers with a gold lamp on each, the main cable sweeping between
-   them, hangers down to the deck, and a faint shimmer of water beneath. A
-   point of gold light travels the cable end to end. It sits directly under
-   the words "The Bridge", so the name and the picture are read together.
+   them, hangers down to the deck, and a faint shimmer of water beneath. The
+   lamps are the only light — a travelling one along the cable was taken out
+   on request. It sits directly under the words "The Bridge", so the name and
+   the picture are read together.
    Faint on purpose: a horizon, not a picture. */
 .home-viaduct {
   width: 100%;
@@ -878,7 +879,6 @@ body.home-single .hero-compact h1 span {
   .gw, .gw-art, .gw-go, .gw-needle { transition: none; }
   .gw:hover, .gw:hover .gw-art, .gw:hover .gw-go, .gw:hover .gw-needle { transform: none; }
   .gw-pulse, .gw-spin, .gw-march, .gw-stars circle, .gw-leaves circle, .bridge-lamp { animation: none; }
-  .bridge-glint { display: none; }
   .gw:hover .gw-draw { animation: none; }
 }
 

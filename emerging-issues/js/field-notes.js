@@ -14,8 +14,9 @@
 
    ── Who sees what ──
 
-   Your own notes, always; everyone's if you are a director or an admin. That
-   is enforced by row-level security in supabase/field-notes.sql, not here —
+   Everyone in Student Services reads every note (2026-09-29); partners read
+   none. That is enforced by row-level security in supabase/field-notes.sql,
+   not here —
    this file only decides whether to offer the tab at all, so that a partner is
    not shown a door into an empty room.
    ═══════════════════════════════════════════════════════════════════════ */
@@ -164,8 +165,8 @@
     const opts = (list) => list.map((v) => `<option value="${esc(v)}">${esc(v)}</option>`).join("");
     const d = el("fnDept"), p = el("fnPerson");
     if (d) { d.innerHTML = `<option value="">All departments</option>` + opts(depts); d.value = f.dept; }
-    // One person's own notes are the only ones most readers have, so a person
-    // filter that offers a list of one is noise. It appears once there are two.
+    // A person filter that offers a list of one is noise, so it appears once
+    // there are two people's notes to choose between.
     if (p) {
       p.hidden = people.length < 2;
       p.innerHTML = `<option value="">Everyone</option>` + opts(people);

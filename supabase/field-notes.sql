@@ -22,9 +22,12 @@
 --
 --  ── Who may read one ──
 --
---  Your own, always. Everyone's, if you are a director or an admin. A note
---  names a person and what they found hard that week, which is a narrower
---  thing than the issue register, so it is not shared sideways across the team.
+--  Everyone in Student Services — staff, directors and admins — reads every
+--  note (2026-09-29; it was your own plus leadership's view of all). Partners
+--  read none. Your own notes stay readable to you whatever your role.
+--
+--  Re-running this file is how that change is applied: the select policy is
+--  dropped and recreated below; the table and its notes are untouched.
 --
 --  Safe to re-run.
 -- ═══════════════════════════════════════════════════════════════════════════
@@ -60,8 +63,8 @@ drop policy if exists field_notes_select on public.field_notes;
 create policy field_notes_select on public.field_notes
   for select to authenticated
   using (
-    created_by = lower(coalesce((select auth.jwt()) ->> 'email', ''))
-    or hub_role() in ('director', 'admin')
+    hub_role() in ('staff', 'director', 'admin')
+    or created_by = lower(coalesce((select auth.jwt()) ->> 'email', ''))
   );
 
 -- ── writing ────────────────────────────────────────────────────────────────
@@ -99,6 +102,13 @@ grant select on public.v_field_notes to authenticated;
 commit;
 
 -- ── check it ───────────────────────────────────────────────────────────────
+-- The reading rule first: must mention 'staff', or re-run this file.
+select 'field notes readable by all of Student Services? (must be yes)' as check_it,
+       case when (select qual from pg_policies
+                   where schemaname = 'public' and tablename = 'field_notes'
+                     and policyname = 'field_notes_select') like '%staff%'
+            then 'yes' else 'NO — re-run this file' end as answer;
+
 -- Empty on a first run. Once notes exist: one row per week, newest first, with
 -- how many notes that week holds and how many people wrote them.
 select week_of,

@@ -153,7 +153,7 @@
           </div>`)}
 
       ${field("Process Description",
-          `<textarea class="proc-textarea" id="pfDescription" rows="3">${escapeHtml(row.description || "")}</textarea>`,
+          `<textarea class="proc-textarea" id="pfDescription" rows="3" required>${escapeHtml(row.description || "")}</textarea>`,
           "2–3 sentences: what is this process, why does it exist, and who does it serve?", true)}
 
       ${field("Process Workflow", `
@@ -325,11 +325,17 @@
     };
   }
 
-  /** process_name, steward_name, and department are NOT NULL in the database. */
+  /** process_name, steward_name, and department are NOT NULL in the database.
+   *  description is required here only, deliberately not in the database:
+   *  15 existing rows have an empty description, and a constraint would fail
+   *  those at save time instead of asking for it here. Every save path (create,
+   *  create-for-steward, edit, review) runs through this, so opening one of
+   *  those rows to change anything asks for a description first. */
   function validateRequired(payload) {
     if (!payload.process_name) return "Process Name is required.";
     if (!payload.steward_name) return "Steward is required.";
     if (!payload.department) return "Department is required.";
+    if (!payload.description) return "Process Description is required.";
     return null;
   }
 

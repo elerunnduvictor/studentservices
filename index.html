@@ -114,6 +114,41 @@
   </div>
 </section>
 
+<!-- ═══════════════ THE BRIDGE ═══════════════
+     Under the portal's name, over the statement: see .home-viaduct in css/home.css. -->
+<div class="home-viaduct" aria-hidden="true">
+    <svg viewBox="0 0 1600 96" preserveAspectRatio="xMidYMax slice" focusable="false">
+      <defs>
+        <linearGradient id="bridgeInk" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="1600" y2="0">
+          <stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".16" stop-color="#fff" stop-opacity=".45"/>
+          <stop offset=".5" stop-color="#fff" stop-opacity=".8"/><stop offset=".84" stop-color="#fff" stop-opacity=".45"/>
+          <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+        </linearGradient>
+        <linearGradient id="bridgeWater" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#fff" stop-opacity=".22"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>
+        </linearGradient>
+        <radialGradient id="bridgeLamp" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#FFD66B" stop-opacity=".95"/><stop offset=".4" stop-color="#FFC328" stop-opacity=".3"/><stop offset="1" stop-color="#FFC328" stop-opacity="0"/></radialGradient>
+        <path id="bridgeCable" d="M0 64Q250 60 420 8Q800 116 1180 8Q1350 60 1600 64"/>
+      </defs>
+      <g fill="none" stroke="url(#bridgeInk)" stroke-linecap="round">
+        <path d="M20 63.6V68 M52 62.6V68 M84 61.2V68 M116 59.3V68 M148 56.8V68 M180 53.9V68 M212 50.3V68 M244 46.1V68 M276 41.1V68 M308 35.4V68 M340 28.8V68 M372 21.3V68 M404 12.7V68 M436 12.5V68 M468 20.8V68 M500 28.3V68 M532 35.1V68 M564 41.2V68 M596 46.4V68 M628 50.9V68 M660 54.7V68 M692 57.6V68 M724 59.8V68 M756 61.3V68 M788 61.9V68 M820 61.9V68 M852 61.0V68 M884 59.4V68 M916 57.0V68 M948 53.8V68 M980 49.9V68 M1012 45.2V68 M1044 39.7V68 M1076 33.5V68 M1108 26.5V68 M1140 18.8V68 M1204 15.0V68 M1236 23.3V68 M1268 30.6V68 M1300 36.9V68 M1332 42.4V68 M1364 47.2V68 M1396 51.2V68 M1428 54.7V68 M1460 57.5V68 M1492 59.8V68 M1524 61.6V68 M1556 62.9V68 M1588 63.8V68" stroke-width=".8" opacity=".75"/>
+        <path d="M420 8Q800 116 1180 8M0 64Q250 60 420 8M1180 8Q1350 60 1600 64" stroke-width="1.6"/>
+        <path d="M413 4V86M427 4V86M413 20H427M413 42H427M413 66H427M1173 4V86M1187 4V86M1173 20H1187M1173 42H1187M1173 66H1187" stroke-width="1.5"/>
+        <path d="M0 68H1600M0 73H1600" stroke-width="1.3"/>
+      </g>
+      <g stroke="url(#bridgeWater)" stroke-linecap="round" stroke-width="1">
+        <path d="M413 88V95M427 88V93M1173 88V95M1187 88V93"/>
+        <path d="M300 90H380M520 92H600M760 89H860M1000 92H1090M1240 90H1320" opacity=".7"/>
+      </g>
+      <circle cx="420" cy="4" r="14" fill="url(#bridgeLamp)" class="bridge-lamp"/><circle cx="420" cy="4" r="1.8" fill="#FFE39A"/>
+      <circle cx="1180" cy="4" r="14" fill="url(#bridgeLamp)" class="bridge-lamp"/><circle cx="1180" cy="4" r="1.8" fill="#FFE39A"/>
+      <g class="bridge-glint">
+        <circle r="30" fill="url(#bridgeLamp)"/><circle r="2.2" fill="#FFF3CF"/>
+        <animateMotion dur="18s" repeatCount="indefinite" rotate="0"><mpath href="#bridgeCable"/></animateMotion>
+      </g>
+    </svg>
+</div>
+
 <!-- ═══════════════ STRATEGY ═══════════════ -->
 <section class="home-strategy" id="mission" data-reveal>
   <div class="home-strategy-inner">
@@ -143,55 +178,124 @@
 <section class="home-gw-wrap" id="structure" data-reveal>
   <div class="home-gw-grid">
 
-      <a class="gw" data-gw="org" id="gw-org" href="/org-chart/index.html">
-        <span class="gw-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="9" y="2" width="6" height="5" rx="1"/><rect x="2" y="16" width="6" height="5" rx="1"/><rect x="16" y="16" width="6" height="5" rx="1"/><path d="M12 7v4M5 16v-2h14v2M12 11v3"/></svg></span>
-        <span class="gw-text">
-          <span class="gw-title">Organization</span>
-          <span class="gw-desc">Full org chart, role inventories, and contact information</span>
-        </span>
-        <span class="gw-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></span>
-      </a>
-
-      <a class="gw" data-gw="projects" id="gw-projects" href="/projects/index.html">
-        <span class="gw-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 3v2h6V3"/><path d="M8 11l1.5 1.5L12 10M8 16l1.5 1.5L12 15M14 11.5h3M14 16.5h3"/></svg></span>
-        <span class="gw-text">
-          <span class="gw-title">Project Inventory</span>
-          <span class="gw-desc">Status of other important projects</span>
-        </span>
-        <span class="gw-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></span>
-      </a>
-
       <a class="gw" data-gw="kpis" id="gw-kpis" href="/scorecard/index.html">
-        <span class="gw-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><line x1="6" y1="20" x2="6" y2="13"/><line x1="12" y1="20" x2="12" y2="7"/><line x1="18" y1="20" x2="18" y2="10"/><line x1="3" y1="20" x2="21" y2="20"/></svg></span>
+        <span class="gw-art" aria-hidden="true">
+          <svg viewBox="0 0 480 300" preserveAspectRatio="xMaxYMax slice" focusable="false">
+            <defs>
+              <linearGradient id="gwKpiFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="currentColor" stop-opacity=".55"/><stop offset="1" stop-color="currentColor" stop-opacity="0"/></linearGradient>
+              <radialGradient id="gwKpiSun" cx=".84" cy=".2" r=".42"><stop offset="0" stop-color="#FFE7A8" stop-opacity=".42"/><stop offset="1" stop-color="#FFE7A8" stop-opacity="0"/></radialGradient>
+            </defs>
+            <rect width="480" height="300" fill="url(#gwKpiSun)"/>
+            <g class="gw-grid" stroke="currentColor" stroke-width="1" stroke-dasharray="2 7" opacity=".22"><line x1="0" y1="70" x2="480" y2="70"/><line x1="0" y1="120" x2="480" y2="120"/><line x1="0" y1="170" x2="480" y2="170"/><line x1="0" y1="220" x2="480" y2="220"/></g>
+            <path d="M0 300V196l52-30 44 20 58-58 50 34 62-62 46 36 64-60 50 30 54-28V300z" fill="url(#gwKpiFill)" opacity=".38"/>
+            <path d="M0 300V232l70-34 46 22 64-52 56 38 50-30 60 36 68-46 66 30V300z" fill="url(#gwKpiFill)" opacity=".6"/>
+            <path d="M0 300V264l86-26 60 16 72-40 64 28 70-24 128 18V300z" fill="url(#gwKpiFill)" opacity=".9"/>
+            <polyline class="gw-draw" points="30,236 96,214 150,222 214,178 272,188 336,138 404,112" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
+            <polyline points="404,112 476,82" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="3 7" stroke-linecap="round" opacity=".75"/>
+            <g fill="currentColor"><circle cx="30" cy="236" r="3.2"/><circle cx="96" cy="214" r="3.2"/><circle cx="150" cy="222" r="3.2"/><circle cx="214" cy="178" r="3.2"/><circle cx="272" cy="188" r="3.2"/><circle cx="336" cy="138" r="3.2"/></g>
+            <circle class="gw-pulse" cx="404" cy="112" r="14" fill="#FFC328" opacity=".35"/>
+            <circle cx="404" cy="112" r="5.5" fill="#FFC328"/>
+          </svg>
+        </span>
+        <span class="gw-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><line x1="6" y1="20" x2="6" y2="13"/><line x1="12" y1="20" x2="12" y2="7"/><line x1="18" y1="20" x2="18" y2="10"/><line x1="3" y1="20" x2="21" y2="20"/></svg></span>
         <span class="gw-text">
           <span class="gw-title">Key Performance Indicators (KPIs)</span>
           <span class="gw-desc">Scorecard of ongoing performance measures</span>
         </span>
-        <span class="gw-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></span>
+        <span class="gw-open" aria-hidden="true">Open <span class="gw-go"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 6 15 12 9 18"/></svg></span></span>
       </a>
 
       <a class="gw" data-gw="okrs" id="gw-okrs" href="/okr-progress/index.html">
-        <span class="gw-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/></svg></span>
+        <span class="gw-art" aria-hidden="true">
+          <svg viewBox="0 0 480 300" preserveAspectRatio="xMaxYMid slice" focusable="false">
+            <defs>
+              <radialGradient id="gwOkrGlow" cx=".75" cy=".47" r=".46"><stop offset="0" stop-color="currentColor" stop-opacity=".34"/><stop offset="1" stop-color="currentColor" stop-opacity="0"/></radialGradient>
+            </defs>
+            <rect width="480" height="300" fill="url(#gwOkrGlow)"/>
+            <circle class="gw-spin" cx="360" cy="140" r="150" fill="none" stroke="currentColor" stroke-width="7" stroke-dasharray="1.2 11" opacity=".3"/>
+            <g fill="none" stroke="currentColor"><circle cx="360" cy="140" r="118" opacity=".2"/><circle cx="360" cy="140" r="88" opacity=".28"/><circle cx="360" cy="140" r="58" opacity=".36"/><circle cx="360" cy="140" r="30" opacity=".5"/>
+              <line x1="190" y1="140" x2="530" y2="140" opacity=".14"/><line x1="360" y1="-30" x2="360" y2="310" opacity=".14"/></g>
+            <g fill="none" stroke-linecap="round" transform="rotate(-90 360 140)">
+              <circle cx="360" cy="140" r="118" stroke="currentColor" stroke-width="3.5" stroke-dasharray="520 742" opacity=".9"/>
+              <circle cx="360" cy="140" r="88" stroke="currentColor" stroke-width="3.5" stroke-dasharray="360 553" opacity=".9"/>
+              <circle cx="360" cy="140" r="58" stroke="#FFC328" stroke-width="3.5" stroke-dasharray="290 365"/>
+            </g>
+            <g class="gw-needle"><polygon points="360,92 370,140 350,140" fill="#FFC328"/><polygon points="350,140 370,140 360,188" fill="currentColor" opacity=".75"/><circle cx="360" cy="140" r="4.5" fill="#fff"/></g>
+          </svg>
+        </span>
+        <span class="gw-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/></svg></span>
         <span class="gw-text">
           <span class="gw-title">Objectives &amp; Key Results (OKRs)</span>
           <span class="gw-desc">Current priority goals and initiatives</span>
         </span>
-        <span class="gw-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></span>
+        <span class="gw-open" aria-hidden="true">Open <span class="gw-go"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 6 15 12 9 18"/></svg></span></span>
+      </a>
+
+      <a class="gw" data-gw="projects" id="gw-projects" href="/projects/index.html">
+        <span class="gw-art" aria-hidden="true">
+          <svg viewBox="0 0 480 300" preserveAspectRatio="xMaxYMax slice" focusable="false">
+            <defs>
+              <linearGradient id="gwPrjSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="currentColor" stop-opacity=".30"/><stop offset=".45" stop-color="currentColor" stop-opacity="0"/></linearGradient>
+              <radialGradient id="gwPrjGoal" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#FFC328" stop-opacity=".75"/><stop offset="1" stop-color="#FFC328" stop-opacity="0"/></radialGradient>
+            </defs>
+            <rect width="480" height="300" fill="url(#gwPrjSky)"/>
+            <g class="gw-stars" fill="#fff"><circle cx="232" cy="38" r="1.3"/><circle cx="300" cy="22" r="1"/><circle cx="352" cy="54" r="1.4"/><circle cx="438" cy="30" r="1.1"/><circle cx="470" cy="64" r="1.2"/><circle cx="268" cy="72" r="1"/><circle cx="396" cy="16" r="1.2"/></g>
+            <path d="M0 124Q90 100 170 116T300 108T420 100T480 104V300H0z" fill="currentColor" opacity=".12"/>
+            <path d="M0 150Q110 124 210 142T380 132T480 126V300H0z" fill="currentColor" opacity=".1"/>
+            <path d="M150 300C230 250 300 230 330 190C352 160 382 132 398 112L404 112C396 138 360 165 380 195C400 225 420 250 400 300Z" fill="currentColor" opacity=".24"/>
+            <path d="M150 300C230 250 300 230 330 190C352 160 382 132 398 112M400 300C420 250 400 225 380 195C360 165 396 138 404 112" fill="none" stroke="currentColor" stroke-width="1.6" opacity=".7"/>
+            <path class="gw-march" d="M275 300C315 250 350 228 355 192C360 162 392 135 401 112" fill="none" stroke="#fff" stroke-width="2" stroke-dasharray="9 9" opacity=".5"/>
+            <g stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="212" y1="266" x2="212" y2="222"/><line x1="350" y1="180" x2="350" y2="156"/></g>
+            <g fill="currentColor"><polygon points="212,222 240,230 212,238"/><polygon points="350,156 366,160 350,165"/></g>
+            <circle class="gw-pulse" cx="406" cy="102" r="20" fill="url(#gwPrjGoal)"/>
+            <line x1="406" y1="112" x2="406" y2="92" stroke="#FFC328" stroke-width="2" stroke-linecap="round"/>
+            <polygon points="406,92 418,96 406,100" fill="#FFC328"/>
+          </svg>
+        </span>
+        <span class="gw-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 3v2h6V3"/><path d="M8 11l1.5 1.5L12 10M8 16l1.5 1.5L12 15M14 11.5h3M14 16.5h3"/></svg></span>
+        <span class="gw-text">
+          <span class="gw-title">Project Inventory</span>
+          <span class="gw-desc">Status of other important projects</span>
+        </span>
+        <span class="gw-open" aria-hidden="true">Open <span class="gw-go"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 6 15 12 9 18"/></svg></span></span>
+      </a>
+
+      <a class="gw" data-gw="org" id="gw-org" href="/org-chart/index.html">
+        <span class="gw-art" aria-hidden="true">
+          <svg viewBox="0 0 480 300" preserveAspectRatio="xMaxYMax meet" focusable="false">
+            <defs>
+              <radialGradient id="gwOrgLeaf" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="currentColor" stop-opacity=".3"/><stop offset="1" stop-color="currentColor" stop-opacity="0"/></radialGradient>
+            </defs>
+            <circle cx="250" cy="112" r="84" fill="url(#gwOrgLeaf)"/><circle cx="345" cy="78" r="96" fill="url(#gwOrgLeaf)"/><circle cx="440" cy="110" r="84" fill="url(#gwOrgLeaf)"/>
+            <ellipse cx="340" cy="276" rx="130" ry="9" fill="currentColor" opacity=".18"/>
+            <g fill="none" stroke="currentColor" stroke-linecap="round" opacity=".75">
+              <path d="M340 270V206" stroke-width="3"/>
+              <path d="M340 206C340 188 270 190 270 168M340 206V150M340 206C340 188 410 190 410 168" stroke-width="2.2"/>
+              <path d="M270 168C270 146 226 142 226 118M270 168C270 140 262 124 262 100M340 150C340 120 318 110 318 88M340 150C340 120 362 110 362 88M410 168C410 140 418 124 418 100M410 168C410 146 454 142 454 118" stroke-width="1.6"/>
+              <path d="M226 118L204 80M226 118L238 72M262 100V60M318 88L300 50M318 88L332 44M362 88L360 46M362 88L390 56M418 100L416 58M454 118L472 80" stroke-width="1.1" opacity=".8"/>
+            </g>
+            <g class="gw-leaves" fill="currentColor"><circle cx="204" cy="80" r="3"/><circle cx="238" cy="72" r="3"/><circle cx="262" cy="60" r="3"/><circle cx="300" cy="50" r="3"/><circle cx="332" cy="44" r="3"/><circle cx="360" cy="46" r="3"/><circle cx="390" cy="56" r="3"/><circle cx="416" cy="58" r="3"/><circle cx="472" cy="80" r="3"/></g>
+            <g fill="currentColor" stroke="#fff" stroke-width="1.5"><circle cx="226" cy="118" r="4.5"/><circle cx="262" cy="100" r="4.5"/><circle cx="318" cy="88" r="4.5"/><circle cx="362" cy="88" r="4.5"/><circle cx="418" cy="100" r="4.5"/><circle cx="454" cy="118" r="4.5"/>
+              <circle cx="270" cy="168" r="6"/><circle cx="340" cy="150" r="6"/><circle cx="410" cy="168" r="6"/></g>
+            <circle cx="340" cy="206" r="7" fill="#FFC328" stroke="#fff" stroke-width="1.5"/>
+          </svg>
+        </span>
+        <span class="gw-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="9" y="2" width="6" height="5" rx="1"/><rect x="2" y="16" width="6" height="5" rx="1"/><rect x="16" y="16" width="6" height="5" rx="1"/><path d="M12 7v4M5 16v-2h14v2M12 11v3"/></svg></span>
+        <span class="gw-text">
+          <span class="gw-title">Organization</span>
+          <span class="gw-desc">Full org chart, role inventories, and contact information</span>
+        </span>
+        <span class="gw-open" aria-hidden="true">Open <span class="gw-go"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 6 15 12 9 18"/></svg></span></span>
       </a>
   </div>
 </section>
 
 <!-- ═══════════════ DEPARTMENTS ROW ═══════════════ -->
 <section class="home-row" id="departments">
-  <div class="home-row-head">
-    <div class="home-row-eyebrow">Our Teams</div>
-    <h2 class="home-row-title">Departments</h2>
-    <div class="home-row-divider"></div>
-  </div>
+  <h2 class="home-dept-label">Departments</h2>
   <div class="dept-grid">
 
     <a href="/departments/records.html" class="dept-card" style="--dc:#3A929D; --dc-r:58,146,157;" data-reveal data-reveal-delay="0">
-      <div class="dept-card-accent" style="background:#3A929D"></div>
       <div class="dept-card-inner">
         <div class="dept-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
@@ -204,7 +308,6 @@
     </a>
 
     <a href="/departments/enrollment.html" class="dept-card" style="--dc:#7E3F8F; --dc-r:126,63,143;" data-reveal data-reveal-delay="1">
-      <div class="dept-card-accent" style="background:#7E3F8F"></div>
       <div class="dept-card-inner">
         <div class="dept-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
@@ -217,7 +320,6 @@
     </a>
 
     <a href="/departments/dean.html" class="dept-card" style="--dc:#A2C23D; --dc-r:162,194,61;" data-reveal data-reveal-delay="2">
-      <div class="dept-card-accent" style="background:#A2C23D"></div>
       <div class="dept-card-inner">
         <div class="dept-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
@@ -230,7 +332,6 @@
     </a>
 
     <a href="/departments/digital.html" class="dept-card" style="--dc:#CB4A27; --dc-r:203,74,39;" data-reveal data-reveal-delay="3">
-      <div class="dept-card-accent" style="background:#CB4A27"></div>
       <div class="dept-card-inner">
         <div class="dept-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>

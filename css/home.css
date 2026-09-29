@@ -67,24 +67,11 @@ body.home-single .hero-compact::before {
   pointer-events: none;
 }
 
-/* The bridge: one hairline arc, brightest at its centre and fading at both
-   ends, so it reads as a span rather than as a border. */
-body.home-single .hero-compact::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  bottom: -78px;
-  /* Never wider than the hero itself, so it cannot extend the page. */
-  width: min(1180px, 100%);
-  aspect-ratio: 5 / 1;
-  transform: translateX(-50%);
-  z-index: -1;
-  border-radius: 50% 50% 0 0 / 100% 100% 0 0;
-  border-top: 1px solid rgba(255,255,255,.16);
-  -webkit-mask-image: linear-gradient(90deg, transparent, #000 22%, #000 78%, transparent);
-          mask-image: linear-gradient(90deg, transparent, #000 22%, #000 78%, transparent);
-  pointer-events: none;
-}
+/* No arc behind the title any more (2026-09-29). It was a hairline drawn
+   across the whole title block, so it ran through the BYU-Pathway badge and
+   the words themselves. The page's one bridge is now the suspension bridge
+   above the four cards (.home-viaduct), where it has room of its own. */
+body.home-single .hero-compact::after { content: none; }
 
 :root[data-theme="light"] body.home-single .hero-compact::before,
 body.home-single .hero-compact::before {
@@ -132,13 +119,13 @@ body.home-single .hero-compact::before {
    what stops the block reading as one long wall. */
 .home-strategy {
   position: relative;
-  padding: clamp(30px, 4.4vw, 50px) 32px clamp(26px, 3.6vw, 42px);
+  padding: clamp(10px, 1vw, 16px) 32px clamp(30px, 3.2vw, 46px);
   text-align: center;
 }
 .home-strategy-inner { max-width: 1000px; margin: 0 auto; }
 
 .home-strategy-label {
-  font-size: .62rem;
+  font-size: .67rem;
   font-weight: 600;
   letter-spacing: .34em;
   text-indent: .34em;
@@ -148,14 +135,14 @@ body.home-single .hero-compact::before {
 }
 .home-strategy-lead {
   font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: clamp(1.12rem, 2.3vw, 1.62rem);
+  font-size: clamp(1.18rem, 2.35vw, 1.78rem);
   font-style: italic;
   font-weight: 400;
   line-height: 1.5;
   letter-spacing: .006em;
   /* Tuned to land on exactly two lines at desktop width — measured, not
      guessed. Narrower and the sentence fell into three stub lines. */
-  max-width: 880px;
+  max-width: 970px;
   margin: 0 auto;
   text-wrap: balance;
 }
@@ -163,8 +150,8 @@ body.home-single .hero-compact::before {
   margin: 22px auto 0;
   /* Three lines at desktop width. Long for prose, but it is one short
      paragraph read once, not a body of text. */
-  max-width: 920px;
-  font-size: clamp(.84rem, 1.3vw, .95rem);
+  max-width: 960px;
+  font-size: clamp(.87rem, 1.3vw, 1.01rem);
   line-height: 1.78;
   text-wrap: pretty;
 }
@@ -250,7 +237,7 @@ body.home-single .hero-compact::before {
    invisible on screen. These are set against the field this page actually has,
    not against the theme's idea of a background. */
 .home-strategy-lead { color: rgba(255,255,255,.94); }
-.home-strategy-body { color: rgba(255,255,255,.74); }
+.home-strategy-body { color: rgba(255,255,255,.8); }
 .home-head-title    { color: rgba(255,255,255,.96); }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -306,85 +293,92 @@ body.home-single .home-row-divider {
 body.home-single .okr-card:hover::before { opacity: 1; }
 
 /* ── departments ──────────────────────────────────────────────────────────
-   Four across, not a 2×2 stranded in the middle. Each carries its colour as
-   light rather than as a 3px rule: a tinted icon, an edge that brightens, and
-   a wash lifted out of the department hue itself. */
+   A quiet row under the four (2026-09-29). They were the loudest thing on the
+   page — tall cards, each washed in its department's colour — and sat below
+   the four that matter while outshouting them. Now they speak the bottom
+   menu's language: slim glass, a small heading instead of a section title,
+   and the department colour kept to a dot beside the name. Still four doors,
+   still tellable apart; no longer a second headline. */
+/* Close under the four, so the page's main content fits one screen on a
+   laptop: main.css gives .home-row 22px of padding and lets it grow. */
+body.home-single #departments {
+  margin-top: 0;
+  padding-block: clamp(4px, .8vw, 10px) clamp(6px, 1vw, 12px);
+  flex: none;
+}
+body.home-single .home-dept-label {
+  display: flex; align-items: center; gap: 14px;
+  margin: 0 0 10px;
+  font-family: 'Jost', system-ui, sans-serif;
+  font-size: .58rem; font-weight: 600;
+  letter-spacing: .28em; text-transform: uppercase;
+  color: rgba(255,255,255,.5);
+}
+body.home-single .home-dept-label::after {
+  content: ""; flex: 1; height: 1px; background: rgba(255,255,255,.12);
+}
 body.home-single .dept-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: clamp(14px, 1.4vw, 20px);
+  gap: clamp(10px, 1.2vw, 14px);
 }
 @media (max-width: 1180px) { body.home-single .dept-grid { grid-template-columns: repeat(2, minmax(0,1fr)); } }
-@media (max-width: 620px)  { body.home-single .dept-grid { grid-template-columns: minmax(0,1fr); } }
+@media (max-width: 560px)  { body.home-single .dept-grid { grid-template-columns: minmax(0,1fr); } }
 
-/* Glass, like the tiles above — a white wash on the teal field with the
-   department's colour as an accent, rather than a slab of the colour itself.
-   The hue was doing the work of a background here and competing with the text
-   on it; carrying it in the top edge, the border and the icon says the same
-   thing and leaves the card readable. A faint tint of it stays in the wash so
-   the cards are still tellable apart at a distance. */
 body.home-single .dept-card {
   position: relative;
-  isolation: isolate;
-  min-height: 158px;
-  background:
-    linear-gradient(165deg, rgba(255,255,255,.085), rgba(255,255,255,.025) 46%, rgba(0,0,0,.15)),
-    linear-gradient(165deg, rgba(var(--dc-r), .16), rgba(var(--dc-r), .04) 60%, transparent);
-  border: 1px solid rgba(255,255,255,.11);
-  border-radius: 16px;
+  min-height: 0;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.04) !important;
+  box-shadow: none;
   overflow: hidden;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.10), 0 14px 32px -20px rgba(0,0,0,.55);
-  transition: transform .5s cubic-bezier(.2,.7,.3,1),
-              box-shadow .5s cubic-bezier(.2,.7,.3,1),
-              border-color .5s, background .5s;
+  transition: background .25s, border-color .25s, transform .25s;
 }
 body.home-single .dept-card:hover {
-  transform: translateY(-6px);
-  border-color: rgba(var(--dc-r), .55);
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.16),
-    0 28px 56px -22px rgba(0,0,0,.7);
+  transform: translateY(-2px);
+  background: rgba(255,255,255,.08) !important;
+  border-color: rgba(var(--dc-r), .5);
+  box-shadow: none;
 }
-/* The old accent bar becomes an edge that lights along its length. */
-body.home-single .dept-card-accent {
-  height: 3px;
-  z-index: 2;
-  background: linear-gradient(90deg, var(--dc), rgba(var(--dc-r), 0)) !important;
-  opacity: .85;
-  animation: none !important;
-  transition: opacity .4s;
-}
-body.home-single .dept-card:hover .dept-card-accent { opacity: 1; }
-
 body.home-single .dept-card-inner {
-  flex-direction: column;
-  gap: 16px;
-  padding: 24px 22px 22px;
+  flex-direction: row;
+  align-items: center;
+  gap: 14px;
+  min-height: 104px;
+  padding: 22px 20px;
 }
 body.home-single .dept-icon {
-  width: 44px; height: 44px;
-  display: grid; place-items: center;
-  border-radius: 12px;
-  background: linear-gradient(160deg, rgba(var(--dc-r), .78), rgba(var(--dc-r), .34));
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.34);
-  transition: transform .5s cubic-bezier(.2,.7,.3,1);
+  width: 38px; height: 38px; flex: none;
+  border-radius: 10px;
+  background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.13);
+  box-shadow: none;
+  color: rgba(255,255,255,.8);
 }
-body.home-single .dept-card:hover .dept-icon { transform: scale(1.06) rotate(-2deg); }
-body.home-single .dept-icon svg { width: 20px; height: 20px; stroke: #fff; }
-
+body.home-single .dept-card:hover .dept-icon { transform: none; }
+body.home-single .dept-icon svg { width: 18px; height: 18px; stroke: currentColor; }
+body.home-single .dept-info { min-width: 0; }
+/* The colour, kept to a dot. */
 body.home-single .dept-name {
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: clamp(1.04rem, 1.3vw, 1.22rem);
-  font-weight: 600;
-  line-height: 1.22;
-  color: rgba(255,255,255,.97);
+  display: flex; align-items: baseline; gap: 8px;
+  margin: 0;
+  font-family: 'Jost', system-ui, sans-serif;
+  font-size: .88rem; font-weight: 500; line-height: 1.3;
+  color: rgba(255,255,255,.9) !important;
   text-wrap: balance;
-  margin-bottom: 8px;
+}
+body.home-single .dept-name::before {
+  content: ""; flex: none; width: 7px; height: 7px; border-radius: 50%;
+  transform: translateY(-1px);
+  background: var(--dc);
+  box-shadow: 0 0 0 3px rgba(var(--dc-r), .18);
 }
 body.home-single .dept-desc {
-  font-size: .79rem;
-  line-height: 1.58;
-  color: rgba(255,255,255,.74);
+  margin-top: 4px;
+  font-size: .72rem; line-height: 1.4;
+  color: rgba(255,255,255,.55) !important;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
 /* ── the button under the OKRs ────────────────────────────────────────────── */
@@ -412,14 +406,6 @@ body.home-single .okr-metric-row span:last-child { color: rgba(255,255,255,.97) 
 body.home-single .okr-legend-item   { color: rgba(255,255,255,.8) !important; }
 body.home-single .okr-ring-val      { fill: rgba(255,255,255,.97); color: rgba(255,255,255,.97) !important; }
 
-/* Departments: the colour wash sits over a dark base for the same reason. */
-body.home-single .dept-card {
-  background:
-    linear-gradient(160deg, rgba(var(--dc-r), .40), rgba(var(--dc-r), .14) 58%, rgba(0,0,0,.30)),
-    linear-gradient(0deg, rgba(4,22,30,.58), rgba(4,22,30,.58)) !important;
-}
-body.home-single .dept-name { color: rgba(255,255,255,.97) !important; }
-body.home-single .dept-desc { color: rgba(255,255,255,.78) !important; }
 
 /* The button, and the loading line before the cards arrive. */
 body.home-single .home-okr-cta-btn { color: rgba(255,255,255,.94) !important; }
@@ -659,140 +645,241 @@ body.home-single .hero-compact h1 span {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   THE TILES
+   THE FOUR — KPIs, OKRs, Project Inventory, Organization
 
-   Glass, not paint. The same treatment the OKR cards carry: a translucent
-   wash over the page's teal field, a hairline of white, an inset highlight
-   along the top edge, and a deep soft shadow — so the card reads as a pane
-   lying on the field rather than a block covering it.
+   The reason the page exists, so they are drawn as the page's main event
+   (2026-09-29, after Ben's mock-up): large cards, each a small lit scene in
+   its own colour rather than a row with an icon.
 
-   Colour is an accent, not a fill: a 3px bar along the top, fading out to the
-   right, in the tile's own hue. That is enough to tell the cards apart at a
-   glance without slabs of colour competing with the content inside them.
+   Ben's mock-up used photographs — mountains, leaves, a compass. These are
+   drawn instead, and each drawing is the thing its page does rather than a
+   mood picture:
 
-   Two by two, and each one a link: Organization and Project Inventory above,
-   the two measurement pages — KPIs and OKRs — below. They used to open in
-   place with a preview of the page behind them; that was taken out on
-   2026-09-28 at Ben's request, so a card now goes straight where it says.
+     KPIs               a ridgeline that is also a rising line chart, with the
+                        latest reading lit in gold and a dotted projection on
+                        past it — the same dotted trend the Cost pages draw.
+     OKRs               target rings with progress arcs on them and a gold
+                        compass needle at the centre: goals, and which way.
+     Project Inventory  a road into the distance with milestone flags along it
+                        and a gold flag at the end: projects are journeys.
+     Organization       a tree that is also an org chart — one gold root,
+                        three branches, leaves.
+
+   Drawn inline in currentColor, so each takes its card's hue from the one
+   pair of variables below and there are no image files to load or go stale.
+   Gold is the only fixed colour, used once per scene for the thing that
+   matters most.
+
+   Each card keeps the colour of the page behind it: press the blue card and
+   the blue page opens. That rule is older than this design and is kept:
+
+     kpis      blue    #5FC0E2  ->  KPI scorecard      (blue hero)
+     okrs      teal    #4CC7B3  ->  OKR progress       (teal hero)
+     projects  violet  #B7A2F2  ->  Project Inventory  (violet hero)
+     org       green   #9BC94F  ->  org chart          (green accent)
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .home-gw-wrap {
   width: 100%;
   max-width: calc(var(--home-max) + 2 * var(--home-gutter));
   margin-inline: auto;
-  padding: 0 var(--home-gutter) clamp(20px, 2.4vw, 30px);
+  padding: 0 var(--home-gutter) clamp(26px, 2.8vw, 40px);
 }
+
+/* ── the bridge ──────────────────────────────────────────────────────────
+   A suspension bridge in hairlines under the portal's name and over the
+   strategy statement (2026-09-29; it replaced a row of stone arches, which
+   read heavy, and was moved up from above the cards to give them the room):
+   two slim towers with a gold lamp on each, the main cable sweeping between
+   them, hangers down to the deck, and a faint shimmer of water beneath. A
+   point of gold light travels the cable end to end. It sits directly under
+   the words "The Bridge", so the name and the picture are read together.
+   Faint on purpose: a horizon, not a picture. */
+.home-viaduct {
+  width: 100%;
+  max-width: calc(var(--home-max) + 2 * var(--home-gutter));
+  margin: clamp(-20px, -1.4vw, -8px) auto 0;
+  height: clamp(36px, 3.7vw, 60px);
+  opacity: .7;
+  pointer-events: none;
+}
+.home-viaduct svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.bridge-lamp { animation: bridgeLamp 4s ease-in-out infinite; }
+.bridge-lamp + circle + .bridge-lamp { animation-delay: -2s; }
+@keyframes bridgeLamp { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
+
 .home-gw-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: clamp(14px, 1.5vw, 20px);
-  align-items: stretch;             /* a row's two cards stand the same height */
+  gap: clamp(12px, 1.3vw, 18px);
 }
+
 .gw {
+  /* Each card sets its hue (--gw-c, --gw-r) and a deep ground in the same
+     family (--gw-deep), so the scene reads as lit from inside its colour
+     rather than as colour laid over the page's teal. */
+  --gw-deep: 8, 36, 52;
   position: relative;
   isolation: isolate;
   min-width: 0;
+  min-height: clamp(148px, 10.6vw, 172px);
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 16px;
-  padding: 22px 24px;
-  color: rgba(255,255,255,.96);
-  text-decoration: none;
-  border: 1px solid rgba(255,255,255,.10);
-  border-radius: 16px;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-content: center;
+  column-gap: 16px;
+  padding: clamp(18px, 1.7vw, 26px);
+  border-radius: 18px;
   overflow: hidden;
-  /* Glass first, then a wash of the tile's own hue beneath it. The colour is
-     faint on purpose — enough that the cards are tellable apart across the
-     room, not so much that it competes with the words on top of it. */
+  color: #fff;
+  text-decoration: none;
+  border: 1px solid rgba(var(--gw-r), .32);
   background:
-    linear-gradient(165deg, rgba(255,255,255,.075), rgba(255,255,255,.022) 46%, rgba(0,0,0,.14)),
-    linear-gradient(165deg, rgba(var(--gw-r), .17), rgba(var(--gw-r), .05) 58%, transparent);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.10), 0 14px 34px -20px rgba(0,0,0,.6);
-  transition: transform .5s cubic-bezier(.2,.7,.3,1),
-              box-shadow .5s cubic-bezier(.2,.7,.3,1),
-              border-color .5s, background .5s;
+    radial-gradient(120% 95% at 88% 12%, rgba(var(--gw-r), .30), transparent 62%),
+    linear-gradient(158deg, rgba(var(--gw-deep), .96) 0%, rgba(var(--gw-deep), .9) 52%, rgba(3, 14, 22, .92) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.14),
+    0 24px 50px -26px rgba(0,0,0,.75);
+  transition: transform .55s cubic-bezier(.2,.7,.3,1),
+              box-shadow .55s cubic-bezier(.2,.7,.3,1),
+              border-color .4s;
 }
-/* The tile's colour, along the top and fading out — the OKR cards' accent. */
+.gw[data-gw="kpis"]     { --gw-c: #5FC0E2; --gw-r: 95,192,226;  --gw-deep: 8, 40, 62; }
+.gw[data-gw="okrs"]     { --gw-c: #4CC7B3; --gw-r: 76,199,179;  --gw-deep: 6, 48, 50; }
+.gw[data-gw="projects"] { --gw-c: #B7A2F2; --gw-r: 183,162,242; --gw-deep: 34, 26, 74; }
+.gw[data-gw="org"]      { --gw-c: #9BC94F; --gw-r: 155,201,79;  --gw-deep: 22, 46, 26; }
+
+/* A hairline of the hue along the top edge, brightest at the left. */
 .gw::before {
   content: "";
-  position: absolute; inset: 0 0 auto 0; height: 4px; z-index: 2;
-  background: linear-gradient(90deg, var(--gw-c) 0%, var(--gw-c) 42%, rgba(255,255,255,.10));
+  position: absolute; inset: 0 0 auto 0; height: 2px; z-index: 3;
+  background: linear-gradient(90deg, var(--gw-c), rgba(var(--gw-r), .2) 60%, transparent);
 }
-/* Each tile keeps the colour its card carried before — the org chart's teal,
-   the scorecard's blue, and the green that used to be the Performance
-   Report's. Each is lifted until it reads against the page's own teal field:
-   the originals sit between 1.3:1 and 2.1:1 against it, which is a colour you
-   cannot see. Hue is preserved, lightness is not. */
-/* A tile's colour is a promise about where it leads: press a green tile and the
-   green page opens. Org Chart and OKRs were swapped so that KPIs and OKRs — the
-   two measurement pages — read as a cool pair, and so each tile now matches the
-   page behind it:
-
-     org   green  #9BC94F  ->  org chart page      (green accent)
-     kpis  blue   #5FC0E2  ->  KPI scorecard       (blue hero)
-     okrs      teal    #4CC7B3  ->  OKR progress       (teal hero)
-     projects  violet  #B7A2F2  ->  Project Inventory  (violet hero, #5B48C2)
-
-   The department cards below already work this way; this brings the tiles into
-   line with them. The violet is new with the Project Inventory card: the one
-   hue family none of the other three, nor the four department colours, sit
-   in, lifted like the others until it reads against the teal field. */
-.gw[data-gw="org"]       { --gw-c: #9BC94F; --gw-r: 155,201,79; }   /* was #4CC7B3 */
-.gw[data-gw="projects"]  { --gw-c: #B7A2F2; --gw-r: 183,162,242; }
-.gw[data-gw="kpis"]      { --gw-c: #5FC0E2; --gw-r: 95,192,226; }   /* unchanged */
-.gw[data-gw="okrs"]      { --gw-c: #4CC7B3; --gw-r: 76,199,179; }   /* was #9BC94F */
-
+/* A floor of shade under the words, so the scene can run behind them without
+   ever costing them contrast. */
+.gw::after {
+  content: "";
+  position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background: linear-gradient(90deg, rgba(var(--gw-deep), .92) 0%, rgba(var(--gw-deep), .55) 42%, transparent 72%),
+              linear-gradient(0deg, rgba(3, 14, 22, .55), transparent 55%);
+}
 .gw:hover {
-  transform: translateY(-4px);
-  border-color: rgba(255,255,255,.18);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 28px 54px -22px rgba(0,0,0,.7);
+  transform: translateY(-6px);
+  border-color: rgba(var(--gw-r), .7);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.2),
+    0 0 0 1px rgba(var(--gw-r), .18),
+    0 36px 70px -28px rgba(0,0,0,.85),
+    0 18px 60px -30px rgba(var(--gw-r), .55);
 }
-.gw:focus-visible { outline: 2px solid var(--bp-gold, #FFC328); outline-offset: 3px; }
+.gw:focus-visible { outline: 2px solid var(--bp-gold, #FFC328); outline-offset: 4px; }
 
-/* The icon carries the accent, faintly — the one place the hue appears as a
-   surface rather than a line. */
-.gw-icon {
-  display: grid; place-items: center;
-  width: 42px; height: 42px; flex: 0 0 auto;
-  border-radius: 12px;
-  background: rgba(var(--gw-r), .18);
-  border: 1px solid rgba(var(--gw-r), .32);
+/* ── the scene ── */
+.gw-art {
+  position: absolute; z-index: 0;
+  top: 0; right: 0; bottom: 0;
+  /* The right half, fading in from its left edge, so the scene never runs
+     under the title: it is fully visible only from about 70% across. */
+  width: 54%;
   color: var(--gw-c);
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 45%);
+          mask-image: linear-gradient(90deg, transparent 0%, #000 45%);
+  transition: transform .9s cubic-bezier(.2,.7,.3,1), opacity .5s;
+  transform-origin: 80% 70%;
 }
-.gw-icon svg { width: 21px; height: 21px; }
-.gw-text { display: block; min-width: 0; }
+.gw-art svg { display: block; width: 100%; height: 100%; }
+.gw:hover .gw-art { transform: scale(1.045) translateY(-3px); }
+
+/* ── what sits on it ── */
+.gw-icon, .gw-text, .gw-open { position: relative; z-index: 2; }
+.gw-icon {
+  grid-row: 1 / span 2; align-self: start; margin-top: 2px;
+  display: grid; place-items: center;
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  color: #fff;
+  background: radial-gradient(circle at 35% 30%, rgba(var(--gw-r), .75), rgba(var(--gw-r), .28) 70%);
+  box-shadow: 0 0 0 1.5px rgba(var(--gw-r), .75), 0 0 0 5px rgba(var(--gw-r), .12), 0 10px 26px -8px rgba(var(--gw-r), .7);
+}
+.gw-icon svg { width: 20px; height: 20px; }
+.gw-text { grid-column: 2; display: block; max-width: min(66%, 440px); }
 .gw-title {
   display: block;
   font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: clamp(1.16rem, 1.5vw, 1.42rem); font-weight: 600; line-height: 1.2;
-  color: rgba(255,255,255,.97);
+  font-size: clamp(1.35rem, 1.75vw, 1.85rem);
+  font-weight: 600; line-height: 1.08;
+  letter-spacing: .005em;
+  color: #fff;
+  text-wrap: balance;
+  text-shadow: 0 2px 18px rgba(0,0,0,.35);
 }
-/* White at strength, not the accent: small text in a saturated hue on the
-   teal field lands around 2:1. */
 .gw-desc {
-  display: block; margin-top: 5px;
-  font-size: .84rem; line-height: 1.45; color: rgba(255,255,255,.74);
+  display: block; margin-top: 6px;
+  font-size: clamp(.82rem, .88vw, .9rem); line-height: 1.5;
+  color: rgba(255,255,255,.8);
 }
-/* An arrow, not a chevron — the card leads somewhere; it no longer opens. */
+.gw-open {
+  grid-column: 2; justify-self: start;
+  display: inline-flex; align-items: center; gap: 10px;
+  margin-top: 18px;
+  font-size: .84rem; font-weight: 500; letter-spacing: .02em;
+  color: rgba(255,255,255,.95);
+}
+/* The short rule above "Open", in the hue — the mock-up's best small idea. */
+.gw-open::before {
+  content: ""; position: absolute; left: 0; top: -10px;
+  width: 34px; height: 2px; border-radius: 2px;
+  background: var(--gw-c);
+}
 .gw-go {
   display: grid; place-items: center;
-  width: 32px; height: 32px; flex: 0 0 auto;
-  border-radius: 50%;
-  background: rgba(255,255,255,.07);
-  color: rgba(255,255,255,.82);
-  transition: transform .35s cubic-bezier(.2,.7,.3,1), background .3s, color .3s;
+  width: 30px; height: 30px; border-radius: 50%;
+  border: 1.5px solid rgba(var(--gw-r), .8);
+  background: rgba(var(--gw-r), .16);
+  color: #fff;
+  transition: background .3s, transform .35s cubic-bezier(.2,.7,.3,1);
 }
-.gw-go svg { width: 16px; height: 16px; }
-.gw:hover .gw-go { background: rgba(var(--gw-r), .32); color: #fff; transform: translateX(3px); }
+.gw-go svg { width: 14px; height: 14px; }
+.gw:hover .gw-go { background: var(--gw-c); color: rgb(var(--gw-deep)); transform: translateX(4px); }
+
+/* ── the scenes, alive but quiet ── */
+.gw-pulse { transform-box: fill-box; transform-origin: center; animation: gwPulse 3.2s ease-in-out infinite; }
+@keyframes gwPulse { 0%, 100% { transform: scale(.8); opacity: .25; } 50% { transform: scale(1.25); opacity: .55; } }
+.gw-spin { transform-box: fill-box; transform-origin: center; animation: gwSpin 90s linear infinite; }
+@keyframes gwSpin { to { transform: rotate(360deg); } }
+.gw-needle { transform-box: view-box; transform-origin: 360px 140px; transition: transform 1.2s cubic-bezier(.3,1.6,.4,1); }
+.gw:hover .gw-needle { transform: rotate(18deg); }
+.gw-march { animation: gwMarch 2.4s linear infinite; }
+@keyframes gwMarch { to { stroke-dashoffset: -36; } }
+.gw-stars circle { animation: gwTwinkle 4s ease-in-out infinite; }
+.gw-stars circle:nth-child(2n) { animation-delay: -1.3s; }
+.gw-stars circle:nth-child(3n) { animation-delay: -2.6s; }
+@keyframes gwTwinkle { 0%, 100% { opacity: .9; } 50% { opacity: .2; } }
+.gw-leaves circle { animation: gwTwinkle 5s ease-in-out infinite; }
+.gw-leaves circle:nth-child(2n) { animation-delay: -1.7s; }
+.gw-leaves circle:nth-child(3n) { animation-delay: -3.1s; }
+.gw-draw { stroke-dasharray: 520; stroke-dashoffset: 0; }
+.gw:hover .gw-draw { animation: gwDraw 1.4s cubic-bezier(.4,0,.2,1); }
+@keyframes gwDraw { from { stroke-dashoffset: 520; } to { stroke-dashoffset: 0; } }
 
 @media (max-width: 900px) {
   .home-gw-grid { grid-template-columns: minmax(0, 1fr); }
-  .gw { padding: 18px 18px; gap: 14px; }
+  .gw { min-height: 156px; }
+  .gw-art { width: 58%; }
+}
+@media (max-width: 560px) {
+  .gw { min-height: 170px; padding: 18px; column-gap: 14px; }
+  .gw-icon { width: 40px; height: 40px; }
+  .gw-icon svg { width: 18px; height: 18px; }
+  .gw-art { width: 100%; opacity: .55; }
+  .gw::after { background: linear-gradient(0deg, rgba(var(--gw-deep), .96) 8%, rgba(var(--gw-deep), .45) 62%, transparent); }
+  .gw-text { max-width: 100%; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .gw, .gw-go { transition: none; }
-  .gw:hover, .gw:hover .gw-go { transform: none; }
+  .gw, .gw-art, .gw-go, .gw-needle { transition: none; }
+  .gw:hover, .gw:hover .gw-art, .gw:hover .gw-go, .gw:hover .gw-needle { transform: none; }
+  .gw-pulse, .gw-spin, .gw-march, .gw-stars circle, .gw-leaves circle, .bridge-lamp { animation: none; }
+  .bridge-glint { display: none; }
+  .gw:hover .gw-draw { animation: none; }
 }
 
 /* ══════════════════════════════════════════════════════════════════════════

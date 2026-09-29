@@ -8,16 +8,11 @@
 <script src="/shared/js/hub-access.js"></script>
 <script src="/shared/js/hub-texture.js"></script>
 <script src="/shared/js/hub-account.js"></script>
-<script src="/shared/js/kpi-status.js"></script>
-<!-- How far along an OKR row is, and how to average several. Needed by the
-     OKR panel in js/home-tiles.js. -->
-<script src="/shared/js/okr-math.js"></script>
  <!-- Defines SS.db. The home page never queried the database until the
      Emerging Issues alert needed a critical count; without this js/home-issues.js
      finds no SS.db and hides the alert without complaining. -->
 <script src="/shared/js/data-service.js"></script>
 <script src="/shared/js/cap-guide-link.js"></script>
-<script defer src="/shared/js/gw-tiles.js"></script>
 <script defer src="/js/home-tiles.js"></script>
 <script defer src="/js/home-issues.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -148,83 +143,41 @@
 <section class="home-gw-wrap" id="structure" data-reveal>
   <div class="home-gw-grid">
 
-      <article class="gw gw-full" data-gw="org" id="gw-org">
-        <button type="button" class="gw-head" aria-expanded="false" aria-controls="gwb-org">
-          <span class="gw-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="9" y="2" width="6" height="5" rx="1"/><rect x="2" y="16" width="6" height="5" rx="1"/><rect x="16" y="16" width="6" height="5" rx="1"/><path d="M12 7v4M5 16v-2h14v2M12 11v3"/></svg></span>
-          <span class="gw-text">
-            <span class="gw-eyebrow">Interactive Hierarchy</span>
-            <span class="gw-title">Organizational Chart</span>
-            <span class="gw-desc">Who reports to whom, across every team.</span>
-          </span>
-          <span class="gw-chev" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-          </span>
-          <span class="gw-hint">Click to expand</span>
-        </button>
-        <div class="gw-body" id="gwb-org">
-          <div class="gw-body-inner">
-            <div class="gw-panel" data-panel="org">
-              <div class="gw-loading">Loading&hellip;</div>
-            </div>
-            <a class="gw-cta" href="/org-chart/index.html">
-              View the whole Student Services org chart
-              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>
-            </a>
-          </div>
-        </div>
-      </article>
+      <a class="gw" data-gw="org" id="gw-org" href="/org-chart/index.html">
+        <span class="gw-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="9" y="2" width="6" height="5" rx="1"/><rect x="2" y="16" width="6" height="5" rx="1"/><rect x="16" y="16" width="6" height="5" rx="1"/><path d="M12 7v4M5 16v-2h14v2M12 11v3"/></svg></span>
+        <span class="gw-text">
+          <span class="gw-title">Organization</span>
+          <span class="gw-desc">Full org chart, role inventories, and contact information</span>
+        </span>
+        <span class="gw-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></span>
+      </a>
 
-      <article class="gw" data-gw="kpis" id="gw-kpis">
-        <button type="button" class="gw-head" aria-expanded="false" aria-controls="gwb-kpis">
-          <span class="gw-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><line x1="6" y1="20" x2="6" y2="13"/><line x1="12" y1="20" x2="12" y2="7"/><line x1="18" y1="20" x2="18" y2="10"/><line x1="3" y1="20" x2="21" y2="20"/></svg></span>
-          <span class="gw-text">
-            <span class="gw-eyebrow">Live Metrics</span>
-            <span class="gw-title">KPI Scorecard</span>
-            <span class="gw-desc">How the measures that matter are tracking right now.</span>
-          </span>
-          <span class="gw-chev" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-          </span>
-          <span class="gw-hint">Click to expand</span>
-        </button>
-        <div class="gw-body" id="gwb-kpis">
-          <div class="gw-body-inner">
-            <div class="gw-panel" data-panel="kpis">
-              <div class="gw-loading">Loading&hellip;</div>
-            </div>
-            <a class="gw-cta" href="/scorecard/index.html">
-              Open the full scorecard
-              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>
-            </a>
-          </div>
-        </div>
-      </article>
+      <a class="gw" data-gw="projects" id="gw-projects" href="/projects/index.html">
+        <span class="gw-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 3v2h6V3"/><path d="M8 11l1.5 1.5L12 10M8 16l1.5 1.5L12 15M14 11.5h3M14 16.5h3"/></svg></span>
+        <span class="gw-text">
+          <span class="gw-title">Project Inventory</span>
+          <span class="gw-desc">Status of other important projects</span>
+        </span>
+        <span class="gw-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></span>
+      </a>
 
-      <article class="gw" data-gw="okrs" id="gw-okrs">
-        <button type="button" class="gw-head" aria-expanded="false" aria-controls="gwb-okrs">
-          <span class="gw-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/></svg></span>
-          <span class="gw-text">
-            <span class="gw-eyebrow">Strategic Goals</span>
-            <span class="gw-title">Objectives &amp; Key Results</span>
-            <span class="gw-desc">The objectives in flight and how far along they are.</span>
-          </span>
-          <span class="gw-chev" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-          </span>
-          <span class="gw-hint">Click to expand</span>
-        </button>
-        <div class="gw-body" id="gwb-okrs">
-          <div class="gw-body-inner">
-            <div class="gw-panel" data-panel="okrs">
-              <div class="gw-loading">Loading&hellip;</div>
-            </div>
-            <a class="gw-cta" href="/okr-progress/index.html">
-              See all OKRs and progress
-              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>
-            </a>
-          </div>
-        </div>
-      </article>
+      <a class="gw" data-gw="kpis" id="gw-kpis" href="/scorecard/index.html">
+        <span class="gw-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><line x1="6" y1="20" x2="6" y2="13"/><line x1="12" y1="20" x2="12" y2="7"/><line x1="18" y1="20" x2="18" y2="10"/><line x1="3" y1="20" x2="21" y2="20"/></svg></span>
+        <span class="gw-text">
+          <span class="gw-title">Key Performance Indicators (KPIs)</span>
+          <span class="gw-desc">Scorecard of ongoing performance measures</span>
+        </span>
+        <span class="gw-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></span>
+      </a>
+
+      <a class="gw" data-gw="okrs" id="gw-okrs" href="/okr-progress/index.html">
+        <span class="gw-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/></svg></span>
+        <span class="gw-text">
+          <span class="gw-title">Objectives &amp; Key Results (OKRs)</span>
+          <span class="gw-desc">Current priority goals and initiatives</span>
+        </span>
+        <span class="gw-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></span>
+      </a>
   </div>
 </section>
 

@@ -352,7 +352,14 @@
 
   /* Notes, oldest first, so the story reads in the order it happened, each
      with who added it and exactly when — the time the database stamped, not
-     one anybody typed. The box to add one is offered to Student Services. */
+     one anybody typed.
+
+     The box to add one is offered to Student Services on a pinned issue only
+     (2026-09-29). A box under every issue read as a request to keep every
+     issue updated; pinning is how an issue is marked as one still being
+     followed, so that is where the running story belongs. Notes already
+     written stay visible if an issue is unpinned — they are part of its
+     record. The database holds the same line (emerging-issue-notes.sql). */
   function notesHtml(i) {
     const list = notesFor(i.id);
     const items = list.map((n) => `
@@ -360,7 +367,7 @@
         <p class="ei-note-body">${esc(n.body)}</p>
         <p class="ei-note-meta">${esc(n.created_by_name || byName(n.created_by))} · ${fmtWhen(n.created_at)}</p>
       </li>`).join("");
-    const box = !canPin() ? "" : NOTES_ON
+    const box = !canPin() || !i.pinned_at ? "" : NOTES_ON
       ? `<form class="ei-note-form" data-note-for="${i.id}">
            <label class="ei-note-label" for="eiNote${i.id}">Add a note</label>
            <textarea id="eiNote${i.id}" name="body" rows="2" maxlength="4000"

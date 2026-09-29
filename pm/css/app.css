@@ -560,3 +560,14 @@ body[data-book="cap_guide"] {
   /* The "N people" note moves under its count, so three columns fit a phone. */
   .um-ppl { display: block; margin-left: 0; min-width: 0; text-align: right; }
 }
+
+/* Projects — the Project Inventory's violet, the same colour as its card on
+   the Bridge's home page and its page's hero, so a PM editing a project and a
+   reader looking at it see one thing. */
+body[data-book="projects"] {
+  --accent: #5B48C2;
+  --accent-soft: rgba(91, 72, 194, .12);
+  --accent-line: rgba(91, 72, 194, .38);
+}
+[data-theme="dark"] body[data-book="projects"] { --accent: #A596F2; --accent-soft: rgba(165,150,242,.16); }
+.tab[data-book="projects"] .dot { background: #5B48C2; }

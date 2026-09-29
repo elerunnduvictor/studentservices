@@ -405,7 +405,7 @@
 
   function outcomeCard(outcome, rows) {
     var mine = outcomeRows(rows, outcome);
-    var roll = rollup(mine);
+    var roll = withCost(outcome, mine, rollup(mine));
     // Sorted by TYPE_ORDER rather than written in order, so the cards and the
     // lens chips above them cannot end up in two different sequences.
     var parts = outcome.parts.slice().sort(function (a, b) {
@@ -435,7 +435,8 @@
         '<div class="sc-outcome-figures">' +
           score +
           '<span class="sc-outcome-cov">' + roll.coverage + "% coverage · " +
-            roll.tracked + " tracked</span>" +
+            roll.tracked + " tracked" + (roll.withCost ? " · Cost counts for " + shareText(roll.costShare) : "") +
+            "</span>" +
           (roll.tracked ? '<span class="sc-outcome-go">See the ' + roll.tracked + " KPI" +
             (roll.tracked === 1 ? "" : "s") + ' <span aria-hidden="true">›</span></span>' : "") +
         "</div>" +
@@ -467,14 +468,50 @@
      department's status — Green 100, Yellow 50, Red 0 — weighted so the VP's
      budget counts for half and the other departments share the other half.
 
-     That score stands on the card. It does not feed Operational Outcomes'
-     own score, which is still a roll-up of its KPIs, nor the organisation's
-     health index: folding a budget into a KPI roll-up moves the headline
-     number, and that is a decision of its own.
+     That score stands on the card and, since 2026-09-29, counts towards
+     Operational Outcomes' score as one of its three parts — see withCost()
+     below. It does not feed the organisation's Health Index at the top of
+     the page, which is still the roll-up of every KPI.
 
      Opens onto every department and its graphs; each department opens onto
      its own chart, notes and months. */
   var COST_HOME = "#/outcome/operational/cost";
+
+  /* Cost in Operational Outcomes' score (2026-09-29).
+
+     Cost is a part like Speed and Quality, so it counts like one: the same
+     share of the outcome as each other part that is reporting. With Speed and
+     Quality both scored that is a third —
+
+         Operational = (KPI roll-up of Speed and Quality × 2  +  Cost) / 3
+
+     — and if only one of them were reporting, Cost would be half. Speed and
+     Quality keep their existing arithmetic between themselves (a roll-up of
+     their KPIs), so adding Cost changes how much the KPIs count in total, not
+     how they count against each other.
+
+     Only the score moves. Coverage, the tracked count and the colour bar stay
+     about KPIs: Cost has no KPI rows, and a department's budget is not a KPI
+     that could be "not reporting".
+
+     Not blended when a lens is on — a lens narrows the page to one KPI type,
+     and Cost is not one of them — nor into the organisation's Health Index at
+     the top of the page, which remains the roll-up of every KPI. */
+  function withCost(outcome, rows, roll) {
+    if (!outcome.parts.some(function (p) { return p.cost; })) return roll;
+    if (state.lens !== "All") return roll;
+    var cost = window.SS && SS.costKpi && SS.costKpi.summary();
+    if (!cost || cost.health === null || cost.health === undefined) return roll;
+    var scoredParts = outcome.parts.filter(function (p) {
+      return !p.cost && rollup(partRows(rows, p.type)).health !== null;
+    }).length;
+    var out = Object.assign({}, roll, { kpiHealth: roll.health, costHealth: cost.health, withCost: true });
+    out.health = roll.health === null
+      ? cost.health
+      : Math.round((roll.health * scoredParts + cost.health) / (scoredParts + 1));
+    out.costShare = 1 / (scoredParts + 1);
+    return out;
+  }
 
   function shareText(f) {
     var n = Math.round(f * 1000) / 10;
@@ -991,7 +1028,10 @@
     var o = outcomeByKey(key);
     if (!o) return '<div class="sc-empty">Unknown outcome.</div>';
     var rows = outcomeRows(outcomeSource(), o);
-    var roll = rollup(rows);
+    // The lens is not applied on this page, so Cost always takes its share.
+    var saved = state.lens; state.lens = "All";
+    var roll = withCost(o, rows, rollup(rows));
+    state.lens = saved;
     var parts = sortedParts(o);
     var costOn = !!(window.SS && SS.costKpi && SS.costKpi.summary());
     var measured = parts.filter(function (p) {
@@ -1017,6 +1057,11 @@
         measured + " of " + parts.length + " parts measured") +
       '<p class="sc-area-q">' + esc(o.blurb) + "</p>" +
       summaryRow(roll) +
+      (roll.withCost
+        ? '<p class="sc-cost-blend">Health Index includes Cost at ' + shareText(roll.costShare) +
+          ": Speed and Quality KPIs " + (roll.kpiHealth === null ? "—" : roll.kpiHealth) +
+          ", Cost " + roll.costHealth + ".</p>"
+        : "") +
       '<div class="sc-kids">' + kids + "</div>" +
       '<div class="sc-kids-head">Every KPI in ' + esc(o.name) + "</div>" +
       kpiList(rows, true, outcomeKpiHref(o));

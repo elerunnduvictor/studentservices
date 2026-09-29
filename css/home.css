@@ -93,27 +93,38 @@ body.home-single .hero-compact::before {
 
 /* The tagline. Hairlines either side rather than a box — it is a subtitle, and
    it should feel like a caption in a well-set book. */
+/* The Bridge — the hub's own name, so it is set as a name rather than as a
+   caption (2026-09-29). It was a .7rem tracked label at 62% white, which read
+   as fine print under the title. Now it is the title's serif at roughly two
+   thirds of the title's size: clearly the second thing you read, never
+   competing with the first. The tracking is wide but not stretched — past
+   about .3em the serif's letters drift apart and the word stops holding
+   together — and the gold rules either side echo "Administrative Portal"
+   above it without repeating its colour in the letters. */
 .hero-tagline {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 18px;
-  margin: 14px auto 0;
-  font-size: clamp(.62rem, 1.1vw, .74rem);
-  font-weight: 500;
-  letter-spacing: .42em;
-  text-indent: .42em;                 /* optical: tracking pushes the word right */
+  gap: clamp(12px, 1.6vw, 22px);
+  margin: clamp(10px, 1.4vw, 18px) auto 0;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: clamp(.8rem, 1.75vw, 1.7rem);   /* floor sits just under the title's on a phone */
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: .26em;
+  text-indent: .26em;                 /* optical: tracking pushes the word right */
   text-transform: uppercase;
-  color: rgba(255,255,255,.62);
+  color: rgba(255,255,255,.95);
+  text-shadow: 0 2px 16px rgba(0,0,0,.28);
 }
 .hero-tagline::before,
 .hero-tagline::after {
   content: "";
-  width: clamp(28px, 7vw, 76px);
+  width: clamp(34px, 7vw, 96px);
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,.4));
+  background: linear-gradient(90deg, transparent, rgba(255,195,40,.75));
 }
-.hero-tagline::after { background: linear-gradient(270deg, transparent, rgba(255,255,255,.4)); }
+.hero-tagline::after { background: linear-gradient(270deg, transparent, rgba(255,195,40,.75)); }
 
 /* ── strategy ─────────────────────────────────────────────────────────────
    Two voices: the statement itself, set large in the serif, and the paragraph
@@ -659,11 +670,10 @@ body.home-single .hero-compact h1 span {
    right, in the tile's own hue. That is enough to tell the cards apart at a
    glance without slabs of colour competing with the content inside them.
 
-   Two by two, each opening in place. The interaction is the org chart's
-   stakeholder tile: press the head, the body grows, press again and it closes.
-   An expanded tile spans the whole row rather than growing inside its column —
-   an org tree or a pair of charts has nothing useful to say in half the width,
-   and pushing its neighbour aside would move what the reader was looking at.
+   Two by two, and each one a link: Organization and Project Inventory above,
+   the two measurement pages — KPIs and OKRs — below. They used to open in
+   place with a preview of the page behind them; that was taken out on
+   2026-09-28 at Ben's request, so a card now goes straight where it says.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .home-gw-wrap {
@@ -676,19 +686,19 @@ body.home-single .hero-compact h1 span {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: clamp(14px, 1.5vw, 20px);
-  align-items: start;
+  align-items: stretch;             /* a row's two cards stand the same height */
 }
-/* The org chart tile, end to end above the KPI/OKR pair — it is the one of
-   the three that actually wants the room, a tree rather than a chart or a
-   list. Spans both tracks of the grid above rather than getting a row of its
-   own, so the gap between it and the pair below stays the same gap the grid
-   already uses everywhere else. */
-.gw-full { grid-column: 1 / -1; }
-
 .gw {
   position: relative;
   isolation: isolate;
   min-width: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  padding: 22px 24px;
+  color: rgba(255,255,255,.96);
+  text-decoration: none;
   border: 1px solid rgba(255,255,255,.10);
   border-radius: 16px;
   overflow: hidden;
@@ -721,11 +731,15 @@ body.home-single .hero-compact h1 span {
 
      org   green  #9BC94F  ->  org chart page      (green accent)
      kpis  blue   #5FC0E2  ->  KPI scorecard       (blue hero)
-     okrs  teal   #4CC7B3  ->  OKR progress        (teal hero)
+     okrs      teal    #4CC7B3  ->  OKR progress       (teal hero)
+     projects  violet  #B7A2F2  ->  Project Inventory  (violet hero, #5B48C2)
 
    The department cards below already work this way; this brings the tiles into
-   line with them. */
+   line with them. The violet is new with the Project Inventory card: the one
+   hue family none of the other three, nor the four department colours, sit
+   in, lifted like the others until it reads against the teal field. */
 .gw[data-gw="org"]       { --gw-c: #9BC94F; --gw-r: 155,201,79; }   /* was #4CC7B3 */
+.gw[data-gw="projects"]  { --gw-c: #B7A2F2; --gw-r: 183,162,242; }
 .gw[data-gw="kpis"]      { --gw-c: #5FC0E2; --gw-r: 95,192,226; }   /* unchanged */
 .gw[data-gw="okrs"]      { --gw-c: #4CC7B3; --gw-r: 76,199,179; }   /* was #9BC94F */
 
@@ -734,28 +748,8 @@ body.home-single .hero-compact h1 span {
   border-color: rgba(255,255,255,.18);
   box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 28px 54px -22px rgba(0,0,0,.7);
 }
-/* An open tile grows in its own column, not across the row. Spanning made the
-   whole grid reflow and moved the tile beside the one you had just pressed;
-   staying put means the other three keep their places and the section keeps
-   its shape. `align-items: start` on the grid lets this one get taller than
-   its neighbour without dragging it along. */
-.gw.is-open {
-  transform: none;
-  border-color: rgba(var(--gw-r), .40);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 30px 60px -24px rgba(0,0,0,.72);
-}
+.gw:focus-visible { outline: 2px solid var(--bp-gold, #FFC328); outline-offset: 3px; }
 
-/* ── the head you press ────────────────────────────────────────────────── */
-.gw-head {
-  width: 100%;
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: 16px;
-  padding: 22px 24px;
-  background: none; border: 0; cursor: pointer;
-  font: inherit; color: rgba(255,255,255,.96); text-align: left;
-}
 /* The icon carries the accent, faintly — the one place the hue appears as a
    surface rather than a line. */
 .gw-icon {
@@ -768,358 +762,37 @@ body.home-single .hero-compact h1 span {
 }
 .gw-icon svg { width: 21px; height: 21px; }
 .gw-text { display: block; min-width: 0; }
-/* White, not the accent colour. Small uppercase text in a saturated hue on a
-   teal field lands around 2:1 — legible to me on a large screen and to nobody
-   on a laptop in daylight. The colour does its work in the bar and the icon,
-   where being decorative is the whole job. */
-.gw-eyebrow {
-  display: block;
-  font-size: .58rem; letter-spacing: .15em; text-transform: uppercase;
-  color: rgba(255,255,255,.72); font-weight: 700;
-}
 .gw-title {
-  display: block; margin-top: 4px;
+  display: block;
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-size: clamp(1.16rem, 1.5vw, 1.42rem); font-weight: 600; line-height: 1.2;
   color: rgba(255,255,255,.97);
 }
+/* White at strength, not the accent: small text in a saturated hue on the
+   teal field lands around 2:1. */
 .gw-desc {
   display: block; margin-top: 5px;
-  font-size: .82rem; line-height: 1.45; color: rgba(255,255,255,.68);
+  font-size: .84rem; line-height: 1.45; color: rgba(255,255,255,.74);
 }
-.gw-chev {
+/* An arrow, not a chevron — the card leads somewhere; it no longer opens. */
+.gw-go {
   display: grid; place-items: center;
-  width: 30px; height: 30px; flex: 0 0 auto;
+  width: 32px; height: 32px; flex: 0 0 auto;
   border-radius: 50%;
   background: rgba(255,255,255,.07);
-  color: rgba(255,255,255,.8);
-  transition: transform .35s cubic-bezier(.2,.7,.3,1), background .3s;
+  color: rgba(255,255,255,.82);
+  transition: transform .35s cubic-bezier(.2,.7,.3,1), background .3s, color .3s;
 }
-.gw-chev svg { width: 17px; height: 17px; }
-.gw:hover .gw-chev { background: rgba(var(--gw-r), .30); }
-.gw.is-open .gw-chev { transform: rotate(180deg); background: rgba(var(--gw-r), .34); }
-/* Hover only. A permanent instruction on every tile is a line of noise on
-   each, once you have learnt it. */
-.gw-hint {
-  position: absolute; right: 24px; bottom: 9px;
-  font-size: .54rem; letter-spacing: .13em; text-transform: uppercase;
-  color: rgba(255,255,255,.5);
-  opacity: 0; transition: opacity .25s; pointer-events: none;
-}
-.gw:hover .gw-hint { opacity: 1; }
-.gw.is-open .gw-hint { opacity: 0; }
-.gw-head:focus-visible { outline: 2px solid var(--bp-gold, #FFC328); outline-offset: -4px; }
-
-/* ── the body that grows ─────────────────────────────────────────────────
-   `hidden` is removed first and the class added on the next frame, so there is
-   a height to animate from. Both in one frame and it appears at full size with
-   no transition at all. */
-/* `visibility`, not the hidden attribute.
-   Collapsing with max-height alone leaves the content in the accessibility
-   tree and in the tab order — a screen reader would read panels nobody
-   can see, and Tab would land inside them. Overriding [hidden] with
-   display:block to keep the animation had exactly that effect. visibility
-   flips to visible the moment it opens, and back only after the closing
-   animation has finished, so it hides properly without cutting the motion. */
-.gw-body {
-  max-height: 0; overflow: hidden; opacity: 0; visibility: hidden;
-  transition: max-height .45s cubic-bezier(.2,.7,.3,1), opacity .3s ease,
-              visibility 0s linear .45s;
-}
-/* A ceiling for the opening frame only — the script replaces it with the
-   content's real height as soon as the panel is filled, so a long panel can
-   never be silently clipped. */
-.gw.is-open .gw-body {
-  max-height: 4000px; opacity: 1; visibility: visible;
-  transition: max-height .45s cubic-bezier(.2,.7,.3,1), opacity .3s ease,
-              visibility 0s linear 0s;
-}
-.gw-body-inner { padding: 0 24px 24px; color: rgba(255,255,255,.92); }
-
-/* A second, fainter pane inside the first — the content sits on its own glass
-   so it separates from the card without a hard border. */
-.gw-panel {
-  background: rgba(255,255,255,.05);
-  border: 1px solid rgba(255,255,255,.09);
-  border-radius: 13px;
-  padding: clamp(15px, 1.7vw, 21px);
-  overflow-x: auto;                      /* wide content scrolls, the page does not */
-}
-.gw-loading, .gw-empty {
-  font-size: .85rem; color: rgba(255,255,255,.66); padding: 8px 2px;
-}
-/* Centred under the panel. `display: flex` with `width: fit-content` and auto
-   side margins, rather than centring the whole body — the panel above it holds
-   charts and a tree that must stay left-aligned to be readable. */
-.gw-cta {
-  display: flex; align-items: center; justify-content: center; gap: 9px;
-  width: fit-content;
-  margin: 16px auto 0; padding: 10px 19px;
-  border-radius: 999px;
-  border: 1px solid rgba(var(--gw-r), .45);
-  background: rgba(var(--gw-r), .18);
-  color: #fff;
-  font-size: .82rem; font-weight: 600; text-decoration: none;
-  transition: background .25s, border-color .25s, transform .25s;
-}
-.gw-cta:hover {
-  background: rgba(var(--gw-r), .32);
-  border-color: rgba(var(--gw-r), .7);
-  /* Lifts rather than slides: a sideways nudge on a centred button reads as it
-     drifting out of alignment. */
-  transform: translateY(-2px);
-}
+.gw-go svg { width: 16px; height: 16px; }
+.gw:hover .gw-go { background: rgba(var(--gw-r), .32); color: #fff; transform: translateX(3px); }
 
 @media (max-width: 900px) {
   .home-gw-grid { grid-template-columns: minmax(0, 1fr); }
-  .gw-head { grid-template-columns: auto 1fr auto; padding: 18px 18px; }
-  .gw-body-inner { padding: 0 18px 18px; }
+  .gw { padding: 18px 18px; gap: 14px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .gw, .gw-body, .gw-chev, .gw-cta { transition: none; }
-  .gw:hover { transform: none; }
-}
-
-/* ── what lives inside an expanded tile ──────────────────────────────────
-   All of it sits on the tile's glass, so everything here is drawn in white at
-   varying strength rather than in theme tokens — the home page keeps its teal
-   field in both themes, and a token would resolve to near-black in light. */
-
-.ht-col-title {
-  font-size: .62rem; letter-spacing: .14em; text-transform: uppercase;
-  color: rgba(255,255,255,.62); font-weight: 700; margin-bottom: 12px;
-}
-.ht-sub { font-size: .78rem; color: rgba(255,255,255,.6); margin-top: 3px; }
-.ht-sec-title {
-  margin: 18px 0 10px; padding-top: 14px;
-  border-top: 1px solid rgba(255,255,255,.10);
-  font-size: .62rem; letter-spacing: .14em; text-transform: uppercase;
-  color: rgba(255,255,255,.62); font-weight: 700;
-}
-.ht-two {
-  display: grid; grid-template-columns: minmax(0,1.35fr) minmax(0,1fr);
-  gap: clamp(18px, 2.4vw, 34px); align-items: start;
-}
-/* The panels live inside half a row now, so they stack well before the page
-   itself is narrow. Container queries would say this more directly; this is
-   the width at which the bars and the ring stop having room side by side. */
-@media (max-width: 1500px) { .ht-two { grid-template-columns: minmax(0,1fr); } }
-
-/* ── org tree ───────────────────────────────────────────────────────────
-   Two different relationships, drawn two different ways.
-
-   Ben to the directors is a hierarchy, so it reads downward: a drop from him
-   to a horizontal bus, and a drop from that bus to each director.
-
-   The people under a director are not above or below one another — they are
-   peers reporting to the same person. Stacking them vertically with arrows
-   between would say the opposite. So they hang off a spine on the left, each
-   reached by a stub from the side, which is how an org chart says "these are
-   siblings" rather than "this one is under that one". */
-.ht-tree { display: grid; gap: 18px; justify-items: center; min-width: min-content; }
-
-.ht-node {
-  position: relative;
-  border: 1px solid rgba(var(--nc-r, 255,255,255), .38);
-  background: rgba(var(--nc-r, 255,255,255), .12);
-  border-radius: 10px; padding: 9px 13px; text-align: center;
-  min-width: 132px;
-}
-/* The department's colour down the leading edge. An inset shadow rather than a
-   pseudo-element on purpose: the sub-nodes need both of their pseudos for the
-   connectors, and a colour bar drawn with ::after would be overwritten by the
-   spine — the people under a director would quietly lose their colour. */
-.ht-node { box-shadow: inset 3px 0 0 var(--nc, rgba(255,255,255,.35)); }
-.ht-node-name { font-size: .84rem; font-weight: 600; color: rgba(255,255,255,.95); }
-.ht-node-role { font-size: .66rem; color: rgba(255,255,255,.6); margin-top: 2px; line-height: 1.35; }
-.ht-node.is-vp {
-  border-color: rgba(var(--nc-r, 255,195,40), .55);
-  background: rgba(var(--nc-r, 255,195,40), .18);
-}
-.ht-node.is-dir { font-weight: 600; }
-
-/* ── Ben down to the directors ── */
-.ht-top { position: relative; padding-bottom: 16px; }
-.ht-top::after {
-  content: ""; position: absolute; left: 50%; bottom: 0; width: 1px; height: 16px;
-  background: rgba(255,255,255,.28);
-}
-.ht-branches {
-  display: grid; grid-auto-flow: column; gap: 14px;
-  align-items: start; justify-content: center;
-}
-.ht-branch { position: relative; padding-top: 16px; display: grid; gap: 10px; justify-items: center; }
-/* The bus: each branch draws its own segment, and the outer two stop at their
-   own centre, so together they form one line spanning first to last. */
-.ht-branch::before {
-  content: "";
-  position: absolute; top: 0; height: 1px;
-  /* Half the 14px gap on each side, so neighbouring segments meet instead of
-     leaving the bus dashed across the gaps between branches. */
-  left: -7px; right: -7px;
-  background: rgba(255,255,255,.28);
-}
-.ht-branch:first-child::before { left: 50%; }
-.ht-branch:last-child::before  { right: 50%; }
-/* White, not the department colour. Records is teal and the page is teal, so
-   its connectors vanished while the other three showed — the colour belongs on
-   the node itself, where it sits on the node's own darker ground. */
-.ht-branch::after {
-  content: ""; position: absolute; top: 0; left: 50%; width: 1px; height: 16px;
-  background: rgba(255,255,255,.28);
-}
-
-/* ── a director's people, hanging off the side ── */
-.ht-sub {
-  position: relative;
-  display: grid; gap: 8px;
-  width: 100%;
-  padding-left: 18px; margin-top: 4px;
-}
-.ht-sub .ht-node { min-width: 0; padding: 7px 11px; text-align: left; }
-.ht-sub .ht-node-name { font-size: .78rem; }
-/* The stub in from the spine. */
-.ht-sub .ht-node::before {
-  content: ""; position: absolute; left: -18px; top: 50%; width: 18px; height: 1px;
-  background: rgba(255,255,255,.26);
-}
-/* The spine, drawn in pieces: each row carries the segment above itself and
-   stops at its own centre, so the line ends at the last person rather than
-   running on into empty space below them. */
-.ht-sub .ht-node::after {
-  content: ""; position: absolute; left: -18px; top: -9px; bottom: 50%; width: 1px;
-  background: rgba(255,255,255,.26);
-}
-/* The first one reaches further up, to meet the director it hangs from. */
-.ht-sub .ht-node:first-child::after { top: -14px; }
-.ht-more {
-  font-size: .68rem; color: rgba(255,255,255,.55);
-  padding: 2px 0 0 2px;
-}
-
-@media (max-width: 900px) {
-  .ht-branches { grid-auto-flow: row; }
-  .ht-branch::before { display: none; }
-}
-
-/* ── directory charts ─────────────────────────────────────────────────── */
-.ht-bar-row { display: grid; grid-template-columns: 1fr; gap: 5px; margin-bottom: 11px; }
-.ht-bar-label {
-  font-size: .74rem; color: rgba(255,255,255,.78);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.ht-bar-track { height: 20px; background: rgba(255,255,255,.07); border-radius: 5px; overflow: hidden; }
-.ht-bar-fill {
-  height: 100%; border-radius: 5px;
-  display: flex; align-items: center; justify-content: flex-end;
-  padding-right: 7px; min-width: 26px;
-}
-.ht-bar-value { font-size: .68rem; font-weight: 700; color: #fff; }
-.ht-donut-wrap { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
-.ht-donut { width: 148px; height: 148px; flex: 0 0 auto; }
-.ht-donut-n { font-size: 26px; font-weight: 700; fill: #fff; }
-.ht-donut-l { font-size: 9px; fill: rgba(255,255,255,.6); letter-spacing: .1em; text-transform: uppercase; }
-.ht-legend { display: grid; gap: 7px; min-width: 0; }
-.ht-leg {
-  display: flex; align-items: center; gap: 8px;
-  font-size: .74rem; color: rgba(255,255,255,.78);
-}
-.ht-leg b { margin-left: auto; padding-left: 10px; color: #fff; }
-.ht-swatch { width: 10px; height: 10px; border-radius: 3px; flex: 0 0 auto; }
-
-/* ── KPI panel ────────────────────────────────────────────────────────── */
-.ht-kpi-head {
-  display: flex; align-items: flex-start; justify-content: space-between;
-  gap: 18px; margin-bottom: 16px;
-}
-/* The head already names the scope; the column titles under it are a second
-   heading, and without this they sat straight on top of the sub-line. */
-.ht-kpi-head + .ht-two .ht-col-title { margin-top: 0; }
-.ht-health {
-  text-align: right; line-height: 1; flex: 0 0 auto;
-}
-.ht-health b { font-size: 1.7rem; font-weight: 700; color: #fff; }
-.ht-health span {
-  display: block; margin-top: 3px;
-  font-size: .56rem; letter-spacing: .14em; text-transform: uppercase;
-  color: rgba(255,255,255,.55);
-}
-
-/* One stacked bar per team: each segment a status, widths in proportion.
-   Reading which team carries the reds is the question a list of individual
-   KPIs made you do by hand. */
-.ht-stack {
-  display: flex; height: 20px; border-radius: 5px; overflow: hidden;
-  background: rgba(255,255,255,.07);
-}
-.ht-seg { height: 100%; }
-.ht-seg:first-child { border-radius: 5px 0 0 5px; }
-.ht-seg:last-child  { border-radius: 0 5px 5px 0; }
-.ht-bar-label { display: flex; align-items: baseline; gap: 8px; }
-.ht-bar-n { margin-left: auto; font-size: .68rem; color: rgba(255,255,255,.55); }
-
-/* ── OKR panel ────────────────────────────────────────────────────────── */
-.ht-okrs { display: grid; gap: 12px; }
-.ht-okr {
-  padding: 14px 16px; border-radius: 11px;
-  background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.09);
-}
-.ht-okr-head { display: flex; align-items: baseline; gap: 12px; }
-.ht-okr-name {
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 1.02rem; font-weight: 600; color: rgba(255,255,255,.95); line-height: 1.25;
-}
-.ht-okr-meta { font-size: .72rem; color: rgba(255,255,255,.6); margin-top: 3px; }
-
-/* One row per key result: what it is, how far it has got, the number.
-   The name is allowed two lines and then trims — these run long, and a card
-   of forty full sentences is a document, not a summary. */
-.ht-krs { display: grid; gap: 7px; margin-top: 12px; }
-.ht-kr {
-  /* The bar column grew from 96px: it holds up to nine segments now, and at
-     96px they were 8px each. */
-  display: grid; grid-template-columns: minmax(0, 1fr) 124px 42px;
-  gap: 10px; align-items: center;
-}
-/* The name is the only thing clamped. The count that used to sit inside this
-   element is now carried by the bar. */
-.ht-kr-name { min-width: 0; }
-.ht-kr-text {
-  font-size: .74rem; color: rgba(255,255,255,.8); line-height: 1.35;
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-/* One segment per tracked row. The number of segments is the count — no
-   numeral needed — and each carries its own progress and status, so the shape
-   of a key result is visible rather than flattened into its average. */
-.ht-kr-bar {
-  display: flex;
-  gap: 2px;
-  height: 6px;
-  align-items: stretch;
-}
-.ht-kr-seg {
-  flex: 1 1 0;
-  min-width: 4px;              /* twelve rows still read as twelve blocks */
-  border-radius: 3px;
-  background: rgba(255,255,255,.14);
-  cursor: default;
-}
-.ht-kr-seg.is-good { background: #3EA96B; }
-.ht-kr-seg.is-mid  { background: #3D8FB5; }
-.ht-kr-seg.is-risk { background: #D98B2E; }
-.ht-kr-pct {
-  font-size: .7rem; font-weight: 700; color: rgba(255,255,255,.92);
-  text-align: right; white-space: nowrap;
-}
-.ht-kr-pct.is-none { color: rgba(255,255,255,.4); font-weight: 400; }
-@media (max-width: 620px) {
-  .ht-kr { grid-template-columns: minmax(0, 1fr) 64px 38px; gap: 8px; }
-}
-.ht-okr-meta .is-risk { color: #E8A33D; }
-.ht-okr-pct {
-  margin-left: auto;
-  font-size: .95rem; font-weight: 700; color: #fff; white-space: nowrap;
+  .gw, .gw-go { transition: none; }
+  .gw:hover, .gw:hover .gw-go { transform: none; }
 }
 
 /* ══════════════════════════════════════════════════════════════════════════

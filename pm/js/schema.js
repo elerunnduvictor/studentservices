@@ -139,6 +139,19 @@ function checkReportsTo(value) {
       "in their manager's view. Check the spelling against the Employee Directory tab.";
 }
 
+/* A project's status, as plainly as it can be said — no percentages. The
+   same seven the Bridge's Project Inventory page reads, in the order a
+   project usually moves through them. */
+const PROJECT_STATUS = [
+  { value: "Not Started", label: "Not Started", tone: "grey" },
+  { value: "On Track",    label: "On Track",    tone: "green" },
+  { value: "At Risk",     label: "At Risk",     tone: "yellow" },
+  { value: "Blocked",     label: "Blocked",     tone: "red" },
+  { value: "On Hold",     label: "On Hold",     tone: "grey" },
+  { value: "Completed",   label: "Completed",   tone: "accent" },
+  { value: "Archived",    label: "Archived",    tone: "grey" },
+];
+
 const OKR_STATUS = [
   { value: "On Track",            label: "On Track",            tone: "green" },
   { value: "At Risk",             label: "At Risk",             tone: "yellow" },
@@ -528,6 +541,27 @@ const COST_MONTHS = [
   { value: "7",  label: "July" },      { value: "8",  label: "August" },
   { value: "9",  label: "September" }, { value: "10", label: "October" },
   { value: "11", label: "November" },  { value: "12", label: "December" },
+];
+
+/* A project row, in the order a PM thinks about it: what it is, whose it is,
+   where it stands, and when. */
+const PROJECT_COLUMNS = [
+  { key: "title",         label: "Project",       type: "text",     width: 240, required: true },
+  { key: "department",    label: "Department",    type: "select",   width: 190, options: DEPARTMENTS },
+  { key: "pm_owner",      label: "PM Owner",      type: "text",     width: 150,
+    help: "The project manager who keeps this row current." },
+  { key: "status",        label: "Status",        type: "select",   width: 130, required: true, options: PROJECT_STATUS },
+  { key: "start_date",    label: "Start",         type: "date",     width: 120 },
+  { key: "target_date",   label: "Target",        type: "date",     width: 120,
+    help: "When it is meant to be done. Leave blank if there is no date yet." },
+  { key: "latest_update", label: "Latest Update", type: "longtext", width: 300,
+    help: "Where it stands now, in a sentence or two." },
+  { key: "update_date",   label: "Updated On",    type: "date",     width: 120,
+    help: "The day the latest update was written. The Bridge flags an update older than a month." },
+  { key: "description",   label: "Description",   type: "longtext", width: 300,
+    help: "What the project is, for someone who has never heard of it." },
+  { key: "stakeholders",  label: "Stakeholders",  type: "text",     width: 220,
+    help: "Comma-separated." },
 ];
 
 window.SS.WORKBOOKS = {
@@ -982,6 +1016,38 @@ window.SS.WORKBOOKS = {
           { key: "hits",   label: "Count",           type: "number", width: 110, readOnly: true },
           { key: "people", label: "Distinct people", type: "number", width: 145, readOnly: true },
         ],
+      },
+    ],
+  },
+
+  /* ═══════════ Projects ═══════════
+     The Bridge's Project Inventory: the other important projects, each with a
+     plain status, kept current by the department's PM. Read by everyone on
+     the hub the OKRs are read by; edited here by the same editors.
+
+     Active and Archived as two tabs over one table, the way the student
+     rosters split theirs: setting a project to Archived moves it across on its
+     own, and setting it back returns it. */
+  projects: {
+    label: "Projects",
+    subtitle: "Project Inventory",
+    accent: "projects",
+    sheets: [
+      {
+        key: "projects_active", group: "projects", groupLabel: "Projects", label: "Active",
+        table: "projects",
+        order: "sort_order.asc,id.asc",
+        filter: { status: "neq.Archived" },
+        seed: { status: "Not Started" },
+        columns: PROJECT_COLUMNS,
+      },
+      {
+        key: "projects_archived", group: "projects", groupLabel: "Projects", label: "Archived",
+        table: "projects",
+        order: "update_date.desc.nullslast,id.desc",
+        filter: { status: "eq.Archived" },
+        seed: { status: "Archived" },
+        columns: PROJECT_COLUMNS,
       },
     ],
   },

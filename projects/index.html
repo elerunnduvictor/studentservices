@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <script src="/js/auth-guard.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light dark">
+<!-- Theme decided before the first paint — see okr-progress/index.html. -->
+<script>
+  (function () {
+    try {
+      var saved = localStorage.getItem("ss-theme") || "light";
+      document.documentElement.setAttribute("data-theme", saved);
+      document.documentElement.style.colorScheme = saved === "dark" ? "dark" : "light";
+    } catch (e) { /* private mode: fall through to light */ }
+  })();
+</script>
+  <title>Project Inventory — BYU-Pathway Worldwide</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Jost:wght@300;400;500;600&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="/css/shared.css">
+  <link rel="stylesheet" href="/projects/css/projects.css">
+</head>
+
+<body>
+
+  <!-- ═══════════════ NAVBAR ═══════════════ -->
+  <nav class="navbar" id="navbar">
+    <a href="/index.html" class="nav-brand">Student Services</a>
+    <button class="nav-hamburger" id="navHamburger" aria-label="Menu">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="3" y1="6" x2="21" y2="6" />
+        <line x1="3" y1="12" x2="21" y2="12" />
+        <line x1="3" y1="18" x2="21" y2="18" />
+      </svg>
+    </button>
+    <div class="nav-links" id="navLinks">
+      <a href="/index.html" class="nav-link">Home</a>
+      <a href="/index.html#departments" class="nav-link">Departments</a>
+      <a href="/emerging-issues/index.html" class="nav-link">Emerging Issues</a>
+      <a href="/scorecard/index.html" class="nav-link">KPI Scorecard</a>
+      <a href="/okr-progress/index.html" class="nav-link">OKRs</a>
+      <a href="/projects/index.html" class="nav-link is-current">Projects</a>
+      <a href="/directory/index.html" class="nav-link">Directory</a>
+      <a href="/org-chart/index.html" class="nav-link">Org Chart</a>
+    </div>
+    <button class="nav-theme-btn" id="themeToggle" title="Toggle theme">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+      </svg>
+    </button>
+  </nav>
+
+  <!-- ═══════════════ HERO ═══════════════ -->
+  <header class="pi-hero">
+    <div class="hero-pattern"></div>
+    <div class="pi-hero-content">
+      <div class="hero-badge">BYU-Pathway Worldwide</div>
+      <h1>Project <span>Inventory</span></h1>
+      <p class="pi-hero-sub">The status of other important projects across Student Services — who owns each one,
+        where it stands, and when it is due.</p>
+      <!-- Filled by projects.js: every active project as one bar, split by status. -->
+      <div class="pi-pulse" id="piPulse" hidden></div>
+    </div>
+  </header>
+
+  <!-- ═══════════════ MAIN ═══════════════ -->
+  <main class="pi-main">
+
+    <!-- Blocked, at risk, past due or gone quiet — the ones worth a look first. -->
+    <section class="pi-attn" id="piAttn" aria-labelledby="piAttnTitle" hidden>
+      <div class="pi-attn-head">
+        <h2 class="pi-attn-title" id="piAttnTitle">Needs attention</h2>
+        <span class="pi-attn-count" id="piAttnCount"></span>
+      </div>
+      <div class="pi-attn-list" id="piAttnList"></div>
+    </section>
+
+    <section class="pi-board" data-reveal aria-label="Projects">
+      <div class="pi-bar">
+        <div class="pi-tabs" role="tablist" aria-label="Which projects">
+          <button type="button" class="pi-tab is-on" role="tab" aria-selected="true" data-tab="active">Active <b id="piCountActive">0</b></button>
+          <button type="button" class="pi-tab" role="tab" aria-selected="false" data-tab="archived">Archived <b id="piCountArchived">0</b></button>
+        </div>
+        <!-- Shown to PM Hub editors only; the database decides who they are. -->
+        <a class="pi-edit" id="piEdit" href="/pm/projects.html" hidden>
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+          Edit in the PM Hub
+        </a>
+      </div>
+
+      <div class="pi-filters">
+        <label class="pi-search">
+          <span class="pi-sr">Search projects</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+          <input class="pi-input" id="piSearch" type="search" placeholder="Search by project, PM or stakeholder" autocomplete="off">
+        </label>
+        <select class="pi-select" id="piDept" aria-label="Department"><option value="">All departments</option></select>
+        <select class="pi-select" id="piStatus" aria-label="Status"><option value="">All statuses</option></select>
+        <select class="pi-select" id="piOwner" aria-label="PM owner"><option value="">All PM owners</option></select>
+      </div>
+      <div class="pi-filter-note" id="piFilterNote" hidden></div>
+
+      <div id="piList" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <!-- ═══════════════ DETAIL PANEL ═══════════════ -->
+  <div class="pi-scrim" id="piScrim"></div>
+  <aside class="pi-panel" id="piPanel" role="dialog" aria-modal="true" aria-labelledby="piPanelTitle" tabindex="-1"></aside>
+
+  <!-- ═══════════════ FOOTER ═══════════════ -->
+  <footer class="site-footer">
+    <span>&copy; 2026 BYU-Pathway Worldwide &middot; Student Services</span>
+  </footer>
+
+  <script src="/js/shared.js"></script>
+  <script src="/shared/js/hub-palette.js"></script>
+<script src="/shared/js/config.js"></script>
+<script src="/shared/js/hub-access.js"></script>
+<script src="/shared/js/hub-texture.js"></script>
+<script src="/shared/js/hub-account.js"></script>
+  <script src="/shared/js/data-service.js"></script>
+  <script src="/shared/js/cap-guide-link.js"></script>
+  <!-- `projects?` — optional until supabase/projects.sql has been run, so a
+       missing table reads as "no projects yet", not "live data unavailable". -->
+  <script src="/shared/js/hub-boot.js"
+          data-datasets="projects?"
+          data-then="projects/js/projects.js"></script>
+</body>
+
+</html>

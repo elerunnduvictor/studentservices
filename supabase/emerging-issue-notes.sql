@@ -12,7 +12,10 @@
 --             policy uses, so an issue and its notes can never disagree about
 --             who is let in. Partners included.
 --    Add      anyone in Student Services (staff, directors, admins) — the same
---             people who can raise an issue.
+--             people who can raise an issue — and only on a PINNED issue
+--             (2026-09-29). Pinning marks an issue as still being followed;
+--             a note box on every issue read as a request to update them all.
+--             Notes already on an issue stay readable after it is unpinned.
 --    Change   nobody. There is no update or delete, for anyone: a note is part
 --             of the record the moment it is posted.
 --
@@ -20,7 +23,8 @@
 --  database as the note goes in, overwriting anything the caller sent. A note
 --  cannot be backdated or put in somebody else's name.
 --
---  Run after emerging-issues-partners.sql. Safe to re-run.
+--  Run after emerging-issues-partners.sql and emerging-issues-pin-status.sql.
+--  Safe to re-run.
 -- ═══════════════════════════════════════════════════════════════════════════
 
 begin;
@@ -59,6 +63,22 @@ create trigger emerging_issue_notes_stamp
   before insert on public.emerging_issue_notes
   for each row execute function public.ei_note_stamp();
 
+-- Is this issue pinned? Security definer so the answer does not depend on the
+-- caller's own view of emerging_issues — the insert policy below asks it, and
+-- it says nothing but yes or no. Needs emerging-issues-pin-status.sql.
+create or replace function public.ei_is_pinned(p_issue bigint)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (select 1 from public.emerging_issues e
+                  where e.id = p_issue and e.pinned_at is not null);
+$$;
+revoke all on function public.ei_is_pinned(bigint) from public, anon;
+grant execute on function public.ei_is_pinned(bigint) to authenticated;
+
 -- ── who may do what ────────────────────────────────────────────────────────
 alter table public.emerging_issue_notes enable row level security;
 
@@ -70,7 +90,8 @@ create policy emerging_issue_notes_select on public.emerging_issue_notes
 drop policy if exists emerging_issue_notes_insert on public.emerging_issue_notes;
 create policy emerging_issue_notes_insert on public.emerging_issue_notes
   for insert to authenticated
-  with check (coalesce(public.hub_role(), 'none') in ('staff', 'director', 'admin'));
+  with check (coalesce(public.hub_role(), 'none') in ('staff', 'director', 'admin')
+              and public.ei_is_pinned(issue_id));
 
 -- Select and insert only. No update or delete is granted to anyone, so there
 -- is no policy for either to get wrong.
@@ -92,5 +113,11 @@ select 'may a signed-in user edit or delete a note? (must be no)',
        case when has_table_privilege('authenticated', 'public.emerging_issue_notes', 'UPDATE')
               or has_table_privilege('authenticated', 'public.emerging_issue_notes', 'DELETE')
             then 'YES — check the grants' else 'no' end
+union all
+select 'does adding a note need the issue pinned? (must be yes)',
+       case when (select with_check from pg_policies
+                   where schemaname = 'public' and tablename = 'emerging_issue_notes'
+                     and policyname = 'emerging_issue_notes_insert') like '%ei_is_pinned%'
+            then 'yes' else 'NO — re-run this file' end
 union all
 select 'notes so far', count(*)::text from public.emerging_issue_notes;

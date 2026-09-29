@@ -970,3 +970,10 @@ button.sc-part:hover .sc-part-arrow { color: var(--sc-accent); transform: transl
    like a branch you may not enter, but it says the true reason. */
 .sc-kid.is-unmeasured { border-style: dashed; }
 .sc-kid.is-unmeasured::after { content: 'Not measured'; }
+
+/* Operational Outcomes: the line under the rings saying Cost is in the score
+   and at what share, so "88" can be traced back to its two halves. */
+.sc-cost-blend {
+  margin: -6px 0 18px;
+  font-size: .8rem; color: var(--text-muted);
+}

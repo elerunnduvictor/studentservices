@@ -391,6 +391,16 @@
     order: "dept_order.asc,category_order.asc,month.asc",
   };
 
+  /* Project Inventory — the other important projects, one row each, edited in
+     the PM Hub's Projects workbook. Raw rows, like costBudget: the page works
+     out what is overdue or has gone quiet at draw time, against today. Optional
+     in the page's hub-boot tag until projects.sql has been run. */
+  DATASETS.projects = {
+    global: "PROJECTS",
+    view: "projects",
+    order: "sort_order.asc,id.asc",
+  };
+
   function numOrNull(v) {
     if (v === null || v === undefined || v === "") return null;
     const n = Number(v);

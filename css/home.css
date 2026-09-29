@@ -849,7 +849,9 @@ body.home-single .hero-compact h1 span {
 @keyframes gwSpin { to { transform: rotate(360deg); } }
 .gw-needle { transform-box: view-box; transform-origin: 360px 140px; transition: transform 1.2s cubic-bezier(.3,1.6,.4,1); }
 .gw:hover .gw-needle { transform: rotate(18deg); }
-.gw-march { animation: gwMarch 2.4s linear infinite; }
+/* The road's centre line stands still until the card is hovered, then runs
+   toward the goal — motion as a response, like the card's lift. */
+.gw:hover .gw-march { animation: gwMarch 2.4s linear infinite; }
 @keyframes gwMarch { to { stroke-dashoffset: -36; } }
 .gw-stars circle { animation: gwTwinkle 4s ease-in-out infinite; }
 .gw-stars circle:nth-child(2n) { animation-delay: -1.3s; }
@@ -878,7 +880,7 @@ body.home-single .hero-compact h1 span {
 @media (prefers-reduced-motion: reduce) {
   .gw, .gw-art, .gw-go, .gw-needle { transition: none; }
   .gw:hover, .gw:hover .gw-art, .gw:hover .gw-go, .gw:hover .gw-needle { transform: none; }
-  .gw-pulse, .gw-spin, .gw-march, .gw-stars circle, .gw-leaves circle, .bridge-lamp { animation: none; }
+  .gw-pulse, .gw-spin, .gw:hover .gw-march, .gw-stars circle, .gw-leaves circle, .bridge-lamp { animation: none; }
   .gw:hover .gw-draw { animation: none; }
 }
 

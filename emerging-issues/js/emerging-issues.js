@@ -89,6 +89,11 @@
     .replace(/"/g, "&quot;");
 
   let ISSUES = [];
+  /* Notes added to issues after they were raised, oldest first
+     (supabase/emerging-issue-notes.sql). NOTES_ON is false until that file has
+     been run, so the page can say so rather than offering a box that fails. */
+  let NOTES = [];
+  let NOTES_ON = true;
   /* department -> its sub-departments, read from the curated `sub_departments`
      table rather than from what people have typed into their own records. The
      free-text values on employees contain "Enrollment Couselling" and "Student
@@ -293,6 +298,10 @@
       `Raised by ${esc(who(i))} · ${fmtWhen(i.created_at || i.first_observed)}`,
       i.owner ? "Owner: " + esc(i.owner) : null,
       i.target_date ? `Target ${fmtDate(i.target_date)}` : null,
+      (() => {
+        const n = notesFor(i.id).length;
+        return n ? `${n} note${n === 1 ? "" : "s"}` : null;
+      })(),
     ].filter(Boolean).join(" &nbsp;·&nbsp; ");
 
     const links = [
@@ -335,9 +344,44 @@
         <div class="ei-card-body" ${open ? "" : "hidden"}>
           ${i.summary ? `<p class="ei-para">${esc(i.summary)}</p>` : ""}
           ${i.impact ? `<p class="ei-para"><strong>Who it affects.</strong> ${esc(i.impact)}</p>` : ""}
+          ${notesHtml(i)}
           ${actions(i)}
         </div>
       </article>`;
+  }
+
+  /* Notes, oldest first, so the story reads in the order it happened, each
+     with who added it and exactly when — the time the database stamped, not
+     one anybody typed. The box to add one is offered to Student Services. */
+  function notesHtml(i) {
+    const list = notesFor(i.id);
+    const items = list.map((n) => `
+      <li class="ei-note">
+        <p class="ei-note-body">${esc(n.body)}</p>
+        <p class="ei-note-meta">${esc(n.created_by_name || byName(n.created_by))} · ${fmtWhen(n.created_at)}</p>
+      </li>`).join("");
+    const box = !canPin() ? "" : NOTES_ON
+      ? `<form class="ei-note-form" data-note-for="${i.id}">
+           <label class="ei-note-label" for="eiNote${i.id}">Add a note</label>
+           <textarea id="eiNote${i.id}" name="body" rows="2" maxlength="4000"
+                     placeholder="What has happened since, who was contacted, what changed…"></textarea>
+           <button type="submit" class="ei-btn">Add note</button>
+         </form>`
+      : `<p class="ei-note-off">Notes are not switched on yet — supabase/emerging-issue-notes.sql has not been run.</p>`;
+    if (!list.length && !box) return "";
+    return `<section class="ei-notes" aria-label="Notes">
+        <h4 class="ei-notes-h">Notes${list.length ? ` <span>${list.length}</span>` : ""}</h4>
+        ${list.length ? `<ol class="ei-note-list">${items}</ol>` : ""}
+        ${box}
+      </section>`;
+  }
+
+  async function addNote(id, body) {
+    await SS.db.insert("emerging_issue_notes", [{ issue_id: id, body }]);
+    // The notes only: the issues have not changed, and re-reading them would
+    // redraw every card for no reason.
+    await loadNotes();
+    renderList();
   }
 
   /* The pin and the status, under what was written. Each control appears only
@@ -537,11 +581,29 @@
   }
 
   /* ── load ──────────────────────────────────────────────────────────────── */
+  /* The notes table arrives with emerging-issue-notes.sql. Until it has been
+     run the register still works; it simply has no notes to show, and says so
+     where the box to add one would be. */
+  async function loadNotes() {
+    try {
+      NOTES = await SS.db.select("emerging_issue_notes", { order: "created_at.asc,id.asc" }) || [];
+      NOTES_ON = true;
+    } catch (err) {
+      NOTES = [];
+      NOTES_ON = !/404|PGRST205|does not exist|not find/i.test(String((err && err.message) || err));
+    }
+  }
+  function notesFor(id) { return NOTES.filter((n) => n.issue_id === id); }
+
   async function load() {
     // One request, not two. The brief view fed the row of stat tiles that used
     // to sit above the list; the tabs count their own rows from what is already
     // in hand, so a second round trip would buy nothing.
-    ISSUES = await SS.db.select("v_emerging_issues", { order: "id.desc" }) || [];
+    const [issues] = await Promise.all([
+      SS.db.select("v_emerging_issues", { order: "id.desc" }),
+      loadNotes(),
+    ]);
+    ISSUES = issues || [];
     renderList();
   }
 
@@ -634,6 +696,24 @@
     });
 
     // Open and close an issue. Delegated, because the list is redrawn often.
+    el("eiList").addEventListener("submit", async (e) => {
+      const form = e.target.closest("[data-note-for]");
+      if (!form) return;
+      e.preventDefault();
+      const box = form.querySelector("textarea");
+      const btn = form.querySelector("button");
+      const body = box.value.trim();
+      if (!body) { box.focus(); return; }
+      btn.disabled = true; box.disabled = true;
+      try {
+        await addNote(Number(form.dataset.noteFor), body);
+        tell("Note added.");
+      } catch (err) {
+        tell("That did not save: " + ((err && err.message) || err), true);
+        btn.disabled = false; box.disabled = false;
+      }
+    });
+
     el("eiList").addEventListener("change", async (e) => {
       const sel = e.target.closest("[data-status-for]");
       if (!sel) return;

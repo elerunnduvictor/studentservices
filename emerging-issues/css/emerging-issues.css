@@ -1710,3 +1710,44 @@ select.is-sev-low option { color: var(--text); font-weight: 400; background: var
 .ei-act-status select:focus-visible { outline: 2px solid var(--bp-teal); outline-offset: 2px; }
 .ei-act-status select:disabled { opacity: .6; cursor: progress; }
 .ei-trail { margin: 10px 0 0; font-size: .76rem; line-height: 1.5; color: var(--text-dim); }
+
+/* ═══ NOTES ON AN ISSUE ══════════════════════════════════════════════════════
+   What happened after it was raised, in the order it happened. Set on the
+   card's own inset tone, beneath what was originally written, so the report
+   and the notes that follow it never read as one paragraph. */
+.ei-notes {
+  margin-top: 14px; padding-top: 12px;
+  border-top: 1px solid var(--border-subtle, var(--border));
+}
+.ei-notes-h {
+  margin: 0 0 8px;
+  font-size: .64rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--text-dim);
+}
+.ei-notes-h span {
+  margin-left: 4px; padding: 1px 7px; border-radius: 999px;
+  background: var(--bg-elevated, rgba(127,137,138,.12)); color: var(--text-muted);
+  font-variant-numeric: lining-nums;
+}
+.ei-note-list { list-style: none; margin: 0 0 12px; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.ei-note {
+  padding: 9px 12px;
+  background: var(--bg-elevated, rgba(127,137,138,.08));
+  border-left: 2px solid var(--border);
+  border-radius: 6px;
+}
+.ei-note-body { margin: 0; font-size: .86rem; line-height: 1.55; color: var(--text); white-space: pre-wrap; }
+.ei-note-meta { margin: 4px 0 0; font-size: .72rem; color: var(--text-dim); }
+.ei-note-form { display: flex; flex-direction: column; gap: 6px; }
+.ei-note-label {
+  font-size: .64rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--text-dim);
+}
+.ei-note-form textarea {
+  font: inherit; font-size: .84rem; line-height: 1.5; padding: 8px 11px; resize: vertical;
+  border: 1px solid var(--border); border-radius: 8px;
+  background: var(--bg-card); color: var(--text);
+}
+.ei-note-form textarea:focus-visible { outline: 2px solid var(--bp-teal); outline-offset: 1px; }
+.ei-note-form button { align-self: flex-start; }
+.ei-note-off { margin: 0; font-size: .78rem; color: var(--text-dim); }

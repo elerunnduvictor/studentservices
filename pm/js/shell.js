@@ -26,7 +26,12 @@
    So: before adding a page here, check the repo root for a folder or .html of
    the same name. Currently taken — css, departments, directory, docs,
    emerging-issues, js, login, okr-progress, org-chart, performance-standards,
-   photos, processes, scorecard, shared, supabase.
+   photos, processes, projects, scorecard, shared, supabase.
+
+   The same thing happened again with projects (2026-09-30): pm/projects.html
+   was answered on the PM Hub's host by the Bridge's Project Inventory page in
+   projects/. The PM page is now project-inventory.html; its tab still reads
+   "Projects".
    ═══════════════════════════════════════════════════════════════════════════ */
 
 (function () {

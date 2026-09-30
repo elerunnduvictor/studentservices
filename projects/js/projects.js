@@ -541,17 +541,22 @@
 
      Where the link goes. The PM Hub is the same deployment served on its own
      host, and vercel.json sends /pm/* on this host back to the home page — so
-     a plain /pm/projects.html link lands on the Bridge, which is the bug this
-     replaced (2026-09-30). On the live site the Projects workbook is
-     /projects on the PM Hub's host; running locally there is only one host,
-     and /pm/projects.html is right.
+     a plain /pm/... link lands on the Bridge, which is the bug this replaced
+     (2026-09-30). On the live site the Projects workbook is
+     /project-inventory on the PM Hub's host; running locally there is only
+     one host, and /pm/project-inventory.html is right.
+
+     Not /projects: that name is this page's own folder at the repo root, and
+     Vercel serves a real folder before the PM Hub's rewrite, so the PM Hub's
+     host answered /projects with this page. See the naming note at the top
+     of pm/js/shell.js.
 
      shared/js/config.js keeps the PM Hub's address out of the hub on purpose
      ("the hub never links to it"). This is the one exception, and it is kept
      narrow: the address is only put into a link after the reader has been
      confirmed as an editor, who already goes there. */
   var PM_HOST = "https://studentservicespm.vercel.app";
-  var PM_PROJECTS = /\.vercel\.app$/.test(location.hostname) ? PM_HOST + "/projects" : "/pm/projects.html";
+  var PM_PROJECTS = /\.vercel\.app$/.test(location.hostname) ? PM_HOST + "/project-inventory" : "/pm/project-inventory.html";
   var editor = false;
   function checkEditor() {
     var a = SS.access || {};

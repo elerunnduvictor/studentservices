@@ -359,7 +359,7 @@
       "<h3>No projects yet</h3>" +
       (editor
         ? "<p>Projects are added in the PM Hub's Projects workbook. Each one you add appears here straight away.</p>" +
-          '<a class="pi-edit" href="/pm/projects.html">Add the first project</a>'
+          '<a class="pi-edit" href="' + esc(PM_PROJECTS) + '">Add the first project</a>'
         : "<p>Once the project managers add projects in the PM Hub, each one will appear here with its status, owner and target date.</p>") +
       "</div>";
   }
@@ -420,7 +420,7 @@
       "</div>" +
       '<div class="pi-panel-foot"><span>' +
         (p.updated_at ? "Record last changed " + esc(fmtDate(new Date(p.updated_at), true)) : "") + "</span>" +
-        (editor ? '<a class="pi-edit" href="/pm/projects.html">Edit this project</a>' : "") +
+        (editor ? '<a class="pi-edit" href="' + esc(PM_PROJECTS) + '">Edit this project</a>' : "") +
       "</div>"
     );
   }
@@ -537,7 +537,21 @@
   /* ── who may edit ────────────────────────────────────────────────────────
      The same question the PM Hub asks, of the same table row-level security
      consults. It only decides whether a link is shown: a reader who is not an
-     editor and follows /pm/projects.html anyway is refused by the database. */
+     editor and finds the PM Hub anyway is refused by the database.
+
+     Where the link goes. The PM Hub is the same deployment served on its own
+     host, and vercel.json sends /pm/* on this host back to the home page — so
+     a plain /pm/projects.html link lands on the Bridge, which is the bug this
+     replaced (2026-09-30). On the live site the Projects workbook is
+     /projects on the PM Hub's host; running locally there is only one host,
+     and /pm/projects.html is right.
+
+     shared/js/config.js keeps the PM Hub's address out of the hub on purpose
+     ("the hub never links to it"). This is the one exception, and it is kept
+     narrow: the address is only put into a link after the reader has been
+     confirmed as an editor, who already goes there. */
+  var PM_HOST = "https://studentservicespm.vercel.app";
+  var PM_PROJECTS = /\.vercel\.app$/.test(location.hostname) ? PM_HOST + "/projects" : "/pm/projects.html";
   var editor = false;
   function checkEditor() {
     var a = SS.access || {};
@@ -557,6 +571,7 @@
   }
   checkEditor().then(function (ok) {
     editor = ok;
+    if (ok) $("piEdit").href = PM_PROJECTS;
     $("piEdit").hidden = !ok;
     if (!ROWS.length) renderList();
     // Redraw an already-open panel so it gains its edit link, without moving

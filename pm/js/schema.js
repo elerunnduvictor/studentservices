@@ -11,6 +11,7 @@
      type      text | longtext | number | percent | date | select | url
      width     px
      options   for select — { value, label, tone, glyph }
+     default   value a new row starts with, when the sheet's own seed gives none
      readOnly  computed or system-managed
      help      tooltip
      check     (value, row) => message | null — flags a value that will not do
@@ -543,14 +544,64 @@ const COST_MONTHS = [
   { value: "11", label: "November" },  { value: "12", label: "December" },
 ];
 
-/* A project row, in the order a PM thinks about it: what it is, whose it is,
-   where it stands, and when. */
+/* Which stage of the work a project is in — separate from Status, which says
+   how it is doing. The database allows exactly these five
+   (supabase/projects-workflow.sql), in this order. */
+const PROJECT_WORKFLOW = [
+  { value: "New",            label: "New",            tone: "grey" },
+  { value: "In Development", label: "In Development", tone: "accent" },
+  { value: "In Progress",    label: "In Progress",    tone: "accent" },
+  { value: "In Review",      label: "In Review",      tone: "accent" },
+  { value: "Completed",      label: "Completed",      tone: "accent", glyph: "✓" },
+];
+
+/**
+ * Status and Workflow disagreeing about whether a project is finished.
+ *
+ * A warning only — the row still saves. Both cells carry the same check, so
+ * the mismatch is marked on whichever one the PM is looking at. A blank is
+ * flagged too: both columns are NOT NULL, and the database would otherwise
+ * refuse the save with nothing on the row to say why.
+ */
+function checkProjectStage(key) {
+  return (value, row) => {
+    const status = row.status, workflow = row.workflow;
+    if (value === null || value === undefined || String(value).trim() === "") {
+      return `${key === "status" ? "Status" : "Workflow"} can't be left blank — the database will refuse to save this row.`;
+    }
+    if (workflow === "Completed" && status !== "Completed" && status !== "Archived") {
+      return `Workflow is Completed but Status is ${status || "blank"}. ` +
+        "If the work is done, set Status to Completed (or Archived); otherwise move Workflow back a stage.";
+    }
+    if (status === "Completed" && workflow !== "Completed") {
+      return `Status is Completed but Workflow is ${workflow || "blank"}. ` +
+        "If the work is done, set Workflow to Completed too.";
+    }
+    return null;
+  };
+}
+
+/* A project row: what it is, who it involves, where it stands, then when.
+   The grid remembers widths and hidden columns by key, not by position, so
+   reordering this list does not disturb anyone's saved layout.
+
+   Status and Workflow both carry a `default` matching the database's: the
+   ways of adding a row that bring no seed (Ctrl+Enter, "Insert row below",
+   pasting past the last row) would otherwise send null to a NOT NULL column. */
 const PROJECT_COLUMNS = [
   { key: "title",         label: "Project",       type: "text",     width: 240, required: true },
   { key: "department",    label: "Department",    type: "select",   width: 190, options: DEPARTMENTS },
+  { key: "stakeholders",  label: "Stakeholders",  type: "text",     width: 220,
+    help: "Comma-separated." },
   { key: "pm_owner",      label: "PM Owner",      type: "text",     width: 150,
     help: "The project manager who keeps this row current." },
-  { key: "status",        label: "Status",        type: "select",   width: 130, required: true, options: PROJECT_STATUS },
+  { key: "description",   label: "Description",   type: "longtext", width: 300,
+    help: "What the project is, for someone who has never heard of it." },
+  { key: "status",        label: "Status",        type: "select",   width: 130, required: true, options: PROJECT_STATUS,
+    default: "Not Started", check: checkProjectStage("status") },
+  { key: "workflow",      label: "Workflow",      type: "select",   width: 150, options: PROJECT_WORKFLOW,
+    default: "New", check: checkProjectStage("workflow"),
+    help: "Which stage the work is in. Separate from Status, which says how it is going." },
   { key: "start_date",    label: "Start",         type: "date",     width: 120 },
   { key: "target_date",   label: "Target",        type: "date",     width: 120,
     help: "When it is meant to be done. Leave blank if there is no date yet." },
@@ -558,10 +609,6 @@ const PROJECT_COLUMNS = [
     help: "Where it stands now, in a sentence or two." },
   { key: "update_date",   label: "Updated On",    type: "date",     width: 120,
     help: "The day the latest update was written. The Bridge flags an update older than a month." },
-  { key: "description",   label: "Description",   type: "longtext", width: 300,
-    help: "What the project is, for someone who has never heard of it." },
-  { key: "stakeholders",  label: "Stakeholders",  type: "text",     width: 220,
-    help: "Comma-separated." },
 ];
 
 window.SS.WORKBOOKS = {

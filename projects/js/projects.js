@@ -17,6 +17,7 @@
        slips past its date shows up without anyone marking it;
      · target dates in words ("in 3 weeks", "12 days overdue"), and a panel
        timeline from start to target with today on it;
+     · Workflow — the stage of the work — beside Status, with its own filter;
      · PM owner as a filter, stakeholders searchable, every column sortable,
        and a #p<id> link that opens straight onto one project.
 
@@ -43,6 +44,11 @@
   ];
   var BY_STATUS = {};
   STATUS.forEach(function (s) { BY_STATUS[s.key] = s; });
+
+  /* Workflow: which stage of the work a project is in, separate from how it is
+     going. The five the database allows, in order. Drawn as a five-step meter
+     so the stage reads at a glance and never rests on colour alone. */
+  var WORKFLOW = ["New", "In Development", "In Progress", "In Review", "Completed"];
   var ATTENTION = "__attention";
   var STALE_DAYS = 30;
   var SOON_DAYS = 14;
@@ -53,7 +59,7 @@
 
   var state = {
     tab: "active",
-    q: "", dept: "", status: "", owner: "",
+    q: "", dept: "", status: "", workflow: "", owner: "",
     sort: "target", dir: 1,
     open: null,          // id of the project in the panel
     returnFocus: null,
@@ -131,6 +137,15 @@
     return '<span class="pi-pill" style="--c:var(' + s.v + ')"><i aria-hidden="true">' + s.g + "</i>" +
            esc(status || "Not Started") + "</span>";
   }
+  function stage(workflow) {
+    var i = WORKFLOW.indexOf(workflow);
+    if (i === -1) return '<span class="pi-none">—</span>';
+    var steps = "";
+    for (var k = 0; k < WORKFLOW.length; k++) steps += "<i" + (k <= i ? ' class="on"' : "") + "></i>";
+    return '<span class="pi-wf' + (i === WORKFLOW.length - 1 ? " is-done" : "") + '" title="Workflow: ' + esc(workflow) +
+           " (stage " + (i + 1) + " of " + WORKFLOW.length + ')"><span class="pi-wf-steps" aria-hidden="true">' + steps +
+           "</span>" + esc(workflow) + "</span>";
+  }
   function dot(d) {
     var c = deptColour(d);
     return '<span class="pi-dot"' + (c ? ' style="--c:' + c + '"' : "") + ' aria-hidden="true"></span>';
@@ -150,6 +165,7 @@
       if (state.owner && clean(p.pm_owner) !== state.owner) return false;
       if (state.status === ATTENTION) { if (!facts(p).why.length) return false; }
       else if (state.status && p.status !== state.status) return false;
+      if (state.workflow && p.workflow !== state.workflow) return false;
       if (q && haystack(p).indexOf(q) === -1) return false;
       return true;
     });
@@ -160,6 +176,7 @@
     dept:   function (p) { return clean(p.department).toLowerCase() || "￿"; },
     owner:  function (p) { return clean(p.pm_owner).toLowerCase() || "￿"; },
     status: function (p) { return (BY_STATUS[p.status] || { rank: 9 }).rank; },
+    workflow: function (p) { var i = WORKFLOW.indexOf(p.workflow); return i === -1 ? 9 : i; },
     // No date sorts last whichever way round; done work sinks below live work
     // so "soonest due" means soonest due among things still being done.
     target: function (p) {
@@ -274,15 +291,18 @@
       .filter(function (k) { return here.some(function (p) { return p.status === k; }); });
     var anyAttn = state.tab === "active" && here.some(function (p) { return facts(p).why.length; });
     if (anyAttn) statuses.unshift(ATTENTION);
+    var workflows = WORKFLOW.filter(function (k) { return here.some(function (p) { return p.workflow === k; }); });
 
     if (depts.indexOf(state.dept) === -1) state.dept = "";
     if (owners.indexOf(state.owner) === -1) state.owner = "";
     if (statuses.indexOf(state.status) === -1) state.status = "";
+    if (workflows.indexOf(state.workflow) === -1) state.workflow = "";
 
     fillSelect($("piDept"), "All departments", depts, state.dept);
     fillSelect($("piOwner"), "All PM owners", owners, state.owner);
     var labels = {}; labels[ATTENTION] = "⚠ Needs attention";
     fillSelect($("piStatus"), "All statuses", statuses, state.status, labels);
+    fillSelect($("piWorkflow"), "All workflows", workflows, state.workflow);
     $("piCountActive").textContent = ROWS.filter(function (p) { return p.status !== "Archived"; }).length;
     $("piCountArchived").textContent = ROWS.filter(function (p) { return p.status === "Archived"; }).length;
   }
@@ -291,7 +311,7 @@
   var COLS = [
     { key: "title", label: "Project" }, { key: "dept", label: "Department" },
     { key: "owner", label: "PM Owner" }, { key: "status", label: "Status" },
-    { key: "target", label: "Target" }, { key: "updated", label: "Updated" },
+    { key: "workflow", label: "Workflow" }, { key: "target", label: "Target" }, { key: "updated", label: "Updated" },
   ];
   function row(p) {
     var f = facts(p);
@@ -312,6 +332,7 @@
         (clean(p.department) ? dot(p.department) + "<span>" + esc(p.department) + "</span>" : '<span class="pi-none">No department</span>') + "</div>" +
       '<div class="pi-owner">' + (clean(p.pm_owner) ? esc(p.pm_owner) : '<span class="pi-none">Unassigned</span>') + "</div>" +
       "<div>" + pill(p.status) + "</div>" +
+      '<div class="pi-stage">' + stage(p.workflow) + "</div>" +
       '<div class="pi-when">' + when + "</div>" +
       "<div>" + fresh + "</div>" +
     "</button>";
@@ -320,7 +341,7 @@
   function renderList() {
     var list = sorted(visible());
     var host = $("piList");
-    var filtered = !!(state.q || state.dept || state.status || state.owner);
+    var filtered = !!(state.q || state.dept || state.status || state.workflow || state.owner);
 
     var note = $("piFilterNote");
     if (filtered) {
@@ -399,7 +420,8 @@
           '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>' +
         (clean(p.department) ? '<div class="pi-panel-dept">' + dot(p.department) + esc(p.department) + "</div>" : "") +
         '<h2 id="piPanelTitle">' + esc(p.title) + "</h2>" +
-        pill(p.status) +
+        '<div class="pi-panel-badges">' + pill(p.status) +
+          (WORKFLOW.indexOf(p.workflow) !== -1 ? stage(p.workflow) : "") + "</div>" +
       "</div>" +
       '<div class="pi-panel-body">' +
         '<div class="pi-sec"><div class="pi-sec-label">Latest update</div>' +
@@ -473,7 +495,7 @@
     render();
   }
   function clearFilters() {
-    state.q = state.dept = state.status = state.owner = "";
+    state.q = state.dept = state.status = state.workflow = state.owner = "";
     $("piSearch").value = "";
     render();
   }
@@ -519,6 +541,7 @@
   $("piDept").addEventListener("change", function (e) { state.dept = e.target.value; render(); });
   $("piOwner").addEventListener("change", function (e) { state.owner = e.target.value; render(); });
   $("piStatus").addEventListener("change", function (e) { state.status = e.target.value; render(); });
+  $("piWorkflow").addEventListener("change", function (e) { state.workflow = e.target.value; render(); });
 
   document.addEventListener("keydown", function (e) {
     if (e.key === "Escape" && state.open != null) { e.preventDefault(); closePanel(); return; }

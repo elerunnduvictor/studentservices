@@ -337,7 +337,7 @@
 
 .pi-filters {
   display: grid; gap: 10px;
-  grid-template-columns: minmax(0, 1.6fr) repeat(3, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1.6fr) repeat(4, minmax(0, 1fr));
   padding: 14px 20px 16px;
   border-bottom: 1px solid var(--border);
 }
@@ -371,7 +371,7 @@
 /* ── the list ── */
 .pi-row, .pi-thead {
   display: grid;
-  grid-template-columns: minmax(0, 2.4fr) minmax(0, 1.3fr) minmax(0, 1fr) 128px minmax(0, 1fr) 104px;
+  grid-template-columns: minmax(0, 2.4fr) minmax(0, 1.3fr) minmax(0, 1fr) 128px 132px minmax(0, 1fr) 104px;
   gap: 14px; align-items: center;
   padding: 0 20px;
 }
@@ -434,6 +434,22 @@
   font-style: normal; font-size: 0.6rem; font-weight: 700; line-height: 1;
 }
 [data-theme="dark"] .pi-pill i, [data-theme="dark"] .pi-leg-dot { color: #111; }
+
+/* ── workflow: the stage of the work, as a five-step meter + word ──
+   Deliberately quieter than the status pill beside it: Status is how a
+   project is doing, Workflow only where it is. */
+.pi-wf {
+  display: inline-flex; flex-direction: column; gap: 4px;
+  font-size: 0.74rem; font-weight: 500; color: var(--text-muted); white-space: nowrap;
+}
+.pi-wf-steps { display: inline-flex; gap: 3px; }
+.pi-wf-steps i {
+  width: 14px; height: 4px; border-radius: 2px;
+  background: var(--border);
+}
+.pi-wf-steps i.on { background: var(--pi); }
+.pi-wf.is-done { color: var(--st-done); font-weight: 600; }
+.pi-wf.is-done .pi-wf-steps i { background: var(--st-done); }
 
 /* ── empty and loading ── */
 .pi-empty {
@@ -503,6 +519,10 @@
   background: rgba(255,255,255,0.14); border-color: rgba(255,255,255,0.3);
 }
 .pi-panel-top .pi-pill i { color: #fff; }
+.pi-panel-badges { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 14px; }
+.pi-panel-top .pi-wf, .pi-panel-top .pi-wf.is-done { color: rgba(255,255,255,0.9); }
+.pi-panel-top .pi-wf-steps i { background: rgba(255,255,255,0.25); }
+.pi-panel-top .pi-wf-steps i.on, .pi-panel-top .pi-wf.is-done .pi-wf-steps i { background: #fff; }
 .pi-panel-body { flex: 1; overflow-y: auto; padding: 22px 24px 28px; }
 .pi-sec { margin-bottom: 22px; }
 .pi-sec-label {
@@ -589,8 +609,8 @@ body.pi-locked { overflow: hidden; }
 }
 
 /* ══════════════ RESPONSIVE ══════════════
-   Below 900px the table becomes a stack of cards: a six-column row squeezed
-   to a phone's width is six truncated words. */
+   Below 900px the table becomes a stack of cards: a seven-column row squeezed
+   to a phone's width is seven truncated words. */
 @media (max-width: 900px) {
   .pi-filters { grid-template-columns: 1fr 1fr; }
   .pi-search { grid-column: 1 / -1; }
@@ -599,16 +619,18 @@ body.pi-locked { overflow: hidden; }
     grid-template-columns: minmax(0, 1fr) auto;
     grid-template-areas:
       "title  status"
-      "dept   dept"
+      "dept   stage"
       "owner  when";
     gap: 8px 12px; padding: 14px 16px;
   }
   .pi-row > :nth-child(1) { grid-area: title; }
   .pi-row > :nth-child(2) { grid-area: dept; }
   .pi-row > :nth-child(3) { grid-area: owner; }
-  .pi-row > :nth-child(4) { grid-area: status; align-self: start; }
-  .pi-row > :nth-child(5) { grid-area: when; text-align: right; }
-  .pi-row > :nth-child(6) { display: none; }
+  .pi-row > :nth-child(4) { grid-area: status; align-self: start; justify-self: end; }
+  .pi-row > :nth-child(5) { grid-area: stage; justify-self: end; }
+  .pi-row > :nth-child(6) { grid-area: when; text-align: right; }
+  .pi-row > :nth-child(7) { display: none; }
+  .pi-stage .pi-wf { align-items: flex-end; }
   .pi-when small { display: inline; margin-left: 4px; }
   .pi-bar { padding: 14px 16px 0; }
   .pi-filters { padding: 12px 16px 14px; }

@@ -24,7 +24,7 @@ export class Grid {
   /**
    * @param {object} opts
    *   mount     — container element
-   *   columns   — [{ key, label, type, width, options, readOnly, required, render }]
+   *   columns   — [{ key, label, type, width, options, default, readOnly, required, render }]
    *   rows      — array of plain row objects (mutated only through the grid)
    *   idKey     — primary key field, default "id"
    *   onSave    — async ({ updates, inserts, deletes }) => void
@@ -318,7 +318,10 @@ export class Grid {
   addRow(afterViewIdx = null, seed = {}) {
     const key = this.seq--;
     const row = { [this.idKey]: key };
-    this.columns.forEach((c) => { row[c.key] = seed[c.key] ?? null; });
+    // A column's own default covers the ways in that bring no seed — Ctrl+Enter
+    // and "Insert row below" — which would otherwise send null to a NOT NULL
+    // column and have the save refused.
+    this.columns.forEach((c) => { row[c.key] = seed[c.key] ?? c.default ?? null; });
     const at = afterViewIdx === null ? this.rows.length : (this.view[afterViewIdx] ?? this.rows.length - 1) + 1;
     this.rows.splice(at, 0, row);
     this.inserted.add(row);
@@ -1170,7 +1173,7 @@ export class Grid {
   addRowSilent(seed = {}) {
     const key = this.seq--;
     const row = { [this.idKey]: key };
-    this.columns.forEach((c) => { row[c.key] = seed[c.key] ?? null; });
+    this.columns.forEach((c) => { row[c.key] = seed[c.key] ?? c.default ?? null; });
     this.rows.push(row);
     this.inserted.add(row);
     return row;

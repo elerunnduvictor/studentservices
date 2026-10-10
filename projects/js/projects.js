@@ -17,6 +17,9 @@
        slips past its date shows up without anyone marking it;
      · target dates in words ("in 3 weeks", "12 days overdue"), and a panel
        timeline from start to target with today on it;
+     · Workflow — the stage of the work — beside Status, with its own filter;
+     · a panel "View history": the earlier status, workflow and note on each
+       date they changed (project_history, filled by a database trigger);
      · PM owner as a filter, stakeholders searchable, every column sortable,
        and a #p<id> link that opens straight onto one project.
 
@@ -43,6 +46,11 @@
   ];
   var BY_STATUS = {};
   STATUS.forEach(function (s) { BY_STATUS[s.key] = s; });
+
+  /* Workflow: which stage of the work a project is in, separate from how it is
+     going. The five the database allows, in order. Drawn as a five-step meter
+     so the stage reads at a glance and never rests on colour alone. */
+  var WORKFLOW = ["New", "In Development", "In Progress", "In Review", "Completed"];
   var ATTENTION = "__attention";
   var STALE_DAYS = 30;
   var SOON_DAYS = 14;
@@ -53,9 +61,12 @@
 
   var state = {
     tab: "active",
-    q: "", dept: "", status: "", owner: "",
+    q: "", dept: "", status: "", workflow: "", owner: "",
     sort: "target", dir: 1,
     open: null,          // id of the project in the panel
+    view: "project",     // what the panel body shows: "project" or "history"
+    hist: null,          // { id, status: loading|error|ready, rows } while history is open
+    projScroll: 0,       // where the project view was scrolled to, for "Back"
     returnFocus: null,
   };
 
@@ -131,6 +142,15 @@
     return '<span class="pi-pill" style="--c:var(' + s.v + ')"><i aria-hidden="true">' + s.g + "</i>" +
            esc(status || "Not Started") + "</span>";
   }
+  function stage(workflow) {
+    var i = WORKFLOW.indexOf(workflow);
+    if (i === -1) return '<span class="pi-none">—</span>';
+    var steps = "";
+    for (var k = 0; k < WORKFLOW.length; k++) steps += "<i" + (k <= i ? ' class="on"' : "") + "></i>";
+    return '<span class="pi-wf' + (i === WORKFLOW.length - 1 ? " is-done" : "") + '" title="Workflow: ' + esc(workflow) +
+           " (stage " + (i + 1) + " of " + WORKFLOW.length + ')"><span class="pi-wf-steps" aria-hidden="true">' + steps +
+           "</span>" + esc(workflow) + "</span>";
+  }
   function dot(d) {
     var c = deptColour(d);
     return '<span class="pi-dot"' + (c ? ' style="--c:' + c + '"' : "") + ' aria-hidden="true"></span>';
@@ -150,6 +170,7 @@
       if (state.owner && clean(p.pm_owner) !== state.owner) return false;
       if (state.status === ATTENTION) { if (!facts(p).why.length) return false; }
       else if (state.status && p.status !== state.status) return false;
+      if (state.workflow && p.workflow !== state.workflow) return false;
       if (q && haystack(p).indexOf(q) === -1) return false;
       return true;
     });
@@ -160,6 +181,7 @@
     dept:   function (p) { return clean(p.department).toLowerCase() || "￿"; },
     owner:  function (p) { return clean(p.pm_owner).toLowerCase() || "￿"; },
     status: function (p) { return (BY_STATUS[p.status] || { rank: 9 }).rank; },
+    workflow: function (p) { var i = WORKFLOW.indexOf(p.workflow); return i === -1 ? 9 : i; },
     // No date sorts last whichever way round; done work sinks below live work
     // so "soonest due" means soonest due among things still being done.
     target: function (p) {
@@ -274,15 +296,18 @@
       .filter(function (k) { return here.some(function (p) { return p.status === k; }); });
     var anyAttn = state.tab === "active" && here.some(function (p) { return facts(p).why.length; });
     if (anyAttn) statuses.unshift(ATTENTION);
+    var workflows = WORKFLOW.filter(function (k) { return here.some(function (p) { return p.workflow === k; }); });
 
     if (depts.indexOf(state.dept) === -1) state.dept = "";
     if (owners.indexOf(state.owner) === -1) state.owner = "";
     if (statuses.indexOf(state.status) === -1) state.status = "";
+    if (workflows.indexOf(state.workflow) === -1) state.workflow = "";
 
     fillSelect($("piDept"), "All departments", depts, state.dept);
     fillSelect($("piOwner"), "All PM owners", owners, state.owner);
     var labels = {}; labels[ATTENTION] = "⚠ Needs attention";
     fillSelect($("piStatus"), "All statuses", statuses, state.status, labels);
+    fillSelect($("piWorkflow"), "All workflows", workflows, state.workflow);
     $("piCountActive").textContent = ROWS.filter(function (p) { return p.status !== "Archived"; }).length;
     $("piCountArchived").textContent = ROWS.filter(function (p) { return p.status === "Archived"; }).length;
   }
@@ -291,7 +316,7 @@
   var COLS = [
     { key: "title", label: "Project" }, { key: "dept", label: "Department" },
     { key: "owner", label: "PM Owner" }, { key: "status", label: "Status" },
-    { key: "target", label: "Target" }, { key: "updated", label: "Updated" },
+    { key: "workflow", label: "Workflow" }, { key: "target", label: "Target" }, { key: "updated", label: "Updated" },
   ];
   function row(p) {
     var f = facts(p);
@@ -312,6 +337,7 @@
         (clean(p.department) ? dot(p.department) + "<span>" + esc(p.department) + "</span>" : '<span class="pi-none">No department</span>') + "</div>" +
       '<div class="pi-owner">' + (clean(p.pm_owner) ? esc(p.pm_owner) : '<span class="pi-none">Unassigned</span>') + "</div>" +
       "<div>" + pill(p.status) + "</div>" +
+      '<div class="pi-stage">' + stage(p.workflow) + "</div>" +
       '<div class="pi-when">' + when + "</div>" +
       "<div>" + fresh + "</div>" +
     "</button>";
@@ -320,7 +346,7 @@
   function renderList() {
     var list = sorted(visible());
     var host = $("piList");
-    var filtered = !!(state.q || state.dept || state.status || state.owner);
+    var filtered = !!(state.q || state.dept || state.status || state.workflow || state.owner);
 
     var note = $("piFilterNote");
     if (filtered) {
@@ -389,22 +415,44 @@
     return '<div class="pi-sec"><div class="pi-sec-label">Timeline</div><div class="pi-time">' + bar + ends + note + "</div></div>";
   }
 
+  /* An update note, as written: escaped, with its own line breaks and typed
+     bullets kept by white-space: pre-line. The one way a note is drawn, so the
+     history view shows an old note exactly as the panel showed it then. */
+  function noteHtml(text) {
+    return '<p class="pi-note">' + esc(clean(text)) + "</p>";
+  }
+
+  /* The panel is three parts. The header (title, status, workflow) and the
+     footer stay put; the body is either the project or its history. */
   function panelHtml(p) {
-    var f = facts(p);
-    var people = clean(p.stakeholders).split(/\s*[,;]\s*/).filter(Boolean);
-    var update = clean(p.latest_update);
+    return panelTop(p) +
+      '<div class="pi-panel-body" id="piPanelBody">' +
+        (state.view === "history" ? historyHtml(p) : projectBody(p)) +
+      "</div>" +
+      panelFoot(p);
+  }
+
+  function panelTop(p) {
     return (
       '<div class="pi-panel-top">' +
         '<button type="button" class="pi-panel-close" data-close aria-label="Close">' +
           '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>' +
         (clean(p.department) ? '<div class="pi-panel-dept">' + dot(p.department) + esc(p.department) + "</div>" : "") +
         '<h2 id="piPanelTitle">' + esc(p.title) + "</h2>" +
-        pill(p.status) +
-      "</div>" +
-      '<div class="pi-panel-body">' +
+        '<div class="pi-panel-badges">' + pill(p.status) +
+          (WORKFLOW.indexOf(p.workflow) !== -1 ? stage(p.workflow) : "") + "</div>" +
+      "</div>"
+    );
+  }
+
+  function projectBody(p) {
+    var f = facts(p);
+    var people = clean(p.stakeholders).split(/\s*[,;]\s*/).filter(Boolean);
+    var update = clean(p.latest_update);
+    return (
         '<div class="pi-sec"><div class="pi-sec-label">Latest update</div>' +
           (update
-            ? '<div class="pi-update' + (f.stale ? " is-stale" : "") + '"><p>' + esc(update) + "</p>" +
+            ? '<div class="pi-update' + (f.stale ? " is-stale" : "") + '">' + noteHtml(update) +
                 (f.updated ? '<div class="pi-update-when">' + (f.stale ? "⚠ " : "") + "Written " + ago(f.updated).toLowerCase() +
                   " · " + fmtDate(f.updated, true) + "</div>" : "") + "</div>"
             : '<p class="pi-none">No update written yet.</p>') +
@@ -416,19 +464,148 @@
           '<div class="pi-fact"><dt>Department</dt><dd>' + (clean(p.department) ? esc(p.department) : '<span class="pi-none">None</span>') + "</dd></div>" +
         "</dl></div>" +
         (people.length ? '<div class="pi-sec"><div class="pi-sec-label">Stakeholders</div><div class="pi-chips">' +
-          people.map(function (s) { return '<span class="pi-chip">' + esc(s) + "</span>"; }).join("") + "</div></div>" : "") +
-      "</div>" +
+          people.map(function (s) { return '<span class="pi-chip">' + esc(s) + "</span>"; }).join("") + "</div></div>" : "")
+    );
+  }
+
+  function panelFoot(p) {
+    var actions =
+      (state.view === "project"
+        ? '<button type="button" class="pi-hist-btn" data-hist-open>View history</button>' : "") +
+      (editor ? '<a class="pi-edit" href="' + esc(PM_PROJECTS) + '">Edit this project</a>' : "");
+    return (
       '<div class="pi-panel-foot"><span>' +
         (p.updated_at ? "Record last changed " + esc(fmtDate(new Date(p.updated_at), true)) : "") + "</span>" +
-        (editor ? '<a class="pi-edit" href="' + esc(PM_PROJECTS) + '">Edit this project</a>' : "") +
+        (actions ? '<div class="pi-foot-actions">' + actions + "</div>" : "") +
       "</div>"
     );
+  }
+
+  /* ══ HISTORY ═════════════════════════════════════════════════════════════
+     What the project said on each earlier date — status, workflow stage and
+     update note — from project_history, which a database trigger fills when
+     one of those three changes on a new date. The live row is always the
+     newest entry, "Current"; the table only ever holds the versions before it.
+
+     Read when the view is opened, not with the page: most readers never ask,
+     and a fresh read means a change saved a minute ago is there. */
+  function currentDate(p) {
+    return parseDate(p.update_date) || (p.created_at ? new Date(p.created_at) : null);
+  }
+  /* The project's own row is read again alongside its history, never taken
+     from ROWS. "Current" is meant to be what the database holds now; built
+     from the copy the page loaded, it showed an edit's old note and old date
+     above the history row that same edit had just written — two versions both
+     claiming Oct 5. If the fresh row differs, the rest of the page is brought
+     up to date with it too. */
+  function loadHistory(p) {
+    var h = state.hist = { id: p.id, status: "loading", rows: [], project: null };
+    var done = function (status, rows, project) {
+      if (state.hist !== h) return;            // another project, or closed, since
+      h.status = status; h.rows = rows || []; h.project = project || null;
+      if (status === "ready") {
+        if (!project) { dropRow(p.id); return; }   // deleted, or no longer visible
+        if (replaceRow(project)) applyRows();      // redraws this view as well
+        else if (state.open === p.id && state.view === "history") $("piPanelBody").innerHTML = historyHtml(project);
+        return;
+      }
+      if (state.open === p.id && state.view === "history") $("piPanelBody").innerHTML = historyHtml(p);
+    };
+    if (!SS.db) { done("error"); return; }
+    Promise.all([
+      SS.db.select("project_history", {
+        select: "as_of,status,workflow,latest_update,recorded_at",
+        filter: { project_id: "eq." + p.id },
+        order: "as_of.desc,recorded_at.desc",
+      }),
+      SS.db.select("projects", { filter: { id: "eq." + p.id }, limit: 1 }),
+    ]).then(function (res) { done("ready", res[0], res[1][0]); })
+      ["catch"](function () { done("error"); });
+  }
+  function historyItem(e, i) {
+    var id = "piHist" + i;
+    return '<div class="pi-hist-item">' +
+      '<button type="button" class="pi-hist-head" data-hist-row="' + i + '" aria-expanded="false" aria-controls="' + id + '">' +
+        '<span class="pi-hist-date">' + (e.date ? esc(fmtDate(e.date, true)) : "No date") + "</span>" +
+        (e.current ? '<span class="pi-hist-tag">Current</span>' : "") +
+        pill(e.status) +
+        '<svg class="pi-hist-chev" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>' +
+      "</button>" +
+      '<div class="pi-hist-body" id="' + id + '" hidden>' +
+        '<dl class="pi-hist-facts">' +
+          "<dt>Status</dt><dd>" + pill(e.status) + "</dd>" +
+          "<dt>Workflow</dt><dd>" + stage(e.workflow) + "</dd>" +
+        "</dl>" +
+        '<div class="pi-hist-label">Update note</div>' +
+        (clean(e.note) ? noteHtml(e.note) : '<p class="pi-none">No update note.</p>') +
+      "</div>" +
+    "</div>";
+  }
+  function historyHtml(p) {
+    var h = state.hist || {};
+    var out = '<button type="button" class="pi-back" data-hist-back>← Back to project</button>' +
+              '<div class="pi-sec-label" id="piHistTitle">History</div>';
+    if (h.status === "loading") {
+      return out + '<p class="pi-hist-state" role="status">Loading history…</p>';
+    }
+    if (h.status === "error") {
+      return out + '<div class="pi-hist-state is-error" role="alert">Couldn’t load this project’s history. ' +
+        '<button type="button" class="pi-clear" data-hist-retry>Try again</button></div>';
+    }
+    var cur = h.project || p;
+    var entries = [{ date: currentDate(cur), status: cur.status, workflow: cur.workflow, note: cur.latest_update, current: true }]
+      .concat(h.rows.map(function (r) {
+        return { date: parseDate(r.as_of), status: r.status, workflow: r.workflow, note: r.latest_update };
+      }));
+    return out +
+      '<div class="pi-hist-list" role="list" aria-labelledby="piHistTitle">' +
+        entries.map(function (e, i) { return '<div role="listitem">' + historyItem(e, i) + "</div>"; }).join("") +
+      "</div>" +
+      (h.rows.length ? "" :
+        '<p class="pi-hist-empty">No earlier updates yet. History is recorded each time the status, workflow or update note changes on a new date.</p>');
+  }
+  function currentProject() {
+    return ROWS.filter(function (r) { return r.id === state.open; })[0];
+  }
+  function openHistory() {
+    var p = currentProject();
+    if (!p) return;
+    var body = $("piPanelBody");
+    state.projScroll = body ? body.scrollTop : 0;
+    state.view = "history";
+    loadHistory(p);
+    $("piPanel").innerHTML = panelHtml(p);
+    var back = $("piPanel").querySelector("[data-hist-back]");
+    if (back) back.focus();
+  }
+  function closeHistory() {
+    var p = currentProject();
+    if (!p) return;
+    state.view = "project";
+    state.hist = null;
+    $("piPanel").innerHTML = panelHtml(p);
+    $("piPanelBody").scrollTop = state.projScroll || 0;
+    var btn = $("piPanel").querySelector("[data-hist-open]");
+    if (btn) btn.focus({ preventScroll: true });
+  }
+  // One open at a time. Done on the DOM rather than by redrawing, so focus
+  // stays on the row the reader just pressed.
+  function toggleHistoryRow(head) {
+    var opening = head.getAttribute("aria-expanded") !== "true";
+    $("piPanel").querySelectorAll(".pi-hist-head").forEach(function (b) {
+      var on = opening && b === head;
+      b.setAttribute("aria-expanded", on ? "true" : "false");
+      var body = document.getElementById(b.getAttribute("aria-controls"));
+      if (body) body.hidden = !on;
+    });
   }
 
   function openPanel(id, fromEl) {
     var p = ROWS.filter(function (r) { return String(r.id) === String(id); })[0];
     if (!p) return;
     state.open = p.id;
+    state.view = "project";
+    state.hist = null;
     state.returnFocus = fromEl || document.activeElement;
     var panel = $("piPanel");
     panel.innerHTML = panelHtml(p);
@@ -438,10 +615,15 @@
     markOpenRow();
     try { history.replaceState(null, "", "#p" + p.id); } catch (e) { /* file:// */ }
     setTimeout(function () { panel.focus(); }, 30);
+    // Shown at once from what the page has, then checked against the database:
+    // the PM Hub is often open in another tab, and its saves land here.
+    refreshProjects();
   }
   function closePanel() {
     if (state.open == null) return;
     state.open = null;
+    state.view = "project";
+    state.hist = null;
     $("piPanel").classList.remove("is-open");
     $("piScrim").classList.remove("is-open");
     document.body.classList.remove("pi-locked");
@@ -455,6 +637,80 @@
       r.classList.toggle("is-open", String(r.dataset.open) === String(state.open));
     });
   }
+
+  /* ══ KEEPING UP WITH THE PM HUB ══════════════════════════════════════════
+     The rows arrive once, through hub-boot, and used to stay as loaded until
+     the page was reloaded — so a project saved in the PM Hub in another tab
+     went on showing its old note and date here. They are read again when this
+     tab comes back into view and whenever a panel is opened, and the page is
+     redrawn only if something actually changed. A failed re-read keeps what is
+     on screen: the page was right a moment ago and is still mostly right. */
+  var fetchSeq = 0;
+  function sameRow(a, b) { return JSON.stringify(a) === JSON.stringify(b); }
+  function replaceRow(fresh) {
+    for (var i = 0; i < ROWS.length; i++) {
+      if (ROWS[i].id === fresh.id) {
+        if (sameRow(ROWS[i], fresh)) return false;
+        ROWS[i] = fresh;
+        return true;
+      }
+    }
+    ROWS.push(fresh);
+    return true;
+  }
+  function dropRow(id) {
+    var before = ROWS.length;
+    ROWS = ROWS.filter(function (r) { return r.id !== id; });
+    if (ROWS.length !== before) applyRows();
+  }
+  function refreshProjects() {
+    if (!SS.db) return;
+    var mine = ++fetchSeq;
+    SS.db.select("projects", { order: "sort_order.asc,id.asc" }).then(function (rows) {
+      if (mine !== fetchSeq || !Array.isArray(rows)) return;   // a newer read is on its way
+      if (rows.length === ROWS.length && rows.every(function (r, i) { return sameRow(r, ROWS[i]); })) return;
+      ROWS = rows;
+      window.PROJECTS = rows;
+      applyRows();
+    })["catch"](function (err) { console.warn("[projects] refresh", err); });
+  }
+  /* Everything that is drawn from ROWS: the pulse, Needs attention, filters
+     and list, and an open panel. The panel keeps its scroll and, where it can,
+     its focus; a project that is no longer there closes it. */
+  function applyRows() {
+    render();
+    if (state.open == null) return;
+    var p = currentProject();
+    if (!p) { closePanel(); return; }
+    var panel = $("piPanel");
+    var hadFocus = panel.contains(document.activeElement);
+    var top = panel.querySelector(".pi-panel-top");
+    var foot = panel.querySelector(".pi-panel-foot");
+    var body = $("piPanelBody");
+    if (top) top.outerHTML = panelTop(p);
+    if (foot) foot.outerHTML = panelFoot(p);
+    if (body) {
+      var y = body.scrollTop;
+      if (state.view === "history") {
+        // "Current" follows the newer copy; an open row stays open.
+        var openRow = body.querySelector('.pi-hist-head[aria-expanded="true"]');
+        var openIdx = openRow ? openRow.dataset.histRow : null;
+        if (state.hist) state.hist.project = p;
+        body.innerHTML = historyHtml(p);
+        if (openIdx != null) {
+          var again = body.querySelector('[data-hist-row="' + openIdx + '"]');
+          if (again) toggleHistoryRow(again);
+        }
+      } else {
+        body.innerHTML = projectBody(p);
+      }
+      body.scrollTop = y;
+    }
+    if (hadFocus && !panel.contains(document.activeElement)) panel.focus({ preventScroll: true });
+  }
+  document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState === "visible") refreshProjects();
+  });
 
   /* ══ WIRING ══════════════════════════════════════════════════════════════ */
   function render() {
@@ -473,7 +729,7 @@
     render();
   }
   function clearFilters() {
-    state.q = state.dept = state.status = state.owner = "";
+    state.q = state.dept = state.status = state.workflow = state.owner = "";
     $("piSearch").value = "";
     render();
   }
@@ -494,6 +750,15 @@
       document.querySelector(".pi-board").scrollIntoView({ behavior: "smooth", block: "start" });
       return;
     }
+    if (t.closest("[data-hist-open]")) { openHistory(); return; }
+    if (t.closest("[data-hist-back]")) { closeHistory(); return; }
+    if (t.closest("[data-hist-retry]")) {
+      var hp = currentProject();
+      if (hp) { loadHistory(hp); $("piPanelBody").innerHTML = historyHtml(hp); }
+      return;
+    }
+    var histRow = t.closest("[data-hist-row]");
+    if (histRow) { toggleHistoryRow(histRow); return; }
     var opener = t.closest("[data-open]");
     if (opener) { openPanel(opener.dataset.open, opener); return; }
     if (t.closest("[data-close]") || t.id === "piScrim") { closePanel(); return; }
@@ -519,6 +784,7 @@
   $("piDept").addEventListener("change", function (e) { state.dept = e.target.value; render(); });
   $("piOwner").addEventListener("change", function (e) { state.owner = e.target.value; render(); });
   $("piStatus").addEventListener("change", function (e) { state.status = e.target.value; render(); });
+  $("piWorkflow").addEventListener("change", function (e) { state.workflow = e.target.value; render(); });
 
   document.addEventListener("keydown", function (e) {
     if (e.key === "Escape" && state.open != null) { e.preventDefault(); closePanel(); return; }
@@ -579,11 +845,12 @@
     if (ok) $("piEdit").href = PM_PROJECTS;
     $("piEdit").hidden = !ok;
     if (!ROWS.length) renderList();
-    // Redraw an already-open panel so it gains its edit link, without moving
-    // the reader's focus.
+    // Give an already-open panel its edit link. Only the footer is redrawn, so
+    // the reader's focus, scroll and any open history row are left alone.
     if (state.open != null) {
-      var p = ROWS.filter(function (r) { return r.id === state.open; })[0];
-      if (p) $("piPanel").innerHTML = panelHtml(p);
+      var p = currentProject();
+      var foot = $("piPanel").querySelector(".pi-panel-foot");
+      if (p && foot) foot.outerHTML = panelFoot(p);
     }
   });
 })();

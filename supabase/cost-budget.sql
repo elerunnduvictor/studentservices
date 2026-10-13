@@ -1,14 +1,14 @@
 -- ══════════════════════════════════════════════════════════════════════════
 --  COST KPI — the monthly budget, seeded by tools/build-cost-budget.py.
 --
---  Source:  2026 Monthly Budget Info for Bridge.xlsx, saved 2026-09-21
---  Budget year: 2026. Months present: 4–8.
+--  Source:  2026 Monthly Budget Info for Bridge.xlsx, saved 2026-10-13
+--  Budget year: 2026. Months present: 4–9.
 --
---    VP — Student Services              3 categories, through month 8: 64% spent
---    Records, Registration & Support    3 categories, through month 8: 77% spent
---    Dean of Students                   3 categories, through month 8: 49% spent
---    Digital Operations                 2 categories, through month 8: 72% spent
---    Enrollment & Retention             3 categories, through month 8: 54% spent
+--    VP — Student Services              3 categories, through month 9: 69% spent
+--    Records, Registration & Support    3 categories, through month 9: 85% spent
+--    Dean of Students                   3 categories, through month 9: 56% spent
+--    Digital Operations                 2 categories, through month 9: 84% spent
+--    Enrollment & Retention             3 categories, through month 9: 61% spent
 --
 --  Every figure is the percentage of the department's ANNUAL budget spent
 --  so far. `total` is the department's own number, not the sum of the
@@ -143,96 +143,115 @@ values
   (2026, 'VP', 'VP - Student Services', 'VP — Student Services', 1, 'wages', 'Wages', 1, 6, 40.0),
   (2026, 'VP', 'VP - Student Services', 'VP — Student Services', 1, 'wages', 'Wages', 1, 7, 45.0),
   (2026, 'VP', 'VP - Student Services', 'VP — Student Services', 1, 'wages', 'Wages', 1, 8, 48.0),
+  (2026, 'VP', 'VP - Student Services', 'VP — Student Services', 1, 'wages', 'Wages', 1, 9, 51.0),
   (2026, 'VP', 'VP - Student Services', 'VP — Student Services', 1, 'travel', 'Travel', 2, 4, 12.0),
   (2026, 'VP', 'VP - Student Services', 'VP — Student Services', 1, 'travel', 'Travel', 2, 5, 6.0),
   (2026, 'VP', 'VP - Student Services', 'VP — Student Services', 1, 'travel', 'Travel', 2, 6, 7.0),
   (2026, 'VP', 'VP - Student Services', 'VP — Student Services', 1, 'travel', 'Travel', 2, 7, 9.0),
   (2026, 'VP', 'VP - Student Services', 'VP — Student Services', 1, 'travel', 'Travel', 2, 8, 18.0),
+  (2026, 'VP', 'VP - Student Services', 'VP — Student Services', 1, 'travel', 'Travel', 2, 9, 37.0),
   (2026, 'VP', 'VP - Student Services', 'VP — Student Services', 1, 'contract', 'Contract', 3, 4, 31.0),
   (2026, 'VP', 'VP - Student Services', 'VP — Student Services', 1, 'contract', 'Contract', 3, 5, 41.0),
   (2026, 'VP', 'VP - Student Services', 'VP — Student Services', 1, 'contract', 'Contract', 3, 6, 50.0),
   (2026, 'VP', 'VP - Student Services', 'VP — Student Services', 1, 'contract', 'Contract', 3, 7, 60.0),
   (2026, 'VP', 'VP - Student Services', 'VP — Student Services', 1, 'contract', 'Contract', 3, 8, 69.0),
+  (2026, 'VP', 'VP - Student Services', 'VP — Student Services', 1, 'contract', 'Contract', 3, 9, 75.0),
   (2026, 'VP', 'VP - Student Services', 'VP — Student Services', 1, 'total', 'Total', 99, 4, 31.0),
   (2026, 'VP', 'VP - Student Services', 'VP — Student Services', 1, 'total', 'Total', 99, 5, 40.0),
   (2026, 'VP', 'VP - Student Services', 'VP — Student Services', 1, 'total', 'Total', 99, 6, 48.0),
   (2026, 'VP', 'VP - Student Services', 'VP — Student Services', 1, 'total', 'Total', 99, 7, 56.0),
   (2026, 'VP', 'VP - Student Services', 'VP — Student Services', 1, 'total', 'Total', 99, 8, 64.0),
+  (2026, 'VP', 'VP - Student Services', 'VP — Student Services', 1, 'total', 'Total', 99, 9, 69.0),
   (2026, 'RRS', 'Student Records, Registration, and Support', 'Records, Registration & Support', 2, 'wages', 'Wages', 1, 4, 30.0),
   (2026, 'RRS', 'Student Records, Registration, and Support', 'Records, Registration & Support', 2, 'wages', 'Wages', 1, 5, 37.0),
   (2026, 'RRS', 'Student Records, Registration, and Support', 'Records, Registration & Support', 2, 'wages', 'Wages', 1, 6, 42.0),
   (2026, 'RRS', 'Student Records, Registration, and Support', 'Records, Registration & Support', 2, 'wages', 'Wages', 1, 7, 47.0),
   (2026, 'RRS', 'Student Records, Registration, and Support', 'Records, Registration & Support', 2, 'wages', 'Wages', 1, 8, 50.0),
+  (2026, 'RRS', 'Student Records, Registration, and Support', 'Records, Registration & Support', 2, 'wages', 'Wages', 1, 9, 53.0),
   (2026, 'RRS', 'Student Records, Registration, and Support', 'Records, Registration & Support', 2, 'travel', 'Travel', 2, 4, 0.0),
   (2026, 'RRS', 'Student Records, Registration, and Support', 'Records, Registration & Support', 2, 'travel', 'Travel', 2, 5, 0.0),
   (2026, 'RRS', 'Student Records, Registration, and Support', 'Records, Registration & Support', 2, 'travel', 'Travel', 2, 6, 0.0),
   (2026, 'RRS', 'Student Records, Registration, and Support', 'Records, Registration & Support', 2, 'travel', 'Travel', 2, 7, 0.0),
   (2026, 'RRS', 'Student Records, Registration, and Support', 'Records, Registration & Support', 2, 'travel', 'Travel', 2, 8, 18.0),
+  (2026, 'RRS', 'Student Records, Registration, and Support', 'Records, Registration & Support', 2, 'travel', 'Travel', 2, 9, 22.0),
   (2026, 'RRS', 'Student Records, Registration, and Support', 'Records, Registration & Support', 2, 'contract', 'Contract', 3, 4, 45.0),
   (2026, 'RRS', 'Student Records, Registration, and Support', 'Records, Registration & Support', 2, 'contract', 'Contract', 3, 5, 59.0),
   (2026, 'RRS', 'Student Records, Registration, and Support', 'Records, Registration & Support', 2, 'contract', 'Contract', 3, 6, 72.0),
   (2026, 'RRS', 'Student Records, Registration, and Support', 'Records, Registration & Support', 2, 'contract', 'Contract', 3, 7, 85.0),
   (2026, 'RRS', 'Student Records, Registration, and Support', 'Records, Registration & Support', 2, 'contract', 'Contract', 3, 8, 99.0),
+  (2026, 'RRS', 'Student Records, Registration, and Support', 'Records, Registration & Support', 2, 'contract', 'Contract', 3, 9, 113.0),
   (2026, 'RRS', 'Student Records, Registration, and Support', 'Records, Registration & Support', 2, 'total', 'Total', 99, 4, 39.0),
   (2026, 'RRS', 'Student Records, Registration, and Support', 'Records, Registration & Support', 2, 'total', 'Total', 99, 5, 49.0),
   (2026, 'RRS', 'Student Records, Registration, and Support', 'Records, Registration & Support', 2, 'total', 'Total', 99, 6, 58.0),
   (2026, 'RRS', 'Student Records, Registration, and Support', 'Records, Registration & Support', 2, 'total', 'Total', 99, 7, 68.0),
   (2026, 'RRS', 'Student Records, Registration, and Support', 'Records, Registration & Support', 2, 'total', 'Total', 99, 8, 77.0),
+  (2026, 'RRS', 'Student Records, Registration, and Support', 'Records, Registration & Support', 2, 'total', 'Total', 99, 9, 85.0),
   (2026, 'DOS', 'Dean of Students', 'Dean of Students', 3, 'wages', 'Wages', 1, 4, 10.0),
   (2026, 'DOS', 'Dean of Students', 'Dean of Students', 3, 'wages', 'Wages', 1, 5, 13.0),
   (2026, 'DOS', 'Dean of Students', 'Dean of Students', 3, 'wages', 'Wages', 1, 6, 16.0),
   (2026, 'DOS', 'Dean of Students', 'Dean of Students', 3, 'wages', 'Wages', 1, 7, 18.0),
   (2026, 'DOS', 'Dean of Students', 'Dean of Students', 3, 'wages', 'Wages', 1, 8, 21.0),
+  (2026, 'DOS', 'Dean of Students', 'Dean of Students', 3, 'wages', 'Wages', 1, 9, 24.0),
   (2026, 'DOS', 'Dean of Students', 'Dean of Students', 3, 'travel', 'Travel', 2, 4, 0.0),
   (2026, 'DOS', 'Dean of Students', 'Dean of Students', 3, 'travel', 'Travel', 2, 5, 2.0),
   (2026, 'DOS', 'Dean of Students', 'Dean of Students', 3, 'travel', 'Travel', 2, 6, 7.0),
   (2026, 'DOS', 'Dean of Students', 'Dean of Students', 3, 'travel', 'Travel', 2, 7, 12.0),
   (2026, 'DOS', 'Dean of Students', 'Dean of Students', 3, 'travel', 'Travel', 2, 8, 14.0),
+  (2026, 'DOS', 'Dean of Students', 'Dean of Students', 3, 'travel', 'Travel', 2, 9, 27.0),
   (2026, 'DOS', 'Dean of Students', 'Dean of Students', 3, 'contract', 'Contract', 3, 4, 26.0),
   (2026, 'DOS', 'Dean of Students', 'Dean of Students', 3, 'contract', 'Contract', 3, 5, 42.0),
   (2026, 'DOS', 'Dean of Students', 'Dean of Students', 3, 'contract', 'Contract', 3, 6, 51.0),
   (2026, 'DOS', 'Dean of Students', 'Dean of Students', 3, 'contract', 'Contract', 3, 7, 59.0),
   (2026, 'DOS', 'Dean of Students', 'Dean of Students', 3, 'contract', 'Contract', 3, 8, 67.0),
+  (2026, 'DOS', 'Dean of Students', 'Dean of Students', 3, 'contract', 'Contract', 3, 9, 76.0),
   (2026, 'DOS', 'Dean of Students', 'Dean of Students', 3, 'total', 'Total', 99, 4, 21.0),
   (2026, 'DOS', 'Dean of Students', 'Dean of Students', 3, 'total', 'Total', 99, 5, 30.0),
   (2026, 'DOS', 'Dean of Students', 'Dean of Students', 3, 'total', 'Total', 99, 6, 37.0),
   (2026, 'DOS', 'Dean of Students', 'Dean of Students', 3, 'total', 'Total', 99, 7, 43.0),
   (2026, 'DOS', 'Dean of Students', 'Dean of Students', 3, 'total', 'Total', 99, 8, 49.0),
+  (2026, 'DOS', 'Dean of Students', 'Dean of Students', 3, 'total', 'Total', 99, 9, 56.0),
   (2026, 'DigOps', 'Digital Operations', 'Digital Operations', 4, 'travel', 'Travel', 2, 4, 2.0),
   (2026, 'DigOps', 'Digital Operations', 'Digital Operations', 4, 'travel', 'Travel', 2, 5, 2.0),
   (2026, 'DigOps', 'Digital Operations', 'Digital Operations', 4, 'travel', 'Travel', 2, 6, 2.0),
   (2026, 'DigOps', 'Digital Operations', 'Digital Operations', 4, 'travel', 'Travel', 2, 7, 3.0),
   (2026, 'DigOps', 'Digital Operations', 'Digital Operations', 4, 'travel', 'Travel', 2, 8, 3.0),
+  (2026, 'DigOps', 'Digital Operations', 'Digital Operations', 4, 'travel', 'Travel', 2, 9, 12.0),
   (2026, 'DigOps', 'Digital Operations', 'Digital Operations', 4, 'contract', 'Contract', 3, 4, 65.0),
   (2026, 'DigOps', 'Digital Operations', 'Digital Operations', 4, 'contract', 'Contract', 3, 5, 43.0),
   (2026, 'DigOps', 'Digital Operations', 'Digital Operations', 4, 'contract', 'Contract', 3, 6, 54.0),
   (2026, 'DigOps', 'Digital Operations', 'Digital Operations', 4, 'contract', 'Contract', 3, 7, 65.0),
   (2026, 'DigOps', 'Digital Operations', 'Digital Operations', 4, 'contract', 'Contract', 3, 8, 75.0),
+  (2026, 'DigOps', 'Digital Operations', 'Digital Operations', 4, 'contract', 'Contract', 3, 9, 86.0),
   (2026, 'DigOps', 'Digital Operations', 'Digital Operations', 4, 'total', 'Total', 99, 4, 59.0),
   (2026, 'DigOps', 'Digital Operations', 'Digital Operations', 4, 'total', 'Total', 99, 5, 41.0),
   (2026, 'DigOps', 'Digital Operations', 'Digital Operations', 4, 'total', 'Total', 99, 6, 52.0),
   (2026, 'DigOps', 'Digital Operations', 'Digital Operations', 4, 'total', 'Total', 99, 7, 62.0),
   (2026, 'DigOps', 'Digital Operations', 'Digital Operations', 4, 'total', 'Total', 99, 8, 72.0),
+  (2026, 'DigOps', 'Digital Operations', 'Digital Operations', 4, 'total', 'Total', 99, 9, 84.0),
   (2026, 'E&R', 'Enrollment & Retention', 'Enrollment & Retention', 5, 'wages', 'Wages', 1, 4, 27.0),
   (2026, 'E&R', 'Enrollment & Retention', 'Enrollment & Retention', 5, 'wages', 'Wages', 1, 5, 35.0),
   (2026, 'E&R', 'Enrollment & Retention', 'Enrollment & Retention', 5, 'wages', 'Wages', 1, 6, 45.0),
   (2026, 'E&R', 'Enrollment & Retention', 'Enrollment & Retention', 5, 'wages', 'Wages', 1, 7, 53.0),
   (2026, 'E&R', 'Enrollment & Retention', 'Enrollment & Retention', 5, 'wages', 'Wages', 1, 8, 60.0),
+  (2026, 'E&R', 'Enrollment & Retention', 'Enrollment & Retention', 5, 'wages', 'Wages', 1, 9, 68.0),
   (2026, 'E&R', 'Enrollment & Retention', 'Enrollment & Retention', 5, 'travel', 'Travel', 2, 4, 1.0),
   (2026, 'E&R', 'Enrollment & Retention', 'Enrollment & Retention', 5, 'travel', 'Travel', 2, 5, 1.0),
   (2026, 'E&R', 'Enrollment & Retention', 'Enrollment & Retention', 5, 'travel', 'Travel', 2, 6, 1.0),
   (2026, 'E&R', 'Enrollment & Retention', 'Enrollment & Retention', 5, 'travel', 'Travel', 2, 7, 1.0),
   (2026, 'E&R', 'Enrollment & Retention', 'Enrollment & Retention', 5, 'travel', 'Travel', 2, 8, 2.0),
+  (2026, 'E&R', 'Enrollment & Retention', 'Enrollment & Retention', 5, 'travel', 'Travel', 2, 9, 2.0),
   (2026, 'E&R', 'Enrollment & Retention', 'Enrollment & Retention', 5, 'contract', 'Contract', 3, 4, 23.0),
   (2026, 'E&R', 'Enrollment & Retention', 'Enrollment & Retention', 5, 'contract', 'Contract', 3, 5, 32.0),
   (2026, 'E&R', 'Enrollment & Retention', 'Enrollment & Retention', 5, 'contract', 'Contract', 3, 6, 39.0),
   (2026, 'E&R', 'Enrollment & Retention', 'Enrollment & Retention', 5, 'contract', 'Contract', 3, 7, 46.0),
   (2026, 'E&R', 'Enrollment & Retention', 'Enrollment & Retention', 5, 'contract', 'Contract', 3, 8, 54.0),
+  (2026, 'E&R', 'Enrollment & Retention', 'Enrollment & Retention', 5, 'contract', 'Contract', 3, 9, 61.0),
   (2026, 'E&R', 'Enrollment & Retention', 'Enrollment & Retention', 5, 'total', 'Total', 99, 4, 23.0),
   (2026, 'E&R', 'Enrollment & Retention', 'Enrollment & Retention', 5, 'total', 'Total', 99, 5, 32.0),
   (2026, 'E&R', 'Enrollment & Retention', 'Enrollment & Retention', 5, 'total', 'Total', 99, 6, 39.0),
   (2026, 'E&R', 'Enrollment & Retention', 'Enrollment & Retention', 5, 'total', 'Total', 99, 7, 46.0),
-  (2026, 'E&R', 'Enrollment & Retention', 'Enrollment & Retention', 5, 'total', 'Total', 99, 8, 54.0)
+  (2026, 'E&R', 'Enrollment & Retention', 'Enrollment & Retention', 5, 'total', 'Total', 99, 8, 54.0),
+  (2026, 'E&R', 'Enrollment & Retention', 'Enrollment & Retention', 5, 'total', 'Total', 99, 9, 61.0)
 on conflict (budget_year, dept_code, category_key, month) do nothing;
 
 commit;

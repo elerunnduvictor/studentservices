@@ -36,11 +36,15 @@ create table if not exists public.student_contractors (
   sub_department text,
   supervisor     text,
   department     text,
+  tier           text,   -- e.g. 'T2', or 'EOR'; the PM Hub's Tier column
   active         boolean not null default true,
   created_at     timestamptz not null default now(),
   updated_at     timestamptz not null default now(),
   updated_by     text
 );
+-- Added 2026-09-25 (it came in with the Dean of Students roster fix); kept
+-- here so a database built from this file has it too.
+alter table public.student_contractors add column if not exists tier text;
 create index if not exists student_contractors_sort_idx
   on public.student_contractors (sort_order, id);
 create index if not exists student_contractors_name_idx

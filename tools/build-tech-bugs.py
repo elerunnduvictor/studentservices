@@ -298,6 +298,12 @@ def notes_start(ws, r):
     return None
 
 
+# Rows that carry nothing but a priority number: TS numbering the next slot
+# before there is a bug to put in it. Not a bug, so not loaded — but named in
+# the output, so a row skipped this way is never skipped silently.
+PLACEHOLDERS = []
+
+
 def read_sheet(ws, order, captured):
     active_cols, unknown = header_map(ws, 2)
     missing = [f for f in FIELDS if f not in active_cols]
@@ -341,6 +347,10 @@ def read_sheet(ws, order, captured):
             continue
 
         raw_bug = text(cells["bug"])
+        if all(text(v) is None for f, v in cells.items() if f != "priority"):
+            PLACEHOLDERS.append(f"{ws.title} row {r} (priority {text(cells['priority'])}, nothing else filled in)")
+            r += 1
+            continue
         if section == "active":
             if text(cells["priority"]) is None:
                 raise BuildError(f"{ws.title} row {r}: an active bug with no Priority")
@@ -628,6 +638,7 @@ def main():
         f"--    notes: {len(notes)}",
         "--",
         "--  Skipped: " + ", ".join(skipped),
+        *(["--  Empty numbered rows, not loaded: " + ", ".join(PLACEHOLDERS)] if PLACEHOLDERS else []),
         "--",
         "--  Safe to re-run. The rows are replaced inside one transaction, so a reader",
         "--  never sees the table empty between one week's list and the next.",
@@ -706,6 +717,8 @@ def main():
         print("  " + l)
     print(f"  {'TOTAL':<24}{totals}   notes {len(notes)}")
     print("  skipped: " + ", ".join(skipped))
+    if PLACEHOLDERS:
+        print("  empty numbered rows, not loaded: " + ", ".join(PLACEHOLDERS))
 
 
 if __name__ == "__main__":

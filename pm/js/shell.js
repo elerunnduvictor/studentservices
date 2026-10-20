@@ -424,8 +424,8 @@
         <p>The PM Hub has no Supabase project to talk to yet. Two values turn it on:</p>
         <ol>
           <li>Create a project at <code>supabase.com</code>.</li>
-          <li>Run <code>supabase/schema.sql</code>, then <code>supabase/seed.sql</code>
-              in the SQL editor.</li>
+          <li>Run <code>supabase/schema.sql</code> in the SQL editor, then load the
+              data (see docs/SETUP.md, step 3).</li>
           <li>Copy the Project URL and the <em>anon / public</em> key from
               Project Settings → API into <code>shared/js/config.js</code>.</li>
         </ol>

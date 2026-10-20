@@ -11,7 +11,8 @@
 --  value is genuinely numeric in every row — "Current Value" holds both 0.93
 --  and "3 minutes", so it is text and parsed at render time.
 --
---  Run this once in the Supabase SQL editor, then run seed.sql.
+--  Run this once in the Supabase SQL editor. For the data, see docs/SETUP.md
+--  step 3: the old seed.sql bootstrap was removed on 2026-10-13.
 -- ═══════════════════════════════════════════════════════════════════════════
 
 -- ── extensions ─────────────────────────────────────────────────────────────

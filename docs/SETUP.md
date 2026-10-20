@@ -38,33 +38,23 @@ Supabase → SQL Editor → New query → paste the whole of **`supabase/schema.
 - the three `v_hub_*` views the hub reads
 
 ### 3. Load the data
-Run **`supabase/seed.sql`** the same way. It loads the current contents of the
-three workbooks:
+There is no data file to run any more. `supabase/seed.sql` was the one-time
+bootstrap from the August 2026 workbooks, and it was removed on 2026-10-13: it
+truncated the live tables before reloading them, so running it against the
+real database would have wiped every edit made in the PM Hub since. It is in
+git history if it is ever needed.
 
-| Table | Rows |
-|-------|------|
-| `okrs` | 50 |
-| `employees` | 109 |
-| `student_employees` | 85 |
-| `org_chart_nodes` | 53 |
-| `kpis` | 153 (77 marked Tracking) |
-| `allowed_editors` | 7 (the project managers) |
+The data lives in Postgres and is edited in the PM Hub. To stand up a fresh
+project, export the tables from the live one rather than going back to the
+workbooks. `import_sheets.py` is kept as a record of how the data first got in.
 
-The seed truncates and reloads, and it suspends the audit triggers so an import
-is not logged as though a person typed it.
+Two files are still regenerated from spreadsheets each time, and are safe to
+run against the live database:
 
-**The source workbooks are no longer in the repository.** They were a one-time
-bootstrap: the data now lives in Postgres and PMs edit it through the PM Hub,
-so the spreadsheets stopped being the source of truth the moment the import ran.
-`import_sheets.py` is kept as a record of how the data got here. If you ever
-need to re-import, drop the workbooks into the repo root (or `data-sources/`)
-and run:
-
-```bash
-python supabase/import_sheets.py     # reads data-sources/*.xlsx → supabase/seed.sql
-```
-
-Be aware that re-importing overwrites whatever PMs have since edited.
+| File | Built by | From |
+|------|----------|------|
+| `tech-bugs.sql` | `tools/build-tech-bugs.py` | the weekly TS Product Tracker |
+| `cost-budget.sql` | `tools/build-cost-budget.py` | the monthly budget workbook (adds new months only) |
 
 ### 4. Turn on email sign-in
 
@@ -132,7 +122,6 @@ What they did is now folded into the files that remain:
 | `schema.sql` | tables, views, RLS, audit triggers, and the grants — including withholding `v_hub_directory` from `anon` |
 | `access-control.sql` | the four roles, `hub_access`, the scoping functions, and the access list |
 | `process-documentation.sql` | the Processes tables and their policies |
-| `seed.sql` | a full data load, for rebuilding from nothing |
 
 If you are standing up a fresh project, run them in that order. Against the live
 database, none of them should be run at all — see the warning in step 3.
@@ -246,7 +235,7 @@ shared/js/              used by both apps
   data-service.js         reads/writes Supabase
   kpi-status.js           the one implementation of KPI colour
   hub-boot.js             loads a hub page's data before rendering it
-supabase/               schema.sql, seed.sql, patches, import scripts
+supabase/               schema.sql, feature SQL files, generated loads, import scripts
 docs/                   this file
 ```
 

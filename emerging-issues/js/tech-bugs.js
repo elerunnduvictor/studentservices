@@ -723,7 +723,7 @@
     host.innerHTML =
       `<div class="tt-weight">
          <div class="tt-weight-n">${fmtNum(weight)}</div>
-         <div class="tt-weight-l">Weight the ten carry</div>
+         <div class="tt-weight-l">Combined score of the top ten</div>
          <p class="tt-weight-d">${share}% of the ${fmtNum(whole)} on the whole open backlog,
             from ${plural(ten.length, "bug", "bugs")} of ${allOpen.length}.</p>
        </div>
@@ -734,7 +734,7 @@
             <b>${noWork}</b> with no workaround</span>` : ""}
          ${passed ? `<span class="tt-chip is-warn"><span class="tb-ico" aria-hidden="true">⏱</span>
             <b>${passed}</b> past ${passed === 1 ? "its" : "their"} ETA</span>` : ""}
-         ${oldest != null ? `<span class="tt-chip">oldest open <b>${fmtNum(oldest)}</b> days</span>` : ""}
+         ${oldest != null ? `<span class="tt-chip">oldest open for <b>${fmtNum(oldest)}</b> days</span>` : ""}
        </div>`;
   }
 
@@ -742,8 +742,8 @@
   function movementHtml() {
     if (!TOP_POINTS || TOP_POINTS.length < 2 || !TREND) {
       return `<p class="tt-move is-quiet">${TOP_POINTS
-        ? "The first capture on record — what enters and leaves the ten shows from the next one."
-        : "Once supabase/tech-bugs.sql has recorded a capture of the heaviest bugs, this says what entered the ten and what dropped out."}</p>`;
+        ? "This is the first week on record. Bugs that join or leave the top ten will show from the next update."
+        : "Once the tracker has been loaded, this will show which bugs joined or left the top ten."}</p>`;
     }
     const now = TOP_POINTS[TOP_POINTS.length - 1], was = TOP_POINTS[TOP_POINTS.length - 2];
     const inn = TREND.top.entrants(now, was) || [], out = TREND.top.leavers(now, was);
@@ -751,11 +751,11 @@
       `<span class="tt-move-b"><i class="tb-trk">${esc(b.label)}</i>${esc(b.title)}
          <b>${fmtNum(Number(b.score))}</b></span>`).join("");
     if (!inn.length && !out.length) {
-      return `<p class="tt-move is-quiet">The same ten as ${esc(fmtDay(was.day))} — no changes at the top.</p>`;
+      return `<p class="tt-move is-quiet">Same top ten as ${esc(fmtDay(was.day))}. Nothing joined or left.</p>`;
     }
     return `<div class="tt-move">
-      ${inn.length ? `<div class="tt-move-side"><h4>Into the ten since ${esc(fmtDay(was.day))}</h4>${list(inn)}</div>` : ""}
-      ${out.length ? `<div class="tt-move-side is-out"><h4>Out of the ten</h4>${list(out)}</div>` : ""}
+      ${inn.length ? `<div class="tt-move-side"><h4>New to the top ten since ${esc(fmtDay(was.day))}</h4>${list(inn)}</div>` : ""}
+      ${out.length ? `<div class="tt-move-side is-out"><h4>Left the top ten</h4>${list(out)}</div>` : ""}
     </div>`;
   }
 
@@ -780,7 +780,7 @@
               <span class="tb-trk">${esc(r.product_label)}</span>
               ${r.bug_refs.length ? `<span class="tb-refs">${refsHtml(r)}</span>` : ""}
               ${work ? "" : `<span class="tb-nowork"><span aria-hidden="true">⊘</span> No workaround</span>`}
-              ${since ? `<span class="tt-since" title="${esc("In the top ten since " + fmtDay(since))}">in the ten since ${esc(fmtDay(since))}</span>` : ""}
+              ${since ? `<span class="tt-since" title="${esc("In the top ten since " + fmtDay(since))}">in the top ten since ${esc(fmtDay(since))}</span>` : ""}
             </span>
             <span class="tb-bug-title">${esc(titleOf(r))}</span>
             <span class="tb-bug-meta">

@@ -499,7 +499,7 @@
           tip: (i) => head(i) + row(RESOLVED, points[i].resolvedFlow) + row(REMOVED, points[i].removedFlow) +
             (i ? `<span class="tr-tip-sub">since ${esc(short(points[i - 1].day))}</span>`
                : `<span class="tr-tip-sub">no earlier capture to compare with</span>`) },
-        { id: "trScore", about: "The weight on the backlog", endWidth: 58, integers: false,
+        { id: "trScore", about: "Weighted score of the open backlog", endWidth: 58, integers: false,
           legend: legendRow({ label: "Weighted score", color: OPEN.color }, now.score,
             prev ? change(now.score - prev.score, { worseUp: true, since: sinceLabel, compact: true }) : "",
             `${fmt(now.scored)} of ${fmt(now.open)} scored`),
@@ -537,7 +537,7 @@
 
   /* ── the Top 10 tab's card ───────────────────────────────────────────────
      Its points are captures of the heaviest bugs themselves, so it can draw
-     what counts alone cannot: the weight the ten carry, the score it takes to
+     what counts alone cannot: the ten scores combined, the score it takes to
      get in, and how many of the ten are new. */
   const TEN = 10;
   const tenOf = (p) => (p.top || []).filter((b) => b.rank <= TEN);
@@ -566,10 +566,10 @@
     return since;
   }
 
-  const WEIGHT = { label: "Weight the ten carry", short: "Weight", color: "var(--tr-open)" };
-  const CUTOFF = { label: "Tenth place", short: "10th", color: "var(--tr-resolved)" };
-  const HEAVIEST = { label: "The heaviest", short: "1st", color: "var(--tr-open)" };
-  const CHURN = { label: "New in the ten", short: "New", color: "var(--tr-closed)" };
+  const WEIGHT = { label: "Top ten combined score", short: "Total", color: "var(--tr-open)" };
+  const CUTOFF = { label: "10th-place score", short: "10th", color: "var(--tr-resolved)" };
+  const HEAVIEST = { label: "Highest score", short: "1st", color: "var(--tr-open)" };
+  const CHURN = { label: "New to the top ten", short: "New", color: "var(--tr-closed)" };
 
   function renderTop(host, points, opts) {
     const o = opts || {};
@@ -594,31 +594,31 @@
       sub: `<b>${plural(n, grain.one, grain.many)}</b> shown · arrows compare with ${esc(grain.before)}`,
       range: o.range, grain: o.grain, onChange: o.onChange, animate: o.animate, days,
       panels: [
-        { id: "ttWeight", about: "The weight the ten carry", endWidth: 70, integers: false,
+        { id: "ttWeight", about: "The top ten combined score", endWidth: 70, integers: false,
           legend: legendRow(WEIGHT, weightOf(now),
             prev ? change(weightOf(now) - weightOf(prev), { worseUp: true, since: sinceLabel, compact: true }) : "",
             o.shareNote || ""),
           aria: `Weighted score of the top ten added together, ${plural(n, grain.one, grain.many)}. Latest, ${pointName(now.day)}: ${fmt(weightOf(now))}. Arrow keys move between points.`,
           series: [{ label: WEIGHT.label, short: WEIGHT.short, color: WEIGHT.color, values: points.map(weightOf) }],
           tip: (i) => head(i) + row(WEIGHT, weightOf(points[i])) +
-            `<span class="tr-tip-sub">${fmt(tenOf(points[i]).length)} bugs, heaviest ${fmt(atRank(points[i], 1))}</span>` },
-        { id: "ttBar", about: "What it takes to be in the ten", endWidth: 82,
+            `<span class="tr-tip-sub">${fmt(tenOf(points[i]).length)} bugs, highest score ${fmt(atRank(points[i], 1))}</span>` },
+        { id: "ttBar", about: "Highest and 10th-place scores", endWidth: 82,
           legend:
             legendRow(HEAVIEST, atRank(now, 1),
               prev ? change(atRank(now, 1) - atRank(prev, 1), { worseUp: true, since: sinceLabel, compact: true }) : "") +
             legendRow(CUTOFF, atRank(now, TEN),
               prev && atRank(prev, TEN) != null ? change(atRank(now, TEN) - atRank(prev, TEN), { worseUp: true, since: sinceLabel, compact: true }) : ""),
-          aria: `The heaviest bug's score and the tenth place score. Latest, ${pointName(now.day)}: heaviest ${fmt(atRank(now, 1))}, tenth ${fmt(atRank(now, TEN))}. Arrow keys move between points.`,
+          aria: `The highest score and the 10th-place score in the top ten. Latest, ${pointName(now.day)}: highest ${fmt(atRank(now, 1))}, 10th place ${fmt(atRank(now, TEN))}. Arrow keys move between points.`,
           series: [{ label: HEAVIEST.label, short: HEAVIEST.short, color: HEAVIEST.color, values: points.map((p) => atRank(p, 1)) },
                    { label: CUTOFF.label, short: CUTOFF.short, color: CUTOFF.color, values: points.map((p) => atRank(p, TEN)) }],
           tip: (i) => head(i) + row(HEAVIEST, atRank(points[i], 1)) + row(CUTOFF, atRank(points[i], TEN)) +
-            `<span class="tr-tip-sub">a bug had to score ${fmt(atRank(points[i], TEN))} to be in the ten</span>` },
-        { id: "ttChurn", about: "How much the ten changes", endWidth: 74,
+            `<span class="tr-tip-sub">score needed to make the top ten: ${fmt(atRank(points[i], TEN))}</span>` },
+        { id: "ttChurn", about: "New to the top ten", endWidth: 74,
           legend: legendRow(CHURN, churn[n - 1],
             prev && churn[n - 2] != null && churn[n - 1] != null
               ? change(churn[n - 1] - churn[n - 2], { since: sinceLabel, compact: true }) : "",
-            prev ? `${fmt(leavers(now, prev).length)} dropped out` : ""),
-          aria: `How many of the top ten are new at each point. Latest, ${pointName(now.day)}: ${churn[n - 1] == null ? "no earlier capture" : fmt(churn[n - 1])}. Arrow keys move between points.`,
+            prev ? `${fmt(leavers(now, prev).length)} left the top ten` : ""),
+          aria: `How many bugs are new to the top ten at each point. Latest, ${pointName(now.day)}: ${churn[n - 1] == null ? "no earlier capture" : fmt(churn[n - 1])}. Arrow keys move between points.`,
           series: [{ label: CHURN.label, short: CHURN.short, color: CHURN.color, values: churn }],
           tip: (i) => {
             const e = entrants(points[i], i ? points[i - 1] : null);
@@ -634,9 +634,9 @@
         <div class="tr-table-wrap">
           <table>
             <caption>The top ten at every point shown, newest first</caption>
-            <thead><tr><th scope="col">Point</th><th scope="col">Weight the ten carry</th>
-              <th scope="col">Heaviest</th><th scope="col">Tenth place</th>
-              <th scope="col">New in the ten</th><th scope="col">Dropped out</th></tr></thead>
+            <thead><tr><th scope="col">Point</th><th scope="col">Combined score</th>
+              <th scope="col">Highest score</th><th scope="col">10th-place score</th>
+              <th scope="col">New to the top ten</th><th scope="col">Left the top ten</th></tr></thead>
             <tbody>${points.slice().reverse().map((p, k, arr) => {
               const was = k + 1 < arr.length ? arr[k + 1] : null;
               const e = entrants(p, was), l = leavers(p, was);

@@ -73,7 +73,7 @@ grant execute on function public.tech_bug_top_trend(text, date) to authenticated
 -- ── check it ───────────────────────────────────────────────────────────────
 -- Every capture on record, and what the top ten carried at each. The last
 -- row is today; its ten scores added together are what the tab shows as the
--- weight the top ten carry.
+-- top ten combined score.
 select bucket,
        jsonb_array_length(top)                                as bugs_stored,
        (select sum((b ->> 'score')::numeric)

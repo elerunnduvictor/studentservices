@@ -788,7 +788,7 @@ select.is-sev-low option { color: var(--text); font-weight: 400; background: var
 [data-theme="dark"] .tb-sub.is-on { color: #E86C6C; border-bottom-color: #E86C6C; }
 .tt[hidden], #tbBacklog[hidden] { display: none !important; }
 
-/* ── at a glance: the weight the ten carry, and what is awkward about them ── */
+/* ── at a glance: the ten scores combined, and what is awkward about them ── */
 .tt-summary {
   display: flex; flex-wrap: wrap; align-items: center; gap: 14px 28px;
   padding: 16px 20px;

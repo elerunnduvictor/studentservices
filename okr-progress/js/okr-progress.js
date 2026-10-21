@@ -16,7 +16,16 @@ function effectiveStatus(r) {
    anchored to the start of the string so it catches both "Completed - On
    time" and "Completed - Late" but not, say, a status that merely mentions
    completion in passing. */
-function isCompleted(r) { return /^Completed/i.test(effectiveStatus(r)); }
+function isCompleted(r) { return window.SS.okr.isCompletedStatus(effectiveStatus(r)); }
+/* Closed: the work ended without meeting its goal. Finished, so it folds away
+   like Completed does, but into a folder of its own, and it is never counted
+   as complete. */
+function isClosed(r) { return window.SS.okr.isClosedStatus(effectiveStatus(r)); }
+/* Archived rows are out of reporting: left out of every count, chart and
+   average unless the reader asks for them with the Status filter. */
+function isArchived(r) { return window.SS.okr.isArchivedStatus(r.status); }
+/* At Risk, In Trouble and Delayed: active work that is behind. */
+function isBehind(r) { return window.SS.okr.needsAttention(effectiveStatus(r)); }
 
 /* ═══════════════ STATE ═══════════════ */
 const state = {
@@ -208,6 +217,7 @@ function getFiltered() {
   return ROWS.filter(r => {
     if (state.okr !== "All" && r.okr !== state.okr) return false;
     if (state.status !== "All" && effectiveStatus(r) !== state.status) return false;
+    if (state.status !== "Archived" && isArchived(r)) return false;
     if (state.stakeholder !== "All" && r.stakeholder !== state.stakeholder) return false;
     if (state.secondaryStakeholder !== "All" && !secondaryList(r.secondaryStakeholders).includes(state.secondaryStakeholder)) return false;
     if (state.pm !== "All" && r.projectManager !== state.pm) return false;
@@ -223,7 +233,11 @@ function getFiltered() {
 /* ═══════════════ RENDER: FILTERS ═══════════════ */
 function renderFilters() {
   const okrs = ["All", ...unique(ROWS.map(r => r.okr))];
-  const statuses = ["All", ...unique(ROWS.map(r => effectiveStatus(r))).sort()];
+  /* Every allowed status in its fixed order, then anything unexpected the
+     data holds, so a stray value can still be filtered to and found. */
+  const known = window.SS.okr.STATUSES;
+  const statuses = ["All", ...known,
+    ...unique(ROWS.map(r => effectiveStatus(r))).filter(s => !known.includes(s)).sort()];
   const stakeholders = ["All", ...unique(ROWS.map(r => r.stakeholder)).sort()];
   const secondaryStakeholders = ["All", ...unique(ROWS.flatMap(r => secondaryList(r.secondaryStakeholders))).sort()];
   const pms = ["All", ...unique(ROWS.map(r => r.projectManager)).sort()];
@@ -254,8 +268,7 @@ function renderKpis(filtered) {
   const krCount = unique(filtered.map(r => `${r.okr}||${r.keyResult}`)).length;
   const total = filtered.length;
   const onTrack = filtered.filter(r => effectiveStatus(r) === "On Track").length;
-  const atRisk = filtered.filter(r => effectiveStatus(r) === "At Risk").length;
-  const completed = filtered.filter(r => effectiveStatus(r) === "Completed").length;
+  const atRisk = filtered.filter(isBehind).length;
   /* Mean attainment, not mean `progress`. Averaging progress directly treats a
      "KPI # - Decrease" row's raw count as a percentage — live data stores that
      one as 8 against a goal of 5 — so one row could contribute 800% and the
@@ -346,9 +359,12 @@ function renderStatusDonut(filtered) {
   const counts = {};
   filtered.forEach(r => { const s = effectiveStatus(r); counts[s] = (counts[s] || 0) + 1; });
 
+  /* In the fixed status order rather than by size, so the two Closed slices
+     sit together as one group beside Completed instead of scattering. */
+  const order = (s) => { const i = window.SS.okr.STATUSES.indexOf(s); return i < 0 ? 99 : i; };
   const data = Object.entries(counts)
     .map(([label, value]) => ({ label, value, color: statusPalette(label).bg }))
-    .sort((a, b) => b.value - a.value);
+    .sort((a, b) => order(a.label) - order(b.label) || b.value - a.value);
   const total = data.reduce((s, d) => s + d.value, 0);
 
   const target = document.getElementById("statusDonut");
@@ -587,11 +603,15 @@ function skrItem(r, opts) {
    `scopeKey` (the caller's own group key, e.g. krSectionKey() or subKey())
    is reused so this folder's own open state doesn't collide with another
    completed folder elsewhere in the tree. */
-function completedFolder(scopeKey, rows, renderItem) {
-  const key = "completed::" + scopeKey;
+function completedFolder(scopeKey, rows, renderItem, closed) {
+  const key = (closed ? "closed::" : "completed::") + scopeKey;
   const open = state.openCompleted.has(key);
+  /* The Closed folder is the same quiet row, grey, with a dash where Completed
+     has its checkmark: finished, but not achieved. */
+  const mark = closed ? '<line x1="6" y1="12" x2="18" y2="12"/>' : '<polyline points="20 6 9 17 4 12"/>';
+  const label = closed ? `Closed, goal not fully met (${rows.length})` : `Completed (${rows.length})`;
   return `
-    <section class="okrp-done${open ? " is-open" : ""}" data-completed="${escapeHtml(key)}">
+    <section class="okrp-done${closed ? " okrp-done--closed" : ""}${open ? " is-open" : ""}" data-completed="${escapeHtml(key)}">
       <button type="button" class="okrp-done-head" aria-expanded="${open}">
         <span class="okrp-done-chev" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
@@ -600,15 +620,24 @@ function completedFolder(scopeKey, rows, renderItem) {
         </span>
         <span class="okrp-done-check" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6">
-            <polyline points="20 6 9 17 4 12"/>
+            ${mark}
           </svg>
         </span>
-        <span class="okrp-done-text">Completed (${rows.length})</span>
+        <span class="okrp-done-text">${label}</span>
       </button>
       <div class="okrp-done-body"${open ? "" : " hidden"}>
         ${rows.map(renderItem).join("")}
       </div>
     </section>`;
+}
+
+/* Which folder a finished row belongs in, or null for one still active. */
+function finishedKind(r) { return isCompleted(r) ? "completed" : isClosed(r) ? "closed" : null; }
+/* The Completed folder, then the Closed one, each only if it has rows. */
+function finishedFolders(scopeKey, rows, renderItem) {
+  const completed = rows.filter(isCompleted), closed = rows.filter(isClosed);
+  return (completed.length ? completedFolder(scopeKey, completed, renderItem, false) : "") +
+         (closed.length ? completedFolder(scopeKey, closed, renderItem, true) : "");
 }
 
 /* A sub-key result with several rows under it: a header that summarises them,
@@ -618,19 +647,19 @@ function subGroup(okr, entry) {
   const key = subKey(okr, entry.parent);
   const open = state.openSub === key;
   const avg = window.SS.okr.averagePercent(entry.rows);
-  const atRisk = entry.rows.filter((r) => /risk|trouble|behind/i.test(effectiveStatus(r))).length;
-  const done = entry.rows.filter((r) => /complet/i.test(effectiveStatus(r))).length;
+  const atRisk = entry.rows.filter(isBehind).length;
+  const done = entry.rows.filter(isCompleted).length;
+  const closed = entry.rows.filter(isClosed).length;
 
   /* This parent's children are exactly the leaf rows that render directly
      under it — split completed out to a folder only when they're a genuine
      mix; entirely one or the other renders flat, same as before this
      existed. */
-  const completedRows = entry.rows.filter(isCompleted);
-  const activeRows = entry.rows.filter((r) => !isCompleted(r));
-  const splitDone = completedRows.length > 0 && activeRows.length > 0;
+  const activeRows = entry.rows.filter((r) => !finishedKind(r));
+  const splitDone = new Set(entry.rows.map(finishedKind)).size > 1;
   const renderChild = (r) => skrItem(r, { nested: true });
   const childrenHtml = splitDone
-    ? activeRows.map(renderChild).join("") + completedFolder(key, completedRows, renderChild)
+    ? activeRows.map(renderChild).join("") + finishedFolders(key, entry.rows, renderChild)
     : entry.rows.map(renderChild).join("");
 
   return `
@@ -643,7 +672,7 @@ function subGroup(okr, entry) {
         </span>
         <span class="okrp-sub-text">
           <span class="okrp-sub-name">${escapeHtml(entry.parent)}</span>
-          <span class="okrp-sub-meta"><b>${entry.rows.length}</b> item${entry.rows.length === 1 ? "" : "s"}${avg === null ? "" : ` · <b>${avg}%</b> avg`}${done ? ` · ${done} complete` : ""}${atRisk ? ` · <b class="is-risk">${atRisk} at risk</b>` : ""}</span>
+          <span class="okrp-sub-meta"><b>${entry.rows.length}</b> item${entry.rows.length === 1 ? "" : "s"}${avg === null ? "" : ` · <b>${avg}%</b> avg`}${done ? ` · ${done} complete` : ""}${closed ? ` · ${closed} closed` : ""}${atRisk ? ` · <b class="is-risk">${atRisk} at risk</b>` : ""}</span>
         </span>
       </button>
       <div class="okrp-sub-body"${open ? "" : " hidden"}>
@@ -674,17 +703,17 @@ function renderSkrLevel(okr, rows, scopeKey) {
     .sort((a, b) => byName(a.parent, b.parent));
 
   const leafRows = entries.filter((e) => e.rows.length === 1).map((e) => e.rows[0]);
-  const completedLeaves = leafRows.filter(isCompleted);
-  const splitLeaves = completedLeaves.length > 0 && completedLeaves.length < leafRows.length;
+  // A genuine mix of active, completed and closed: two or more of the three.
+  const splitLeaves = new Set(leafRows.map(finishedKind)).size > 1;
 
   const mainHtml = entries.map((entry) => {
     if (entry.rows.length > 1) return subGroup(okr, entry);
     const r = entry.rows[0];
-    if (splitLeaves && isCompleted(r)) return ""; // moved into the folder below, out of its alphabetical slot
+    if (splitLeaves && finishedKind(r)) return ""; // moved into a folder below, out of its alphabetical slot
     return skrItem(r);
   }).join("");
 
-  const folderHtml = splitLeaves ? completedFolder(scopeKey, completedLeaves, (r) => skrItem(r)) : "";
+  const folderHtml = splitLeaves ? finishedFolders(scopeKey, leafRows, (r) => skrItem(r)) : "";
   return mainHtml + folderHtml;
 }
 
@@ -697,8 +726,9 @@ function krGroup(okr, entry) {
   const key = krSectionKey(okr, entry.keyResult);
   const open = state.openKr === key;
   const avg = window.SS.okr.averagePercent(entry.rows);
-  const atRisk = entry.rows.filter((r) => /risk|trouble|behind/i.test(effectiveStatus(r))).length;
-  const done = entry.rows.filter((r) => /complet/i.test(effectiveStatus(r))).length;
+  const atRisk = entry.rows.filter(isBehind).length;
+  const done = entry.rows.filter(isCompleted).length;
+  const closed = entry.rows.filter(isClosed).length;
 
   return `
     <section class="okrp-kr${open ? " is-open" : ""}" data-kr="${escapeHtml(key)}">
@@ -710,7 +740,7 @@ function krGroup(okr, entry) {
         </span>
         <span class="okrp-kr-text">
           <span class="okrp-kr-name">${escapeHtml(entry.keyResult)}</span>
-          <span class="okrp-kr-meta"><b>${entry.rows.length}</b> sub-key result${entry.rows.length === 1 ? "" : "s"}${avg === null ? "" : ` · <b>${avg}%</b> avg`}${done ? ` · ${done} complete` : ""}${atRisk ? ` · <b class="is-risk">${atRisk} at risk</b>` : ""}</span>
+          <span class="okrp-kr-meta"><b>${entry.rows.length}</b> sub-key result${entry.rows.length === 1 ? "" : "s"}${avg === null ? "" : ` · <b>${avg}%</b> avg`}${done ? ` · ${done} complete` : ""}${closed ? ` · ${closed} closed` : ""}${atRisk ? ` · <b class="is-risk">${atRisk} at risk</b>` : ""}</span>
         </span>
       </button>
       <div class="okrp-kr-body"${open ? "" : " hidden"}>
@@ -744,8 +774,9 @@ function renderGroups(filtered) {
     const c = okrPalette(g.okr);
     const open = state.openGroup === g.okr;
     const avg = window.SS.okr.averagePercent(g.rows);
-    const atRisk = g.rows.filter((r) => /risk|trouble|behind/i.test(effectiveStatus(r))).length;
-    const done = g.rows.filter((r) => /complet/i.test(effectiveStatus(r))).length;
+    const atRisk = g.rows.filter(isBehind).length;
+    const done = g.rows.filter(isCompleted).length;
+    const closed = g.rows.filter(isClosed).length;
 
     /* A Key Result with several rows becomes a group of its own; one with a
        single row skips straight to the sub-key-result-parent grouping with no
@@ -774,7 +805,7 @@ function renderGroups(filtered) {
           </span>
           <span class="okrp-group-text">
             <span class="okrp-group-name">${escapeHtml(g.okr)}</span>
-            <span class="okrp-group-meta"><b>${g.rows.length}</b> sub-key result${g.rows.length === 1 ? "" : "s"}${avg === null ? "" : ` · <b>${avg}%</b> avg`}${done ? ` · ${done} complete` : ""}${atRisk ? ` · <b class="is-risk">${atRisk} at risk</b>` : ""}</span>
+            <span class="okrp-group-meta"><b>${g.rows.length}</b> sub-key result${g.rows.length === 1 ? "" : "s"}${avg === null ? "" : ` · <b>${avg}%</b> avg`}${done ? ` · ${done} complete` : ""}${closed ? ` · ${closed} closed` : ""}${atRisk ? ` · <b class="is-risk">${atRisk} at risk</b>` : ""}</span>
           </span>
         </button>
         <div class="okrp-group-body"${open ? "" : " hidden"}>
@@ -1092,7 +1123,7 @@ function openDetailById(id) {
 }
 
 function openKrDetail(okr, kr) {
-  const rows = ROWS.filter(r => r.okr === okr && r.keyResult === kr);
+  const rows = ROWS.filter(r => r.okr === okr && r.keyResult === kr && !isArchived(r));
   if (!rows.length) return;
   renderAggregateDetail({
     kind: "Key Result",
@@ -1102,7 +1133,7 @@ function openKrDetail(okr, kr) {
 }
 
 function openOkrDetail(okr) {
-  const rows = ROWS.filter(r => r.okr === okr);
+  const rows = ROWS.filter(r => r.okr === okr && !isArchived(r));
   if (!rows.length) return;
   renderAggregateDetail({
     kind: "Objective",

@@ -31,6 +31,10 @@
      stop competing for attention, not a status to draw the eye toward. */
   --done-color: #6B9C7D;
   --done-pale: rgba(107,156,125,0.12);
+  /* The Closed folder beside it: grey, because the work ended without meeting
+     its goal, and the green of Completed would say it had. */
+  --closed-color: #7F898A;
+  --closed-pale: rgba(127,137,138,0.12);
 
   --bg: #FFFFFF;
   --bg-card: #FFFFFF;
@@ -1706,6 +1710,9 @@ body.modal-open { overflow: hidden; }
 }
 .okrp-done-body[hidden] { display: none; }
 .okrp-done-body .okrp-skr { background: var(--bg-card); }
+
+/* Same folder, Closed rather than Completed: only the colour changes. */
+.okrp-done--closed { --done-color: var(--closed-color); --done-pale: var(--closed-pale); }
 
 @media (max-width: 760px) {
   .okrp-done-body { padding: 2px 8px 8px 8px; }

@@ -153,16 +153,23 @@ const PROJECT_STATUS = [
   { value: "Archived",    label: "Archived",    tone: "grey" },
 ];
 
+/* The database allows exactly these (supabase/okr-statuses.sql), and the Bridge
+   lists them in this order (shared/js/okr-math.js). Plain hyphens: the value
+   saved is the text stored, so an en dash here would fail the constraint.
+   Closed is for work that ended without meeting its goal — it is not a kind
+   of Completed, and the Bridge never counts it as one. */
 const OKR_STATUS = [
-  { value: "On Track",            label: "On Track",            tone: "green" },
-  { value: "At Risk",             label: "At Risk",             tone: "yellow" },
-  { value: "Delayed",             label: "Delayed",             tone: "yellow" },
-  { value: "In Trouble",          label: "In Trouble",          tone: "red" },
-  { value: "Completed - On time", label: "Completed - On time", tone: "accent" },
-  { value: "Completed - Late",    label: "Completed - Late",    tone: "accent" },
-  { value: "Not Started",         label: "Not Started",         tone: "grey" },
-  { value: "Archived",            label: "Archived",            tone: "grey" },
-  { value: "Canceled",            label: "Canceled",            tone: "grey" },
+  { value: "Not Started",                 label: "Not Started",                 tone: "grey" },
+  { value: "On Track",                    label: "On Track",                    tone: "green" },
+  { value: "At Risk",                     label: "At Risk",                     tone: "yellow" },
+  { value: "In Trouble",                  label: "In Trouble",                  tone: "red" },
+  { value: "Delayed",                     label: "Delayed",                     tone: "yellow" },
+  { value: "Completed - On time",         label: "Completed - On time",         tone: "accent" },
+  { value: "Completed - Late",            label: "Completed - Late",            tone: "accent" },
+  { value: "Closed - Partially Achieved", label: "Closed - Partially Achieved", tone: "grey" },
+  { value: "Closed - Goal Not Achieved",  label: "Closed - Goal Not Achieved",  tone: "grey" },
+  { value: "Canceled",                    label: "Canceled",                    tone: "grey" },
+  { value: "Archived",                    label: "Archived",                    tone: "grey" },
 ];
 
 const TREND = [
@@ -476,6 +483,45 @@ function statusCell(_value, row) {
    the same rule, from shared/js/okr-math.js. */
 const isCountRow = (row) => !!(row && row.type && /#/.test(String(row.type)));
 
+/**
+ * A finishing status that the row's own data contradicts.
+ *
+ * Warnings only, like checkProjectStage below — the row still saves. Each rule
+ * names the cells it involves, and every one of those cells carries this check,
+ * so the problem is marked on whichever one the PM is looking at:
+ *   · Completed, but progress is short of the goal (skipped on a Decrease row,
+ *     where lower is better and the comparison runs the other way)
+ *   · Closed, with no comment saying why
+ *   · Completed, Closed or Canceled, with no date it happened
+ * Two items were once marked "Completed - On time" against a missed goal and
+ * inflated every Completed count; Closed exists for exactly that case.
+ */
+function checkOkrFinish(key) {
+  return (_value, row) => {
+    const status = String(row.status || "");
+    const completed = /^Completed/.test(status), closed = /^Closed/.test(status);
+    const blank = (v) => v === null || v === undefined || String(v).trim() === "";
+    const problems = [];
+    const p = Number(row.progress), g = Number(row.goal);
+    if (completed && !blank(row.progress) && !blank(row.goal) && Number.isFinite(p) && Number.isFinite(g)
+        && p < g && !/decrease/i.test(String(row.type || ""))) {
+      problems.push({ keys: ["status", "progress"], text:
+        `Status is ${status}, but Progress is below the Goal. ` +
+        "If the work ended short of its goal, use a Closed status instead." });
+    }
+    if (closed && blank(row.comment)) {
+      problems.push({ keys: ["status", "comment"], text:
+        `Status is ${status} but there is no Comment. Say briefly why the work ended where it did.` });
+    }
+    if ((completed || closed || status === "Canceled") && blank(row.update_date)) {
+      problems.push({ keys: ["status", "update_date"], text:
+        `Status is ${status} but Update Date is blank. Enter the day it was finished or stopped.` });
+    }
+    const mine = problems.filter((x) => x.keys.includes(key)).map((x) => x.text);
+    return mine.length ? mine.join(" ") : null;
+  };
+}
+
 /* Goal and Stretch Goal: a count shows as the number it is. It used to go
    through the generic percent display, so a goal of 5 bugs read "5%". */
 function goalCell(value, row) {
@@ -641,12 +687,14 @@ window.SS.WORKBOOKS = {
         { key: "stretch_goal",           label: "Stretch Goal",            type: "percent",  width: 100,
           render: goalCell, countIf: isCountRow },
         { key: "progress",               label: "Progress",                type: "percent",  width: 140,
-          render: progressCell, countIf: isCountRow,
+          render: progressCell, countIf: isCountRow, check: checkOkrFinish("progress"),
           help: 'A percentage (75 = 75%), or on a "KPI #" row the count itself (9 = 9).' },
-        { key: "status",                 label: "Status",                  type: "select",   width: 150, options: OKR_STATUS },
+        { key: "status",                 label: "Status",                  type: "select",   width: 190, options: OKR_STATUS,
+          check: checkOkrFinish("status"),
+          help: "Completed means the goal was met. If the work ended without meeting it, use Closed and say why in the Comment." },
         { key: "trend",                  label: "Trend",                   type: "select",   width: 130, options: TREND },
-        { key: "comment",                label: "Comment",                 type: "longtext", width: 560 },
-        { key: "update_date",            label: "Update Date",             type: "date",     width: 120 },
+        { key: "comment",                label: "Comment",                 type: "longtext", width: 560, check: checkOkrFinish("comment") },
+        { key: "update_date",            label: "Update Date",             type: "date",     width: 120, check: checkOkrFinish("update_date") },
       ],
     }],
   },

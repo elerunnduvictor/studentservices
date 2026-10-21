@@ -52,6 +52,10 @@
   var STATUS_ORDER = [
     "Completed - On time",
     "Completed - Late",
+    // Ended short of the goal: next to Completed, so the finished work reads
+    // as one stretch of the strip, but never part of it.
+    "Closed - Partially Achieved",
+    "Closed - Goal Not Achieved",
     "On Track",
     "Not Started",
     "Delayed",

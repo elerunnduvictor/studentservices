@@ -61,7 +61,14 @@ window.STATUS_COLORS = {
   "Completed - Late":     { bg: "#7E80CE", pale: "rgba(126,128,206,0.14)" },
   "Not Started":          { bg: "#7F898A", pale: "rgba(127,137,138,0.14)" },
   "Canceled":             { bg: "#5C5C5C", pale: "rgba(92,92,92,0.14)" },
-  "Archived":             { bg: "#58595B", pale: "rgba(88,89,91,0.14)" }
+  "Archived":             { bg: "#58595B", pale: "rgba(88,89,91,0.14)" },
+  // Work that ended without meeting its goal: a plum family of their own, so
+  // they read as finished but never as the blues of Completed. Appended rather
+  // than slotted in by meaning, because each key's position here is its
+  // texture slot (hub-texture.js) and moving one re-patterns every status after
+  // it. The two land on different slots (solid / hatched) from each other.
+  "Closed - Partially Achieved": { bg: "#9A6A93", pale: "rgba(154,106,147,0.14)" },
+  "Closed - Goal Not Achieved":  { bg: "#6E3F63", pale: "rgba(110,63,99,0.14)" }
 };
 
 window.SKR_COLORS = (function () {

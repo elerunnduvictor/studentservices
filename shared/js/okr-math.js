@@ -102,11 +102,38 @@
     return (Math.round(n * 1000) / 10) + "%";
   }
 
+  /* ── What a status means ──
+
+     The allowed values, in the order every status filter lists them. The
+     database holds exactly these (supabase/okr-statuses.sql) and the PM hub's
+     dropdown offers the same text, plain hyphen included.
+
+     Completed and Closed are different outcomes and are never counted
+     together: Completed means the goal was met; Closed means the work ended
+     without meeting it, partly or at all. Archived is not an outcome — it is
+     taken out of reporting altogether. */
+  var STATUSES = [
+    "Not Started", "On Track", "At Risk", "In Trouble", "Delayed",
+    "Completed - On time", "Completed - Late",
+    "Closed - Partially Achieved", "Closed - Goal Not Achieved",
+    "Canceled", "Archived",
+  ];
+  function isCompletedStatus(s) { return /^Completed/i.test(String(s || "")); }
+  function isClosedStatus(s) { return /^Closed/i.test(String(s || "")); }
+  function isArchivedStatus(s) { return String(s || "") === "Archived"; }
+  /* Active but behind: what an "At Risk" count reports. */
+  function needsAttention(s) { return /^(At Risk|In Trouble|Delayed)$/i.test(String(s || "")); }
+
   SS.okr = {
     attainment: attainment,
     averagePercent: averagePercent,
     averageGoalPercent: averageGoalPercent,
     isCount: isCount,
     formatValue: formatValue,
+    STATUSES: STATUSES,
+    isCompletedStatus: isCompletedStatus,
+    isClosedStatus: isClosedStatus,
+    isArchivedStatus: isArchivedStatus,
+    needsAttention: needsAttention,
   };
 })();

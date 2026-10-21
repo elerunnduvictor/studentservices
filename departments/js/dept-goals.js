@@ -126,6 +126,11 @@
     "Completed - On time": "#1E6E8C", "Completed - Late": "#8E7CC3",
     "On Track": "#2E9E5B", "Not Started": "#9AA3A5",
     "At Risk": "#D89A1E", "In Trouble": "#C0392B", "Canceled": "#58595B",
+    // Delayed sits beside At Risk; Closed is ended-short-of-goal, so plum, not
+    // the blues of Completed. Same families as shared/js/hub-palette.js.
+    "Delayed": "#C9682B",
+    "Closed - Partially Achieved": "#9A6A93", "Closed - Goal Not Achieved": "#6E3F63",
+    "Archived": "#58595B",
   };
 
   function esc(s) {
@@ -267,13 +272,19 @@
 
       var counts = {};
       krs.forEach(function (r) { var s = r.status || "Not Started"; counts[s] = (counts[s] || 0) + 1; });
+      // The fixed status order, so the Closed statuses sit together.
+      var order = window.SS.okr.STATUSES;
+      var keys = Object.keys(counts).sort(function (a, b) {
+        var ia = order.indexOf(a), ib = order.indexOf(b);
+        return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
+      });
 
-      var strip = Object.keys(counts).map(function (s) {
+      var strip = keys.map(function (s) {
         return '<i style="flex:' + counts[s] + ';background:' + (OKR_STATUS_COLOR[s] || "#9AA3A5") +
                '" title="' + esc(s) + ": " + counts[s] + '"></i>';
       }).join("");
 
-      var legend = Object.keys(counts).map(function (s) {
+      var legend = keys.map(function (s) {
         return '<span class="dg-legend-item">' +
           '<span class="dg-dot" style="background:' + (OKR_STATUS_COLOR[s] || "#9AA3A5") + '"></span>' +
           esc(s) + " <b>" + counts[s] + "</b></span>";
@@ -329,8 +340,9 @@
     var kpis = conf ? (window.SCORECARD_KPIS || []).filter(function (k) {
       return deptMatches(k, conf, window.DEPT_NAME);
     }) : [];
+    // Archived is out of reporting, so it is left off the department page.
     var okrs = conf ? (window.OKR_PROGRESS_ROWS || []).filter(function (r) {
-      return samePerson(r.stakeholder, conf.director);
+      return samePerson(r.stakeholder, conf.director) && !window.SS.okr.isArchivedStatus(r.status);
     }) : [];
 
     var deptColor = (window.DEPT_COLORS && window.DEPT_COLORS[window.DEPT_NAME] &&

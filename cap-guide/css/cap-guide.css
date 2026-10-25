@@ -71,3 +71,53 @@
 .cap-guide-links-card .cap-guide-list { margin: 0; padding-left: 20px; }
 
 .cap-guide-empty { color: var(--text-dim); padding: 40px 0; text-align: center; }
+
+/* ══════════════ SELF-ASSESSMENT FORMS ══════════════
+   The two download cards below the guide, and the inline link under each
+   matching goal type. Same card shape as .dept-nav-card; the button is the
+   page's accent, which keeps white text above 8:1 in either theme. */
+.cap-forms { margin-top: 12px; padding-top: 28px; border-top: 1px solid var(--border); }
+.cap-forms-note { color: var(--text-muted); line-height: 1.6; margin: 0 0 18px; }
+.cap-forms-grid {
+  display: grid; gap: 16px; align-items: start;   /* a status line grows one card, not both */
+  grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
+}
+.cap-form-card {
+  display: flex; flex-direction: column; gap: 12px;
+  padding: 20px; min-width: 0;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); box-shadow: var(--shadow);
+}
+.cap-form-title { font: 600 1rem/1.35 'Jost', sans-serif; color: var(--text); margin: 0; }
+.cap-form-summary { color: var(--text-muted); font-size: 0.92rem; line-height: 1.6; margin: 0; }
+.cap-form-btn {
+  align-self: flex-start; display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 18px; border: none; border-radius: 8px; cursor: pointer;
+  background: var(--dept-color); color: #fff;
+  font: 500 0.88rem/1 'Jost', sans-serif;
+  transition: var(--transition);
+}
+.cap-form-btn:hover { background: var(--dept-dark); }
+.cap-form-btn:focus-visible,
+.cap-form-link:focus-visible { outline: 2px solid var(--text); outline-offset: 3px; }
+.cap-form-btn[aria-busy="true"],
+.cap-form-link[aria-busy="true"] { cursor: progress; opacity: 0.75; }
+.cap-form-status { font-size: 0.85rem; line-height: 1.5; color: var(--text-muted); margin: 0; }
+.cap-form-status:empty { display: none; }
+.cap-form-status.is-error { color: var(--alert-red); font-weight: 500; }
+/* #A32222 is unreadable on the dark card; lift it towards the dark theme's
+   text colour instead of adding a new red. */
+[data-theme="dark"] .cap-form-status.is-error { color: color-mix(in srgb, var(--alert-red) 45%, var(--text)); }
+
+.cap-form-inline { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin-top: 4px; }
+.cap-form-link {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 0; border: none; background: none; cursor: pointer;
+  font: inherit; font-weight: 500; color: var(--dept-color); text-align: left;
+}
+.cap-form-link span { border-bottom: 1px solid currentColor; }
+.cap-form-link svg { flex-shrink: 0; }
+.cap-form-link:hover { opacity: 0.8; }
+/* The accent is too dark to read as text on the dark page; lift it the same
+   way as the error colour above. */
+[data-theme="dark"] .cap-form-link { color: color-mix(in srgb, var(--dept-color) 40%, var(--text)); }

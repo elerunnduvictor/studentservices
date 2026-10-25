@@ -120,6 +120,15 @@
         <div id="capLoading" class="cap-guide-empty">Loading…</div>
         <nav class="cap-tabs" id="capGuideTabs"></nav>
         <div id="capGuideBody"></div>
+
+        <!-- Built in the browser from cap-guide/js/cap-forms-content.js; see
+             cap-guide/js/cap-forms.js. Nothing typed into a form comes back here. -->
+        <section class="cap-forms" aria-labelledby="capFormsTitle">
+          <h2 class="cap-guide-section-title" id="capFormsTitle">Self-assessment forms</h2>
+          <p class="cap-forms-note">Fill in this PDF on your computer. Your answers are not stored by the Bridge,
+            so save your own copy.</p>
+          <div class="cap-forms-grid" id="capFormsCards"></div>
+        </section>
       </div>
     </section>
   </div>
@@ -140,6 +149,10 @@
        not loaded asynchronously through hub-boot.js's data-then indirection,
        so it needs SS.escapeHtml to already exist when it runs. -->
   <script src="/js/shared.js"></script>
+  <!-- The forms' wording and the cards; pdf-lib and the builder load only on
+       a Download click. Before cap-guide.js, which links the guide text to them. -->
+  <script src="/cap-guide/js/cap-forms-content.js"></script>
+  <script src="/cap-guide/js/cap-forms.js"></script>
   <script src="/cap-guide/js/cap-guide.js"></script>
 </body>
 

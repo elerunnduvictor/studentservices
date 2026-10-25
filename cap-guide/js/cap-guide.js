@@ -81,6 +81,14 @@
     return html;
   }
 
+  /* The self-assessment PDF that goes with a goal type ("Behavior based
+     goals", "Development based goals"), linked under that item in both the
+     Team Member and Leader versions. Which item gets which form is set in
+     cap-forms-content.js (goalType), not here. */
+  function formLink(body) {
+    return window.CAPForms ? window.CAPForms.guideLinkHtml(body) : "";
+  }
+
   function renderList(items, baseIndent) {
     var html = '<ul class="cap-guide-list' + (baseIndent > 0 ? " indent-1" : "") + '">';
     var i = 0;
@@ -94,7 +102,7 @@
       var sub = [];
       var j = i + 1;
       while (j < items.length && (items[j].indent || 0) > baseIndent) { sub.push(items[j]); j++; }
-      html += "<li>" + renderBody(it.body, it.link_label, it.link_url) +
+      html += "<li>" + renderBody(it.body, it.link_label, it.link_url) + formLink(it.body) +
         (sub.length ? renderList(sub, baseIndent + 1) : "") + "</li>";
       i = j;
     }

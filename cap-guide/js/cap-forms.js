@@ -1,8 +1,10 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    CAP SELF-ASSESSMENT FORMS — on the page
 
-   The "Self-assessment forms" cards, the download links under the two goal
-   types in the guide text, and the click that turns a form into a PDF.
+   The click that turns a form into a PDF. The buttons themselves are drawn
+   by cap-guide.js, from download items whose link_url is cap-form:<id>; it
+   asks CAPForms.has(id) first, so an id with no form here shows as plain
+   text rather than a button that does nothing.
 
    Nothing heavy loads with the page. pdf-lib (vendored, ~0.5MB) and the
    builder are fetched from this site on the first Download click and reused
@@ -26,11 +28,6 @@
   var NOTE = "Fill in this PDF on your computer. Your answers are not stored by the Bridge, so save your own copy.";
 
   var FORMS = window.CAP_FORMS || {};
-  var ORDER = window.CAP_FORMS_ORDER || Object.keys(FORMS);
-
-  var DOWNLOAD_ICON = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" ' +
-    'stroke-width="2" aria-hidden="true" focusable="false"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>' +
-    '<polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
 
   /* ── Loading on demand ── */
 
@@ -55,10 +52,11 @@
   /* ── Colours ──
 
      The light-theme values of the page's own tokens, read from the :root
-     rules of its stylesheets (dept.css and the <style> block that sets
-     --dept-color). Not getComputedStyle: in dark mode that answers with the
-     dark values, and a printed form wants paper colours whatever the reader's
-     theme. Later rules win, as they do in the cascade. */
+     rules of its stylesheets: the --cap-print-* tokens in cap-guide.css, and
+     --text, --text-muted, --border and --bg-card from dept.css. Not
+     getComputedStyle: in dark mode that answers with the dark values, and a
+     printed form wants paper colours whatever the reader's theme. Later rules
+     win, as they do in the cascade. */
   function palette() {
     var tokens = {};
     Array.prototype.forEach.call(document.styleSheets, function (sheet) {
@@ -73,11 +71,10 @@
       });
     });
     return {
-      accent: tokens["--dept-color"],
-      accentLight: tokens["--dept-light"],
+      accent: tokens["--cap-print-accent"],
       text: tokens["--text"],
       muted: tokens["--text-muted"],
-      panel: tokens["--bg-elevated"],
+      panel: tokens["--cap-print-panel"],
       rule: tokens["--border"],
       paper: tokens["--bg-card"],
     };
@@ -105,7 +102,7 @@
   }
 
   async function download(button) {
-    var form = FORMS[button.dataset.capForm];
+    var form = has(button.dataset.capForm) ? FORMS[button.dataset.capForm] : null;
     var status = button.parentElement.querySelector(".cap-form-status");
     if (!form || button.getAttribute("aria-busy") === "true") return;
 
@@ -132,65 +129,14 @@
     if (button) download(button);
   });
 
-  /* ── Markup ── */
-
-  function el(tag, cls, text) {
-    var node = document.createElement(tag);
-    if (cls) node.className = cls;
-    if (text != null) node.textContent = text;
-    return node;
+  /** Whether `id` names a form. Own keys only, so "constructor" and the like
+   *  from the database are not mistaken for one. */
+  function has(id) {
+    return Object.prototype.hasOwnProperty.call(FORMS, id);
   }
 
-  function renderCards() {
-    var grid = document.getElementById("capFormsCards");
-    if (!grid) return;
-    ORDER.forEach(function (id) {
-      var form = FORMS[id];
-      if (!form) return;
-      var card = el("div", "cap-form-card");
-      card.appendChild(el("h3", "cap-form-title", form.title));
-      card.appendChild(el("p", "cap-form-summary", form.summary));
-      var button = el("button", "cap-form-btn");
-      button.type = "button";
-      button.dataset.capForm = id;
-      button.innerHTML = DOWNLOAD_ICON;
-      button.appendChild(el("span", null, "Download PDF"));
-      button.setAttribute("aria-label", "Download " + form.title + " (PDF)");
-      card.appendChild(button);
-      var status = el("p", "cap-form-status");
-      status.setAttribute("aria-live", "polite");
-      card.appendChild(status);
-      grid.appendChild(card);
-    });
-  }
-
-  function normalise(s) {
-    return String(s || "").toLowerCase().replace(/[\s‐-―-]+/g, " ").trim();
-  }
-
-  /** The form whose goal type a guide item starts with, or null. */
-  function formForGuideItem(body) {
-    var text = normalise(body);
-    for (var i = 0; i < ORDER.length; i++) {
-      var form = FORMS[ORDER[i]];
-      if (form && form.goalType && text.indexOf(normalise(form.goalType)) === 0) return ORDER[i];
-    }
-    return null;
-  }
-
-  /** The download link shown under a goal type in the guide text, as HTML,
-   *  or "" when the item is not one. All text here is our own, not the
-   *  item's, so there is nothing of the database's to escape. */
-  function guideLinkHtml(body) {
-    var id = formForGuideItem(body);
-    if (!id) return "";
-    var title = FORMS[id].title.replace(/[&<>"]/g, "");
-    return '<span class="cap-form-inline">' +
-      '<button type="button" class="cap-form-link" data-cap-form="' + id + '">' + DOWNLOAD_ICON +
-      "<span>" + title + " (PDF)</span></button>" +
-      '<span class="cap-form-status" aria-live="polite"></span></span>';
-  }
-
-  renderCards();
-  window.CAPForms = { guideLinkHtml: guideLinkHtml };
+  window.CAPForms = {
+    has: has,
+    title: function (id) { return has(id) ? FORMS[id].title : null; },
+  };
 })();

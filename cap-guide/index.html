@@ -110,25 +110,20 @@
         </div>
         <h1>CAP <span>Walkthrough Guide</span></h1>
         <p class="hero-tagline">Career and Performance — how the process works, step by step, for team members and
-          for leaders running it with their team.</p>
+          for supervisors running it with their team.</p>
       </div>
     </section>
 
     <!-- ═══════════════ CONTENT ═══════════════ -->
     <section class="section">
-      <div class="section-inner" style="max-width: 900px;">
+      <div class="section-inner cap-inner">
         <div id="capLoading" class="cap-guide-empty">Loading…</div>
-        <nav class="cap-tabs" id="capGuideTabs"></nav>
+        <div class="cap-tabs" id="capGuideTabs"></div>
+        <!-- The downloads are in the guide text itself, as download items
+             (cap-guide/js/cap-guide.js). The self-assessment PDFs are built in
+             the browser from cap-guide/js/cap-forms-content.js; nothing typed
+             into one comes back here. -->
         <div id="capGuideBody"></div>
-
-        <!-- Built in the browser from cap-guide/js/cap-forms-content.js; see
-             cap-guide/js/cap-forms.js. Nothing typed into a form comes back here. -->
-        <section class="cap-forms" aria-labelledby="capFormsTitle">
-          <h2 class="cap-guide-section-title" id="capFormsTitle">Self-assessment forms</h2>
-          <p class="cap-forms-note">Fill in this PDF on your computer. Your answers are not stored by the Bridge,
-            so save your own copy.</p>
-          <div class="cap-forms-grid" id="capFormsCards"></div>
-        </section>
       </div>
     </section>
   </div>
@@ -149,8 +144,9 @@
        not loaded asynchronously through hub-boot.js's data-then indirection,
        so it needs SS.escapeHtml to already exist when it runs. -->
   <script src="/js/shared.js"></script>
-  <!-- The forms' wording and the cards; pdf-lib and the builder load only on
-       a Download click. Before cap-guide.js, which links the guide text to them. -->
+  <!-- The forms' wording and the download click; pdf-lib and the builder load
+       only on a Download click. Before cap-guide.js, which asks them which
+       cap-form: ids exist. -->
   <script src="/cap-guide/js/cap-forms-content.js"></script>
   <script src="/cap-guide/js/cap-forms.js"></script>
   <script src="/cap-guide/js/cap-guide.js"></script>

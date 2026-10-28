@@ -2,19 +2,24 @@
    CAP SELF-ASSESSMENT FORMS — the wording, as data
 
    The one place the two self-assessment PDFs are written. Remove a question,
-   reword a rating or add a bullet here, and both the download cards on the
-   page and the generated PDF follow; cap-forms-builder.js only lays out what
-   it finds below and holds no wording of its own.
+   reword a rating or add a bullet here, and the generated PDF follows;
+   cap-forms-builder.js only lays out what it finds below and holds no
+   wording of its own.
 
-   Source: the "Professional Conduct Self-Assessment" and "Professional
-   Development Self-Assessment" sections of the CAP Guide draft, as already
-   laid out in the two reference PDFs. One deliberate change from the draft:
-   the Development plan said "professional conduct goals" where it means
-   "professional development goals".
+   Sources: the "Professional Practices Self-Assessment" section of the CAP
+   Guide Round 2 draft (Jess Swinburne, 2026-10-28), word for word, and the
+   "Professional Development Self-Assessment" section of the first draft,
+   unchanged. One deliberate change from the first draft: the Development
+   plan said "professional conduct goals" where it means "professional
+   development goals". The Practices plan still says "professional conduct
+   goals", as Round 2 does.
 
-   Field names are the reference PDFs' own (conduct_rating_engagement,
-   development_plan_actions, ...). Keep them stable: a filled-in copy is read
-   by field name, so renaming one orphans that answer in every saved copy.
+   The guide links to a form by id (a download item whose link_url is
+   cap-form:practices or cap-form:development), so an id must not change.
+
+   Field names (practices_rating_engagement, development_plan_actions, ...)
+   must stay stable too: a filled-in copy is read by field name, so renaming
+   one orphans that answer in every saved copy.
 
    Static text only, deliberately. Nothing about the reader goes into a form —
    no name, no email, no date — and nothing a reader types ever comes back to
@@ -25,32 +30,65 @@
    because the PDF uses the standard Helvetica font. The builder refuses a
    character it cannot draw rather than dropping it silently.
 
-   `goalType` is the heading of the matching goal type in the guide text
-   (cap_guide_items, both the Team Member and Leader versions). The guide
-   puts a download link under the list item that starts with it; spacing,
-   hyphens and case are ignored when matching.
-
    Block types, in the order the builder draws them:
-     { type: "text",   text }                      a paragraph
+     { type: "text",   text, italic? }             a paragraph
      { type: "list",   label?, items }             a bullet list
-     { type: "rating", field, number, title, description }
-                                                   one area, three radio buttons
+     { type: "rating", field, number, title, description, select?, comment? }
+                                                   one area, three radio buttons;
+                                                   select labels the buttons,
+                                                   comment is { field, label },
+                                                   a text box under them
+     { type: "choice", field, title, prompt, options, comment? }
+                                                   a dropdown of options, and
+                                                   optionally a comment box
      { type: "answer", field, number?, title?, prompts?, examples?, height? }
                                                    a question and its text box;
                                                    examples is { label, items },
                                                    a list drawn between the two
+     { type: "group",  title, blocks }             a bold title and its blocks,
+                                                   kept on one page
+
+   Form options the builder reads besides the blocks: identity (field names,
+   and optional labels for the three boxes at the top), howTo, ratingScale,
+   closing, closingBold.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 (function () {
   "use strict";
 
   /* The three ratings, shared by every rating area. `value` is the radio
-     option's export value in the PDF (match the reference: Exceeds / Meets /
-     Needs) and should not change; `label` and `detail` are wording. */
+     option's export value in the PDF (Exceeds / Meets / Needs) and should not
+     change; `label` and `detail` are wording, drawn together in the rating
+     scale as "label detail". */
   var RATING_LEVELS = [
-    { value: "Exceeds", label: "Exceeds expectations", detail: "top 10% performance, unusually effective" },
-    { value: "Meets", label: "Meets expectations", detail: "middle 60% performance, good, no need for adjustment" },
-    { value: "Needs", label: "Needs improvement", detail: "bottom 30% performance, requires adjustment or development" },
+    { value: "Exceeds", label: "Exceeds expectations", detail: "(top 10% performance—unusually effective)" },
+    { value: "Meets", label: "Meets expectations", detail: "(middle 60% performance—good, no need for adjustment)" },
+    { value: "Needs", label: "Needs improvement", detail: "(bottom 30% performance—requires adjustment/development)" },
+  ];
+
+  /* The five areas of Step 1, in order. The names are also the options of the
+     two "Select one area to highlight" dropdowns. */
+  var AREAS = [
+    { key: "engagement", name: "Engagement",
+      description: "Demonstrates consistent engagement through timely responses, reliable calendar " +
+        "management, and clear availability. Stays attentive to requests, follows through promptly, and " +
+        "uses agreed upon channels to remain informed and accessible." },
+    { key: "ownership", name: "Ownership",
+      description: "Takes responsibility for outcomes by showing initiative, anticipating needs, and " +
+        "driving work forward without requiring constant direction. Identifies problems early and brings " +
+        "forward thoughtful, viable solutions rather than merely escalating issues." },
+    { key: "proficiency", name: "Proficiency",
+      description: "Maintains and effectively applies the knowledge, skills, tools, and systems required " +
+        "for the role. Demonstrates competence within their area of responsibility and pursues continual " +
+        "improvement as expectations evolve." },
+    { key: "adaptability", name: "Adaptability",
+      description: "Responds constructively to change by adjusting priorities, processes, or approaches " +
+        "as needed. Manages transitions effectively, remains flexible in the face of uncertainty, and " +
+        "supports others through change." },
+    { key: "collaboration", name: "Collaboration",
+      description: "Communicates clearly and appropriately, keeps relevant stakeholders informed, and " +
+        "works productively with others to achieve shared outcomes. Contributes positively to team " +
+        "dynamics and cross functional efforts." },
   ];
 
   var FEEDBACK_INTRO_2 = "This feedback will be critical in setting your goals in the next step. Discuss " +
@@ -66,12 +104,11 @@
   var CLOSING = "Share your goals with your supervisor and request approval or further feedback so you can " +
     "revise. Once they have reviewed and approved your goals, they are ready to be added to @work.";
 
-  function howTo(hasRatings) {
+  function howTo() {
     return [
       "Open this file on a computer in Adobe Acrobat Reader, Chrome, Edge or Mac Preview. You do not need " +
         "Acrobat Pro.",
-      "Click a box and type. Boxes scroll if your answer is long." +
-        (hasRatings ? " Pick one circle for each rating." : ""),
+      "Click a box and type. Boxes scroll if your answer is long.",
       "Save often. When you finish, save a copy to your device (if asked, choose to save with your " +
         "changes). Print it or send it to your supervisor if you like.",
       "Nothing you type is sent anywhere. The Bridge does not store your answers, so keep your own copy.",
@@ -86,95 +123,93 @@
     ];
   }
 
-  var conduct = {
-    id: "conduct",
-    fileName: "Professional-Conduct-Self-Assessment.pdf",
-    title: "Professional Conduct Self-Assessment",
+  /* Professional Practices. Step 1 is the supervisor's: they download one copy
+     per team member, which is why the first box asks for the team member's
+     name. Steps 2 and 3 are the team member's. Labels end in a colon here
+     because Round 2 writes them that way. */
+  var practices = {
+    id: "practices",
+    fileName: "Professional-Practices-Self-Assessment.pdf",
+    title: "Professional Practices Self-Assessment",
     subtitle: "Behavior Assessment - 1 of 2",
-    goalType: "Behavior based goals",
-    summary: "Rate yourself in five areas of professional conduct, reflect on the results, gather your " +
-      "supervisor's feedback, and draft 2 to 3 conduct goals.",
-    purpose: "Purpose: Assess your professional conduct from the past year and identify your strengths and " +
+    purpose: "Purpose: Assess your professional practices from the past year and identify your strengths and " +
       "areas of improvement, to set goals for the coming year, under the guidance of your supervisor.",
-    identity: { name: "conduct_name", supervisor: "conduct_supervisor", date: "conduct_date" },
-    howTo: howTo(true),
-    ratingScale: { intro: "Rating scale: use the following scale to rate your conduct", levels: RATING_LEVELS },
+    identity: {
+      name: "practices_name", supervisor: "practices_supervisor", date: "practices_date",
+      labels: { name: "TEAM MEMBER NAME", supervisor: "SUPERVISOR NAME", date: "DATE" },
+      tips: { name: "Team member name", supervisor: "Supervisor name", date: "Date" },
+    },
+    howTo: [
+      "Step 1 is completed by the supervisor. Steps 2 and 3 are completed by the team member.",
+      "Open this file on a computer in Adobe Acrobat Reader, Chrome, Edge or Mac Preview. You do not need " +
+        "Acrobat Pro.",
+      "Click a box and type. Boxes scroll if your answer is long. Pick one circle for each rating, and " +
+        "choose an area from each list.",
+      "Save the file in the private \"[Your Name] CAP Review\" OneDrive folder, shared only with the " +
+        "supervisor. If asked, choose to save with your changes.",
+      "Nothing you type is sent anywhere. The Bridge does not store your answers.",
+    ],
+    ratingScale: { intro: "Rating Scale: Use the following scale to rate your conduct", levels: RATING_LEVELS },
     steps: [
       {
-        title: "Step 1: Assess",
-        blocks: [
-          { type: "rating", field: "conduct_rating_engagement", number: 1, title: "Engagement",
-            description: "Demonstrates consistent engagement through timely responses, reliable calendar " +
-              "management, and clear availability. Stays attentive to requests, follows through promptly, and " +
-              "uses agreed upon channels to remain informed and accessible." },
-          { type: "rating", field: "conduct_rating_ownership", number: 2, title: "Ownership",
-            description: "Takes responsibility for outcomes by showing initiative, anticipating needs, and " +
-              "driving work forward without requiring constant direction. Identifies problems early and brings " +
-              "forward thoughtful, viable solutions rather than merely escalating issues." },
-          { type: "rating", field: "conduct_rating_proficiency", number: 3, title: "Proficiency",
-            description: "Maintains and effectively applies the knowledge, skills, tools, and systems required " +
-              "for the role. Demonstrates competence within their area of responsibility and pursues continual " +
-              "improvement as expectations evolve." },
-          { type: "rating", field: "conduct_rating_adaptability", number: 4, title: "Adaptability",
-            description: "Responds constructively to change by adjusting priorities, processes, or approaches " +
-              "as needed. Manages transitions effectively, remains flexible in the face of uncertainty, and " +
-              "supports others through change." },
-          { type: "rating", field: "conduct_rating_collaboration", number: 5, title: "Collaboration",
-            description: "Communicates clearly and appropriately, keeps relevant stakeholders informed, and " +
-              "works productively with others to achieve shared outcomes. Contributes positively to team " +
-              "dynamics and cross functional efforts." },
-        ],
+        title: "Step 1: Assess – To be completed by Supervisor",
+        blocks: AREAS.map(function (a, i) {
+          return { type: "rating", field: "practices_rating_" + a.key, number: i + 1, title: a.name,
+            description: a.description, select: "Select:",
+            comment: { field: "practices_comment_" + a.key, label: "Comment:" } };
+        }).concat([
+          { type: "choice", field: "practices_strength_area", title: "Greatest strength",
+            prompt: "Select one area to highlight:", options: AREAS.map(function (a) { return a.name; }),
+            comment: { field: "practices_strength_comment", label: "Comment:" } },
+          { type: "choice", field: "practices_opportunity_area", title: "Biggest opportunity for improvement",
+            prompt: "Select one area to highlight:", options: AREAS.map(function (a) { return a.name; }),
+            comment: { field: "practices_opportunity_comment", label: "Comment:" } },
+          { type: "group", title: "Final Comments:", blocks: [
+            { type: "answer", field: "practices_feedback_general", title: "General feedback for this area:",
+              height: 80 },
+            { type: "answer", field: "practices_feedback_directives", title: "Directives for goal planning:",
+              height: 80 },
+          ] },
+        ]),
       },
       {
-        title: "Step 2: Reflect",
+        title: "Step 2: Reflect - To be completed by Team Member",
         blocks: [
-          { type: "answer", field: "conduct_reflect_strengths", number: 1, title: "Strengths",
-            prompts: ["Based on your assessment above, which areas are you doing well in?",
+          { type: "answer", field: "practices_reflect_strengths", number: 1, title: "Strengths",
+            prompts: ["Based on the assessment above, which areas are you doing well in?",
               "Where are your areas of strength?"] },
-          { type: "answer", field: "conduct_reflect_opportunities", number: 2, title: "Opportunities for improvement",
-            prompts: ["Based on your assessment above, in which areas do you need to develop further?",
+          { type: "answer", field: "practices_reflect_opportunities", number: 2,
+            title: "Opportunities for improvement",
+            prompts: ["Based on the assessment above, in which areas do you need to develop further?",
               "Where do you need the most improvement?"] },
-          { type: "answer", field: "conduct_reflect_insights", number: 3, title: "Insights & impressions",
+          { type: "answer", field: "practices_reflect_insights", number: 3, title: "Insights & impressions",
             prompts: [INSIGHTS] },
         ],
       },
       {
-        title: "Step 3: Feedback",
+        title: "Step 3: Plan",
         blocks: [
-          { type: "text", text: "Meet your supervisor and review your assessment and reflections. Ask them for " +
-            "honest and productive feedback on your professional behavior." },
-          { type: "text", text: FEEDBACK_INTRO_2 },
-          { type: "list", label: "Discuss:", items: [
-            "Examples and accomplishments that demonstrate strong engagement",
-            "How consistently you take ownership and follow through on outcomes",
-            "Your proficiency in the knowledge, skills, tools, and systems required for your role",
-            "How effectively you adapt to changing priorities, processes, and expectations",
-            "How well you collaborate, communicate, and keep stakeholders informed",
-            "Specific professional conduct goals and actions to focus on in the coming year",
-          ] },
-          { type: "answer", field: "conduct_feedback_general", title: "General feedback for this area" },
-          { type: "answer", field: "conduct_feedback_directives", title: "Directives for goal planning" },
-        ],
-      },
-      {
-        title: "Step 4: Plan",
-        blocks: [
-          { type: "text", text: PLAN_INTRO },
-          { type: "answer", field: "conduct_plan_growth_areas", number: 1,
+          { type: "text", text: PLAN_INTRO, italic: true },
+          { type: "answer", field: "practices_plan_growth_areas", number: 1,
             prompts: ["Looking at your opportunities for improvement, identify one or two specific areas where " +
               "you want to grow your capacities."] },
-          { type: "answer", field: "conduct_plan_use_strengths", number: 2,
+          { type: "answer", field: "practices_plan_use_strengths", number: 2,
             prompts: ["List some specific ways you can use your identified strengths to help improve the areas " +
               "you identified in question 1."] },
-          { type: "answer", field: "conduct_plan_actions", number: 3,
+          { type: "answer", field: "practices_plan_actions", number: 3,
             prompts: ["What other specific actions could help you develop in your identified areas?"] },
+          // "conduct" is Round 2's own word here, kept as written.
           { type: "text", text: "Use your answers to these questions to develop 2 to 3 professional conduct " +
             "goals to focus on for next year." },
           { type: "list", label: "Each goal should:", items: GOAL_RULES },
-        ].concat(goals("conduct")),
+          { type: "answer", field: "practices_goal_1", title: "Goal 1:", height: 70 },
+          { type: "answer", field: "practices_goal_2", title: "Goal 2:", height: 70 },
+          { type: "answer", field: "practices_goal_3", title: "Goal 3 (Optional):", height: 70 },
+        ],
       },
     ],
     closing: CLOSING,
+    closingBold: true,
   };
 
   var development = {
@@ -182,13 +217,10 @@
     fileName: "Professional-Development-Self-Assessment.pdf",
     title: "Professional Development Self-Assessment",
     subtitle: null,
-    goalType: "Development based goals",
-    summary: "Reflect on where your goals focus, gather your supervisor's feedback on your growth, and draft " +
-      "2 to 3 development goals for the coming year.",
     purpose: "Purpose: Reflect on your development, gather meaningful feedback, and create intentional goals " +
       "that support both your current effectiveness and future growth, under the guidance of your supervisor.",
     identity: { name: "development_name", supervisor: "development_supervisor", date: "development_date" },
-    howTo: howTo(false),
+    howTo: howTo(),
     ratingScale: null,
     steps: [
       {
@@ -247,8 +279,8 @@
               "Conferences or professional communities",
               "Cross-functional projects",
             ] } },
-          // The draft read "professional conduct goals" here, copied from the
-          // Conduct form; this form's goals are development goals.
+          // The first draft read "professional conduct goals" here, copied
+          // from the behavior form; this form's goals are development goals.
           { type: "text", text: "Use your answers to these questions to develop 2 to 3 professional development " +
             "goals to focus on for next year." },
           { type: "list", label: "Each goal should:", items: GOAL_RULES.concat([
@@ -260,6 +292,5 @@
     closing: CLOSING,
   };
 
-  window.CAP_FORMS = { conduct: conduct, development: development };
-  window.CAP_FORMS_ORDER = ["conduct", "development"];
+  window.CAP_FORMS = { practices: practices, development: development };
 })();

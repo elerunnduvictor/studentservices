@@ -1017,7 +1017,10 @@ window.SS.WORKBOOKS = {
             help: "Where this section falls within its audience, lowest first." },
           { key: "section_key", label: "Section Key", type: "text",     width: 150, required: true,
             help: "A short, unique-per-audience code (e.g. \"step_1\"). Not shown on the page." },
-          { key: "title",       label: "Title",       type: "text",     width: 260, required: true },
+          { key: "title",       label: "Title",       type: "text",     width: 260, required: true,
+            help: "A step's title starting \"Step 3:\" puts 3 in the step's round badge." },
+          { key: "date_label",  label: "Date",        type: "text",     width: 220,
+            help: "Optional date chip beside the title, e.g. \"Starting December 4, 2026\"." },
           { key: "intro",       label: "Intro",       type: "longtext", width: 320,
             help: "Optional paragraph shown under the heading, before its items." },
         ],
@@ -1035,22 +1038,43 @@ window.SS.WORKBOOKS = {
             help: "Which section this bullet or paragraph belongs to." },
           { key: "sort_order",  label: "Order",       type: "number",   width: 80,
             help: "Where this item falls within its section, lowest first." },
-          { key: "kind",        label: "Kind",        type: "select",   width: 120, required: true,
+          // Must match cap_guide_items_kind_check (docs/sql/2026-10-28-cap-guide-
+          // round2.sql) and what cap-guide/js/cap-guide.js draws.
+          { key: "kind",        label: "Kind",        type: "select",   width: 140, required: true,
             options: [
-              { value: "paragraph", label: "Paragraph" },
-              { value: "list_item", label: "List item" },
-            ] },
+              { value: "paragraph",     label: "Paragraph" },
+              { value: "list_item",     label: "Bullet" },
+              { value: "numbered_item", label: "Numbered" },
+              { value: "check_item",    label: "Checklist" },
+              { value: "heading",       label: "Sub-heading" },
+              { value: "callout",       label: "Callout box" },
+              { value: "card",          label: "Card" },
+              { value: "tile",          label: "Tile" },
+              { value: "milestone",     label: "Timeline point" },
+              { value: "download",      label: "Download" },
+            ],
+            help: "How the item is drawn. Consecutive Cards sit side by side, Tiles form a grid, " +
+                  "Numbered items with a Title become numbered cards. Download: Link Label is the " +
+                  "button, Link URL is cap-form:practices, cap-form:development, a file path, or " +
+                  "blank for \"Available soon\"." },
           { key: "indent",      label: "Indent",      type: "select",   width: 90,
             options: [
               { value: "0", label: "0" },
               { value: "1", label: "1" },
             ],
-            help: "1 nests a lettered sub-list under a numbered one. Ignored for paragraphs." },
-          { key: "body",        label: "Body",        type: "longtext", width: 380 },
+            help: "1 puts the item inside the one above it: a sub-point under a list item, or " +
+                  "text and buttons inside a card." },
+          { key: "title",       label: "Title",       type: "text",     width: 180,
+            help: "Optional. The month of a timeline point, the heading of a card, tile or callout, " +
+                  "or a small badge in front of a paragraph (\"2+ goals\")." },
+          { key: "body",        label: "Body",        type: "longtext", width: 380,
+            help: "The text. A blank line starts a new paragraph in a callout; [label](url) adds a link." },
           { key: "link_label",  label: "Link Label",  type: "text",     width: 160,
-            help: "Optional — the visible text of one inline or trailing link." },
-          { key: "link_url",    label: "Link URL",    type: "url",      width: 110, linkLabel: "Open ↗",
-            help: "Optional. Leave both link fields blank for an item with no link." },
+            help: "Optional — the visible text of one link. Linked in place if it appears in Body, " +
+                  "otherwise shown as a button after it." },
+          { key: "link_url",    label: "Link URL",    type: "text",     width: 200,
+            help: "Optional. A Bridge path (/scorecard/index.html), a full https:// address, or for a " +
+                  "Download, cap-form:practices / cap-form:development." },
         ],
       },
     ],
